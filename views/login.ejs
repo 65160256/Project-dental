@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dentistry Login</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  </head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="/img/dentist.jpg" alt="Dentist" />
+    </div>
+    <div class="right">
+      <div class="form-box">
+        <h2>Dentistry</h2>
+        <p class="subtitle">Login</p>
+
+        <div class="tab-toggle">
+          <a href="/register" class="tab-btn tab-left active">Register</a>
+          <a href="/login" class="tab-btn tab-right">Login</a>
+        </div>
+
+        <form action="/login" method="post">
+          <label>Email:</label>
+          <input type="email" name="email" required>
+          
+          <label>Password:</label>
+          <div class="password-wrapper">
+            <input type="password" name="password" id="password">
+            <i class="fa-solid fa-eye toggle-password" onclick="togglePassword()"></i>
+          </div>
+
+          <p class="forgot">Forgot Password</p>
+
+          <button type="submit" class="confirm-btn">Confirm</button>
+        
+          <% if (messages.success && messages.success.length > 0) { %>
+  <div class="alert success"><%= messages.success[0] %></div>
+<% } %>
+
+<% if (messages.error && messages.error.length > 0) { %>
+  <div class="alert error"><%= messages.error[0] %></div>
+<% } %>
+
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const icon = document.querySelector(".toggle-password");
+
+      const isHidden = passwordInput.type === "password";
+      passwordInput.type = isHidden ? "text" : "password";
+
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    }
+  </script>
+
+</body>
+</html>

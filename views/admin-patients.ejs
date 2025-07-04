@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Patients</title>
+  <link rel="stylesheet" href="/css/admin-patients.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" alt="Logo" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li class="active"><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Patients</h2>
+      <div class="search">
+        <label>Search:</label>
+        <input type="text" id="searchInput" placeholder="Name or Patient ID..." />
+      </div>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" class="notification-icon" />
+
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a><hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tools-bar">
+      <span><i class="fa fa-users"></i> <%= patients.length %> total patients</span>
+      <div>
+        <button class="btn-light">Filters</button>
+        <a href="/admin/patients/add" class="btn-blue">+ Add Patient</a>
+      </div>
+    </div>
+
+    <table class="patients-table">
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="patientsTable">
+        <% patients.forEach((p, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= p.name %></td>
+            <td><%= p.phone %></td>
+            <td>
+              <a href="/admin/patients/<%= p.id %>" class="btn-gray">View</a>
+              <a href="/admin/patients/<%= p.id %>/edit" class="btn-yellow">Edit</a>
+              <button class="btn-red" onclick="confirmDelete('<%= p.id %>', '<%= p.name %>')">Delete</button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>Confirm Deletion</h3>
+    <p id="deleteMessage">Are you sure you want to delete this patient?</p>
+    <div class="modal-buttons">
+      <button id="confirmDeleteBtn" class="btn-red">Delete</button>
+      <button class="btn-gray" onclick="closeModal()">Cancel</button>
+      
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleDropdown() {
+    const menu = document.getElementById('profileDropdown');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+
+  document.addEventListener('click', function (e) {
+    const prof = document.querySelector('.profile-dropdown');
+    if (!prof.contains(e.target)) {
+      document.getElementById('profileDropdown').style.display = 'none';
+    }
+  });
+
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    const value = this.value.toLowerCase();
+    const rows = document.querySelectorAll("#patientsTable tr");
+    rows.forEach(row => {
+      const name = row.children[1].textContent.toLowerCase();
+      row.style.display = name.includes(value) ? "" : "none";
+    });
+  });
+
+  let deletePatientId = null;
+
+  function confirmDelete(id, name) {
+    deletePatientId = id;
+    document.getElementById('deleteMessage').innerText =
+      `Are you sure you want to delete "${name}"?`;
+    document.getElementById('deleteModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    deletePatientId = null;
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+    if (deletePatientId) {
+      window.location.href = `/admin/patients/${deletePatientId}/delete`;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile</title>
+  <link rel="stylesheet" href="/css/admin-profile.css" />
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+    </div>
+    <ul>
+      <li><a href="/admin/schedule">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main-profile">
+   <div class="topbar">
+  <div class="topbar-left">
+    <h2>My Profile</h2>
+    <a href="/admin/dashboard" class="back-icon">
+      <img src="/img/left.png" alt="Back" />
+    </a>
+  </div>
+  <div class="rightbar">
+    <img src="/img/notification-bell.png" class="notif-icon" />
+    <div class="admin-info">
+      <img src="/img/user-icon.png" class="avatar" />
+      <div class="text">
+        <div class="name">Hello Admin</div>
+        <div class="role">admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <% if (messages.error && messages.error.length > 0) { %>
+      <div class="alert error"><%= messages.error[0] %></div>
+    <% } %>
+    <% if (messages.success && messages.success.length > 0) { %>
+      <div class="alert success"><%= messages.success[0] %></div>
+    <% } %>
+
+    <div class="profile-card">
+      <img src="/img/user-icon.png" class="profile-image" alt="User Icon" />
+      <h2><%= user.rname %></h2>
+      <p class="last-login">Last Login: <%= new Date(user.last_login).toLocaleString() %></p>
+
+      <p>Username: <%= user.username %></p>
+      <p>Email: <%= user.email %></p>
+      <p>Password: ******</p>
+
+      <div class="buttons">
+        <button class="gray" onclick="document.getElementById('changePasswordModal').style.display='block'">Change Password</button>
+        <a href="/logout" class="red">Log out</a>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="changePasswordModal" class="modal">
+      <div class="modal-content">
+        <span onclick="document.getElementById('changePasswordModal').style.display='none'" class="close">&times;</span>
+        <h2>Change Password</h2>
+        <form action="/admin/change-password" method="POST">
+          <input type="password" name="currentPassword" placeholder="Current Password" required /><br />
+          <input type="password" name="newPassword" placeholder="New Password" required /><br />
+          <input type="password" name="confirmPassword" placeholder="Confirm New Password" required /><br />
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

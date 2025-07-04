@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Treatment History</title>
+  <link rel="stylesheet" href="/css/treatment-details.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li class="active"><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Treatment History</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" class="icon" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a><hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<a href="/admin/patients/<%= patientId %>/treatments" class="back-btn">
+  <i class="fas fa-chevron-left"></i>
+</a>
+
+<div class="treatment-info">
+  <p><strong>Date of Treatment:</strong> <%= detail.formattedDate %></p>
+
+  <div class="card">
+    <p><strong>Booking Request ID:</strong> #Y-<%= detail.queue_id || 'N/A' %></p>
+    <p><strong>Date:</strong> <%= detail.formattedDate %>, <%= detail.formattedTime %></p>
+    <p><strong>Treatment:</strong> <%= detail.treatment_name %></p>
+    <p><strong>Dentist:</strong> Dr. <%= detail.dentist_name %></p>
+    <p><strong>Diagnosis:</strong> <%= detail.diagnosis || '-' %></p>
+    <p><strong>Next appointment:</strong> -</p>
+  </div>
+</div>
+</div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

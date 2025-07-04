@@ -1,0 +1,82 @@
+<!-- ข้อมูลทันตแพทย์แบบละเอียด -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dentist Information</title>
+  <link rel="stylesheet" href="/css/view-dentist.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" alt="Logo"></div>
+    <ul>
+      <li><a href="/admin/schedule">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li class="active"><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Dentist Information</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" />
+        <div class="admin-info">
+          <img src="/img/user-icon.png" />
+          <div>Hello Admin<br /><small>admin</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="left">
+        <img src="/uploads/<%= dentist.photo %>" alt="Dentist Photo" class="photo">
+      </div>
+      <div class="right">
+        
+
+        <div class="section">
+          <h4>Personal Information</h4>
+          <p>Name: Dr. <%= dentist.fname %> <%= dentist.lname %></p>
+          <p>Dentist ID: <%= dentist.dentist_id %></p>
+          <% if (dentist.dob) { %>
+            <p>Date of Birth: <%= new Date(dentist.dob).toLocaleDateString() %></p>
+            <% } else { %>
+            <p>Date of Birth: -</p>
+            <% } %>
+
+            <p>ID Card Number: <%= dentist.idcard || '-' %></p>
+            <p>Specialist: <%= dentist.specialty || '-' %></p>
+            <p>Educational Background: <%= dentist.education || '-' %></p>
+            
+            </div>
+
+        <div class="section">
+          <h4>Contact Information</h4>
+          <p>Address: <%= dentist.address %></p>
+          <p>Phone: <%= dentist.phone %></p>
+        </div>
+
+        <a href="/admin/dentists/<%= dentist.dentist_id %>/schedule" class="btn-schedule">Work schedule</a>
+
+        <div class="section">
+          <h4>Login Information</h4>
+          <p>Email: <%= dentist.email %></p>
+          <p>Password: ******</p>
+          
+        </div>
+
+        <div class="buttons">
+          <a href="/admin/dentists/<%= dentist.dentist_id %>/edit" class="btn-yellow">Edit</a>
+          <form action="/admin/dentists/<%= dentist.dentist_id %>/delete" method="POST">
+            <button class="btn-red" onclick="return confirm('Delete this dentist?')">Delete</button>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

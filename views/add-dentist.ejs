@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Dentist</title>
+  <link rel="stylesheet" href="/css/add-dentist.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li class="active"><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Add Dentist</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/admin/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/admin/dentists/add" method="POST" enctype="multipart/form-data" class="form-container">
+      <div class="left-section">
+        <div class="image-preview">
+          <img id="photoPreview" src="/img/placeholder.png" alt="Preview" />
+        </div>
+        <input type="file" name="photo" id="photoUpload" accept="image/*" />
+        <label for="photoUpload" class="btn-blue">+ Upload Photo</label>
+      </div>
+
+      <div class="right-section">
+        <h3>Personal Information</h3>
+        <div class="form-group">
+          <label for="fname">Firstname <span class="required">*</span></label>
+          <input type="text" id="fname" name="fname" required />
+        </div>
+        <div class="form-group">
+          <label for="lname">Lastname <span class="required">*</span></label>
+          <input type="text" id="lname" name="lname" required />
+        </div>
+        <div class="form-group">
+          <label for="dob">Date of Birth <span class="required">*</span></label>
+          <input type="date" id="dob" name="dob" required />
+        </div>
+        <div class="form-group">
+          <label for="idcard">ID Card Number <span class="required">*</span></label>
+          <input type="text" id="idcard" name="idcard" required />
+        </div>
+        <div class="form-group">
+          <label for="specialty">Specialist <span class="required">*</span></label>
+          <input type="text" id="specialty" name="specialty" required />
+        </div>
+        <div class="form-group">
+          <label for="education">Educational Background</label>
+          <textarea id="education" name="education" rows="2"></textarea>
+        </div>
+
+        <h3>Contact Information</h3>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <textarea id="address" name="address" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone <span class="required">*</span></label>
+          <input type="text" id="phone" name="phone" required />
+        </div>
+
+        <h3>Login Information</h3>
+        <div class="form-group">
+          <label for="email">Email <span class="required">*</span></label>
+          <input type="email" id="email" name="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password <span class="required">*</span></label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+          <input type="password" id="confirmPassword" name="confirmPassword" required />
+        </div>
+
+        <div class="buttons">
+          <button type="submit" class="btn-green">Confirm</button>
+          <a href="/admin/dentists" class="btn-red">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const photoInput = document.getElementById('photoUpload');
+    const photoPreview = document.getElementById('photoPreview');
+    photoInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        photoPreview.src = URL.createObjectURL(file);
+      }
+    });
+
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

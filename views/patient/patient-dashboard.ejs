@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Dashboard</title>
+  <link rel="stylesheet" href="/css/patient-dashboard.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+    </div>
+    <ul>
+      <li class="active"><a href="/patient/dashboard">Dashboard</a></li>
+      <li><a href="/patient/appointments">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/my-treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <div class="search">
+        <label>Search:</label>
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Firstname or Lastname..." />
+        </div>
+      </div>
+      <div class="user-section">
+        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar"/>
+            <div>
+              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong><br />
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h1>Hello Mrs. <%= patient.lname %></h1>
+    <p><%= currentDate %></p>
+
+    <div class="next-appointment">
+      <h2><i class="fas fa-exclamation-circle"></i> Next Appointment</h2>
+      <% if (nextAppointment) { %>
+        <div class="card next-appointment-card">
+          <div class="left">
+            <p><strong>Date:</strong> <%= new Date(nextAppointment.time).toLocaleDateString() %>, <%= new Date(nextAppointment.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) %></p>
+            <p><strong>Treatment:</strong> <%= nextAppointment.treatment %></p>
+          </div>
+          <div class="right">
+            <a href="/patient/appointments/<%= nextAppointment.queue_id %>">View Details</a>
+          </div>
+        </div>
+      <% } else { %>
+        <p>No upcoming appointment</p>
+      <% } %>
+    </div>
+
+    <div class="appointments-section">
+      <h2>My appointments</h2>
+      <div class="controls">
+        <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button>
+        <a href="/patient/appointments" class="add-btn"><i class="fas fa-plus"></i> Appointment</a>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Time</th><th>Name</th><th>Treatment</th><th>Dentist</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% appointments.forEach(function(apt) { %>
+            <tr>
+              <td><%= new Date(apt.time).toLocaleDateString() %></td>
+              <td><%= new Date(apt.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></td>
+              <td><%= apt.name %></td>
+              <td><%= apt.treatment %></td>
+              <td><%= apt.dentist %></td>
+              <td><%= apt.queue_status %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bottom-panels">
+      <div class="treatment-history">
+        <h2>Treatment History</h2>
+        <% if (treatmentHistory) { %>
+          <div class="card">
+            <p><strong>Treatment:</strong> <%= treatmentHistory.treatment %></p>
+            <p><strong>Dentist:</strong> Dr. <%= treatmentHistory.dentist %></p>
+            <p><strong>Diagnosis:</strong> <%= treatmentHistory.diagnosis %></p>
+            <a href="/patient/history">View Details</a>
+          </div>
+        <% } else { %>
+          <p>No treatment history available.</p>
+        <% } %>
+      </div>
+
+      <div class="dentists-today">
+        <h2>Dentists Today</h2>
+        <div class="dentist-cards">
+          <% dentists.forEach(function(dentist) { %>
+            <div class="dentist-card">
+              <img src="/uploads/<%= dentist.photo %>" alt="<%= dentist.fname %>" />
+              <p>Dr. <%= dentist.fname %> <%= dentist.lname %></p>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

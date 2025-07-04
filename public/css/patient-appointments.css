@@ -1,0 +1,168 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.sidebar {
+  position: fixed;
+  width: 180px;
+  height: 100vh;
+  background-color: #2196F3;
+  color: #fff;
+  padding-top: 20px;
+}
+
+.sidebar .logo img {
+  display: block;
+  margin: 0 auto 20px;
+  width: 80px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 12px 20px;
+}
+
+.sidebar ul li.active,
+.sidebar ul li:hover {
+  background-color: #cde6ff;
+  color: black;
+}
+
+.sidebar ul li a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.main {
+  margin-left: 180px;
+  padding: 20px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+}
+
+.notification-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 15px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-info div {
+  margin-left: 8px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  display: none;
+  right: 20px;
+  top: 70px;
+  z-index: 100;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  margin: 30px 0 20px;
+  gap: 20px;
+}
+
+.arrow-btn {
+  background-color: #1e50ff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 18px;
+  border-radius: 4px;
+}
+
+.view-buttons button {
+  margin-left: 8px;
+  padding: 5px 10px;
+  border: none;
+  background-color: #1e50ff;
+  color: white;
+  border-radius: 4px;
+}
+
+.view-buttons button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.time-grid {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.time-slot {
+  display: flex;
+  border-bottom: 1px solid #ccc;
+  height: 50px;
+}
+
+.hour {
+  width: 80px;
+  padding: 12px;
+  border-right: 1px solid #ccc;
+  background-color: #f9f9f9;
+}
+
+.appointments-cell {
+  flex: 1;
+  position: relative;
+}
+
+.appointment-box {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  width: 250px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: white;
+  font-size: 13px;
+}
+
+.appointment-box.blue {
+  background-color: #0039e6;
+}
+
+.appointment-box.green {
+  background-color: #006666;
+}

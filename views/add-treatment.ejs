@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Add Treatments</title>
+  <link rel="stylesheet" href="/css/add-treatment.css" />
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" alt="Logo" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li class="active"><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Add Treatments</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" class="notif-icon" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a><hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/admin/treatments/add" method="POST" class="form">
+      <div class="form-group">
+        <label for="name">Treatment Name:</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+      <div class="form-group">
+        <label for="dentist_id">Dentist:</label>
+        <select id="dentist_id" name="dentist_id" required>
+          <option value="">-- Select Dentist --</option>
+          <% dentists.forEach(d => { %>
+            <option value="<%= d.dentist_id %>"><%= d.fname %> <%= d.lname %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="duration">Duration:</label>
+        <input type="number" id="duration" name="duration" min="1" required /> min
+      </div>
+      <div class="buttons">
+        <button type="submit" class="btn-green">Save</button>
+        <a href="/admin/treatments" class="btn-red">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

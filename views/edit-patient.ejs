@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Patient Information</title>
+  <link rel="stylesheet" href="/css/edit-patient.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" alt="Smile Clinic" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li class="active"><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Edit Patient Information</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" class="icon" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a><hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/admin/patients/<%= patient.patient_id %>/edit" method="POST" class="form-container">
+      <h3>Personal Information</h3>
+      <div class="form-group">
+        <label>Firstname:</label>
+        <input type="text" name="fname" value="<%= patient.fname %>" required />
+      </div>
+      <div class="form-group">
+        <label>Lastname:</label>
+        <input type="text" name="lname" value="<%= patient.lname %>" required />
+      </div>
+      <div class="form-group">
+        <label>Date of Birth:</label>
+        <input type="date" name="dob" value="<%= patient.dob || '' %>" required />
+    </div>
+      <div class="form-group">
+        <label>ID Card Number:</label>
+        <input type="text" name="idcard" value="<%= patient.idcard %>" required />
+      </div>
+
+      <h3>Login Information</h3>
+      <div class="form-group">
+        <label>Email:</label>
+        <input type="email" name="email" id="email" value="<%= patient.email %>" required />
+      </div>
+      <div class="form-group">
+        <label>Password:</label>
+        <input type="password" name="password" />
+      </div>
+      <div class="form-group">
+        <label>Confirm password:</label>
+        <input type="password" name="confirmPassword" />
+      </div>
+
+      <h3>Contact Information</h3>
+      <div class="form-group">
+        <label>Address:</label>
+        <textarea name="address" rows="2"><%= patient.address %></textarea>
+      </div>
+      <div class="form-group">
+        <label>Phone:</label>
+        <input type="text" name="phone" value="<%= patient.phone %>" required />
+      </div>
+
+      <div class="buttons">
+        <button type="submit" class="btn-green">Confirm</button>
+        <a href="/admin/patients" class="btn-red">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

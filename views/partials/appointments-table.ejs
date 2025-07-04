@@ -1,0 +1,12 @@
+<table>
+  <% appointments.forEach(app => { %>
+    <tr>
+      <td><%= app.time_start %></td>
+      <td><%= app.name %></td>
+      <td><%= app.treatment %></td>
+      <td><%= app.dentist %></td>
+      <td><%= app.phone %></td>
+      <td><%= app.status %></td>
+    </tr>
+  <% }) %>
+</table>

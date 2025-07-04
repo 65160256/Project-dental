@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Treatments</title>
+  <link rel="stylesheet" href="/css/edit-treatment.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointment</a></li>
+      <li><a href="/admin/dentists">Dentist</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li class="active"><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Edit Treatments</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" class="notif-icon" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/admin/treatments/<%= treatment.treatment_id %>?_method=PUT" method="POST" class="form-container">
+      <div class="form-group">
+        <label>Treatment Name:</label>
+        <input type="text" name="treatment_name" value="<%= treatment.treatment_name %>" required>
+
+        <label>Duration (minutes):</label>
+        <input type="number" name="duration" value="<%= treatment.duration %>" required>
+
+        <label>Select Dentist:</label>
+        <select name="dentist_ids[]" multiple required>
+          <% dentists.forEach(dentist => { %>
+            <option value="<%= dentist.dentist_id %>" <%= treatment.dentist_ids?.includes(dentist.dentist_id) ? 'selected' : '' %>>
+              <%= dentist.fname %> <%= dentist.lname %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="buttons">
+        <button type="submit" class="btn-green">Save</button>
+        <a href="/admin/treatments" class="btn-red">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

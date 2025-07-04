@@ -1,0 +1,109 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinic Dentists' Schedule</title>
+  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"> <img src="/img/logo.png" alt="Smile Clinic" /> </div>
+    <ul>
+      <li class="active"><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h1>Clinic Dentists' Schedule</h1>
+      <div class="header-right">
+        <img src="/img/notification-bell.png" alt="Notifications" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" alt="Profile" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/admin/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="calendar-container">
+      <div id='calendar'></div>
+    </div>
+  </div>
+
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var calendarEl = document.getElementById('calendar');
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next',
+          center: 'title',
+          right: ''
+        },
+        events: [
+          {
+            title: 'Dr. Somsri\n10:00am-6:00pm',
+            start: '2025-04-01',
+            color: '#d48ed6'
+          },
+          {
+            title: 'Dr. Somsri\n10:00am-6:00pm',
+            start: '2025-04-01',
+            end: '2025-04-03',
+            color: '#9ec9f5'
+          },
+          {
+            title: 'Dr. Somsri\n10:00am-6:00pm',
+            start: '2025-04-04',
+            color: '#d48ed6'
+          },
+          {
+            title: 'Dr. Somsri\n10:00am-6:00pm',
+            start: '2025-04-07',
+            end: '2025-04-11',
+            color: '#9ec9f5'
+          },
+          {
+            title: 'Dr. Somsri\n10:00am-6:00pm',
+            start: '2025-04-08',
+            color: '#d48ed6'
+          }
+        ]
+      });
+      calendar.render();
+    });
+
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+
+  </script>
+</body>
+</html>

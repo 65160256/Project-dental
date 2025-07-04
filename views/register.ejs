@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dentistry Register</title>
+  <link rel="stylesheet" href="/css/register.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="/img/dentist.jpg" alt="Dentist" />
+    </div>
+    <div class="right">
+      <div class="form-box">
+        <div class="back">
+          <a href="/login"><i class="fas fa-chevron-left"></i></a>
+        </div>
+        <h2>Dentistry</h2>
+        <p class="subtitle">Register</p>
+
+        <form id="registerForm" action="/register" method="POST" onsubmit="return validateForm()">
+          <h4>Personal Information</h4>
+
+          <label>Firstname: <span class="required">*</span></label>
+          <input type="text" name="fname" required>
+
+          <label>Lastname: <span class="required">*</span></label>
+          <input type="text" name="lname" required>
+
+          <label>Date of Birth: <span class="required">*</span></label>
+          <input type="date" name="dob" required>
+
+          <label>ID Card Number: <span class="required">*</span></label>
+          <input type="number" name="idcard" id="idcard" required maxlength="13">
+
+          <h4>Login Information</h4>
+
+          <label>Email: <span class="required">*</span></label>
+          <input type="email" name="email" required>
+
+          <label>Password: <span class="required">*</span></label>
+          <div class="password-wrapper">
+            <input type="password" name="password" id="password" required>
+            <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+          </div>
+
+          <label>Confirm password: <span class="required">*</span></label>
+          <div class="password-wrapper">
+            <input type="password" name="confirmPassword" id="confirmPassword" required>
+            <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('confirmPassword', this)"></i>
+          </div>
+
+          <h4>Contact Information</h4>
+
+          <label>Address: <span class="required">*</span></label>
+          <input type="text" name="address" required>
+
+          <label>Phone: <span class="required">*</span></label>
+          <input type="number" name="phone" id="phone" required maxlength="10">
+
+          <div class="button-group">
+            <button type="button" class="cancel-btn" onclick="window.location='/login'">Cancel</button>
+            <button type="submit" class="register-btn">Register</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(fieldId, iconEl) {
+      const input = document.getElementById(fieldId);
+      input.type = input.type === "password" ? "text" : "password";
+      iconEl.classList.toggle('fa-eye');
+      iconEl.classList.toggle('fa-eye-slash');
+    }
+
+    function validateForm() {
+      const phone = document.getElementById("phone").value.trim();
+      const idcard = document.getElementById("idcard").value.trim();
+      const pass = document.getElementById("password").value;
+      const confirm = document.getElementById("confirmPassword").value;
+
+      if (phone.length > 10) {
+        alert("Phone number must not exceed 10 digits.");
+        return false;
+      }
+
+      if (idcard.length > 13) {
+        alert("ID card number must not exceed 13 digits.");
+        return false;
+      }
+
+      if (pass !== confirm) {
+        alert("Passwords do not match.");
+        return false;
+      }
+
+      return confirm("Are you sure you want to register?");
+    }
+
+    // ตรวจสอบ error จาก query string เช่น ?error=duplicate_email
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'duplicate_email') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Email already exists',
+        text: 'Please use a different email address.',
+      });
+    }
+
+  </script>
+
+</body>
+</html>

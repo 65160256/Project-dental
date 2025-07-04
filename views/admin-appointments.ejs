@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Appointments</title>
+  <link rel="stylesheet" href="/css/admin-appointments.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li class="active"><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Appointments</h2>
+      <div class="search">
+        <label>Search:</label>
+        <input type="text" placeholder="Firstname or Lastname...">
+      </div>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" />
+        <div class="admin-info">
+          <img src="/img/user-icon.png" />
+          <div>Hello Admin<br /><small>admin</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="date-strip">
+      <div class="calendar-bar">
+        <button id="prevWeek" class="arrow-btn">❮</button>
+        <% for (let i = 0; i < 7; i++) {
+             const date = new Date();
+             const today = new Date();
+             const offset = (weekOffset || 0) * 7 + i;
+             date.setDate(today.getDate() + offset);
+             const iso = date.toISOString().split('T')[0];
+             const isToday = date.toDateString() === today.toDateString();
+        %>
+          <button class="calendar-day <%= selectedDate === iso ? 'active' : '' %> <%= isToday ? 'today' : '' %>" 
+                  data-date="<%= iso %>">
+            <%= date.toLocaleDateString('en-US', { weekday: 'short' }) %><br>
+            <%= date.getDate() %>
+          </button>
+        <% } %>
+        <button id="nextWeek" class="arrow-btn">❯</button>
+      </div>
+    </div>
+
+    <div class="tools-bar">
+      <span><i class="fa fa-users"></i> <%= appointments.length %> total appointments</span>
+      <div>
+        <button class="btn-light">Filters</button>
+        <a href="/admin/appointments/add" class="btn-blue">+ Appointment</a>
+      </div>
+    </div>
+
+    <table class="appointments-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Name</th>
+          <th>Treatment</th>
+          <th>Dentist</th>
+          <th>Phone</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="appointment-table">
+        <% appointments.forEach(a => { %>
+          <tr>
+            <!-- <td><%= a.time_start %><%= a.time_end ? ' - ' + a.time_end : '' %></td> -->
+            <td>
+  <%= new Date(a.time_start).toLocaleString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Bangkok'
+      }) %>
+</td>
+
+            <td><%= a.name %></td>
+            <td><%= a.treatment || '-' %></td>
+            <td><%= a.dentist || '-' %></td>
+            <td><%= a.phone %></td>
+            <td><%= a.status %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  // รับค่าจาก Server หากไม่มีให้ fallback เป็น 0 หรือวันนี้
+  let weekOffset = typeof <%= typeof weekOffset !== 'undefined' ? weekOffset : 0 %> === 'number' ? <%= weekOffset || 0 %> : 0;
+  let selectedDate = "<%= selectedDate || new Date().toISOString().split('T')[0] %>";
+
+  function loadAppointments(date) {
+    fetch(`/admin/appointments/ajax?date=${date}`)
+      .then(res => res.text())
+      .then(html => {
+        const container = document.getElementById('appointment-table');
+        if (container) container.innerHTML = html;
+      });
+  }
+
+  function renderWeek() {
+    fetch(`/admin/appointments/week?offset=${weekOffset}&selectedDate=${selectedDate}`)
+      .then(res => res.text())
+      .then(html => {
+        const calendarBar = document.querySelector('.calendar-bar');
+        if (calendarBar) {
+          calendarBar.outerHTML = html;
+          bindCalendarEvents(); // rebind หลัง DOM เปลี่ยน
+        }
+      });
+  }
+
+  function bindCalendarEvents() {
+    document.querySelectorAll('.calendar-day').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.calendar-day').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedDate = btn.dataset.date;
+        loadAppointments(selectedDate);
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('prevWeek')?.addEventListener('click', () => {
+      weekOffset--;
+      renderWeek();
+    });
+
+    document.getElementById('nextWeek')?.addEventListener('click', () => {
+      weekOffset++;
+      renderWeek();
+    });
+
+    bindCalendarEvents();
+  });
+</script>
+
+
+</body>
+</html>

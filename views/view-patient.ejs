@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Patient Information</title>
+  <link rel="stylesheet" href="/css/view-patient.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" alt="Smile Clinic" /></div>
+    <ul>
+      <li><a href="/admin/dashboard">Schedule</a></li>
+      <li><a href="/admin/appointments">Appointments</a></li>
+      <li><a href="/admin/dentists">Dentists</a></li>
+      <li class="active"><a href="/admin/patients">Patients</a></li>
+      <li><a href="/admin/treatments">Treatments</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Patient Information</h2>
+      <div class="top-right">
+        
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello Admin</strong><br />
+              <small>admin</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
+            <a href="/profile">My Profile</a><hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+        <a href="/admin/patients/<%= patient.patient_id %>/treatments" class="btn-blue">Treatment History</a>
+      <h4>Personal Information</h4>
+      <p>Name: <%= patient.fname %> <%= patient.lname %></p>
+      <p>Patient ID: <%= patient.patient_id %></p>
+      <p>Date of Birth: <%= patient.dob.toISOString().split('T')[0] %></p>
+      <p>ID Card Number: <%= patient.idcard %></p>
+    </div>
+
+    <div class="section">
+      <h4>Contact Information</h4>
+      <p>Address: <%= patient.address %></p>
+      <p>Phone: <%= patient.phone %></p>
+    </div>
+
+    <div class="section">
+      <h4>Login Information</h4>
+      <p>Email: <%= patient.email %></p>
+      <p>Password: ******</p>
+    </div>
+
+    <!-- ปุ่มลบ -->
+<div class="button-group">
+  <a href="/admin/patients/<%= patient.patient_id %>/edit" class="btn-yellow">Edit</a>
+  <button class="btn-red" onclick="openDeleteModal()">Delete</button>
+</div>
+
+<!-- Modal -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h3>Confirm Deletion</h3>
+    <p>Are you sure you want to delete this patient?</p>
+    <div class="modal-buttons">
+      <a href="/admin/patients/<%= patient.patient_id %>/delete" class="btn-red">Yes, Delete</a>
+      <button onclick="closeDeleteModal()" class="btn-gray">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+
+    function openDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'flex';
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+  }
+
+  document.addEventListener('click', function (e) {
+    const modal = document.getElementById('deleteModal');
+    if (e.target === modal) closeDeleteModal();
+  });
+    
+  </script>
+</body>
+</html>
