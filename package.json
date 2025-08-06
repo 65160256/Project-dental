@@ -23,7 +23,9 @@
     "express": "^5.1.0",
     "express-flash": "^0.0.2",
     "express-session": "^1.18.1",
+    "fullcalendar": "^6.1.18",
     "method-override": "^3.0.0",
+    "moment": "^2.30.1",
     "multer": "^2.0.1",
     "mysql2": "^3.14.1",
     "nodemailer": "^7.0.3"

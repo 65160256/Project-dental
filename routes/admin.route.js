@@ -34,7 +34,8 @@ router.get('/dentists/:id/edit', adminController.editDentistForm);
 
 router.post('/dentists/:id/edit', upload.single('photo'), adminController.editDentist);
 
-router.post('/dentists/delete/:id', adminController.deleteDentist);
+router.get('/dentists/delete/:id', adminController.deleteDentist);
+
 router.get('/dentists/:id/schedule', adminController.dentistSchedule);
 
 router.get('/patients', adminController.getPatients); 

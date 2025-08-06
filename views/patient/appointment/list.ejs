@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Appointments - <%= viewType.toUpperCase() %> View</title>
+</head>
+<body>
+  <h2>Appointments - <%= viewType.toUpperCase() %> View</h2>
+  <p><strong>From:</strong> <%= startDate %> <strong>To:</strong> <%= endDate %></p>
+
+  <ul>
+    <% appointments.forEach(app => { %>
+      <li>
+        <%= app.time %> - <%= app.patient %> - <%= app.treatment %> (<%= app.dentist %>)
+      </li>
+    <% }) %>
+  </ul>
+</body>
+</html>

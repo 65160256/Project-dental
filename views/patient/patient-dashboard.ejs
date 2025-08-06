@@ -4,13 +4,428 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Patient Dashboard</title>
-  <link rel="stylesheet" href="/css/patient-dashboard.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      position: fixed;
+      height: 100vh;
+      padding: 0;
+      color: #fff;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar .logo img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+
+    .sidebar .logo h3 {
+      margin: 10px 0 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      margin: 2px 0;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .sidebar ul li.active a,
+    .sidebar ul li:hover a {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      margin: 0 10px;
+    }
+
+    .main {
+      margin-left: 180px;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .search-section label {
+      font-weight: 500;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .search-box {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 20px;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      width: 250px;
+    }
+
+    .search-box i {
+      color: #666;
+      margin-right: 8px;
+      font-size: 14px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .user-details strong {
+      display: block;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f8f9fa;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .welcome-section {
+      margin-bottom: 30px;
+    }
+
+    .welcome-section h1 {
+      font-size: 24px;
+      color: #333;
+      margin: 0 0 5px 0;
+      font-weight: 600;
+    }
+
+    .welcome-section p {
+      color: #666;
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .next-appointment {
+      background: #e8e8e8;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .next-appointment h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      margin: 0 0 15px 0;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .next-appointment h2 i {
+      color: #dc3545;
+    }
+
+    .appointment-details {
+      margin-bottom: 10px;
+    }
+
+    .appointment-details p {
+      margin: 5px 0;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .view-details {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #4A90E2;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .view-details:hover {
+      text-decoration: underline;
+    }
+
+    .appointments-section {
+      margin-bottom: 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: 18px;
+      margin: 0;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .filter-btn, .add-btn {
+      background: #4A90E2;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      background: #f8f9fa;
+      color: #666;
+      border: 1px solid #e1e5e9;
+    }
+
+    .filter-btn:hover {
+      background: #e9ecef;
+    }
+
+    .add-btn:hover {
+      background: #357abd;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    thead {
+      background: #f8f9fa;
+    }
+
+    th {
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+      font-size: 13px;
+      border-bottom: 1px solid #e1e5e9;
+    }
+
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #f1f3f4;
+      color: #555;
+      font-size: 13px;
+    }
+
+    tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .bottom-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .treatment-history, .dentists-today {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .treatment-history h2, .dentists-today h2 {
+      font-size: 16px;
+      margin: 0 0 15px 0;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .treatment-card {
+      background: #e8e8e8;
+      border-radius: 6px;
+      padding: 15px;
+      position: relative;
+    }
+
+    .treatment-card p {
+      margin: 5px 0;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .treatment-card .view-details {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+    }
+
+    .dentist-cards {
+      display: flex;
+      gap: 15px;
+    }
+
+    .dentist-card {
+      text-align: center;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      min-width: 100px;
+    }
+
+    .dentist-card img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 8px;
+      background: #ddd;
+    }
+
+    .dentist-card p {
+      margin: 0;
+      font-size: 12px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+      
+      .bottom-panels {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="sidebar">
     <div class="logo">
       <img src="/img/logo.png" alt="Smile Clinic" />
+      <h3>Smile Clinic</h3>
     </div>
     <ul>
       <li class="active"><a href="/patient/dashboard">Dashboard</a></li>
@@ -23,7 +438,7 @@
 
   <div class="main">
     <div class="top-bar">
-      <div class="search">
+      <div class="search-section">
         <label>Search:</label>
         <div class="search-box">
           <i class="fas fa-search"></i>
@@ -35,8 +450,8 @@
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()">
             <img src="/img/user-icon.png" class="avatar"/>
-            <div>
-              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong><br />
+            <div class="user-details">
+              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
               <small>patient</small>
             </div>
             <i class="fas fa-caret-down"></i>
@@ -50,77 +465,84 @@
       </div>
     </div>
 
-    <h1>Hello Mrs. <%= patient.lname %></h1>
-    <p><%= currentDate %></p>
+    <div class="content">
+      <div class="welcome-section">
+        <h1>Hello Mrs. <%= patient.lname %></h1>
+        <p><%= currentDate %></p>
+      </div>
 
-    <div class="next-appointment">
-      <h2><i class="fas fa-exclamation-circle"></i> Next Appointment</h2>
-      <% if (nextAppointment) { %>
-        <div class="card next-appointment-card">
-          <div class="left">
+      <div class="next-appointment">
+        <h2><i class="fas fa-exclamation-circle"></i> Next Appointment</h2>
+        <% if (nextAppointment) { %>
+          <div class="appointment-details">
             <p><strong>Date:</strong> <%= new Date(nextAppointment.time).toLocaleDateString() %>, <%= new Date(nextAppointment.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) %></p>
             <p><strong>Treatment:</strong> <%= nextAppointment.treatment %></p>
           </div>
-          <div class="right">
-            <a href="/patient/appointments/<%= nextAppointment.queue_id %>">View Details</a>
-          </div>
-        </div>
-      <% } else { %>
-        <p>No upcoming appointment</p>
-      <% } %>
-    </div>
-
-    <div class="appointments-section">
-      <h2>My appointments</h2>
-      <div class="controls">
-        <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button>
-        <a href="/patient/appointments" class="add-btn"><i class="fas fa-plus"></i> Appointment</a>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th><th>Time</th><th>Name</th><th>Treatment</th><th>Dentist</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% appointments.forEach(function(apt) { %>
-            <tr>
-              <td><%= new Date(apt.time).toLocaleDateString() %></td>
-              <td><%= new Date(apt.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></td>
-              <td><%= apt.name %></td>
-              <td><%= apt.treatment %></td>
-              <td><%= apt.dentist %></td>
-              <td><%= apt.queue_status %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="bottom-panels">
-      <div class="treatment-history">
-        <h2>Treatment History</h2>
-        <% if (treatmentHistory) { %>
-          <div class="card">
-            <p><strong>Treatment:</strong> <%= treatmentHistory.treatment %></p>
-            <p><strong>Dentist:</strong> Dr. <%= treatmentHistory.dentist %></p>
-            <p><strong>Diagnosis:</strong> <%= treatmentHistory.diagnosis %></p>
-            <a href="/patient/history">View Details</a>
-          </div>
+          <a href="/patient/appointments/<%= nextAppointment.queue_id %>" class="view-details">View Details</a>
         <% } else { %>
-          <p>No treatment history available.</p>
+          <p>No upcoming appointment</p>
         <% } %>
       </div>
 
-      <div class="dentists-today">
-        <h2>Dentists Today</h2>
-        <div class="dentist-cards">
-          <% dentists.forEach(function(dentist) { %>
-            <div class="dentist-card">
-              <img src="/uploads/<%= dentist.photo %>" alt="<%= dentist.fname %>" />
-              <p>Dr. <%= dentist.fname %> <%= dentist.lname %></p>
+      <div class="appointments-section">
+        <div class="section-header">
+          <h2>My appointments</h2>
+          <div class="controls">
+            <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button>
+            <a href="/patient/appointments" class="add-btn"><i class="fas fa-plus"></i> Appointment</a>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Name</th>
+              <th>Treatment</th>
+              <th>Dentist</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% appointments.forEach(function(apt) { %>
+              <tr>
+                <td><%= new Date(apt.time).toLocaleDateString() %></td>
+                <td><%= new Date(apt.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></td>
+                <td><%= apt.name %></td>
+                <td><%= apt.treatment %></td>
+                <td><%= apt.dentist %></td>
+                <td><%= apt.queue_status %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bottom-panels">
+        <div class="treatment-history">
+          <h2>Treatment History</h2>
+          <% if (treatmentHistory) { %>
+            <div class="treatment-card">
+              <p><strong>Treatment:</strong> <%= treatmentHistory.treatment %></p>
+              <p><strong>Dentist:</strong> Dr. <%= treatmentHistory.dentist %></p>
+              <p><strong>Diagnosis:</strong> <%= treatmentHistory.diagnosis %></p>
+              <a href="/patient/history" class="view-details">View Details</a>
             </div>
-          <% }) %>
+          <% } else { %>
+            <p>No treatment history available.</p>
+          <% } %>
+        </div>
+
+        <div class="dentists-today">
+          <h2>Dentists Today</h2>
+          <div class="dentist-cards">
+            <% dentists.forEach(function(dentist) { %>
+              <div class="dentist-card">
+                <img src="/uploads/<%= dentist.photo %>" alt="<%= dentist.fname %>" />
+                <p>Dr. <%= dentist.fname %> <%= dentist.lname %></p>
+              </div>
+            <% }) %>
+          </div>
         </div>
       </div>
     </div>
@@ -131,6 +553,11 @@
       const menu = document.getElementById('profileDropdown');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
+    
+    function toggleNotifications() {
+      console.log('Notifications clicked');
+    }
+    
     document.addEventListener('click', function (e) {
       const prof = document.querySelector('.profile-dropdown');
       if (!prof.contains(e.target)) {

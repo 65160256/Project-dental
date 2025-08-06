@@ -1,9 +1,7 @@
-
-// controllers/patient.controller.js
-
 const db = require('../models/db');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
+const moment = require('moment');
 
 // Show forgot password form
 exports.showForgotPasswordForm = (req, res) => {
@@ -16,7 +14,7 @@ exports.handleForgotPassword = async (req, res) => {
 
   try {
     const [rows] = await db.execute(
-      'SELECT * FROM user u JOIN patient p ON u.user_id = p.user_id WHERE u.email = ? AND u.role_id = 1',
+      'SELECT * FROM user u JOIN patient p ON u.user_id = p.user_id WHERE u.email = ? AND u.role_id = 3',
       [email]
     );
 
@@ -28,20 +26,19 @@ exports.handleForgotPassword = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'yourclinicemail@gmail.com',
-        pass: 'yourapppassword'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       }
     });
 
     const mailOptions = {
-      from: '"Dentistry Clinic" <yourclinicemail@gmail.com>',
+      from: '"Dentistry Clinic" <' + process.env.EMAIL_USER + '>',
       to: email,
       subject: 'Password Reset Link',
       html: `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a>`
     };
 
     await transporter.sendMail(mailOptions);
-
     res.send('Reset link has been sent to your email.');
   } catch (err) {
     console.error(err);
@@ -61,7 +58,7 @@ exports.resetPassword = async (req, res) => {
   const hashed = bcrypt.hashSync(password, 10);
 
   try {
-    await db.execute('UPDATE user SET password = ? WHERE email = ? AND role_id = 1', [hashed, email]);
+    await db.execute('UPDATE user SET password = ? WHERE email = ? AND role_id = 3', [hashed, email]);
     res.send('Password has been reset. You can now login.');
   } catch (err) {
     console.error(err);
@@ -76,6 +73,8 @@ exports.getDashboard = async (req, res) => {
 
   try {
     const [patientRows] = await db.execute('SELECT * FROM patient WHERE user_id = ?', [patientId]);
+    if (patientRows.length === 0) return res.status(404).send('Patient not found.');
+
     const patient = patientRows[0];
 
     const [nextAppointmentRows] = await db.execute(
@@ -89,9 +88,8 @@ exports.getDashboard = async (req, res) => {
     const nextAppointment = nextAppointmentRows[0];
 
     const [appointmentsRows] = await db.execute(
-      `SELECT a.time, p.fname AS name, t.treatment_name AS treatment, d.fname AS dentist, a.queue_status
+      `SELECT a.time, t.treatment_name AS treatment, d.fname AS dentist, a.queue_status
        FROM queue a
-       JOIN patient p ON a.patient_id = p.patient_id
        JOIN treatment t ON a.treatment_id = t.treatment_id
        JOIN dentist d ON a.dentist_id = d.dentist_id
        WHERE a.patient_id = ? ORDER BY a.time DESC`,
@@ -116,14 +114,13 @@ exports.getDashboard = async (req, res) => {
        JOIN queue q ON d.dentist_id = q.dentist_id
        WHERE DATE(q.time) = CURDATE()`
     );
-    const dentists = dentistsRows;
 
     res.render('patient/patient-dashboard', {
       patient,
       nextAppointment,
       appointments: appointmentsRows,
       treatmentHistory,
-      dentists,
+      dentists: dentistsRows,
       currentDate: new Date().toLocaleDateString()
     });
   } catch (err) {
@@ -132,33 +129,85 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
-exports.getAppointmentsPage = async (req, res) => {
+function getColor(treatmentName) {
+  if (treatmentName.toLowerCase().includes('fill')) return 'green';
+  return 'blue';
+}
+
+exports.renderDayView = async (req, res) => {
   try {
-    const selectedDate = req.query.date ?? new Date().toISOString().slice(0, 10);
+    const [rows] = await db.execute(
+      `SELECT q.queue_id, p.fname, p.lname, t.treatment_name, q.time
+       FROM queue q
+       JOIN patient p ON q.patient_id = p.patient_id
+       JOIN treatment t ON q.treatment_id = t.treatment_id
+       WHERE DATE(q.time) = CURDATE()
+       ORDER BY q.time`
+    );
 
-    if (!selectedDate) {
-      return res.status(400).send('Missing or invalid date');
-    }
+    const appointments = rows.map(row => ({
+      patient: row.fname + ' ' + row.lname,
+      treatment: row.treatment_name,
+      time: row.time,
+      color: getColor(row.treatment_name)
+    }));
 
-    const userId = req.session.userId;
-    const [patientRows] = await db.execute('SELECT * FROM patient WHERE user_id = ?', [userId]);
-    const patient = patientRows[0];
+    // 👇 ดึงชื่อผู้ใช้จาก session (หรือ mock สำหรับ dev)
+    const patientName = req.session?.name || 'Guest';
 
-    const [appointments] = await db.execute(`
-      SELECT q.time, p.fname AS patient_fname, p.lname AS patient_lname, t.treatment_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE DATE(q.time) = ?
-    `, [selectedDate]);
-
-    res.render('patient/appointments', {
-      date: selectedDate,
+    res.render('patient/appointment/day', {
+      displayDate: new Date().toLocaleDateString(),
       appointments,
-      patient
+      patientName // ✅ ส่งตัวแปรนี้เข้า view
     });
-  } catch (error) {
-    console.error('Error loading appointments:', error);
-    res.status(500).send('Internal Server Error');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching day appointments');
   }
 };
+
+
+exports.renderForm = async (req, res) => {
+  try {
+    const [treatments] = await db.execute('SELECT * FROM treatment');
+    const [dentists] = await db.execute('SELECT * FROM dentist');
+
+    const patient = {
+      name: 'Mock Patient',
+      phone: '0123456789'
+    };
+
+    res.render('patient/appointment/form', {
+      treatments: treatments.map(t => ({ id: t.treatment_id, name: t.treatment_name })),
+      dentists: dentists.map(d => ({ id: d.dentist_id, name: d.fname + ' ' + d.lname })),
+      patient
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error loading form');
+  }
+};
+
+exports.renderConfirm = async (req, res) => {
+  const { name, phone, date, start_time, end_time, dentist_id, symptom, treatment_id } = req.body;
+
+  try {
+    const [[treatment]] = await db.execute('SELECT treatment_name FROM treatment WHERE treatment_id = ?', [treatment_id]);
+    const [[dentist]] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentist_id]);
+
+    res.render('patient/appointment/confirm', {
+      queueId: 'Y-106666',
+      name,
+      phone,
+      date,
+      time: start_time + ' - ' + end_time,
+      dentist: dentist ? dentist.fname + ' ' + dentist.lname : 'Any',
+      symptom,
+      treatment: treatment ? treatment.treatment_name : 'Unknown'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error confirming appointment');
+  }
+};
+

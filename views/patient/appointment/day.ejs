@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Book an Appointment</title>
+  <link rel="stylesheet" href="/css/appointment/day.css" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo"><img src="/img/logo.png" /></div>
+    <ul>
+      <li><a href="/patient/dashboard">Dashboard</a></li>
+      <li class="active"><a href="/patient/appointment/day">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h2>Book an appointment</h2>
+      <div class="top-right">
+        <img src="/img/notification-bell.png" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar" />
+            <div>
+              <strong>Hello <%= patientName %></strong><br />
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="date-header">
+      <button class="nav-btn">&lt;</button>
+      <h3><%= displayDate %></h3>
+      <button class="nav-btn">&gt;</button>
+      <div class="view-toggle">
+        <a href="/patient/appointment/day" class="view-btn active">day</a>
+        <a href="/patient/appointment/week" class="view-btn">week</a>
+        <a href="/patient/appointment/month" class="view-btn">month</a>
+      </div>
+    </div>
+
+    <div class="calendar-container">
+      <div class="calendar-grid">
+        <% for (let hour = 10; hour <= 20; hour++) { %>
+          <div class="time-label"><%= hour %>am</div>
+          <div class="time-slot">
+            <% appointments.filter(a => new Date(a.time).getHours() === hour).forEach(a => { %>
+              <a href="/patient/appointment/form" class="appointment-block" style="background-color: <%= a.color %>;">
+                <strong><%= a.patient %></strong><br />
+                <small>&bull; <%= a.treatment %></small>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

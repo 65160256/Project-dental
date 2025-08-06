@@ -169,7 +169,7 @@ exports.addDentist = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const [userResult] = await db.execute(
-    `INSERT INTO user (email, password, role_id) VALUES (?, ?, 3)`,
+    `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
     [email, hashedPassword]
   );
   const userId = userResult.insertId;
@@ -413,9 +413,15 @@ exports.viewPatient = async (req, res) => {
 // ลบ patient
 exports.deletePatient = async (req, res) => {
   const id = req.params.id;
-  console.log('🧨 DELETE PATIENT ID:', id); // ✅ เพิ่มไว้
+  console.log('🧨 DELETE PATIENT ID:', id); // สำหรับ debug
+
   try {
+    // ลบข้อมูลใน queue ที่อ้างอิงถึง patient นี้
+    await db.execute('DELETE FROM queue WHERE patient_id = ?', [id]);
+
+    // จากนั้นลบ patient
     await db.execute('DELETE FROM patient WHERE patient_id = ?', [id]);
+
     req.flash('success', 'Patient deleted successfully.');
     res.redirect('/admin/patients');
   } catch (err) {

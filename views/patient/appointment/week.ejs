@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>Appointment - Week View</title>
+    <link rel="stylesheet" href="/css/appointment.css">
+  </head>
+  <body>
+    <h1>This Week's Appointments</h1>
+    <% if (appointments.length === 0) { %>
+      <p>No appointments this week.</p>
+    <% } else { %>
+      <ul>
+        <% appointments.forEach(app => { %>
+          <li>
+            <strong><%= app.date %></strong> - <%= app.time %> -
+            <%= app.patient %> -
+            <%= app.treatment %>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </body>
+</html>

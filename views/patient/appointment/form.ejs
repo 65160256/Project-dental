@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>Book Appointment</title>
+    <link rel="stylesheet" href="/css/appointment.css">
+  </head>
+  <body>
+    <h1>Book Appointment</h1>
+    <form method="POST" action="/patient/appointment/confirm">
+      <label>Name:</label>
+      <input name="name" value="<%= patient.name %>" readonly><br>
+      <label>Phone:</label>
+      <input name="phone" value="<%= patient.phone %>" readonly><br>
+      <label>Treatment:</label>
+      <select name="treatment_id">
+        <% treatments.forEach(t => { %>
+          <option value="<%= t.id %>"><%= t.name %></option>
+        <% }) %>
+      </select><br>
+      <label>Dentist:</label>
+      <select name="dentist_id">
+        <% dentists.forEach(d => { %>
+          <option value="<%= d.id %>"><%= d.name %></option>
+        <% }) %>
+      </select><br>
+      <label>Date:</label>
+      <input type="date" name="date"><br>
+      <label>Start Time:</label>
+      <input type="time" name="start_time"><br>
+      <label>End Time:</label>
+      <input type="time" name="end_time"><br>
+      <label>Symptom:</label>
+      <textarea name="symptom"></textarea><br>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

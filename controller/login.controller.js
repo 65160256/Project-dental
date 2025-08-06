@@ -31,7 +31,7 @@ exports.login = async (req, res) => {
     // ✅ redirect ตาม role
     if (user.role_id == 1) return res.redirect('/admin/dashboard');
     if (user.role_id == 2) return res.redirect('/dentist/schedule');
-    if (user.role_id == 3) return res.redirect('/patient/home');
+    if (user.role_id == 3) return res.redirect('/patient/dashboard');
 
     // ถ้าไม่มี role ที่ตรง ให้ redirect กลับไป login
     return res.redirect('/login');

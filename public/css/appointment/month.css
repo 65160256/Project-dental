@@ -1,0 +1,32 @@
+
+body {
+  background-color: #e8f7ff;
+  font-family: sans-serif;
+}
+.main-container {
+  padding: 2rem;
+}
+h1 {
+  margin-bottom: 1rem;
+}
+.calendar-day table, .calendar-week table, .calendar-month table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.time-label {
+  width: 80px;
+  font-weight: bold;
+}
+.appointment-block {
+  margin: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.9rem;
+}
+.appointment-block.green {
+  background-color: #12866f;
+}
+.appointment-block.blue {
+  background-color: #0033cc;
+}
