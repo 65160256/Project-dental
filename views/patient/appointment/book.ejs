@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book an appointment</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      position: fixed;
+      height: 100vh;
+      padding: 0;
+      color: #fff;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar .logo img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+
+    .sidebar .logo h3 {
+      margin: 10px 0 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      margin: 2px 0;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .sidebar ul li.active a,
+    .sidebar ul li:hover a {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      margin: 0 10px;
+    }
+
+    .main {
+      margin-left: 180px;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .search-section label {
+      font-weight: 500;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .search-box {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 20px;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      width: 250px;
+    }
+
+    .search-box i {
+      color: #666;
+      margin-right: 8px;
+      font-size: 14px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .user-details strong {
+      display: block;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f8f9fa;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      color: #333;
+      margin: 0 0 5px 0;
+      font-weight: 600;
+    }
+
+    .booking-form {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .optional {
+      color: #e74c3c;
+      font-weight: normal;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+      background: #fff;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4A90E2;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-actions {
+      margin-top: 40px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .btn-primary {
+      background: #28a745;
+      color: white;
+      box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #218838;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-secondary {
+      background: #dc3545;
+      color: white;
+      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+
+    .time-display {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      padding: 12px 15px;
+      font-size: 14px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .booking-form {
+        padding: 20px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+
+      .form-actions {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/patient/dashboard">Dashboard</a></li>
+      <li class="active"><a href="/patient/appointments">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/my-treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <div class="search-section">
+        <label>Search:</label>
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Firstname or Lastname..." />
+        </div>
+      </div>
+      <div class="user-section">
+        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="user-details">
+              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <h1>Book an appointment</h1>
+      </div>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> Appointment booked successfully! We will confirm your appointment soon.
+      </div>
+      <% } %>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i> There was an error booking your appointment. Please try again.
+      </div>
+      <% } %>
+
+      <form class="booking-form" method="POST" action="/patient/appointment/book">
+        <div class="form-group">
+          <label class="form-label" for="name">Name:</label>
+          <input type="text" id="name" name="name" class="form-control" 
+                 value="<%= patient.fname %> <%= patient.lname %>" readonly style="background-color: #f8f9fa;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="treatment_id">Treatment needed:</label>
+          <select id="treatment_id" name="treatment_id" class="form-control" required>
+            <option value="">Select Treatment</option>
+            <% treatments.forEach(function(treatment) { %>
+            <option value="<%= treatment.treatment_id %>" 
+                    <%= selectedTreatment == treatment.treatment_id ? 'selected' : '' %>>
+              <%= treatment.treatment_name %> (<%= treatment.duration %> min)
+            </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="symptom_details">Symptom Details:</label>
+          <textarea id="symptom_details" name="symptom_details" class="form-control" 
+                    placeholder="Please describe your symptoms or concerns..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="dentist_id">Select preferred dentist: <span class="optional">(optional)</span></label>
+          <select id="dentist_id" name="dentist_id" class="form-control">
+            <option value="">Any Available Dentist</option>
+            <% dentists.forEach(function(dentist) { %>
+            <option value="<%= dentist.dentist_id %>" 
+                    <%= selectedDentist == dentist.dentist_id ? 'selected' : '' %>>
+              Dr. <%= dentist.full_name %> - <%= dentist.specialty %>
+            </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone:</label>
+          <input type="tel" id="phone" name="phone" class="form-control" 
+                 placeholder="Enter your phone number" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="date">Booking Date:</label>
+            <input type="date" id="date" name="date" class="form-control" 
+                   value="<%= selectedDate %>" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="time">Selected time:</label>
+            <select id="time" name="time" class="form-control" required>
+              <option value="">Select Time</option>
+              <% 
+              const timeSlots = [];
+              for (let hour = 10; hour <= 20; hour++) {
+                for (let min of ['00', '30']) {
+                  const time24 = `${hour.toString().padStart(2, '0')}:${min}`;
+                  const hour12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                  const ampm = hour >= 12 ? 'PM' : 'AM';
+                  const time12 = `${hour12}:${min} ${ampm}`;
+                  timeSlots.push({time24, time12});
+                }
+              }
+              %>
+              <% timeSlots.forEach(function(slot) { %>
+              <option value="<%= slot.time24 %>" 
+                      <%= selectedTime == slot.time24 ? 'selected' : '' %>>
+                <%= slot.time12 %>
+              </option>
+              <% }); %>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">End time:</label>
+          <div class="time-display" id="endTime">11:00 AM</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check"></i> Confirm
+          </button>
+          <a href="/patient/appointments" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    function toggleNotifications() {
+      console.log('Notifications clicked');
+    }
+    
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+
+    // Calculate end time based on treatment duration and selected time
+    function updateEndTime() {
+      const treatmentSelect = document.getElementById('treatment_id');
+      const timeSelect = document.getElementById('time');
+      const endTimeDisplay = document.getElementById('endTime');
+
+      const selectedTreatment = treatmentSelect.value;
+      const selectedTime = timeSelect.value;
+
+      if (selectedTreatment && selectedTime) {
+        // Find treatment duration
+        const treatmentOption = treatmentSelect.options[treatmentSelect.selectedIndex];
+        const durationMatch = treatmentOption.text.match(/\((\d+) min\)/);
+        const duration = durationMatch ? parseInt(durationMatch[1]) : 30;
+
+        // Calculate end time
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        const startTime = new Date();
+        startTime.setHours(hours, minutes, 0, 0);
+        
+        const endTime = new Date(startTime.getTime() + duration * 60000);
+        const endHours = endTime.getHours();
+        const endMinutes = endTime.getMinutes();
+        
+        const endHour12 = endHours > 12 ? endHours - 12 : (endHours === 0 ? 12 : endHours);
+        const endAmPm = endHours >= 12 ? 'PM' : 'AM';
+        
+        endTimeDisplay.textContent = `${endHour12}:${endMinutes.toString().padStart(2, '0')} ${endAmPm}`;
+      } else {
+        endTimeDisplay.textContent = '11:00 AM';
+      }
+    }
+
+    // Add event listeners
+    document.getElementById('treatment_id').addEventListener('change', updateEndTime);
+    document.getElementById('time').addEventListener('change', updateEndTime);
+
+    // Initialize end time on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      updateEndTime();
+    });
+
+    // Form validation
+    document.querySelector('.booking-form').addEventListener('submit', function(e) {
+      const requiredFields = ['treatment_id', 'date', 'time', 'phone'];
+      let isValid = true;
+
+      requiredFields.forEach(function(fieldName) {
+        const field = document.getElementById(fieldName);
+        if (!field.value.trim()) {
+          field.style.borderColor = '#dc3545';
+          isValid = false;
+        } else {
+          field.style.borderColor = '#e1e5e9';
+        }
+      });
+
+      if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+      }
+    });
+  </script>
+</body>
+</html>

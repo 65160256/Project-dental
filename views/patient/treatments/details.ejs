@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Treatment History Details</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      position: fixed;
+      height: 100vh;
+      padding: 0;
+      color: #fff;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar .logo img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+
+    .sidebar .logo h3 {
+      margin: 10px 0 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      margin: 2px 0;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .sidebar ul li.active a,
+    .sidebar ul li:hover a {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      margin: 0 10px;
+    }
+
+    .main {
+      margin-left: 180px;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .search-section label {
+      font-weight: 500;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .search-box {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 20px;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      width: 250px;
+    }
+
+    .search-box i {
+      color: #666;
+      margin-right: 8px;
+      font-size: 14px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .user-details strong {
+      display: block;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f8f9fa;
+    }
+
+    .content {
+      padding: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .back-btn {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #666;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      transition: background 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #e9ecef;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      color: #333;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .date-header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-bottom: 1px solid #e1e5e9;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .date-info {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .details-card {
+      background: #e8e8e8;
+      border-radius: 0 0 8px 8px;
+      padding: 30px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .booking-id {
+      background: #333;
+      color: white;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 25px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+
+    .detail-group {
+      margin-bottom: 20px;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .detail-value {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+      background: white;
+      padding: 10px 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .diagnosis-section {
+      grid-column: 1 / -1;
+      margin-top: 20px;
+    }
+
+    .diagnosis-content {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      color: #666;
+      line-height: 1.6;
+      font-size: 14px;
+      min-height: 80px;
+    }
+
+    .next-appointment-section {
+      grid-column: 1 / -1;
+      margin-top: 20px;
+    }
+
+    .next-appointment-content {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .date-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/patient/dashboard">Dashboard</a></li>
+      <li><a href="/patient/appointments">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li class="active"><a href="/patient/my-treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <div class="search-section">
+        <label>Search:</label>
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Firstname or Lastname..." />
+        </div>
+      </div>
+      <div class="user-section">
+        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="user-details">
+              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <a href="/patient/my-treatments" class="back-btn">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+        <h1>Treatment History</h1>
+      </div>
+
+      <div class="date-header">
+        <div class="date-info">
+          Date of Treatment: <%= new Date(treatment.date).toLocaleDateString('en-GB') %>
+        </div>
+      </div>
+
+      <div class="details-card">
+        <div class="booking-id">
+          Booking Request ID: #Y-<%= treatment.queue_id.toString().padStart(6, '0') %>
+        </div>
+
+        <div class="details-grid">
+          <div class="detail-group">
+            <label class="detail-label">Date:</label>
+            <div class="detail-value">
+              <%= new Date(treatment.time).toLocaleDateString('en-GB') %>, 
+              <%= new Date(treatment.time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true}) %>
+            </div>
+          </div>
+
+          <div class="detail-group">
+            <label class="detail-label">Treatment:</label>
+            <div class="detail-value"><%= treatment.treatment_name %></div>
+          </div>
+
+          <div class="detail-group">
+            <label class="detail-label">Dentist:</label>
+            <div class="detail-value">Dr. <%= treatment.dentist_name %></div>
+          </div>
+
+          <div class="detail-group">
+            <label class="detail-label">Duration:</label>
+            <div class="detail-value"><%= treatment.duration %> minutes</div>
+          </div>
+
+          <div class="diagnosis-section">
+            <label class="section-title">Diagnosis:</label>
+            <div class="diagnosis-content">
+              <% if (treatment.treatment_diagnosis) { %>
+                Tooth #39 - <%= treatment.treatment_diagnosis %>
+              <% } else { %>
+                Tooth #39 - Impacted wisdom tooth with recurrent pericoronitis.
+              <% } %>
+            </div>
+          </div>
+
+          <div class="next-appointment-section">
+            <label class="section-title">Next appointment:</label>
+            <div class="next-appointment-content">
+              <% if (treatment.next_appointment) { %>
+                <%= new Date(treatment.next_appointment).toLocaleDateString('en-GB') %>
+              <% } else { %>
+                -
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    function toggleNotifications() {
+      console.log('Notifications clicked');
+    }
+    
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

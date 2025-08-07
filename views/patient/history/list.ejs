@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Book an appointment - Day View</title>
+  <title>Appointment History</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     body {
@@ -201,164 +201,147 @@
       font-weight: 600;
     }
 
-    .calendar-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
+    .filter-section {
       background: white;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .date-navigation {
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 15px;
     }
 
-    .nav-btn {
-      background: #4A90E2;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-    }
-
-    .nav-btn:hover {
-      background: #357abd;
-    }
-
-    .current-date {
-      font-size: 18px;
+    .filter-section label {
       font-weight: 600;
       color: #333;
-      min-width: 200px;
-      text-align: center;
+      font-size: 14px;
     }
 
-    .view-controls {
-      display: flex;
-      background: #4A90E2;
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #e1e5e9;
       border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .view-btn {
-      background: none;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
       font-size: 13px;
-      font-weight: 500;
+      background: white;
+      cursor: pointer;
     }
 
-    .view-btn:hover, .view-btn.active {
-      background: rgba(255,255,255,0.2);
-    }
-
-    .schedule-container {
+    .appointment-list {
       background: white;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
-    .time-slot {
-      display: flex;
+    .appointment-item {
+      padding: 20px;
       border-bottom: 1px solid #e1e5e9;
-      min-height: 60px;
-      align-items: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
     }
 
-    .time-slot:last-child {
+    .appointment-item:hover {
+      background: #f8f9fa;
+    }
+
+    .appointment-item:last-child {
       border-bottom: none;
     }
 
-    .time-label {
-      width: 100px;
-      padding: 15px 20px;
-      background: #f8f9fa;
-      border-right: 1px solid #e1e5e9;
+    .appointment-header {
+      display: flex;
+      justify-content: between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .appointment-id {
       font-weight: 600;
-      color: #555;
-      text-align: center;
+      color: #333;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .appointment-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .detail-item {
+      display: flex;
+      gap: 8px;
+    }
+
+    .detail-label {
+      font-weight: 500;
+      min-width: 120px;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-confirm {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-cancel {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #1565c0;
+    }
+
+    .info-box h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .info-box ul {
+      margin: 10px 0 0 20px;
+      padding: 0;
+    }
+
+    .info-box li {
+      margin: 5px 0;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-weight: 500;
       font-size: 14px;
     }
 
-    .appointment-area {
-      flex: 1;
-      padding: 10px 20px;
-      position: relative;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-    }
-
-    .appointment-card {
-      background: linear-gradient(135deg, #4A90E2 0%, #2DA8FF 100%);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
-      cursor: pointer;
-      transition: transform 0.2s ease;
-      width: 200px;
-    }
-
-    .appointment-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
-    }
-
-    .appointment-card.treatment-2 {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-    }
-
-    .appointment-card.treatment-2:hover {
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-    }
-
-    .appointment-card.treatment-3 {
-      background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-      box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
-    }
-
-    .appointment-card.treatment-3:hover {
-      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
-    }
-
-    .dentist-name {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .treatment-name {
-      font-size: 11px;
-      opacity: 0.9;
-    }
-
-    .empty-slot {
-      color: #b2bec3;
-      font-style: italic;
-      opacity: 0.7;
+    .alert-success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
     }
 
     @media (max-width: 768px) {
@@ -376,19 +359,13 @@
         padding: 20px;
       }
 
-      .calendar-controls {
+      .appointment-details {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-section {
         flex-direction: column;
-        gap: 20px;
         align-items: stretch;
-      }
-
-      .view-controls {
-        align-self: center;
-      }
-
-      .current-date {
-        font-size: 16px;
-        min-width: auto;
       }
     }
   </style>
@@ -401,8 +378,8 @@
     </div>
     <ul>
       <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li class="active"><a href="/patient/appointments">Appointment</a></li>
-      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/appointments">Appointment</a></li>
+      <li class="active"><a href="/patient/history">History</a></li>
       <li><a href="/patient/my-treatments">My Treatments</a></li>
       <li><a href="/patient/dentists">Dentists</a></li>
     </ul>
@@ -439,61 +416,75 @@
 
     <div class="content">
       <div class="page-header">
-        <h1>Book an appointment</h1>
+        <h1>Appointment History</h1>
       </div>
 
-      <div class="calendar-controls">
-        <div class="date-navigation">
-          <button class="nav-btn" onclick="navigateDate(-1)">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="nav-btn" onclick="navigateDate(1)">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-          <div class="current-date" id="currentDate">
-            <%= selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
-          </div>
-        </div>
-        
-        <div class="view-controls">
-          <a href="/patient/appointment/day?date=<%= selectedDate.toISOString().split('T')[0] %>" class="view-btn active">day</a>
-          <a href="/patient/appointment/week?date=<%= selectedDate.toISOString().split('T')[0] %>" class="view-btn">week</a>
-          <a href="/patient/appointment/month" class="view-btn">month</a>
-        </div>
+      <div class="info-box">
+        <h4>ข้อความโปรดทราบ</h4>
+        <ul>
+          <li><strong>pending</strong> = รอยืนยันจากคลินิก</li>
+          <li><strong>confirm cancel</strong> = สามารถแก้ไขเฉพาะการจองที่ยังไม่ถึงกำหนด</li>
+          <li><strong>Completed</strong> = รักษาเรียบร้อย</li>
+        </ul>
+        <p style="margin-top: 10px; color: #d32f2f; font-weight: 600;">
+          Caution: Appointment changes must be made within 24 hours of your appointment time.
+        </p>
+        <p style="margin: 5px 0 0 0;">
+          After that, please contact the clinic directly for assistance.
+        </p>
       </div>
 
-      <div class="schedule-container">
-        <% 
-        const timeSlots = [];
-        for (let hour = 10; hour <= 20; hour++) {
-          timeSlots.push(`${hour}:00`);
-        }
-        %>
+      <% if (typeof success !== 'undefined' && success === 'cancelled') { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> Appointment cancelled successfully.
+      </div>
+      <% } %>
 
-        <% timeSlots.forEach(function(timeSlot) { %>
-        <div class="time-slot">
-          <div class="time-label">
-            <%= timeSlot.replace(':00', '') + (parseInt(timeSlot.split(':')[0]) < 12 ? 'am' : (parseInt(timeSlot.split(':')[0]) === 12 ? 'pm' : 'pm')) %>
-          </div>
-          <div class="appointment-area">
-            <% 
-            const appointment = appointments.find(app => {
-              const appTime = new Date(app.time);
-              const slotHour = parseInt(timeSlot.split(':')[0]);
-              return appTime.getHours() === slotHour;
-            });
-            %>
-            
-            <% if (appointment) { %>
-            <div class="appointment-card treatment-<%= appointment.treatment_id %>" 
-                 onclick="bookAppointment('<%= selectedDate.toISOString().split('T')[0] %>', '<%= timeSlot %>', '<%= appointment.dentist_id %>', '<%= appointment.treatment_id %>')">
-              <div class="dentist-name">Dr. <%= appointment.dentist_name %></div>
-              <div class="treatment-name"><%= appointment.treatment_name %></div>
+      <div class="filter-section">
+        <label>Status:</label>
+        <select class="filter-select" id="statusFilter">
+          <option value="">All</option>
+          <option value="pending">Pending</option>
+          <option value="confirm">Confirmed</option>
+          <option value="cancel">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="appointment-list">
+        <% if (appointments && appointments.length > 0) { %>
+          <% appointments.forEach(function(appointment) { %>
+          <div class="appointment-item" onclick="viewDetails('<%= appointment.queue_id %>')">
+            <div class="appointment-header">
+              <div>
+                <div class="appointment-id">Appointment ID: #Y-<%= appointment.queue_id.toString().padStart(6, '0') %></div>
+                <span class="status-badge status-<%= appointment.queue_status %>"><%= appointment.queue_status %></span>
+              </div>
             </div>
-            <% } %>
+            <div class="appointment-details">
+              <div class="detail-item">
+                <span class="detail-label">Treatment needed:</span>
+                <span><%= appointment.treatment_name %></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Requested Time:</span>
+                <span><%= new Date(appointment.time).toLocaleDateString('en-GB') %>, <%= new Date(appointment.time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true}) %></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Preferred Doctor:</span>
+                <span>Dr. <%= appointment.dentist_name %></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Current Status:</span>
+                <span style="text-transform: capitalize;"><%= appointment.queue_status %></span>
+              </div>
+            </div>
           </div>
-        </div>
-        <% }); %>
+          <% }); %>
+        <% } else { %>
+          <div class="appointment-item" style="text-align: center; color: #666;">
+            <p>No appointment history found.</p>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
@@ -515,34 +506,25 @@
       }
     });
 
-    function navigateDate(direction) {
-      const currentDate = new Date('<%= selectedDate.toISOString() %>');
-      currentDate.setDate(currentDate.getDate() + direction);
-      const newDate = currentDate.toISOString().split('T')[0];
-      window.location.href = `/patient/appointment/day?date=${newDate}`;
+    function viewDetails(appointmentId) {
+      window.location.href = `/patient/history/details/${appointmentId}`;
     }
 
-    function bookAppointment(date, time, dentistId, treatmentId) {
-      const params = new URLSearchParams({
-        date: date,
-        time: time,
-        dentist_id: dentistId,
-        treatment_id: treatmentId
-      });
-      window.location.href = `/patient/appointment/book?${params.toString()}`;
-    }
-
-    // Update time display to show AM/PM correctly
-    document.addEventListener('DOMContentLoaded', function() {
-      const timeLabels = document.querySelectorAll('.time-label');
-      timeLabels.forEach(function(label) {
-        const hour = parseInt(label.textContent);
-        if (hour < 12) {
-          label.textContent = hour + 'am';
-        } else if (hour === 12) {
-          label.textContent = '12pm';
+    // Filter functionality
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      const selectedStatus = this.value.toLowerCase();
+      const appointmentItems = document.querySelectorAll('.appointment-item');
+      
+      appointmentItems.forEach(function(item) {
+        if (selectedStatus === '') {
+          item.style.display = 'block';
         } else {
-          label.textContent = (hour - 12) + 'pm';
+          const statusBadge = item.querySelector('.status-badge');
+          if (statusBadge && statusBadge.classList.contains('status-' + selectedStatus)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
         }
       });
     });
