@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        /* Patients Section */
+        .patients-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .patient-count-badge {
+            background-color: #4A90E2;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .filters-btn {
+            background-color: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filters-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Patients Table */
+        .patients-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .patients-table thead {
+            background-color: #f8f9fa;
+        }
+
+        .patients-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .patients-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .patients-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .patient-id {
+            font-family: monospace;
+            color: #666;
+        }
+
+        .patient-name {
+            color: #4A90E2;
+            font-weight: 500;
+        }
+
+        .patient-phone {
+            color: #666;
+        }
+
+        .last-visit {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .visit-count {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+            margin-right: 5px;
+        }
+
+        .action-btn:hover {
+            background: #357abd;
+        }
+
+        .action-btn.view {
+            background: #6c757d;
+        }
+
+        .action-btn.view:hover {
+            background: #5a6268;
+        }
+
+        .action-btn.history {
+            background: #28a745;
+        }
+
+        .action-btn.history:hover {
+            background: #218838;
+        }
+
+        .no-patients {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .no-patients i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .patients-table {
+                font-size: 12px;
+            }
+            
+            .patients-table th,
+            .patients-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li class="active"><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Name or Patient ID..." id="searchInput" />
+                </div>
+            </div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar">👨‍⚕️</div>
+                        <div class="user-details">
+                            <strong>Hello Dr. Somsri</strong>
+                            <small>dentist</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dentist/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Patients</h1>
+            </div>
+
+            <!-- Patients Section -->
+            <div class="patients-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i>
+                        <span>My Patients</span>
+                        <span class="patient-count-badge" id="patientCount"><%= patients ? patients.length : 0 %></span>
+                        <small style="margin-left: 10px; color: #666;">total patients</small>
+                    </div>
+                    <button class="filters-btn">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                </div>
+
+                <% if (patients && patients.length > 0) { %>
+                <table class="patients-table" id="patientsTable">
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Last Visit</th>
+                            <th>Total Visits</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsBody">
+                        <% patients.forEach(function(patient) { %>
+                        <tr>
+                            <td class="patient-id">****</td>
+                            <td class="patient-name">Mr. <%= patient.fname %> <%= patient.lname %></td>
+                            <td class="patient-phone"><%= patient.phone || 'N/A' %></td>
+                            <td class="last-visit">
+                                <%= patient.last_visit ? new Date(patient.last_visit).toLocaleDateString('th-TH') : 'Never' %>
+                            </td>
+                            <td>
+                                <span class="visit-count"><%= patient.total_visits || 0 %></span>
+                            </td>
+                            <td>
+                                <button onclick="viewPatient(<%= patient.patient_id %>)" class="action-btn view">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button onclick="addTreatmentHistory(<%= patient.patient_id %>)" class="action-btn history">
+                                    <i class="fas fa-plus"></i> History
+                                </button>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+                <% } else { %>
+                <div class="no-patients" id="noPatients">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>No patients found</h3>
+                    <p>No patients have appointments with you yet.</p>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Treatment History Modal -->
+    <div id="treatmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Treatment History</h2>
+                <span class="close">&times;</span>
+            </div>
+            
+            <form id="treatmentForm">
+                <div class="form-group">
+                    <label>Patient:</label>
+                    <input type="text" id="patientNameDisplay" readonly>
+                    <input type="hidden" id="selectedPatientId">
+                </div>
+                
+                <div class="form-group">
+                    <label>Latest Appointment:</label>
+                    <select id="latestAppointment">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Treatment:</label>
+                    <input type="text" id="treatmentName" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>Appointment Date & Time:</label>
+                    <input type="text" id="appointmentDateTime" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>Diagnosis:</label>
+                    <textarea id="diagnosis" placeholder="Enter diagnosis and treatment details..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Follow-up Notes:</label>
+                    <textarea id="followUpdate" placeholder="Enter follow-up instructions or notes..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Next Appointment (Optional):</label>
+                    <input type="date" id="nextAppointment">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTreatmentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Treatment History</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#patientsBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('patientCount').textContent = visibleCount;
+        });
+
+        function viewPatient(patientId) {
+            window.location.href = `/dentist/patients/${patientId}`;
+        }
+
+        function addTreatmentHistory(patientId) {
+            document.getElementById('selectedPatientId').value = patientId;
+            
+            // Get patient name from table
+            const row = event.target.closest('tr');
+            const patientName = row.querySelector('.patient-name').textContent;
+            document.getElementById('patientNameDisplay').value = patientName;
+            
+            // Load latest appointments for this patient
+            loadLatestAppointments(patientId);
+            
+            // Show modal
+            document.getElementById('treatmentModal').style.display = 'block';
+        }
+
+        function loadLatestAppointments(patientId) {
+            const select = document.getElementById('latestAppointment');
+            select.innerHTML = '<option value="">Loading...</option>';
+            
+            fetch(`/dentist/api/patients/${patientId}/latest-appointments`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.appointments.length > 0) {
+                        select.innerHTML = '';
+                        data.appointments.forEach(apt => {
+                            const option = document.createElement('option');
+                            option.value = apt.queue_id;
+                            option.textContent = `${new Date(apt.time).toLocaleDateString('th-TH')} ${new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} - ${apt.treatment_name} (${apt.queue_status})`;
+                            option.dataset.treatment = apt.treatment_name;
+                            option.dataset.datetime = new Date(apt.time).toLocaleString('th-TH');
+                            option.dataset.diagnosis = apt.diagnosis || '';
+                            select.appendChild(option);
+                        });
+                        
+                        // Auto-select first appointment and load details
+                        if (data.appointments.length > 0) {
+                            select.selectedIndex = 0;
+                            updateAppointmentDetails();
+                        }
+                    } else {
+                        select.innerHTML = '<option value="">No recent appointments found</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading appointments:', error);
+                    select.innerHTML = '<option value="">Error loading appointments</option>';
+                });
+        }
+
+        function updateAppointmentDetails() {
+            const select = document.getElementById('latestAppointment');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                document.getElementById('treatmentName').value = selectedOption.dataset.treatment || '';
+                document.getElementById('appointmentDateTime').value = selectedOption.dataset.datetime || '';
+                document.getElementById('diagnosis').value = selectedOption.dataset.diagnosis || '';
+            }
+        }
+
+        function closeTreatmentModal() {
+            document.getElementById('treatmentModal').style.display = 'none';
+            document.getElementById('treatmentForm').reset();
+        }
+
+        // Form submission
+        document.getElementById('treatmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                patientId: document.getElementById('selectedPatientId').value,
+                queueId: document.getElementById('latestAppointment').value,
+                diagnosis: document.getElementById('diagnosis').value,
+                followUpdate: document.getElementById('followUpdate').value,
+                nextAppointment: document.getElementById('nextAppointment').value
+            };
+            
+            if (!formData.queueId) {
+                showNotification('Please select an appointment', 'error');
+                return;
+            }
+            
+            if (!formData.diagnosis.trim()) {
+                showNotification('Please enter diagnosis', 'error');
+                return;
+            }
+            
+            // Save treatment history
+            fetch('/dentist/api/treatment-history/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Treatment history added successfully', 'success');
+                    closeTreatmentModal();
+                    // Optionally reload the page or update the table
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Connection error', 'error');
+            });
+        });
+
+        // Event listeners
+        document.getElementById('latestAppointment').addEventListener('change', updateAppointmentDetails);
+
+        // Modal close events
+        document.querySelector('.close').addEventListener('click', closeTreatmentModal);
+        
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('treatmentModal');
+            if (event.target === modal) {
+                closeTreatmentModal();
+            }
+        });
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fecaca' : '#f3f4f6'};
+                color: ${type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#374151'};
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 1001;
+                border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#6b7280'};
+                max-width: 400px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            showNotification('Notifications feature coming soon!');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

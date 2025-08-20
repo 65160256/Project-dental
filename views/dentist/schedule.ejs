@@ -1,38 +1,1323 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule</title>
-  <link rel="stylesheet" href="/css/dentist-dashboard.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Schedule - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .calendar-nav:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            border: 1px solid #e1e5e9;
+            background: white;
+            color: #666;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .view-btn.active {
+            background: #4A90E2;
+            color: white;
+            border-color: #4A90E2;
+        }
+
+        /* Schedule Table */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .schedule-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .schedule-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f1f3f4;
+            border-right: 1px solid #f1f3f4;
+            text-align: center;
+            font-size: 12px;
+            height: 40px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #555;
+        }
+
+        .schedule-table td:hover {
+            background: #f8f9fa;
+        }
+
+        .schedule-table .time-column {
+            background: #f8f9fa;
+            font-weight: 500;
+            color: #666;
+            cursor: default;
+        }
+
+        .schedule-table .time-column:hover {
+            background: #f8f9fa;
+        }
+
+        /* Disabled cells for Sunday and out of working hours */
+        .schedule-table td.disabled {
+            background: #f5f5f5 !important;
+            color: #ccc !important;
+            cursor: not-allowed !important;
+            position: relative;
+        }
+
+        .schedule-table td.disabled:hover {
+            background: #f5f5f5 !important;
+        }
+
+        .schedule-table td.disabled::after {
+            content: "✕";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ccc;
+            font-size: 16px;
+        }
+
+        .working-slot {
+            background: #e8f5e8 !important;
+            color: #2e7d32;
+        }
+
+        .working-slot:hover {
+            background: #d4edda !important;
+        }
+
+        .appointment-slot {
+            background: #fce4ec !important;
+            color: #c2185b;
+        }
+
+        .appointment-slot:hover {
+            background: #f8bbd9 !important;
+        }
+
+        /* Schedule Block Overlay */
+        .schedule-block {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background: #e8f5e8;
+            border: 2px solid #2e7d32;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2e7d32;
+            font-weight: 500;
+            font-size: 11px;
+            z-index: 10;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .schedule-block.appointment {
+            background: #fce4ec;
+            border-color: #c2185b;
+            color: #c2185b;
+        }
+
+        .schedule-block.day-off {
+            background: #f5f5f5;
+            border-color: #999;
+            color: #999;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            margin: 0;
+        }
+
+        .time-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .note-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #c82333;
+        }
+
+        /* Legend */
+        .schedule-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-working {
+            background: #e8f5e8;
+            border: 1px solid #2e7d32;
+        }
+
+        .legend-appointment {
+            background: #fce4ec;
+            border: 1px solid #c2185b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .schedule-table {
+                font-size: 10px;
+            }
+            
+            .schedule-table td {
+                padding: 4px;
+                height: 30px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
+    <!-- Sidebar -->
     <div class="sidebar">
-      <!-- Sidebar content (เหมือนเดิม) -->
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li class="active"><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+        </ul>
     </div>
 
+    <!-- Main Content -->
     <div class="main">
-      <h1>Your Schedule</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Treatment</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% scheduleData.forEach(function(schedule) { %>
-            <tr>
-              <td><%= schedule.date %></td>
-              <td><%= schedule.time %></td>
-              <td><%= schedule.treatment_name %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Schedule or Date..." id="searchInput" />
+                </div>
+            </div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar">👨‍⚕️</div>
+                        <div class="user-details">
+                            <strong>Hello Dr. Somchai</strong>
+                            <small>dentist</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dentist/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1>Work Schedule</h1>
+                <p>Manage your working hours and availability</p>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="changeWeek(-1)">◀</button>
+                    <h2 class="calendar-title" id="currentWeekTitle">August 10, 2025</h2>
+                    <button class="calendar-nav" onclick="changeWeek(1)">▶</button>
+                    <div class="view-controls">
+                        <button class="view-btn" onclick="setView('day')">day</button>
+                        <button class="view-btn active" onclick="setView('week')">week</button>
+                        <button class="view-btn" onclick="setView('month')">month</button>
+                    </div>
+                </div>
+
+                <!-- Schedule Table -->
+                <div style="position: relative;">
+                    <table class="schedule-table" id="scheduleTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Time</th>
+                                <th>Sun 8/10</th>
+                                <th>Mon 8/11</th>
+                                <th>Tue 8/12</th>
+                                <th>Wed 8/13</th>
+                                <th>Thu 8/14</th>
+                                <th>Fri 8/15</th>
+                                <th>Sat 8/16</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody">
+                            <!-- Table rows will be generated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <!-- Schedule blocks will be positioned here -->
+                    <div id="scheduleOverlay"></div>
+                </div>
+
+                <!-- Legend -->
+                <div class="schedule-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-working"></div>
+                        <span>Working Hours</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-appointment"></div>
+                        <span>Has Appointments</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f5f5f5; border: 1px solid #ccc;"></div>
+                        <span>Unavailable (Sunday / Outside Working Hours)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- Modal for Schedule Setting -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span id="modalDate">Thu, August 14, 2025</span>
+                </h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+
+            <form id="scheduleForm">
+                <div class="form-group">
+                    <label class="form-label">Status:</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="working" name="status" value="working" checked onchange="toggleTimeControls()">
+                            <label for="working">Working</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="dayoff" name="status" value="dayoff" onchange="toggleTimeControls()">
+                            <label for="dayoff">Day Off</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="time-controls" id="timeControls">
+                    <div class="form-group">
+                        <label class="form-label">Start Time:</label>
+                        <select class="form-control" id="startTime" name="startTime">
+                            <option value="08:00">08:00 AM</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00" selected>10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">01:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                            <option value="18:00">06:00 PM</option>
+                            <option value="19:00">07:00 PM</option>
+                            <option value="20:00">08:00 PM</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">End Time:</label>
+                        <select class="form-control" id="endTime" name="endTime">
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">01:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                            <option value="18:00">06:00 PM</option>
+                            <option value="19:00">07:00 PM</option>
+                            <option value="20:00" selected>08:00 PM</option>
+                            <option value="21:00">09:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-sticky-note"></i>
+                        Note (optional):
+                    </label>
+                    <textarea class="form-control note-textarea" id="note" name="note" placeholder="Enter any additional notes..."></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let currentView = 'week';
+        let selectedCell = null;
+        let scheduleData = {};
+
+        // Initialize schedule table
+        function initializeSchedule() {
+            generateScheduleTable();
+            loadScheduleData();
+        }
+
+        // Top bar functions
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            alert('Notifications feature coming soon!');
+        }
+        
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            // Add search logic for schedules here
+        });
+
+        // Toggle time controls based on status selection
+        function toggleTimeControls() {
+            const workingRadio = document.getElementById('working');
+            const timeControls = document.getElementById('timeControls');
+            
+            if (workingRadio.checked) {
+                timeControls.style.display = 'grid';
+            } else {
+                timeControls.style.display = 'none';
+            }
+        }
+
+        // Get default working hours based on day of week
+        function getDefaultWorkingHours(dayOfWeek) {
+            // Sunday = 0, Monday = 1, Tuesday = 2, etc.
+            const workingHours = {
+                0: { start: '10:00', end: '20:00', closed: true },  // Sunday - ปิดทำการ (disabled)
+                1: { start: '10:00', end: '20:00', closed: false }, // Monday
+                2: { start: '10:00', end: '20:00', closed: false }, // Tuesday
+                3: { start: '10:00', end: '20:00', closed: false }, // Wednesday
+                4: { start: '10:00', end: '20:00', closed: false }, // Thursday
+                5: { start: '10:00', end: '20:00', closed: false }, // Friday
+                6: { start: '10:00', end: '20:00', closed: false }  // Saturday
+            };
+            
+            return workingHours[dayOfWeek] || { start: '10:00', end: '20:00', closed: false };
+        }
+
+        // Check if a time slot is within working hours
+        function isWithinWorkingHours(dayOfWeek, hour) {
+            // Sunday is always closed
+            if (dayOfWeek === 0) {
+                return false;
+            }
+            
+            // Working hours: 10:00-20:00
+            return hour >= 10 && hour < 20;
+        }
+
+        // Generate schedule table
+        function generateScheduleTable() {
+            const tbody = document.getElementById('scheduleTableBody');
+            tbody.innerHTML = '';
+
+            // Generate time slots from 8am to 10pm (extended range for display)
+            for (let hour = 8; hour <= 22; hour++) {
+                const row = document.createElement('tr');
+                
+                // Time column
+                const timeCell = document.createElement('td');
+                timeCell.className = 'time-column';
+                timeCell.textContent = hour <= 12 ? `${hour}am` : `${hour - 12}pm`;
+                if (hour === 12) timeCell.textContent = '12pm';
+                row.appendChild(timeCell);
+
+                // Day columns
+                for (let day = 0; day < 7; day++) {
+                    const cell = document.createElement('td');
+                    cell.dataset.day = day;
+                    cell.dataset.hour = hour;
+                    
+                    // Check if this cell should be disabled
+                    if (shouldDisableCell(day, hour)) {
+                        cell.classList.add('disabled');
+                        cell.onclick = null; // Remove click handler
+                    } else {
+                        cell.onclick = () => openScheduleModal(day, hour, cell);
+                    }
+                    
+                    row.appendChild(cell);
+                }
+
+                tbody.appendChild(row);
+            }
+        }
+
+        // Check if a cell should be disabled
+        function shouldDisableCell(day, hour) {
+            // Sunday (day 0) is always disabled
+            if (day === 0) {
+                return true;
+            }
+            
+            // Outside working hours (10:00-20:00) are disabled
+            if (hour < 10 || hour >= 20) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Calculate schedule block position and size
+        function calculateBlockPosition(day, startTime, endTime) {
+            const table = document.getElementById('scheduleTable');
+            const tbody = table.querySelector('tbody');
+            
+            // Find the first and last cells for this time range
+            const startHour = parseInt(startTime.split(':')[0]);
+            const endHour = parseInt(endTime.split(':')[0]);
+            const startMinute = parseInt(startTime.split(':')[1]);
+            const endMinute = parseInt(endTime.split(':')[1]);
+            
+            // Find cells
+            const startCell = tbody.querySelector(`td[data-day="${day}"][data-hour="${startHour}"]`);
+            const endCell = tbody.querySelector(`td[data-day="${day}"][data-hour="${endHour}"]`) || 
+                           tbody.querySelector(`td[data-day="${day}"][data-hour="${endHour-1}"]`);
+            
+            if (!startCell || !endCell) return null;
+            
+            const tableRect = table.getBoundingClientRect();
+            const startRect = startCell.getBoundingClientRect();
+            const endRect = endCell.getBoundingClientRect();
+            
+            // Calculate position relative to table
+            const left = startRect.left - tableRect.left;
+            const width = startRect.width;
+            const top = startRect.top - tableRect.top;
+            
+            // Calculate height based on time duration
+            const totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+            const minutesPerHour = 60;
+            const cellHeight = startRect.height;
+            const height = (totalMinutes / minutesPerHour) * cellHeight;
+            
+            // Adjust top position based on start minute
+            const minuteOffset = (startMinute / minutesPerHour) * cellHeight;
+            
+            return {
+                left: left,
+                width: width,
+                top: top + minuteOffset,
+                height: height
+            };
+        }
+
+        // Create schedule block overlay
+        function createScheduleBlock(day, schedule) {
+            const position = calculateBlockPosition(day, schedule.startTime, schedule.endTime);
+            if (!position) return null;
+            
+            const block = document.createElement('div');
+            block.className = 'schedule-block';
+            
+            if (schedule.status === 'dayoff') {
+                block.classList.add('day-off');
+                block.textContent = 'Day Off';
+            } else if (schedule.hasAppointment) {
+                block.classList.add('appointment');
+                block.textContent = `${schedule.startTime}-${schedule.endTime}`;
+            } else {
+                block.textContent = `${schedule.startTime}-${schedule.endTime}`;
+            }
+            
+            // Set position
+            block.style.left = position.left + 'px';
+            block.style.width = position.width + 'px';
+            block.style.top = position.top + 'px';
+            block.style.height = position.height + 'px';
+            
+            // Add click handler
+            block.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const hour = parseInt(schedule.startTime.split(':')[0]);
+                const cell = document.querySelector(`td[data-day="${day}"][data-hour="${hour}"]`);
+                if (cell) openScheduleModal(day, hour, cell);
+            });
+            
+            // Make it clickable
+            block.style.pointerEvents = 'auto';
+            block.style.cursor = 'pointer';
+            
+            return block;
+        }
+
+        // Update schedule display
+        function updateScheduleDisplay() {
+            const overlay = document.getElementById('scheduleOverlay');
+            overlay.innerHTML = '';
+            
+            // Group schedules by day and time range
+            const daySchedules = {};
+            
+            Object.values(scheduleData).forEach(schedule => {
+                const day = schedule.day;
+                if (!daySchedules[day]) daySchedules[day] = [];
+                daySchedules[day].push(schedule);
+            });
+            
+            // Create blocks for each day
+            Object.keys(daySchedules).forEach(day => {
+                const schedules = daySchedules[day];
+                
+                // Sort by start time
+                schedules.sort((a, b) => {
+                    const aTime = parseInt(a.startTime.replace(':', ''));
+                    const bTime = parseInt(b.startTime.replace(':', ''));
+                    return aTime - bTime;
+                });
+                
+                // Merge continuous time blocks
+                const mergedSchedules = [];
+                let currentSchedule = null;
+                
+                schedules.forEach(schedule => {
+                    if (!currentSchedule) {
+                        currentSchedule = { ...schedule };
+                    } else if (currentSchedule.endTime === schedule.startTime && 
+                              currentSchedule.status === schedule.status) {
+                        // Extend current schedule
+                        currentSchedule.endTime = schedule.endTime;
+                        if (schedule.hasAppointment) {
+                            currentSchedule.hasAppointment = true;
+                        }
+                    } else {
+                        // Start new schedule block
+                        mergedSchedules.push(currentSchedule);
+                        currentSchedule = { ...schedule };
+                    }
+                });
+                
+                if (currentSchedule) {
+                    mergedSchedules.push(currentSchedule);
+                }
+                
+                // Create visual blocks
+                mergedSchedules.forEach(schedule => {
+                    const block = createScheduleBlock(parseInt(day), schedule);
+                    if (block) {
+                        overlay.appendChild(block);
+                    }
+                });
+            });
+        }
+
+        // Open schedule modal
+        function openScheduleModal(day, hour, cell) {
+            // Check if this time slot is disabled
+            if (shouldDisableCell(day, hour)) {
+                alert('ไม่สามารถจองในช่วงเวลานี้ได้');
+                return;
+            }
+            
+            selectedCell = cell;
+            const modal = document.getElementById('scheduleModal');
+            const modalDate = document.getElementById('modalDate');
+            
+            // Calculate the actual date
+            const weekStart = getWeekStart(currentDate);
+            const targetDate = new Date(weekStart);
+            targetDate.setDate(weekStart.getDate() + day);
+            
+            const dateStr = targetDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            
+            modalDate.textContent = dateStr;
+            
+            // Get default working hours for this day
+            const dayOfWeek = targetDate.getDay();
+            const defaultHours = getDefaultWorkingHours(dayOfWeek);
+            
+            // Since we're only allowing working days, always set to working
+            document.getElementById('working').checked = true;
+            document.getElementById('dayoff').checked = false;
+            
+            // Set default times (always working hours for enabled cells)
+            document.getElementById('startTime').value = defaultHours.start;
+            document.getElementById('endTime').value = defaultHours.end;
+            
+            // Update time controls visibility
+            toggleTimeControls();
+            
+            // Load existing data if any
+            const key = `${targetDate.toDateString()}-${hour}`;
+            if (scheduleData[key]) {
+                const data = scheduleData[key];
+                document.querySelector(`input[name="status"][value="${data.status}"]`).checked = true;
+                document.getElementById('startTime').value = data.startTime;
+                document.getElementById('endTime').value = data.endTime;
+                document.getElementById('note').value = data.note || '';
+                toggleTimeControls();
+            } else {
+                // Reset form with defaults
+                document.getElementById('note').value = '';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('scheduleModal').style.display = 'none';
+            selectedCell = null;
+        }
+
+        // Save schedule
+        function saveSchedule() {
+            if (!selectedCell) return;
+
+            const form = document.getElementById('scheduleForm');
+            const formData = new FormData(form);
+            
+            const day = parseInt(selectedCell.dataset.day);
+            const hour = parseInt(selectedCell.dataset.hour);
+            
+            // Calculate the actual date
+            const weekStart = getWeekStart(currentDate);
+            const targetDate = new Date(weekStart);
+            targetDate.setDate(weekStart.getDate() + day);
+            
+            const status = formData.get('status');
+            let scheduleInfo;
+            
+            if (status === 'dayoff') {
+                // For day off, don't need time ranges
+                scheduleInfo = {
+                    date: targetDate.toISOString().split('T')[0],
+                    day: day,
+                    hour: hour,
+                    status: 'dayoff',
+                    startTime: '00:00',
+                    endTime: '23:59',
+                    note: formData.get('note') || '',
+                    hasAppointment: false
+                };
+            } else {
+                // For working hours
+                scheduleInfo = {
+                    date: targetDate.toISOString().split('T')[0],
+                    day: day,
+                    hour: hour,
+                    status: 'working',
+                    startTime: formData.get('startTime'),
+                    endTime: formData.get('endTime'),
+                    note: formData.get('note') || '',
+                    hasAppointment: Math.random() > 0.7 // Simulate some appointments
+                };
+            }
+
+            // For demo purposes, we'll just store locally
+            // In real app, you would send to server:
+            // fetch('/dentist/api/schedule/save', { ... })
+            
+            // Clear existing schedules for this date
+            const existingKeys = Object.keys(scheduleData).filter(key => {
+                const data = scheduleData[key];
+                return data.day === day && data.date === scheduleInfo.date;
+            });
+            
+            existingKeys.forEach(key => delete scheduleData[key]);
+            
+            if (status === 'dayoff') {
+                // For day off, create a single block covering the whole day
+                const key = `${targetDate.toDateString()}-${hour}`;
+                scheduleData[key] = scheduleInfo;
+            } else {
+                // For working hours, create time range blocks
+                const startHour = parseInt(scheduleInfo.startTime.split(':')[0]);
+                const endHour = parseInt(scheduleInfo.endTime.split(':')[0]);
+                
+                for (let h = startHour; h < endHour; h++) {
+                    const key = `${targetDate.toDateString()}-${h}`;
+                    scheduleData[key] = {
+                        ...scheduleInfo,
+                        hour: h
+                    };
+                }
+            }
+            
+            // Update display
+            updateScheduleDisplay();
+            closeModal();
+            
+            // Show success message
+            setTimeout(() => {
+                const message = status === 'dayoff' ? 'บันทึกวันหยุดเรียบร้อยแล้ว' : 'บันทึกตารางเวลาเรียบร้อยแล้ว';
+                alert(message);
+            }, 100);
+        }
+
+        // Load schedule data (demo data)
+        function loadScheduleData() {
+            // Clear existing data
+            scheduleData = {};
+            
+            // Add some demo data for working days only
+            const weekStart = getWeekStart(currentDate);
+            
+            // Thursday 12:00-13:00 working hours (demo)
+            const thursdayDate = new Date(weekStart);
+            thursdayDate.setDate(weekStart.getDate() + 4); // Thursday
+            
+            // Only add demo data if it's within working hours
+            if (isWithinWorkingHours(4, 12)) { // Thursday, 12:00
+                const demoSchedule = {
+                    date: thursdayDate.toISOString().split('T')[0],
+                    day: 4,
+                    hour: 12,
+                    status: 'working',
+                    startTime: '12:00',
+                    endTime: '13:00',
+                    note: 'Lunch break coverage',
+                    hasAppointment: false
+                };
+                
+                const key = `${thursdayDate.toDateString()}-12`;
+                scheduleData[key] = demoSchedule;
+            }
+            
+            // Update display
+            updateScheduleDisplay();
+        }
+
+        // Get week start (Sunday)
+        function getWeekStart(date) {
+            const result = new Date(date);
+            result.setDate(result.getDate() - result.getDay());
+            return result;
+        }
+
+        // Change week
+        function changeWeek(direction) {
+            currentDate.setDate(currentDate.getDate() + (direction * 7));
+            updateWeekTitle();
+            updateTableHeaders();
+            generateScheduleTable();
+            loadScheduleData();
+        }
+
+        // Update week title
+        function updateWeekTitle() {
+            const weekStart = getWeekStart(currentDate);
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('currentWeekTitle').textContent = 
+                `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}, ${weekStart.getFullYear()}`;
+        }
+
+        // Update table headers
+        function updateTableHeaders() {
+            const weekStart = getWeekStart(currentDate);
+            const headers = document.querySelectorAll('.schedule-table th');
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            for (let i = 1; i < headers.length; i++) {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + (i - 1));
+                
+                headers[i].textContent = `${dayNames[i - 1]} ${date.getMonth() + 1}/${date.getDate()}`;
+            }
+        }
+
+        // Set view
+        function setView(view) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="setView('${view}')"]`).classList.add('active');
+            currentView = view;
+        }
+
+        // Handle window resize to recalculate positions
+        window.addEventListener('resize', () => {
+            setTimeout(updateScheduleDisplay, 100);
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('scheduleModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSchedule();
+            updateWeekTitle();
+            updateTableHeaders();
+            
+            // Recalculate positions after table is rendered
+            setTimeout(updateScheduleDisplay, 100);
+        });
+    </script>
 </body>
 </html>

@@ -31,7 +31,22 @@ router.get('/appointment/day', requirePatient, patientController.appointmentDay)
 router.get('/appointment/book', requirePatient, patientController.showBookingForm);
 router.post('/appointment/book', requirePatient, patientController.bookAppointment);
 
-// เพิ่มใน patient.route.js ที่มีอยู่
+// ===== เพิ่ม Routes ใหม่สำหรับ Schedule Integration =====
+
+// หน้าจองนัดหมายใหม่ที่ใช้ระบบ Schedule
+router.get('/appointment/new', requirePatient, patientController.showNewBookingForm);
+
+// API Routes สำหรับระบบจองนัดหมายผ่าน Schedule
+router.get('/api/available-dentists', requirePatient, patientController.getAvailableDentistsForBooking);
+router.get('/api/available-slots', requirePatient, patientController.getAvailableTimeSlots);
+router.post('/api/book-appointment', requirePatient, patientController.bookAppointmentWithSchedule);
+router.post('/api/cancel-appointment', requirePatient, patientController.cancelMyAppointment);
+router.get('/api/my-appointments', requirePatient, patientController.getMyAppointments);
+
+// Dashboard ที่รองรับ Schedule (ทางเลือก)
+router.get('/dashboard-schedule', requirePatient, patientController.getDashboardWithSchedule);
+
+// ===== Routes เดิมที่มีอยู่แล้ว =====
 
 // History routes
 router.get('/history', requirePatient, patientController.getHistory);
@@ -43,7 +58,6 @@ router.post('/history/cancel/:id', requirePatient, patientController.cancelAppoi
 // My Treatments routes
 router.get('/my-treatments', requirePatient, patientController.getMyTreatments);
 router.get('/my-treatments/:id', requirePatient, patientController.getTreatmentDetails);
-
 
 // Dentists routes
 router.get('/dentists', requirePatient, patientController.getDentists);

@@ -1,120 +1,931 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dentist Dashboard</title>
-  <link rel="stylesheet" href="/css/dentist-dashboard.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Dashboard - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .patients-today { color: #4A90E2; }
+        .total-patients { color: #28a745; }
+        .appointments { color: #ffc107; }
+        .completed { color: #6f42c1; }
+
+        /* Alert Box */
+        .next-appointment {
+            background: #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .next-appointment h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .next-appointment h2 i {
+            color: #dc3545;
+        }
+
+        .appointment-details {
+            margin-bottom: 10px;
+        }
+
+        .appointment-details p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .view-details {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #4A90E2;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .view-details:hover {
+            text-decoration: underline;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        /* Appointments Section */
+        .appointments-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            margin: 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn, .add-btn {
+            background: #4A90E2;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .filter-btn:hover {
+            background: #e9ecef;
+        }
+
+        .add-btn:hover {
+            background: #357abd;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f3f4;
+            color: #555;
+            font-size: 13px;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-confirm {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-cancel {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .calendar-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .calendar-section h2 {
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Mini Calendar */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .calendar-nav:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .calendar-day {
+            padding: 6px;
+            text-align: center;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 12px;
+        }
+
+        .calendar-day:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-day.header {
+            font-weight: 600;
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .calendar-day.today {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .calendar-day.has-appointment {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Upcoming Appointments */
+        .upcoming-appointments {
+            margin-top: 15px;
+        }
+
+        .upcoming-appointments h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .appointment-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .appointment-item .time {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .appointment-item .patient {
+            color: #666;
+        }
+
+        .appointment-item .treatment {
+            color: #4A90E2;
+            font-size: 11px;
+        }
+
+        /* Working Hours */
+        .working-hours {
+            background: #f0f9ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .working-hours h4 {
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .working-hours .time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .working-hours .specialty {
+            font-size: 11px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="logo">
-        <img src="/img/tooth-logo.png" alt="Smile Clinic"/>
-        <h3>Smile Clinic</h3>
-      </div>
-      <ul class="nav">
-        <li class="active">Dashboard</li>
-        <li>Work Schedule</li>
-        <li>Appointments</li>
-        <li>Patients</li>
-        <li>History</li>
-      </ul>
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li class="active"><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+        </ul>
     </div>
 
-    <!-- Main -->
+    <!-- Main Content -->
     <div class="main">
-      <div class="top-bar">
-        <div class="search-bar">
-          <input type="text" placeholder="Firstname or Lastname..." />
-        </div>
-        <div class="icons">
-          <img src="/img/notification-bell.png" alt="Notifications"/>
-          <div class="profile">
-            <p>Hello Dr. Somsri</p>
-            <span>dentist</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashboard">
-        <h1>Hello Dr. Somsri</h1>
-        <p>24/05/2025 11:00 AM</p>
-
-        <div class="stats">
-          <div class="card"><p>Patients Today</p><h2><%= todayPatients %></h2></div>
-          <div class="card"><p>Total Patients</p><h2><%= totalPatients %></h2></div>
-          <div class="card"><p>Cancel</p><h2><%= cancelAppointments %></h2></div>
-        </div>
-
-        <div class="alert-box">
-          <div class="alert-icon">!</div>
-          <div class="alert-text">
-            <p><strong>เวรวันนี้</strong></p>
-            <p><strong>Treatment:</strong> <%= todayTreatment %></p>
-          </div>
-          <a href="#">View Details</a>
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Firstname or Lastname..." id="searchInput" />
+                </div>
+            </div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar">👨‍⚕️</div>
+                        <div class="user-details">
+                            <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
+                            <small>dentist</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dentist/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="latest-patients">
-          <h3>Latest Patients</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Name</th>
-                <th>Treatment</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% latestPatients.forEach(function(patient) { %>
-                <tr>
-                  <td><%= patient.date %></td>
-                  <td><%= patient.time %></td>
-                  <td><%= patient.name %></td>
-                  <td><%= patient.treatment_name %></td>
-                  <td><%= patient.status %></td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
+        <!-- Content -->
+        <div class="content">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></h1>
+                <p><%= currentDate %></p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number patients-today"><%= stats.todayPatients %></div>
+                    <div class="stat-label">Patients Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number total-patients"><%= stats.totalPatients %></div>
+                    <div class="stat-label">Total Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number appointments"><%= stats.cancelledAppointments %></div>
+                    <div class="stat-label">Cancel</div>
+                </div>
+            </div>
+
+            <!-- Next Appointment Alert -->
+            <% if (todaySchedule) { %>
+            <div class="next-appointment">
+                <h2><i class="fas fa-exclamation-circle"></i> เวรวันนี้</h2>
+                <div class="appointment-details">
+                    <p><strong>Treatment:</strong> <%= todaySchedule.treatment_name %></p>
+                    <p><strong>เวลา:</strong> <%= new Date(todaySchedule.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'}) %></p>
+                    <p><strong>ผู้ป่วย:</strong> <%= todaySchedule.fname %> <%= todaySchedule.lname %></p>
+                </div>
+                <a href="/dentist/appointments/<%= todaySchedule.queue_id %>" class="view-details">View Details</a>
+            </div>
+            <% } %>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Appointments Section -->
+                <div class="appointments-section">
+                    <div class="section-header">
+                        <h2>Latest Patients</h2>
+                        <div class="controls">
+                            <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button>
+                            <a href="/dentist/appointments" class="add-btn"><i class="fas fa-plus"></i> Appointment</a>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Name</th>
+                                <th>Treatment</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentsTableBody">
+                            <% latestAppointments.forEach(function(apt) { %>
+                            <tr>
+                                <td><%= new Date(apt.time).toLocaleDateString('th-TH') %></td>
+                                <td><%= new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'}) %></td>
+                                <td><%= apt.fname %> <%= apt.lname %></td>
+                                <td><%= apt.treatment_name %></td>
+                                <td>
+                                    <span class="status-badge status-<%= apt.queue_status %>">
+                                        <%= apt.queue_status === 'confirm' ? 'Confirmed' : 
+                                            apt.queue_status === 'pending' ? 'Pending' : 
+                                            apt.queue_status === 'cancel' ? 'Cancelled' : apt.queue_status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (apt.queue_status === 'pending') { %>
+                                        <button class="action-btn" onclick="confirmAppointment('<%= apt.queue_id %>')">
+                                            Confirm
+                                        </button>
+                                    <% } else { %>
+                                        <button class="action-btn" onclick="viewAppointment('<%= apt.queue_id %>')">
+                                            View
+                                        </button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel">
+                    <!-- Calendar Section -->
+                    <div class="calendar-section">
+                        <div class="calendar-header">
+                            <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
+                            <h2 id="currentMonthYear">
+                                <%= new Date().toLocaleDateString('th-TH', {month: 'long', year: 'numeric'}) %>
+                            </h2>
+                            <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
+                        </div>
+
+                        <div class="calendar-grid" id="calendarGrid">
+                            <div class="calendar-day header">Sun</div>
+                            <div class="calendar-day header">Mon</div>
+                            <div class="calendar-day header">Tue</div>
+                            <div class="calendar-day header">Wed</div>
+                            <div class="calendar-day header">Thu</div>
+                            <div class="calendar-day header">Fri</div>
+                            <div class="calendar-day header">Sat</div>
+                            <!-- Calendar days will be generated by JavaScript -->
+                        </div>
+
+                        <div class="upcoming-appointments">
+                            <h3>Upcoming Appointments</h3>
+                            <% upcomingAppointments.forEach(function(apt) { %>
+                            <div class="appointment-item">
+                                <div class="time"><%= new Date(apt.time).toLocaleDateString('th-TH') %></div>
+                                <div class="patient">
+                                    <%= new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'}) %> - 
+                                    <%= apt.fname %> <%= apt.lname %>
+                                </div>
+                                <div class="treatment"><%= apt.treatment_name %></div>
+                            </div>
+                            <% }) %>
+                        </div>
+
+                        <div class="working-hours">
+                            <h4>Working Hours</h4>
+                            <div class="time">
+                                <i class="fas fa-clock" style="color: #4A90E2;"></i>
+                                <span>
+                                    <%= dentist.work_start ? dentist.work_start.substring(0,5) : '08:00' %> - 
+                                    <%= dentist.work_end ? dentist.work_end.substring(0,5) : '16:00' %>
+                                </span>
+                            </div>
+                            <div class="specialty">Specialty: <%= dentist.specialty || 'General Dentistry' %></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
-    <!-- Calendar -->
-    <div class="calendar">
-      <div class="calendar-header">
-        <h2>April 2025</h2>
-        <div class="calendar-nav">
-          <button>&lt;</button>
-          <button>&gt;</button>
-        </div>
-      </div>
+    <script>
+        let currentDate = new Date();
+        const monthlyAppointments = <%- JSON.stringify(monthlyAppointments) %>;
 
-      <div class="calendar-days">
-        <div class="day selected">Sun 7</div>
-        <div class="day">Mon 8</div>
-        <div class="day">Tue 9</div>
-        <div class="day">Wed 10</div>
-        <div class="day">Thu 11</div>
-        <div class="day">Fri 12</div>
-        <div class="day">Sat 13</div>
-      </div>
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            alert('Notifications feature coming soon!');
+        }
+        
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
 
-      <div class="upcoming">
-        <h4>Upcoming Appointments</h4>
-        <% upcomingAppointments.forEach(function(appointment) { %>
-          <div class="appointment <%= appointment.active ? 'active' : '' %>">
-            <p><strong><%= appointment.name %></strong><br/><%= appointment.treatment_name %></p>
-            <span><%= appointment.time %></span>
-          </div>
-        <% }) %>
-      </div>
-    </div>
-  </div>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#appointmentsTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        // Appointment functions
+        function viewAppointment(queueId) {
+            window.location.href = `/dentist/appointments/${queueId}`;
+        }
+
+        function confirmAppointment(queueId) {
+            if (confirm('ยืนยันการนัดหมายนี้หรือไม่?')) {
+                fetch('/dentist/api/appointment/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ queueId: queueId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('ยืนยันการนัดหมายเรียบร้อยแล้ว');
+                        location.reload();
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+                });
+            }
+        }
+
+        // Calendar functions
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const calendarGrid = document.getElementById('calendarGrid');
+            
+            // Clear existing days (keep headers)
+            const headers = calendarGrid.querySelectorAll('.calendar-day.header');
+            calendarGrid.innerHTML = '';
+            headers.forEach(header => calendarGrid.appendChild(header));
+
+            // Generate calendar days
+            for (let i = 0; i < 42; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = currentDate.getDate();
+                
+                // Add classes for styling
+                if (currentDate.getMonth() !== month) {
+                    dayElement.style.color = '#ccc';
+                }
+                
+                if (currentDate.toDateString() === new Date().toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Check if this day has appointments
+                const dayHasAppointments = monthlyAppointments.some(apt => apt.day === currentDate.getDate());
+                if (dayHasAppointments && currentDate.getMonth() === month) {
+                    dayElement.classList.add('has-appointment');
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            updateCalendar();
+        }
+
+        function updateCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('currentMonthYear').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+                
+            generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+            
+            // Fetch calendar data for new month
+            fetch(`/dentist/api/calendar/${currentDate.getFullYear()}/${currentDate.getMonth() + 1}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update calendar with new appointment data
+                        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                    }
+                })
+                .catch(error => console.error('Error fetching calendar data:', error));
+        }
+
+        // Initialize calendar
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        // Auto refresh every 5 minutes
+        setInterval(() => {
+            location.reload();
+        }, 300000);
+    </script>
 </body>
 </html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Detail - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Patient Header */
+        .patient-header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .patient-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .patient-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .patient-info h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+
+        .patient-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 100px;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        /* Treatment History Section */
+        .treatment-history {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #357abd;
+        }
+
+        /* Timeline */
+        .treatment-timeline {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .year-section {
+            margin-bottom: 30px;
+        }
+
+        .year-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .year-header:hover {
+            background: #e9ecef;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .year-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .treatments-list {
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .treatments-list.collapsed {
+            display: none;
+        }
+
+        .treatment-item {
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .treatment-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .treatment-date {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .treatment-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .treatment-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-cancel {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .treatment-diagnosis {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .no-treatments {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .no-treatments i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .patient-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li class="active"><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <a href="/dentist/patients" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Patients
+            </a>
+            <div class="user-section">
+                <div class="avatar">👨‍⚕️</div>
+                <div class="user-details">
+                    <strong>Hello Dr. Somsri</strong>
+                    <small>dentist</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Patient Header -->
+            <div class="patient-header">
+                <div class="patient-title">
+                    <div class="patient-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="patient-info">
+                        <h1>Mr. <%= patient.fname %> <%= patient.lname %></h1>
+                    </div>
+                </div>
+                
+                <div class="patient-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Name:</span>
+                        <span class="detail-value">Mr. <%= patient.fname %> <%= patient.lname %></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date of Birth:</span>
+                        <span class="detail-value">
+                            <%= patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB') : 'Not specified' %>
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value"><%= patient.phone || 'Not specified' %></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Address:</span>
+                        <span class="detail-value"><%= patient.address || 'Not specified' %></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Patient ID:</span>
+                        <span class="detail-value">****</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">ID Card:</span>
+                        <span class="detail-value"><%= patient.idcard || 'Not specified' %></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment History -->
+            <div class="treatment-history">
+                <div class="section-header">
+                    <h2 class="section-title">Treatment History</h2>
+                    <div class="filter-section">
+                        <label>Search by Date:</label>
+                        <input type="date" class="filter-input" id="dateFilter">
+                        <button class="filter-btn" onclick="filterByDate()">
+                            <i class="fas fa-filter"></i> History
+                        </button>
+                    </div>
+                </div>
+
+                <div class="treatment-timeline">
+                    <% if (treatmentHistory && treatmentHistory.length > 0) { %>
+                        <% 
+                        // Group treatments by year
+                        const groupedByYear = {};
+                        treatmentHistory.forEach(treatment => {
+                            const year = new Date(treatment.time).getFullYear();
+                            if (!groupedByYear[year]) {
+                                groupedByYear[year] = [];
+                            }
+                            groupedByYear[year].push(treatment);
+                        });
+                        
+                        // Sort years in descending order
+                        const sortedYears = Object.keys(groupedByYear).sort((a, b) => b - a);
+                        %>
+                        
+                        <% sortedYears.forEach(year => { %>
+                        <div class="year-section">
+                            <div class="year-header" onclick="toggleYear('<%= year %>')">
+                                <span><%= year %></span>
+                                <i class="fas fa-chevron-down toggle-icon" id="icon-<%= year %>"></i>
+                            </div>
+                            
+                            <div class="treatments-list" id="treatments-<%= year %>">
+                                <% groupedByYear[year].forEach(treatment => { %>
+                                <div class="treatment-item">
+                                    <div class="treatment-date">
+                                        <%= new Date(treatment.time).toLocaleDateString('en-GB') %> 
+                                        - <%= new Date(treatment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %>
+                                    </div>
+                                    
+                                    <div class="treatment-name">
+                                        <%= treatment.treatment_name %>
+                                    </div>
+                                    
+                                    <span class="treatment-status status-<%= treatment.queue_status %>">
+                                        <%= treatment.queue_status === 'completed' ? 'รักษาแล้ว' : 
+                                            treatment.queue_status === 'pending' ? 'ยังไม่ได้รักษา' : 
+                                            treatment.queue_status === 'cancel' ? 'ยกเลิก' : treatment.queue_status %>
+                                    </span>
+                                    
+                                    <% if (treatment.diagnosis) { %>
+                                    <div class="treatment-diagnosis">
+                                        <strong>Diagnosis:</strong> <%= treatment.diagnosis %>
+                                    </div>
+                                    <% } %>
+                                </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                        <% }); %>
+                    <% } else { %>
+                    <div class="no-treatments">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>No treatment history</h3>
+                        <p>This patient has no treatment history yet.</p>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleYear(year) {
+            const treatmentsList = document.getElementById(`treatments-${year}`);
+            const icon = document.getElementById(`icon-${year}`);
+            const header = icon.closest('.year-header');
+            
+            if (treatmentsList.classList.contains('collapsed')) {
+                treatmentsList.classList.remove('collapsed');
+                header.classList.remove('collapsed');
+            } else {
+                treatmentsList.classList.add('collapsed');
+                header.classList.add('collapsed');
+            }
+        }
+
+        function filterByDate() {
+            const dateFilter = document.getElementById('dateFilter').value;
+            const treatmentItems = document.querySelectorAll('.treatment-item');
+            
+            if (!dateFilter) {
+                // Show all treatments
+                treatmentItems.forEach(item => {
+                    item.style.display = 'block';
+                });
+                return;
+            }
+            
+            const filterDate = new Date(dateFilter);
+            
+            treatmentItems.forEach(item => {
+                const dateText = item.querySelector('.treatment-date').textContent;
+                const treatmentDate = parseDateFromText(dateText);
+                
+                if (treatmentDate && 
+                    treatmentDate.getDate() === filterDate.getDate() &&
+                    treatmentDate.getMonth() === filterDate.getMonth() &&
+                    treatmentDate.getFullYear() === filterDate.getFullYear()) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Hide year sections that have no visible treatments
+            document.querySelectorAll('.year-section').forEach(yearSection => {
+                const visibleTreatments = yearSection.querySelectorAll('.treatment-item[style="display: block;"], .treatment-item:not([style*="display: none"])');
+                if (visibleTreatments.length === 0 && dateFilter) {
+                    yearSection.style.display = 'none';
+                } else {
+                    yearSection.style.display = 'block';
+                }
+            });
+        }
+
+        function parseDateFromText(dateText) {
+            // Parse date from format "DD/MM/YYYY - HH:MM"
+            const datePart = dateText.split(' - ')[0];
+            const [day, month, year] = datePart.split('/');
+            return new Date(year, month - 1, day);
+        }
+
+        // Reset filter when date input is cleared
+        document.getElementById('dateFilter').addEventListener('change', function() {
+            if (!this.value) {
+                filterByDate();
+            }
+        });
+
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('.year-header').forEach(header => {
+            header.addEventListener('click', function() {
+                setTimeout(() => {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
