@@ -62,9 +62,13 @@ router.get('/patients', requireAuth, requireDentist, dentistController.getPatien
 router.get('/patients/:id', requireAuth, requireDentist, dentistController.getPatientDetail);
 
 // =================
-// History Routes
+// History Routes  
 // =================
 router.get('/history', requireAuth, requireDentist, dentistController.getHistory);
+router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
+router.get('/api/patient-history', requireAuth, requireDentist, dentistController.getPatientHistoryAPI);
+router.get('/api/patient-history/search', requireAuth, requireDentist, dentistController.searchPatientHistory);
+router.get('/api/patient-history/:patientId', requireAuth, requireDentist, dentistController.getPatientDetailedHistory);
 
 // =================
 // Profile Routes
@@ -76,8 +80,8 @@ router.post('/profile/update-password', requireAuth, requireDentist, dentistCont
 // =================
 // Treatment Routes
 // =================
-router.get('/treatments', requireAuth, requireDentist, dentistController.getTreatments);
-router.post('/treatments/add', requireAuth, requireDentist, dentistController.addTreatment);
+router.get('/history', requireAuth, requireDentist, dentistController.getHistory);
+router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
 router.put('/treatments/:id', requireAuth, requireDentist, dentistController.updateTreatment);
 router.delete('/treatments/:id', requireAuth, requireDentist, dentistController.deleteTreatment);
 
@@ -112,6 +116,12 @@ router.get('/api/patients/:patientId/latest-appointments', requireAuth, requireD
 
 // Treatment History API
 router.post('/api/treatment-history/add', requireAuth, requireDentist, dentistController.addTreatmentHistory);
+
+// =================
+// Treatment History Routes
+// =================
+router.get('/treatment-history/:queueId', requireAuth, requireDentist, dentistController.getTreatmentHistoryPage);
+router.get('/api/treatment-history/:queueId', requireAuth, requireDentist, dentistController.getTreatmentHistoryDetail);
 
 // Error handling middleware
 router.use((err, req, res, next) => {

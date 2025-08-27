@@ -312,11 +312,17 @@
             margin-bottom: 15px;
             position: relative;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .treatment-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(-2px);
+            border-color: #4A90E2;
+        }
+
+        .treatment-item:hover .treatment-name {
+            color: #4A90E2;
         }
 
         .treatment-date {
@@ -330,6 +336,7 @@
             font-weight: 600;
             color: #333;
             margin-bottom: 10px;
+            transition: color 0.3s;
         }
 
         .treatment-status {
@@ -342,7 +349,8 @@
             margin-bottom: 10px;
         }
 
-        .status-completed {
+        .status-completed,
+        .status-confirm {
             background: #d1fae5;
             color: #065f46;
         }
@@ -367,6 +375,42 @@
             border-radius: 6px;
         }
 
+        .treatment-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .treatment-item:hover .treatment-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+            margin-left: 5px;
+        }
+
+        .action-btn:hover {
+            background: #357abd;
+        }
+
+        .action-btn.edit {
+            background: #ffc107;
+        }
+
+        .action-btn.edit:hover {
+            background: #e0a800;
+        }
+
         .no-treatments {
             text-align: center;
             padding: 60px 20px;
@@ -378,6 +422,20 @@
             font-size: 48px;
             color: #ddd;
             margin-bottom: 15px;
+        }
+
+        .click-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            color: #4A90E2;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .treatment-item:hover .click-hint {
+            opacity: 1;
         }
 
         /* Responsive */
@@ -400,6 +458,17 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .treatment-actions {
+                opacity: 1;
+                position: static;
+                margin-top: 10px;
+                text-align: right;
+            }
+
+            .click-hint {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -415,7 +484,7 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li class="active"><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
         </ul>
     </div>
 
@@ -444,14 +513,14 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="patient-info">
-                        <h1>Mr. <%= patient.fname %> <%= patient.lname %></h1>
+                        <h1><%= patient.fname %> <%= patient.lname %></h1>
                     </div>
                 </div>
                 
                 <div class="patient-details">
                     <div class="detail-item">
                         <span class="detail-label">Name:</span>
-                        <span class="detail-value">Mr. <%= patient.fname %> <%= patient.lname %></span>
+                        <span class="detail-value"><%= patient.fname %> <%= patient.lname %></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Date of Birth:</span>
@@ -469,7 +538,7 @@
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Patient ID:</span>
-                        <span class="detail-value">****</span>
+                        <span class="detail-value">#<%= patient.patient_id %></span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">ID Card:</span>
@@ -486,7 +555,10 @@
                         <label>Search by Date:</label>
                         <input type="date" class="filter-input" id="dateFilter">
                         <button class="filter-btn" onclick="filterByDate()">
-                            <i class="fas fa-filter"></i> History
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <button class="filter-btn" onclick="clearFilter()" style="background: #6c757d;">
+                            <i class="fas fa-times"></i> Clear
                         </button>
                     </div>
                 </div>
@@ -511,13 +583,13 @@
                         <% sortedYears.forEach(year => { %>
                         <div class="year-section">
                             <div class="year-header" onclick="toggleYear('<%= year %>')">
-                                <span><%= year %></span>
+                                <span><%= year %> (<%= groupedByYear[year].length %> treatments)</span>
                                 <i class="fas fa-chevron-down toggle-icon" id="icon-<%= year %>"></i>
                             </div>
                             
                             <div class="treatments-list" id="treatments-<%= year %>">
                                 <% groupedByYear[year].forEach(treatment => { %>
-                                <div class="treatment-item">
+                                <div class="treatment-item" onclick="viewTreatmentDetail(<%= treatment.queue_id %>)" data-queue-id="<%= treatment.queue_id %>">
                                     <div class="treatment-date">
                                         <%= new Date(treatment.time).toLocaleDateString('en-GB') %> 
                                         - <%= new Date(treatment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %>
@@ -525,11 +597,14 @@
                                     
                                     <div class="treatment-name">
                                         <%= treatment.treatment_name %>
+                                        <% if (treatment.duration) { %>
+                                            <small style="color: #666; font-weight: normal;">(<%= treatment.duration %> min)</small>
+                                        <% } %>
                                     </div>
                                     
                                     <span class="treatment-status status-<%= treatment.queue_status %>">
-                                        <%= treatment.queue_status === 'completed' ? 'รักษาแล้ว' : 
-                                            treatment.queue_status === 'pending' ? 'ยังไม่ได้รักษา' : 
+                                        <%= treatment.queue_status === 'completed' || treatment.queue_status === 'confirm' ? 'รักษาแล้ว' : 
+                                            treatment.queue_status === 'pending' ? 'รอการรักษา' : 
                                             treatment.queue_status === 'cancel' ? 'ยกเลิก' : treatment.queue_status %>
                                     </span>
                                     
@@ -538,6 +613,23 @@
                                         <strong>Diagnosis:</strong> <%= treatment.diagnosis %>
                                     </div>
                                     <% } %>
+
+                                    <!-- Action Buttons -->
+                                    <div class="treatment-actions">
+                                        <button onclick="event.stopPropagation(); viewTreatmentDetail(<%= treatment.queue_id %>)" class="action-btn" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <% if (treatment.queue_status === 'pending') { %>
+                                        <button onclick="event.stopPropagation(); editTreatment(<%= treatment.queue_id %>)" class="action-btn edit" title="Edit Treatment">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- Click Hint -->
+                                    <div class="click-hint">
+                                        <i class="fas fa-mouse-pointer"></i> Click to view details
+                                    </div>
                                 </div>
                                 <% }); %>
                             </div>
@@ -547,7 +639,7 @@
                     <div class="no-treatments">
                         <i class="fas fa-clipboard-list"></i>
                         <h3>No treatment history</h3>
-                        <p>This patient has no treatment history yet.</p>
+                        <p>This patient has no treatment history with you yet.</p>
                     </div>
                     <% } %>
                 </div>
@@ -556,6 +648,19 @@
     </div>
 
     <script>
+        // ฟังก์ชันดูรายละเอียดการรักษา
+        function viewTreatmentDetail(queueId) {
+            console.log('Viewing treatment detail for queue ID:', queueId);
+            window.location.href = `/dentist/treatment-history/${queueId}`;
+        }
+
+        // ฟังก์ชันแก้ไขการรักษา
+        function editTreatment(queueId) {
+            console.log('Editing treatment for queue ID:', queueId);
+            window.location.href = `/dentist/appointments/${queueId}`;
+        }
+
+        // ฟังก์ชันสลับการแสดง/ซ่อนปี
         function toggleYear(year) {
             const treatmentsList = document.getElementById(`treatments-${year}`);
             const icon = document.getElementById(`icon-${year}`);
@@ -570,19 +675,19 @@
             }
         }
 
+        // ฟังก์ชันกรองตามวันที่
         function filterByDate() {
             const dateFilter = document.getElementById('dateFilter').value;
             const treatmentItems = document.querySelectorAll('.treatment-item');
+            const yearSections = document.querySelectorAll('.year-section');
             
             if (!dateFilter) {
-                // Show all treatments
-                treatmentItems.forEach(item => {
-                    item.style.display = 'block';
-                });
+                showAllTreatments();
                 return;
             }
             
             const filterDate = new Date(dateFilter);
+            let hasVisibleItems = false;
             
             treatmentItems.forEach(item => {
                 const dateText = item.querySelector('.treatment-date').textContent;
@@ -593,22 +698,84 @@
                     treatmentDate.getMonth() === filterDate.getMonth() &&
                     treatmentDate.getFullYear() === filterDate.getFullYear()) {
                     item.style.display = 'block';
+                    hasVisibleItems = true;
                 } else {
                     item.style.display = 'none';
                 }
             });
             
-            // Hide year sections that have no visible treatments
-            document.querySelectorAll('.year-section').forEach(yearSection => {
+            // แสดง/ซ่อนปีที่ไม่มีการรักษาที่ตรงกับการค้นหา
+            yearSections.forEach(yearSection => {
                 const visibleTreatments = yearSection.querySelectorAll('.treatment-item[style="display: block;"], .treatment-item:not([style*="display: none"])');
+                const treatmentsList = yearSection.querySelector('.treatments-list');
+                
                 if (visibleTreatments.length === 0 && dateFilter) {
                     yearSection.style.display = 'none';
                 } else {
                     yearSection.style.display = 'block';
+                    // ขยายปีที่มีผลลัพธ์
+                    if (dateFilter && !treatmentsList.classList.contains('collapsed')) {
+                        treatmentsList.classList.remove('collapsed');
+                        yearSection.querySelector('.year-header').classList.remove('collapsed');
+                    }
                 }
+            });
+
+            // แสดงข้อความถ้าไม่พบข้อมูล
+            if (!hasVisibleItems && dateFilter) {
+                showNoResultsMessage();
+            } else {
+                hideNoResultsMessage();
+            }
+        }
+
+        // ฟังก์ชันล้างการกรอง
+        function clearFilter() {
+            document.getElementById('dateFilter').value = '';
+            showAllTreatments();
+            hideNoResultsMessage();
+        }
+
+        // ฟังก์ชันแสดงการรักษาทั้งหมด
+        function showAllTreatments() {
+            const treatmentItems = document.querySelectorAll('.treatment-item');
+            const yearSections = document.querySelectorAll('.year-section');
+            
+            treatmentItems.forEach(item => {
+                item.style.display = 'block';
+            });
+            
+            yearSections.forEach(yearSection => {
+                yearSection.style.display = 'block';
             });
         }
 
+        // ฟังก์ชันแสดงข้อความไม่พบผลลัพธ์
+        function showNoResultsMessage() {
+            let noResultsDiv = document.getElementById('no-results-message');
+            if (!noResultsDiv) {
+                noResultsDiv = document.createElement('div');
+                noResultsDiv.id = 'no-results-message';
+                noResultsDiv.className = 'no-treatments';
+                noResultsDiv.innerHTML = `
+                    <i class="fas fa-search"></i>
+                    <h3>No treatments found</h3>
+                    <p>No treatments found for the selected date.</p>
+                `;
+                document.querySelector('.treatment-timeline').appendChild(noResultsDiv);
+            }
+            noResultsDiv.style.display = 'block';
+        }
+
+        // ฟังก์ชันซ่อนข้อความไม่พบผลลัพธ์
+        function hideNoResultsMessage() {
+            const noResultsDiv = document.getElementById('no-results-message');
+            if (noResultsDiv) {
+                noResultsDiv.style.display = 'none';
+            }
+        }
+
+        // ฟังก์ชันแปลงข้อความวันที่
         function parseDateFromText(dateText) {
             // Parse date from format "DD/MM/YYYY - HH:MM"
             const datePart = dateText.split(' - ')[0];
@@ -616,21 +783,58 @@
             return new Date(year, month - 1, day);
         }
 
-        // Reset filter when date input is cleared
-        document.getElementById('dateFilter').addEventListener('change', function() {
-            if (!this.value) {
-                filterByDate();
-            }
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reset filter when date input is cleared
+            document.getElementById('dateFilter').addEventListener('change', function() {
+                if (!this.value) {
+                    clearFilter();
+                }
+            });
+
+            // เพิ่ม smooth scrolling สำหรับ year headers
+            document.querySelectorAll('.year-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    setTimeout(() => {
+                        this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 300);
+                });
+            });
+
+            // เพิ่ม keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                // ESC key เพื่อล้างการค้นหา
+                if (e.key === 'Escape') {
+                    clearFilter();
+                }
+            });
+
+            console.log('Patient detail page loaded');
+            console.log('Total treatments:', document.querySelectorAll('.treatment-item').length);
         });
 
-        // Add smooth scrolling for better UX
-        document.querySelectorAll('.year-header').forEach(header => {
-            header.addEventListener('click', function() {
-                setTimeout(() => {
-                    this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 300);
-            });
-        });
+        // เพิ่ม loading state เมื่อคลิกไปยังรายละเอียด
+        function showLoadingState(element) {
+            const originalHTML = element.innerHTML;
+            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            element.style.pointerEvents = 'none';
+            
+            // คืนค่าเดิมหาก loading นานเกินไป
+            setTimeout(() => {
+                element.innerHTML = originalHTML;
+                element.style.pointerEvents = 'auto';
+            }, 5000);
+        }
+
+        // Override viewTreatmentDetail เพื่อเพิ่ม loading state
+        const originalViewTreatmentDetail = viewTreatmentDetail;
+        viewTreatmentDetail = function(queueId) {
+            const treatmentItem = document.querySelector(`[data-queue-id="${queueId}"]`);
+            if (treatmentItem) {
+                showLoadingState(treatmentItem);
+            }
+            originalViewTreatmentDetail(queueId);
+        };
     </script>
 </body>
 </html>
