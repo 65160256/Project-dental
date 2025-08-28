@@ -1,109 +1,1282 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clinic Dentists' Schedule</title>
-  <link rel="stylesheet" href="/css/admin-dashboard.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Dentists' Schedule - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            transition: background 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: linear-gradient(90deg, rgba(74, 144, 226, 0.05), transparent);
+            border-left: 3px solid #4A90E2;
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 8px;
+            height: 8px;
+            background: #4A90E2;
+            border-radius: 50%;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .notification-text strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .notification-text .new-tag {
+            background: #ff4757;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .notification-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-details-btn {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .view-details-btn:hover {
+            background: #357abd;
+        }
+
+        .mark-read-btn {
+            background: #e1e5e9;
+            color: #666;
+        }
+
+        .mark-read-btn:hover {
+            background: #d1d5db;
+        }
+
+        .no-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .notification-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e1e5e9;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .clear-all-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: underline;
+        }
+
+        .clear-all-btn:hover {
+            color: #357abd;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            border-radius: 10px;
+            border: 1px solid rgba(74, 144, 226, 0.2);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        /* FullCalendar Customization */
+        .fc {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .fc-header-toolbar {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            padding: 20px;
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .fc-toolbar-title {
+            color: white !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+        }
+
+        .fc-button-primary {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+        }
+
+        .fc-button-primary:hover {
+            background: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .fc-event {
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .fc-daygrid-day:hover {
+            background: rgba(74, 144, 226, 0.05) !important;
+        }
+
+        .fc-day-today {
+            background: rgba(74, 144, 226, 0.1) !important;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(74, 144, 226, 0.1);
+            border-top: 4px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .legend {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .notification-dropdown {
+                min-width: 300px;
+                right: -50px;
+            }
+        }
+
+        /* Custom scrollbar */
+        .notification-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notification-content::-webkit-scrollbar-track {
+            background: #f1f3f4;
+        }
+
+        .notification-content::-webkit-scrollbar-thumb {
+            background: #c1c8cd;
+            border-radius: 3px;
+        }
+
+        .notification-content::-webkit-scrollbar-thumb:hover {
+            background: #a8b0b5;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo"> <img src="/img/logo.png" alt="Smile Clinic" /> </div>
-    <ul>
-      <li class="active"><a href="/admin/dashboard">Schedule</a></li>
-      <li><a href="/admin/appointments">Appointments</a></li>
-      <li><a href="/admin/dentists">Dentists</a></li>
-      <li><a href="/admin/patients">Patients</a></li>
-      <li><a href="/admin/treatments">Treatments</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="header">
-      <h1>Clinic Dentists' Schedule</h1>
-      <div class="header-right">
-        <img src="/img/notification-bell.png" alt="Notifications" class="notification-icon" onclick="toggleNotifications()" />
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" alt="Profile" class="avatar" />
-            <div>
-              <strong>Hello Admin</strong><br />
-              <small>admin</small>
-            </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown">
-            <a href="/admin/profile">My Profile</a>
-            <hr />
-            <a href="/logout">Log Out</a>
-          </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
+        <ul>
+            <li class="active"><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
     </div>
 
-    <div class="calendar-container">
-      <div id='calendar'></div>
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Dentist, schedule or date..." id="searchInput" />
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                        <div class="notification-footer">
+                            <button class="clear-all-btn" onclick="markAllAsRead()">Mark all as read</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar">👨‍💼</div>
+                        <div class="user-details">
+                            <strong>Hello Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1>Clinic Dentists' Schedule</h1>
+                <p>View and manage all dentists' schedules and appointments</p>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading schedule data...</p>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e8f5e8; border-color: #2e7d32;"></div>
+                        <span>Working Hours</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fce4ec; border-color: #c2185b;"></div>
+                        <span>Working Hours (Has Appointments)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f5f5f5; border-color: #999;"></div>
+                        <span>Day Off</span>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="calendar-container">
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var calendarEl = document.getElementById('calendar');
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-          left: 'prev,next',
-          center: 'title',
-          right: ''
-        },
-        events: [
-          {
-            title: 'Dr. Somsri\n10:00am-6:00pm',
-            start: '2025-04-01',
-            color: '#d48ed6'
-          },
-          {
-            title: 'Dr. Somsri\n10:00am-6:00pm',
-            start: '2025-04-01',
-            end: '2025-04-03',
-            color: '#9ec9f5'
-          },
-          {
-            title: 'Dr. Somsri\n10:00am-6:00pm',
-            start: '2025-04-04',
-            color: '#d48ed6'
-          },
-          {
-            title: 'Dr. Somsri\n10:00am-6:00pm',
-            start: '2025-04-07',
-            end: '2025-04-11',
-            color: '#9ec9f5'
-          },
-          {
-            title: 'Dr. Somsri\n10:00am-6:00pm',
-            start: '2025-04-08',
-            color: '#d48ed6'
-          }
-        ]
-      });
-      calendar.render();
-    });
+    <!-- Notification Detail Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Notification Details</h3>
+                <button class="close" onclick="closeNotificationModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
 
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script>
+        let notificationData = [];
+        let calendar;
+        let notificationDropdownOpen = false;
 
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
+        // Initialize calendar and load data
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            
+            document.getElementById('loading').style.display = 'block';
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                height: 'auto',
+                eventDisplay: 'block',
+                dayMaxEvents: false,
+                events: [], // Will be loaded from API
+                eventClick: handleCalendarEventClick,
+                loading: function(isLoading) {
+                    document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+                },
+                eventDidMount: function(info) {
+                    info.el.title = info.event.title;
+                }
+            });
+            
+            calendar.render();
+            
+            // Load real data
+            loadScheduleEvents();
+            loadNotifications();
 
-  </script>
+            // Auto-refresh every 60 seconds
+            setInterval(() => {
+                loadNotifications();
+            }, 60000);
+        });
+
+        // Load schedule events from database
+        async function loadScheduleEvents() {
+            try {
+                const response = await fetch('/admin/api/schedule');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    calendar.removeAllEvents();
+                    calendar.addEventSource(data.events);
+                } else {
+                    throw new Error(data.error || 'Failed to load schedules');
+                }
+            } catch (error) {
+                console.error('Error loading schedule events:', error);
+                showToast('Failed to load schedules: ' + error.message, 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Load notifications from database
+        async function loadNotifications() {
+            try {
+                // Simulate API call - replace with actual endpoint
+                const response = await fetch('/admin/api/notifications');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        notificationData = data.notifications;
+                    }
+                } else {
+                    // If API doesn't exist yet, create sample notifications from database data
+                    await createSampleNotifications();
+                }
+                
+                renderNotifications();
+                updateNotificationBadge();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                // Create sample notifications as fallback
+                await createSampleNotifications();
+                renderNotifications();
+                updateNotificationBadge();
+            }
+        }
+
+        // Create sample notifications based on recent appointments
+        async function createSampleNotifications() {
+            try {
+                // Get recent appointments and schedule changes
+                const scheduleResponse = await fetch('/admin/api/schedule');
+                const scheduleData = await scheduleResponse.json();
+                
+                notificationData = [];
+                
+                if (scheduleData.success && scheduleData.events) {
+                    // Create notifications based on appointments
+                    scheduleData.events.forEach((event, index) => {
+                        if (event.extendedProps && event.extendedProps.hasAppointments) {
+                            notificationData.push({
+                                id: index + 1,
+                                type: 'appointment',
+                                title: 'New Appointment',
+                                message: `Appointment scheduled with ${event.extendedProps.dentist}`,
+                                date: new Date(event.start).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }),
+                                isRead: Math.random() > 0.3, // 70% chance of being unread
+                                isNew: Math.random() > 0.7,  // 30% chance of being new
+                                timestamp: new Date(event.start)
+                            });
+                        }
+                    });
+                }
+
+                // Add some general notifications
+                notificationData.unshift({
+                    id: 'new_1',
+                    type: 'appointment',
+                    title: 'New Appointment Request',
+                    message: 'Appointment from: Mr. Somchai Wongdee',
+                    date: 'April 10, 2025 at 2:00 PM',
+                    isRead: false,
+                    isNew: true,
+                    timestamp: new Date('2025-04-10T14:00:00')
+                });
+
+                notificationData.unshift({
+                    id: 'new_2',
+                    type: 'appointment',
+                    title: 'Appointment Request',
+                    message: 'Appointment from: Mr. Nithipol Pronpa',
+                    date: 'April 11, 2025 at 3:00 PM',
+                    isRead: false,
+                    isNew: false,
+                    timestamp: new Date('2025-04-11T15:00:00')
+                });
+            } catch (error) {
+                console.error('Error creating sample notifications:', error);
+            }
+        }
+
+        // Render notifications in dropdown
+        function renderNotifications() {
+            const notificationContent = document.getElementById('notificationContent');
+            
+            if (notificationData.length === 0) {
+                notificationContent.innerHTML = `
+                    <div class="no-notifications">
+                        <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px; color: #ccc;"></i>
+                        <p>No notifications</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by timestamp (newest first)
+            const sortedNotifications = notificationData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            notificationContent.innerHTML = sortedNotifications.map(notification => `
+                <div class="notification-item ${!notification.isRead ? 'unread' : ''}" data-id="${notification.id}">
+                    <div class="notification-text">
+                        ${notification.isNew ? '<span class="new-tag">New</span>' : ''}
+                        <strong>${notification.title}:</strong> ${notification.message}
+                    </div>
+                    <div class="notification-date">${notification.date}</div>
+                    <div class="notification-actions">
+                        <button class="notification-btn view-details-btn" onclick="viewNotificationDetails('${notification.id}')">
+                            View Details
+                        </button>
+                        ${!notification.isRead ? `
+                            <button class="notification-btn mark-read-btn" onclick="markAsRead('${notification.id}')">
+                                Mark as read
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update notification badge
+        function updateNotificationBadge() {
+            const unreadCount = notificationData.filter(n => !n.isRead).length;
+            const badge = document.getElementById('notificationBadge');
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            notificationDropdownOpen = !notificationDropdownOpen;
+            
+            if (notificationDropdownOpen) {
+                dropdown.classList.add('show');
+                loadNotifications(); // Refresh when opening
+            } else {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        // View notification details
+        function viewNotificationDetails(id) {
+            const notification = notificationData.find(n => n.id == id);
+            if (notification) {
+                // Mark as read
+                notification.isRead = true;
+                notification.isNew = false;
+                
+                // Show modal with details
+                showNotificationModal(notification);
+                
+                // Update UI
+                renderNotifications();
+                updateNotificationBadge();
+                
+                // In real app, send to server
+                markNotificationAsReadInDatabase(id);
+            }
+        }
+
+        // Show notification detail modal
+        function showNotificationModal(notification) {
+            const modal = document.getElementById('notificationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = notification.title;
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <p style="margin: 0 0 10px 0; color: #333; line-height: 1.5;"><strong>Message:</strong> ${notification.message}</p>
+                    <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">
+                        <i class="fas fa-clock"></i> ${notification.date}
+                    </p>
+                    <p style="margin: 0; color: #666; font-size: 13px;">
+                        <i class="fas fa-tag"></i> Type: ${notification.type}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <button onclick="closeNotificationModal()" style="
+                        background: #4A90E2;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">Close</button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // Close notification modal
+        function closeNotificationModal() {
+            const modal = document.getElementById('notificationModal');
+            modal.style.display = 'none';
+        }
+
+        // Mark notification as read
+        function markAsRead(id) {
+            const notification = notificationData.find(n => n.id == id);
+            if (notification) {
+                notification.isRead = true;
+                notification.isNew = false;
+                
+                renderNotifications();
+                updateNotificationBadge();
+                showToast('Notification marked as read', 'success');
+                
+                // In real app, send to server
+                markNotificationAsReadInDatabase(id);
+            }
+        }
+
+        // Mark all notifications as read
+        function markAllAsRead() {
+            const unreadCount = notificationData.filter(n => !n.isRead).length;
+            
+            if (unreadCount === 0) {
+                showToast('No unread notifications', 'info');
+                return;
+            }
+            
+            notificationData.forEach(n => {
+                n.isRead = true;
+                n.isNew = false;
+            });
+            
+            renderNotifications();
+            updateNotificationBadge();
+            showToast(`${unreadCount} notifications marked as read`, 'success');
+            
+            // In real app, send to server
+            markAllNotificationsAsReadInDatabase();
+        }
+
+        // Handle calendar event click
+        function handleCalendarEventClick(info) {
+            const event = info.event;
+            const props = event.extendedProps;
+            
+            let modalContent = `
+                <div style="margin-bottom: 20px;">
+                    <p style="margin: 0 0 10px 0;"><strong>Event:</strong> ${event.title}</p>
+                    <p style="margin: 0 0 10px 0;"><strong>Date:</strong> ${event.start.toDateString()}</p>
+            `;
+            
+            if (props) {
+                if (props.dentist) modalContent += `<p style="margin: 0 0 10px 0;"><strong>Dentist:</strong> ${props.dentist}</p>`;
+                if (props.specialty) modalContent += `<p style="margin: 0 0 10px 0;"><strong>Specialty:</strong> ${props.specialty}</p>`;
+                if (props.startTime && props.endTime) modalContent += `<p style="margin: 0 0 10px 0;"><strong>Time:</strong> ${props.startTime} - ${props.endTime}</p>`;
+                if (props.appointmentCount > 0) modalContent += `<p style="margin: 0 0 10px 0;"><strong>Appointments:</strong> ${props.appointmentCount}</p>`;
+            }
+            
+            modalContent += `
+                </div>
+                <div style="text-align: right;">
+                    <button onclick="closeEventModal()" style="
+                        background: #4A90E2;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">Close</button>
+                </div>
+            `;
+            
+            const modal = document.getElementById('notificationModal');
+            document.getElementById('modalTitle').textContent = 'Schedule Details';
+            document.getElementById('modalBody').innerHTML = modalContent;
+            modal.style.display = 'flex';
+        }
+
+        // Close event modal (same as notification modal)
+        function closeEventModal() {
+            closeNotificationModal();
+        }
+
+        // Profile dropdown toggle
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 0) {
+                // This would filter events in real implementation
+                showToast('Search functionality will filter schedules', 'info');
+            }
+        });
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // API simulation functions (replace with real implementations)
+        async function markNotificationAsReadInDatabase(id) {
+            try {
+                // Replace with actual API call
+                // await fetch(`/admin/api/notifications/${id}/read`, { method: 'POST' });
+                console.log(`Marked notification ${id} as read`);
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        async function markAllNotificationsAsReadInDatabase() {
+            try {
+                // Replace with actual API call
+                // await fetch('/admin/api/notifications/read-all', { method: 'POST' });
+                console.log('Marked all notifications as read');
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            // Close profile dropdown
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+            
+            // Close notification dropdown
+            const notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer.contains(event.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                notificationDropdownOpen = false;
+            }
+            
+            // Close modal when clicking outside
+            const modal = document.getElementById('notificationModal');
+            if (event.target === modal) {
+                closeNotificationModal();
+            }
+        });
+
+        // Auto-refresh on window focus
+        window.addEventListener('focus', () => {
+            loadNotifications();
+            loadScheduleEvents();
+        });
+
+        // Simulate new notifications periodically (remove in production)
+        setTimeout(() => {
+            const newNotification = {
+                id: 'sim_' + Date.now(),
+                type: 'appointment',
+                title: 'New Appointment Request',
+                message: 'Appointment request from: Ms. Anna Thompson',
+                date: new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                isRead: false,
+                isNew: true,
+                timestamp: new Date()
+            };
+            
+            notificationData.unshift(newNotification);
+            renderNotifications();
+            updateNotificationBadge();
+            showToast('New notification received!', 'info');
+        }, 10000); // After 10 seconds for demo
+    </script>
 </body>
 </html>

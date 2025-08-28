@@ -393,8 +393,9 @@
             font-weight: 500;
             font-size: 11px;
             z-index: 10;
-            pointer-events: none;
+            pointer-events: auto;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .schedule-block.appointment {
@@ -549,6 +550,11 @@
             background: #c82333;
         }
 
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         /* Legend */
         .schedule-legend {
             display: flex;
@@ -577,6 +583,38 @@
         .legend-appointment {
             background: #fce4ec;
             border: 1px solid #c2185b;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
 
         /* Responsive */
@@ -614,7 +652,7 @@
             <li class="active"><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
         </ul>
     </div>
 
@@ -635,7 +673,7 @@
                     <div class="user-info" onclick="toggleDropdown()">
                         <div class="avatar">👨‍⚕️</div>
                         <div class="user-details">
-                            <strong>Hello Dr. Somchai</strong>
+                            <strong>Hello Dr. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'Doctor' %></strong>
                             <small>dentist</small>
                         </div>
                         <i class="fas fa-caret-down"></i>
@@ -657,11 +695,17 @@
                 <p>Manage your working hours and availability</p>
             </div>
 
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading schedule...</p>
+            </div>
+
             <!-- Calendar Section -->
             <div class="calendar-section">
                 <div class="calendar-header">
                     <button class="calendar-nav" onclick="changeWeek(-1)">◀</button>
-                    <h2 class="calendar-title" id="currentWeekTitle">August 10, 2025</h2>
+                    <h2 class="calendar-title" id="currentWeekTitle">Loading...</h2>
                     <button class="calendar-nav" onclick="changeWeek(1)">▶</button>
                     <div class="view-controls">
                         <button class="view-btn" onclick="setView('day')">day</button>
@@ -676,13 +720,13 @@
                         <thead>
                             <tr>
                                 <th style="width: 80px;">Time</th>
-                                <th>Sun 8/10</th>
-                                <th>Mon 8/11</th>
-                                <th>Tue 8/12</th>
-                                <th>Wed 8/13</th>
-                                <th>Thu 8/14</th>
-                                <th>Fri 8/15</th>
-                                <th>Sat 8/16</th>
+                                <th>Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
                             </tr>
                         </thead>
                         <tbody id="scheduleTableBody">
@@ -718,12 +762,16 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-calendar-plus"></i>
-                    <span id="modalDate">Thu, August 14, 2025</span>
+                    <span id="modalDate">Select Date</span>
                 </h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
 
             <form id="scheduleForm">
+                <input type="hidden" id="selectedDate" name="date">
+                <input type="hidden" id="selectedDay" name="day">
+                <input type="hidden" id="selectedHour" name="hour">
+
                 <div class="form-group">
                     <label class="form-label">Status:</label>
                     <div class="radio-group">
@@ -787,8 +835,11 @@
                 </div>
 
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">
+                    <button type="button" class="btn btn-primary" onclick="saveSchedule()" id="saveBtn">
                         <i class="fas fa-check"></i> Confirm
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="deleteSchedule()" id="deleteBtn" style="display: none;">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">
                         <i class="fas fa-times"></i> Cancel
@@ -808,6 +859,8 @@
         function initializeSchedule() {
             generateScheduleTable();
             loadScheduleData();
+            updateWeekTitle();
+            updateTableHeaders();
         }
 
         // Top bar functions
@@ -817,7 +870,7 @@
         }
         
         function toggleNotifications() {
-            alert('Notifications feature coming soon!');
+            showNotification('Notifications feature coming soon!');
         }
         
         document.addEventListener('click', function (e) {
@@ -845,22 +898,6 @@
             }
         }
 
-        // Get default working hours based on day of week
-        function getDefaultWorkingHours(dayOfWeek) {
-            // Sunday = 0, Monday = 1, Tuesday = 2, etc.
-            const workingHours = {
-                0: { start: '10:00', end: '20:00', closed: true },  // Sunday - ปิดทำการ (disabled)
-                1: { start: '10:00', end: '20:00', closed: false }, // Monday
-                2: { start: '10:00', end: '20:00', closed: false }, // Tuesday
-                3: { start: '10:00', end: '20:00', closed: false }, // Wednesday
-                4: { start: '10:00', end: '20:00', closed: false }, // Thursday
-                5: { start: '10:00', end: '20:00', closed: false }, // Friday
-                6: { start: '10:00', end: '20:00', closed: false }  // Saturday
-            };
-            
-            return workingHours[dayOfWeek] || { start: '10:00', end: '20:00', closed: false };
-        }
-
         // Check if a time slot is within working hours
         function isWithinWorkingHours(dayOfWeek, hour) {
             // Sunday is always closed
@@ -877,7 +914,7 @@
             const tbody = document.getElementById('scheduleTableBody');
             tbody.innerHTML = '';
 
-            // Generate time slots from 8am to 10pm (extended range for display)
+            // Generate time slots from 8am to 10pm
             for (let hour = 8; hour <= 22; hour++) {
                 const row = document.createElement('tr');
                 
@@ -897,7 +934,7 @@
                     // Check if this cell should be disabled
                     if (shouldDisableCell(day, hour)) {
                         cell.classList.add('disabled');
-                        cell.onclick = null; // Remove click handler
+                        cell.onclick = null;
                     } else {
                         cell.onclick = () => openScheduleModal(day, hour, cell);
                     }
@@ -929,13 +966,11 @@
             const table = document.getElementById('scheduleTable');
             const tbody = table.querySelector('tbody');
             
-            // Find the first and last cells for this time range
             const startHour = parseInt(startTime.split(':')[0]);
             const endHour = parseInt(endTime.split(':')[0]);
             const startMinute = parseInt(startTime.split(':')[1]);
             const endMinute = parseInt(endTime.split(':')[1]);
             
-            // Find cells
             const startCell = tbody.querySelector(`td[data-day="${day}"][data-hour="${startHour}"]`);
             const endCell = tbody.querySelector(`td[data-day="${day}"][data-hour="${endHour}"]`) || 
                            tbody.querySelector(`td[data-day="${day}"][data-hour="${endHour-1}"]`);
@@ -944,20 +979,16 @@
             
             const tableRect = table.getBoundingClientRect();
             const startRect = startCell.getBoundingClientRect();
-            const endRect = endCell.getBoundingClientRect();
             
-            // Calculate position relative to table
             const left = startRect.left - tableRect.left;
             const width = startRect.width;
             const top = startRect.top - tableRect.top;
             
-            // Calculate height based on time duration
             const totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
             const minutesPerHour = 60;
             const cellHeight = startRect.height;
             const height = (totalMinutes / minutesPerHour) * cellHeight;
             
-            // Adjust top position based on start minute
             const minuteOffset = (startMinute / minutesPerHour) * cellHeight;
             
             return {
@@ -981,7 +1012,7 @@
                 block.textContent = 'Day Off';
             } else if (schedule.hasAppointment) {
                 block.classList.add('appointment');
-                block.textContent = `${schedule.startTime}-${schedule.endTime}`;
+                block.textContent = `${schedule.startTime}-${schedule.endTime} (${schedule.appointmentCount || 1})`;
             } else {
                 block.textContent = `${schedule.startTime}-${schedule.endTime}`;
             }
@@ -1000,10 +1031,6 @@
                 if (cell) openScheduleModal(day, hour, cell);
             });
             
-            // Make it clickable
-            block.style.pointerEvents = 'auto';
-            block.style.cursor = 'pointer';
-            
             return block;
         }
 
@@ -1012,7 +1039,7 @@
             const overlay = document.getElementById('scheduleOverlay');
             overlay.innerHTML = '';
             
-            // Group schedules by day and time range
+            // Group schedules by day
             const daySchedules = {};
             
             Object.values(scheduleData).forEach(schedule => {
@@ -1041,13 +1068,12 @@
                         currentSchedule = { ...schedule };
                     } else if (currentSchedule.endTime === schedule.startTime && 
                               currentSchedule.status === schedule.status) {
-                        // Extend current schedule
                         currentSchedule.endTime = schedule.endTime;
                         if (schedule.hasAppointment) {
                             currentSchedule.hasAppointment = true;
+                            currentSchedule.appointmentCount = (currentSchedule.appointmentCount || 0) + (schedule.appointmentCount || 1);
                         }
                     } else {
-                        // Start new schedule block
                         mergedSchedules.push(currentSchedule);
                         currentSchedule = { ...schedule };
                     }
@@ -1069,9 +1095,8 @@
 
         // Open schedule modal
         function openScheduleModal(day, hour, cell) {
-            // Check if this time slot is disabled
             if (shouldDisableCell(day, hour)) {
-                alert('ไม่สามารถจองในช่วงเวลานี้ได้');
+                showNotification('ไม่สามารถกำหนดตารางเวลาในช่วงนี้ได้', 'error');
                 return;
             }
             
@@ -1093,36 +1118,40 @@
             
             modalDate.textContent = dateStr;
             
-            // Get default working hours for this day
-            const dayOfWeek = targetDate.getDay();
-            const defaultHours = getDefaultWorkingHours(dayOfWeek);
+            // Set hidden fields
+            document.getElementById('selectedDate').value = targetDate.toISOString().split('T')[0];
+            document.getElementById('selectedDay').value = day;
+            document.getElementById('selectedHour').value = hour;
             
-            // Since we're only allowing working days, always set to working
+            // Reset form
             document.getElementById('working').checked = true;
             document.getElementById('dayoff').checked = false;
-            
-            // Set default times (always working hours for enabled cells)
-            document.getElementById('startTime').value = defaultHours.start;
-            document.getElementById('endTime').value = defaultHours.end;
-            
-            // Update time controls visibility
-            toggleTimeControls();
+            document.getElementById('startTime').value = '10:00';
+            document.getElementById('endTime').value = '20:00';
+            document.getElementById('note').value = '';
+            document.getElementById('deleteBtn').style.display = 'none';
             
             // Load existing data if any
-            const key = `${targetDate.toDateString()}-${hour}`;
-            if (scheduleData[key]) {
-                const data = scheduleData[key];
-                document.querySelector(`input[name="status"][value="${data.status}"]`).checked = true;
-                document.getElementById('startTime').value = data.startTime;
-                document.getElementById('endTime').value = data.endTime;
-                document.getElementById('note').value = data.note || '';
-                toggleTimeControls();
-            } else {
-                // Reset form with defaults
-                document.getElementById('note').value = '';
+            const existingSchedule = findExistingSchedule(targetDate, hour);
+            if (existingSchedule) {
+                document.querySelector(`input[name="status"][value="${existingSchedule.status}"]`).checked = true;
+                document.getElementById('startTime').value = existingSchedule.startTime;
+                document.getElementById('endTime').value = existingSchedule.endTime;
+                document.getElementById('note').value = existingSchedule.note || '';
+                document.getElementById('deleteBtn').style.display = 'inline-block';
             }
             
+            toggleTimeControls();
             modal.style.display = 'block';
+        }
+
+        // Find existing schedule
+        function findExistingSchedule(date, hour) {
+            const dateStr = date.toISOString().split('T')[0];
+            return Object.values(scheduleData).find(schedule => 
+                schedule.date === dateStr && 
+                (schedule.hour === hour || schedule.status === 'dayoff')
+            );
         }
 
         // Close modal
@@ -1132,121 +1161,125 @@
         }
 
         // Save schedule
-        function saveSchedule() {
-            if (!selectedCell) return;
-
+        async function saveSchedule() {
             const form = document.getElementById('scheduleForm');
             const formData = new FormData(form);
+            const saveBtn = document.getElementById('saveBtn');
             
-            const day = parseInt(selectedCell.dataset.day);
-            const hour = parseInt(selectedCell.dataset.hour);
-            
-            // Calculate the actual date
-            const weekStart = getWeekStart(currentDate);
-            const targetDate = new Date(weekStart);
-            targetDate.setDate(weekStart.getDate() + day);
-            
-            const status = formData.get('status');
-            let scheduleInfo;
-            
-            if (status === 'dayoff') {
-                // For day off, don't need time ranges
-                scheduleInfo = {
-                    date: targetDate.toISOString().split('T')[0],
-                    day: day,
-                    hour: hour,
-                    status: 'dayoff',
-                    startTime: '00:00',
-                    endTime: '23:59',
-                    note: formData.get('note') || '',
-                    hasAppointment: false
-                };
-            } else {
-                // For working hours
-                scheduleInfo = {
-                    date: targetDate.toISOString().split('T')[0],
-                    day: day,
-                    hour: hour,
-                    status: 'working',
+            try {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                
+                const scheduleData = {
+                    date: formData.get('date'),
+                    day: parseInt(formData.get('day')),
+                    status: formData.get('status'),
                     startTime: formData.get('startTime'),
                     endTime: formData.get('endTime'),
-                    note: formData.get('note') || '',
-                    hasAppointment: Math.random() > 0.7 // Simulate some appointments
+                    note: formData.get('note')
                 };
-            }
-
-            // For demo purposes, we'll just store locally
-            // In real app, you would send to server:
-            // fetch('/dentist/api/schedule/save', { ... })
-            
-            // Clear existing schedules for this date
-            const existingKeys = Object.keys(scheduleData).filter(key => {
-                const data = scheduleData[key];
-                return data.day === day && data.date === scheduleInfo.date;
-            });
-            
-            existingKeys.forEach(key => delete scheduleData[key]);
-            
-            if (status === 'dayoff') {
-                // For day off, create a single block covering the whole day
-                const key = `${targetDate.toDateString()}-${hour}`;
-                scheduleData[key] = scheduleInfo;
-            } else {
-                // For working hours, create time range blocks
-                const startHour = parseInt(scheduleInfo.startTime.split(':')[0]);
-                const endHour = parseInt(scheduleInfo.endTime.split(':')[0]);
                 
-                for (let h = startHour; h < endHour; h++) {
-                    const key = `${targetDate.toDateString()}-${h}`;
-                    scheduleData[key] = {
-                        ...scheduleInfo,
-                        hour: h
-                    };
+                const response = await fetch('/dentist/api/schedule/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(scheduleData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    closeModal();
+                    loadScheduleData();
+                } else {
+                    showNotification(result.error, 'error');
                 }
+                
+            } catch (error) {
+                console.error('Error saving schedule:', error);
+                showNotification('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Confirm';
             }
-            
-            // Update display
-            updateScheduleDisplay();
-            closeModal();
-            
-            // Show success message
-            setTimeout(() => {
-                const message = status === 'dayoff' ? 'บันทึกวันหยุดเรียบร้อยแล้ว' : 'บันทึกตารางเวลาเรียบร้อยแล้ว';
-                alert(message);
-            }, 100);
         }
 
-        // Load schedule data (demo data)
-        function loadScheduleData() {
-            // Clear existing data
-            scheduleData = {};
-            
-            // Add some demo data for working days only
-            const weekStart = getWeekStart(currentDate);
-            
-            // Thursday 12:00-13:00 working hours (demo)
-            const thursdayDate = new Date(weekStart);
-            thursdayDate.setDate(weekStart.getDate() + 4); // Thursday
-            
-            // Only add demo data if it's within working hours
-            if (isWithinWorkingHours(4, 12)) { // Thursday, 12:00
-                const demoSchedule = {
-                    date: thursdayDate.toISOString().split('T')[0],
-                    day: 4,
-                    hour: 12,
-                    status: 'working',
-                    startTime: '12:00',
-                    endTime: '13:00',
-                    note: 'Lunch break coverage',
-                    hasAppointment: false
-                };
-                
-                const key = `${thursdayDate.toDateString()}-12`;
-                scheduleData[key] = demoSchedule;
+        // Delete schedule
+        async function deleteSchedule() {
+            if (!confirm('คุณต้องการลบตารางเวลานี้หรือไม่?')) {
+                return;
             }
             
-            // Update display
-            updateScheduleDisplay();
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            try {
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                
+                const response = await fetch('/dentist/api/schedule/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: document.getElementById('selectedDate').value,
+                        hour: parseInt(document.getElementById('selectedHour').value)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    closeModal();
+                    loadScheduleData();
+                } else {
+                    showNotification(result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error deleting schedule:', error);
+                showNotification('เกิดข้อผิดพลาดในการลบ', 'error');
+            } finally {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            }
+        }
+
+        // Load schedule data from database
+        async function loadScheduleData() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                
+                const weekStart = getWeekStart(currentDate);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                const response = await fetch(`/dentist/api/schedule/load?startDate=${weekStart.toISOString().split('T')[0]}&endDate=${weekEnd.toISOString().split('T')[0]}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    scheduleData = {};
+                    
+                    // Convert array to object for easy lookup
+                    result.schedules.forEach(schedule => {
+                        const key = `${schedule.date}-${schedule.hour}`;
+                        scheduleData[key] = schedule;
+                    });
+                    
+                    updateScheduleDisplay();
+                } else {
+                    showNotification('ไม่สามารถโหลดตารางเวลาได้: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                showNotification('เกิดข้อผิดพลาดในการโหลดตารางเวลา', 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
         }
 
         // Get week start (Sunday)
@@ -1296,7 +1329,39 @@
             currentView = view;
         }
 
-        // Handle window resize to recalculate positions
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fecaca' : '#f3f4f6'};
+                color: ${type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#374151'};
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 1001;
+                border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#6b7280'};
+                max-width: 400px;
+                font-size: 14px;
+                animation: slideInRight 0.3s ease;
+            `;
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Handle window resize
         window.addEventListener('resize', () => {
             setTimeout(updateScheduleDisplay, 100);
         });
@@ -1311,12 +1376,11 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Schedule page loaded');
             initializeSchedule();
-            updateWeekTitle();
-            updateTableHeaders();
             
             // Recalculate positions after table is rendered
-            setTimeout(updateScheduleDisplay, 100);
+            setTimeout(updateScheduleDisplay, 500);
         });
     </script>
 </body>

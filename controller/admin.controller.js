@@ -60,6 +60,324 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Dashboard
+exports.getDashboard = async (req, res) => {
+  try {
+    // ดึงข้อมูลตารางเวลาของทันตแพทย์ทั้งหมด
+    const [scheduleData] = await db.execute(`
+      SELECT 
+        ds.schedule_date,
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        ds.note,
+        d.fname,
+        d.lname,
+        d.specialty,
+        COUNT(q.queue_id) as appointment_count
+      FROM dentist_schedule ds
+      JOIN dentist d ON ds.dentist_id = d.dentist_id
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY
+        AND ds.schedule_date <= CURDATE() + INTERVAL 60 DAY
+      GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
+      ORDER BY ds.schedule_date, ds.hour
+    `);
+
+    // จัดรูปแบบข้อมูลสำหรับ FullCalendar
+    const events = [];
+    
+    // Group schedules by dentist and date
+    const groupedSchedules = {};
+    
+    scheduleData.forEach(schedule => {
+      const dateKey = schedule.schedule_date.toISOString().split('T')[0];
+      const dentistKey = `${schedule.fname} ${schedule.lname}`;
+      
+      if (!groupedSchedules[dateKey]) {
+        groupedSchedules[dateKey] = {};
+      }
+      
+      if (!groupedSchedules[dateKey][dentistKey]) {
+        groupedSchedules[dateKey][dentistKey] = {
+          dentist: dentistKey,
+          specialty: schedule.specialty,
+          schedules: [],
+          hasAppointments: false
+        };
+      }
+      
+      groupedSchedules[dateKey][dentistKey].schedules.push(schedule);
+      
+      if (schedule.appointment_count > 0) {
+        groupedSchedules[dateKey][dentistKey].hasAppointments = true;
+      }
+    });
+
+    // Create events for FullCalendar
+    Object.keys(groupedSchedules).forEach(date => {
+      Object.keys(groupedSchedules[date]).forEach(dentistName => {
+        const dentistData = groupedSchedules[date][dentistName];
+        
+        if (dentistData.schedules.length === 0) return;
+        
+        // Sort schedules by hour
+        dentistData.schedules.sort((a, b) => a.hour - b.hour);
+        
+        // Group continuous working hours
+        const workingBlocks = [];
+        let currentBlock = null;
+        
+        dentistData.schedules.forEach(schedule => {
+          if (schedule.status === 'dayoff') {
+            if (currentBlock) {
+              workingBlocks.push(currentBlock);
+              currentBlock = null;
+            }
+            workingBlocks.push({
+              type: 'dayoff',
+              start: schedule.start_time,
+              end: schedule.end_time,
+              note: schedule.note
+            });
+          } else {
+            if (!currentBlock) {
+              currentBlock = {
+                type: 'working',
+                start: schedule.start_time,
+                end: schedule.end_time,
+                hasAppointments: schedule.appointment_count > 0
+              };
+            } else {
+              currentBlock.end = schedule.end_time;
+              if (schedule.appointment_count > 0) {
+                currentBlock.hasAppointments = true;
+              }
+            }
+          }
+        });
+        
+        if (currentBlock) {
+          workingBlocks.push(currentBlock);
+        }
+        
+        // Create FullCalendar events
+        workingBlocks.forEach(block => {
+          if (block.type === 'dayoff') {
+            events.push({
+              title: `Dr. ${dentistName}\nDay Off`,
+              start: date,
+              color: '#f5f5f5',
+              textColor: '#999',
+              borderColor: '#ddd'
+            });
+          } else {
+            const startTime = block.start.substring(0, 5); // HH:MM
+            const endTime = block.end.substring(0, 5);
+            
+            events.push({
+              title: `Dr. ${dentistName}\n${startTime}-${endTime}${block.hasAppointments ? ' (Has Appointments)' : ''}`,
+              start: date,
+              color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
+              textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
+              borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32'
+            });
+          }
+        });
+      });
+    });
+
+    res.render('admin-dashboard', { events: JSON.stringify(events) });
+    
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    res.render('admin-dashboard', { events: JSON.stringify([]) });
+  }
+};
+
+exports.getScheduleAPI = async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    
+    let whereClause = '';
+    let params = [];
+    
+    if (start && end) {
+      whereClause = 'WHERE ds.schedule_date BETWEEN ? AND ?';
+      params = [start, end];
+    } else {
+      whereClause = `WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY 
+                     AND ds.schedule_date <= CURDATE() + INTERVAL 60 DAY`;
+    }
+
+    const [scheduleData] = await db.execute(`
+      SELECT 
+        ds.schedule_date,
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        ds.note,
+        d.dentist_id,
+        d.fname,
+        d.lname,
+        d.specialty,
+        COUNT(q.queue_id) as appointment_count
+      FROM dentist_schedule ds
+      JOIN dentist d ON ds.dentist_id = d.dentist_id
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      ${whereClause}
+      GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.dentist_id, d.fname, d.lname, d.specialty
+      ORDER BY ds.schedule_date, ds.hour
+    `, params);
+
+    // จัดรูปแบบข้อมูลสำหรับ FullCalendar
+    const events = [];
+    
+    // Group schedules by dentist and date
+    const groupedSchedules = {};
+    
+    scheduleData.forEach(schedule => {
+      const dateKey = schedule.schedule_date.toISOString().split('T')[0];
+      const dentistKey = `${schedule.fname}_${schedule.lname}_${schedule.dentist_id}`;
+      
+      if (!groupedSchedules[dateKey]) {
+        groupedSchedules[dateKey] = {};
+      }
+      
+      if (!groupedSchedules[dateKey][dentistKey]) {
+        groupedSchedules[dateKey][dentistKey] = {
+          dentist: `${schedule.fname} ${schedule.lname}`,
+          specialty: schedule.specialty,
+          schedules: [],
+          hasAppointments: false
+        };
+      }
+      
+      groupedSchedules[dateKey][dentistKey].schedules.push(schedule);
+      
+      if (schedule.appointment_count > 0) {
+        groupedSchedules[dateKey][dentistKey].hasAppointments = true;
+      }
+    });
+
+    // Create events for FullCalendar
+    Object.keys(groupedSchedules).forEach(date => {
+      Object.keys(groupedSchedules[date]).forEach(dentistKey => {
+        const dentistData = groupedSchedules[date][dentistKey];
+        
+        if (dentistData.schedules.length === 0) return;
+        
+        // Sort schedules by hour
+        dentistData.schedules.sort((a, b) => a.hour - b.hour);
+        
+        // Group continuous working hours
+        const workingBlocks = [];
+        let currentBlock = null;
+        
+        dentistData.schedules.forEach(schedule => {
+          if (schedule.status === 'dayoff') {
+            if (currentBlock) {
+              workingBlocks.push(currentBlock);
+              currentBlock = null;
+            }
+            workingBlocks.push({
+              type: 'dayoff',
+              start: schedule.start_time,
+              end: schedule.end_time,
+              note: schedule.note
+            });
+          } else {
+            if (!currentBlock) {
+              currentBlock = {
+                type: 'working',
+                start: schedule.start_time,
+                end: schedule.end_time,
+                hasAppointments: schedule.appointment_count > 0,
+                appointmentCount: schedule.appointment_count
+              };
+            } else {
+              currentBlock.end = schedule.end_time;
+              if (schedule.appointment_count > 0) {
+                currentBlock.hasAppointments = true;
+                currentBlock.appointmentCount += schedule.appointment_count;
+              }
+            }
+          }
+        });
+        
+        if (currentBlock) {
+          workingBlocks.push(currentBlock);
+        }
+        
+        // Create FullCalendar events
+        workingBlocks.forEach(block => {
+          if (block.type === 'dayoff') {
+            events.push({
+              id: `dayoff_${dentistKey}_${date}`,
+              title: `Dr. ${dentistData.dentist}\nDay Off`,
+              start: date,
+              color: '#f5f5f5',
+              textColor: '#999',
+              borderColor: '#ddd',
+              extendedProps: {
+                type: 'dayoff',
+                dentist: dentistData.dentist,
+                note: block.note
+              }
+            });
+          } else {
+            const startTime = block.start.substring(0, 5); // HH:MM
+            const endTime = block.end.substring(0, 5);
+            
+            const appointmentText = block.hasAppointments 
+              ? ` (${block.appointmentCount} appointment${block.appointmentCount > 1 ? 's' : ''})` 
+              : '';
+            
+            events.push({
+              id: `work_${dentistKey}_${date}`,
+              title: `Dr. ${dentistData.dentist}\n${startTime}-${endTime}${appointmentText}`,
+              start: date,
+              color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
+              textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
+              borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
+              extendedProps: {
+                type: 'working',
+                dentist: dentistData.dentist,
+                specialty: dentistData.specialty,
+                startTime: startTime,
+                endTime: endTime,
+                hasAppointments: block.hasAppointments,
+                appointmentCount: block.appointmentCount || 0
+              }
+            });
+          }
+        });
+      });
+    });
+
+    res.json({
+      success: true,
+      events: events
+    });
+    
+  } catch (error) {
+    console.error('Error loading schedule API:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load schedule data',
+      events: []
+    });
+  }
+};
+
 // -------------------- แสดงรายการนัด --------------------
 exports.viewAppointments = async (req, res) => {
   try {
@@ -710,3 +1028,757 @@ exports.deleteTreatment = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
+// ==================== Notifications Functions ====================
+
+// Get all notifications for admin
+exports.getNotifications = async (req, res) => {
+  try {
+    const { limit = 50, offset = 0, unread_only = 'false' } = req.query;
+    
+    let whereClause = '';
+    let params = [];
+    
+    if (unread_only === 'true') {
+      whereClause = 'WHERE is_read = 0';
+    }
+    
+    const [notifications] = await db.execute(`
+      SELECT 
+        n.id,
+        n.type,
+        n.title,
+        n.message,
+        n.is_read,
+        n.is_new,
+        n.appointment_id,
+        n.dentist_id,
+        n.patient_id,
+        n.created_at,
+        p.fname as patient_fname,
+        p.lname as patient_lname,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname
+      FROM notifications n
+      LEFT JOIN patient p ON n.patient_id = p.patient_id
+      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
+      ${whereClause}
+      ORDER BY n.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [...params, parseInt(limit), parseInt(offset)]);
+
+    // Get total count
+    const [countResult] = await db.execute(`
+      SELECT COUNT(*) as total FROM notifications n ${whereClause}
+    `, params);
+
+    const totalCount = countResult[0].total;
+    const unreadCount = await getUnreadNotificationCount();
+
+    res.json({
+      success: true,
+      notifications: notifications,
+      pagination: {
+        total: totalCount,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        unread_count: unreadCount
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load notifications',
+      details: error.message
+    });
+  }
+};
+
+// Get single notification by ID
+exports.getNotificationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [notifications] = await db.execute(`
+      SELECT 
+        n.*,
+        p.fname as patient_fname,
+        p.lname as patient_lname,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname,
+        q.time as appointment_time,
+        t.treatment_name
+      FROM notifications n
+      LEFT JOIN patient p ON n.patient_id = p.patient_id
+      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
+      LEFT JOIN queue q ON n.appointment_id = q.queue_id
+      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE n.id = ?
+    `, [id]);
+
+    if (notifications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Notification not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      notification: notifications[0]
+    });
+
+  } catch (error) {
+    console.error('Error fetching notification:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load notification details',
+      details: error.message
+    });
+  }
+};
+
+// Mark notification as read
+exports.markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [result] = await db.execute(`
+      UPDATE notifications 
+      SET is_read = 1, is_new = 0, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Notification not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Notification marked as read'
+    });
+
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark notification as read',
+      details: error.message
+    });
+  }
+};
+
+// Mark all notifications as read
+exports.markAllNotificationsAsRead = async (req, res) => {
+  try {
+    const [result] = await db.execute(`
+      UPDATE notifications 
+      SET is_read = 1, is_new = 0, updated_at = CURRENT_TIMESTAMP 
+      WHERE is_read = 0
+    `);
+
+    res.json({
+      success: true,
+      message: `${result.affectedRows} notifications marked as read`
+    });
+
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to mark all notifications as read',
+      details: error.message
+    });
+  }
+};
+
+// Delete notification
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [result] = await db.execute('DELETE FROM notifications WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Notification not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Notification deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete notification',
+      details: error.message
+    });
+  }
+};
+
+// Create new notification (for testing or manual creation)
+exports.createNotification = async (req, res) => {
+  try {
+    const { 
+      type, 
+      title, 
+      message, 
+      appointment_id = null, 
+      dentist_id = null, 
+      patient_id = null 
+    } = req.body;
+
+    if (!type || !title || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Type, title, and message are required'
+      });
+    }
+
+    const [result] = await db.execute(`
+      INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+    `, [type, title, message, appointment_id, dentist_id, patient_id]);
+
+    res.json({
+      success: true,
+      message: 'Notification created successfully',
+      notification_id: result.insertId
+    });
+
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create notification',
+      details: error.message
+    });
+  }
+};
+
+// Helper function to get unread notification count
+async function getUnreadNotificationCount() {
+  try {
+    const [result] = await db.execute('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0');
+    return result[0].count;
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return 0;
+  }
+}
+
+// ==================== Utility Functions for Notifications ====================
+
+// Create notification when new appointment is made
+async function createAppointmentNotification(appointmentId, patientId, dentistId) {
+  try {
+    // Get patient and dentist names
+    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
+    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
+    
+    if (patientData.length > 0 && dentistData.length > 0) {
+      const patient = patientData[0];
+      const dentist = dentistData[0];
+      
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+      `, [
+        'appointment',
+        'New Appointment Request',
+        `Appointment from: ${patient.fname} ${patient.lname} with Dr. ${dentist.fname} ${dentist.lname}`,
+        appointmentId,
+        dentistId,
+        patientId
+      ]);
+    }
+  } catch (error) {
+    console.error('Error creating appointment notification:', error);
+  }
+}
+
+// Create notification when appointment is cancelled
+async function createCancellationNotification(appointmentId, patientId, dentistId) {
+  try {
+    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
+    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
+    
+    if (patientData.length > 0 && dentistData.length > 0) {
+      const patient = patientData[0];
+      const dentist = dentistData[0];
+      
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+      `, [
+        'cancellation',
+        'Appointment Cancelled',
+        `${patient.fname} ${patient.lname} cancelled appointment with Dr. ${dentist.fname} ${dentist.lname}`,
+        appointmentId,
+        dentistId,
+        patientId
+      ]);
+    }
+  } catch (error) {
+    console.error('Error creating cancellation notification:', error);
+  }
+}
+
+// Create notification when dentist updates schedule
+async function createScheduleUpdateNotification(dentistId, date, action) {
+  try {
+    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
+    
+    if (dentistData.length > 0) {
+      const dentist = dentistData[0];
+      
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, dentist_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
+      `, [
+        'schedule_update',
+        'Schedule Updated',
+        `Dr. ${dentist.fname} ${dentist.lname} ${action} schedule for ${date}`,
+        dentistId
+      ]);
+    }
+  } catch (error) {
+    console.error('Error creating schedule update notification:', error);
+  }
+}
+
+// Export utility functions for use in other controllers
+module.exports.notificationUtils = {
+  createAppointmentNotification,
+  createCancellationNotification,
+  createScheduleUpdateNotification,
+  getUnreadNotificationCount
+};
+
+// Get appointments for a specific date
+exports.getAppointmentsAPI = async (req, res) => {
+  try {
+    const { date = new Date().toISOString().split('T')[0] } = req.query;
+    
+    const [appointments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        q.diagnosis,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        p.phone,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        d.specialty as dentist_specialty,
+        t.treatment_name,
+        t.duration as treatment_duration
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE DATE(q.time) = ?
+      ORDER BY q.time ASC
+    `, [date]);
+
+    res.json({
+      success: true,
+      appointments: appointments,
+      date: date,
+      total_count: appointments.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load appointments',
+      details: error.message
+    });
+  }
+};
+
+// Get single appointment details
+exports.getAppointmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [appointments] = await db.execute(`
+      SELECT 
+        q.*,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        p.phone,
+        p.dob as patient_dob,
+        p.address as patient_address,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        d.specialty as dentist_specialty,
+        t.treatment_name,
+        t.duration as treatment_duration,
+        th.diagnosis as treatment_diagnosis,
+        th.followUpdate as follow_update
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+      WHERE q.queue_id = ?
+    `, [id]);
+
+    if (appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      appointment: appointments[0]
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointment details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load appointment details',
+      details: error.message
+    });
+  }
+};
+
+// Update appointment status
+exports.updateAppointmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, diagnosis, next_appointment } = req.body;
+    
+    // Validate status
+    const validStatuses = ['pending', 'confirm', 'cancel'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status. Must be: pending, confirm, or cancel'
+      });
+    }
+
+    // Update appointment
+    const [result] = await db.execute(`
+      UPDATE queue 
+      SET queue_status = ?, diagnosis = ?, next_appointment = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE queue_id = ?
+    `, [status, diagnosis || null, next_appointment || null, id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+
+    // Create notification for status change
+    if (status === 'cancel') {
+      await createAppointmentStatusNotification(id, 'cancelled');
+    } else if (status === 'confirm') {
+      await createAppointmentStatusNotification(id, 'confirmed');
+    }
+
+    res.json({
+      success: true,
+      message: 'Appointment status updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update appointment status',
+      details: error.message
+    });
+  }
+};
+
+// Create new appointment
+exports.createAppointment = async (req, res) => {
+  try {
+    const { 
+      patient_id, 
+      treatment_id, 
+      dentist_id, 
+      appointment_time, 
+      notes 
+    } = req.body;
+
+    // Validate required fields
+    if (!patient_id || !treatment_id || !dentist_id || !appointment_time) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: patient_id, treatment_id, dentist_id, appointment_time'
+      });
+    }
+
+    // Check if dentist is available at the requested time
+    const appointmentDate = new Date(appointment_time);
+    const dateStr = appointmentDate.toISOString().split('T')[0];
+    const hour = appointmentDate.getHours();
+
+    const [scheduleCheck] = await db.execute(`
+      SELECT COUNT(*) as schedule_exists
+      FROM dentist_schedule 
+      WHERE dentist_id = ? AND schedule_date = ? AND hour = ? AND status = 'working'
+    `, [dentist_id, dateStr, hour]);
+
+    if (scheduleCheck[0].schedule_exists === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dentist is not available at the requested time'
+      });
+    }
+
+    // Check for existing appointments at the same time
+    const [existingAppointment] = await db.execute(`
+      SELECT COUNT(*) as appointment_exists
+      FROM queue 
+      WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
+    `, [dentist_id, appointment_time]);
+
+    if (existingAppointment[0].appointment_exists > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Time slot is already booked'
+      });
+    }
+
+    // Create queuedetail first
+    const [queueDetailResult] = await db.execute(`
+      INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `, [patient_id, treatment_id, dentist_id, dateStr]);
+
+    const queueDetailId = queueDetailResult.insertId;
+
+    // Create queue entry
+    const [queueResult] = await db.execute(`
+      INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
+      VALUES (?, ?, ?, ?, ?, 'pending', ?)
+    `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time, notes || null]);
+
+    const queueId = queueResult.insertId;
+
+    // Create notification (this will be handled by the trigger, but we can also create manually)
+    await createAppointmentNotification(queueId, patient_id, dentist_id);
+
+    res.json({
+      success: true,
+      message: 'Appointment created successfully',
+      appointment_id: queueId
+    });
+
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create appointment',
+      details: error.message
+    });
+  }
+};
+
+// Delete appointment
+exports.deleteAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get appointment details for notification
+    const [appointmentData] = await db.execute(`
+      SELECT q.*, p.fname, p.lname, d.fname as dentist_fname, d.lname as dentist_lname
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.queue_id = ?
+    `, [id]);
+
+    if (appointmentData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+
+    // Delete the appointment
+    const [result] = await db.execute('DELETE FROM queue WHERE queue_id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Appointment not found'
+      });
+    }
+
+    // Create deletion notification
+    const appointment = appointmentData[0];
+    await db.execute(`
+      INSERT INTO notifications (type, title, message, dentist_id, patient_id, is_read, is_new)
+      VALUES (?, ?, ?, ?, ?, 0, 1)
+    `, [
+      'deletion',
+      'Appointment Deleted',
+      `Appointment deleted: ${appointment.fname} ${appointment.lname} with Dr. ${appointment.dentist_fname} ${appointment.dentist_lname}`,
+      appointment.dentist_id,
+      appointment.patient_id
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Appointment deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete appointment',
+      details: error.message
+    });
+  }
+};
+
+// Get appointment statistics
+exports.getAppointmentStats = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const startDate = start_date || new Date().toISOString().split('T')[0];
+    const endDate = end_date || new Date().toISOString().split('T')[0];
+
+    // Get total appointments
+    const [totalResult] = await db.execute(`
+      SELECT COUNT(*) as total FROM queue 
+      WHERE DATE(time) BETWEEN ? AND ?
+    `, [startDate, endDate]);
+
+    // Get appointments by status
+    const [statusResult] = await db.execute(`
+      SELECT 
+        queue_status,
+        COUNT(*) as count
+      FROM queue 
+      WHERE DATE(time) BETWEEN ? AND ?
+      GROUP BY queue_status
+    `, [startDate, endDate]);
+
+    // Get appointments by dentist
+    const [dentistResult] = await db.execute(`
+      SELECT 
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        COUNT(*) as appointment_count
+      FROM queue q
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE DATE(q.time) BETWEEN ? AND ?
+      GROUP BY q.dentist_id, d.fname, d.lname
+      ORDER BY appointment_count DESC
+    `, [startDate, endDate]);
+
+    // Get popular treatments
+    const [treatmentResult] = await db.execute(`
+      SELECT 
+        t.treatment_name,
+        COUNT(*) as booking_count
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE DATE(q.time) BETWEEN ? AND ?
+      GROUP BY q.treatment_id, t.treatment_name
+      ORDER BY booking_count DESC
+      LIMIT 10
+    `, [startDate, endDate]);
+
+    res.json({
+      success: true,
+      stats: {
+        total_appointments: totalResult[0].total,
+        by_status: statusResult,
+        by_dentist: dentistResult,
+        popular_treatments: treatmentResult,
+        date_range: { start_date: startDate, end_date: endDate }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointment stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load appointment statistics',
+      details: error.message
+    });
+  }
+};
+
+// ==================== Helper Functions ====================
+
+// Create appointment status change notification
+async function createAppointmentStatusNotification(queueId, action) {
+  try {
+    const [appointmentData] = await db.execute(`
+      SELECT q.*, 
+             CONCAT(p.fname, ' ', p.lname) as patient_name,
+             CONCAT(d.fname, ' ', d.lname) as dentist_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.queue_id = ?
+    `, [queueId]);
+
+    if (appointmentData.length > 0) {
+      const appointment = appointmentData[0];
+      
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+      `, [
+        'status_change',
+        `Appointment ${action}`,
+        `${appointment.patient_name}'s appointment with Dr. ${appointment.dentist_name} has been ${action}`,
+        queueId,
+        appointment.dentist_id,
+        appointment.patient_id
+      ]);
+    }
+  } catch (error) {
+    console.error('Error creating status notification:', error);
+  }
+}
+
+// Enhanced appointment notification creation
+async function createAppointmentNotification(queueId, patientId, dentistId) {
+  try {
+    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
+    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
+    
+    if (patientData.length > 0 && dentistData.length > 0) {
+      const patient = patientData[0];
+      const dentist = dentistData[0];
+      
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+      `, [
+        'appointment',
+        'New Appointment Request',
+        `New appointment from: ${patient.fname} ${patient.lname} with Dr. ${dentist.fname} ${dentist.lname}`,
+        queueId,
+        dentistId,
+        patientId
+      ]);
+    }
+  } catch (error) {
+    console.error('Error creating appointment notification:', error);
+  }
+}

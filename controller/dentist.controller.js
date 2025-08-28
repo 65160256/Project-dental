@@ -906,6 +906,219 @@ searchPatientHistory: async (req, res) => {
     }
   },
 
+// ดึงการจองล่าสุดของผู้ป่วยกับหมอคนนี้
+getLatestPatientAppointment: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const patientId = req.params.patientId;
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'Dentist not found' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    // ดึงข้อมูลผู้ป่วย
+    const [patientResult] = await db.execute(`
+      SELECT * FROM patient WHERE patient_id = ?
+    `, [patientId]);
+
+    if (patientResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'Patient not found' });
+    }
+
+    // ดึงการจองล่าสุดที่ยังไม่ได้บันทึกประวัติ หรือทั้งหมดถ้าไม่มี
+    const [latestAppointment] = await db.execute(`
+      SELECT 
+        q.*,
+        t.treatment_name,
+        t.duration,
+        p.fname,
+        p.lname,
+        p.phone,
+        p.dob
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN patient p ON q.patient_id = p.patient_id
+      WHERE q.patient_id = ? 
+        AND q.dentist_id = ?
+        AND q.queue_status IN ('pending', 'confirm')
+      ORDER BY q.time DESC
+      LIMIT 1
+    `, [patientId, dentistId]);
+
+    if (latestAppointment.length === 0) {
+      // หาการจองล่าสุดไม่ว่าสถานะ
+      const [anyAppointment] = await db.execute(`
+        SELECT 
+          q.*,
+          t.treatment_name,
+          t.duration,
+          p.fname,
+          p.lname,
+          p.phone,
+          p.dob
+        FROM queue q
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN patient p ON q.patient_id = p.patient_id
+        WHERE q.patient_id = ? AND q.dentist_id = ?
+        ORDER BY q.time DESC
+        LIMIT 1
+      `, [patientId, dentistId]);
+
+      if (anyAppointment.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'No appointments found for this patient' 
+        });
+      }
+
+      return res.json({
+        success: true,
+        appointment: anyAppointment[0],
+        patient: patientResult[0],
+        isCompleted: true // การจองนี้เสร็จแล้ว
+      });
+    }
+
+    // ดึงรายการ treatment ทั้งหมดสำหรับ dropdown
+    const [treatments] = await db.execute(`
+      SELECT treatment_id, treatment_name, duration FROM treatment ORDER BY treatment_name
+    `);
+
+    res.json({
+      success: true,
+      appointment: latestAppointment[0],
+      patient: patientResult[0],
+      treatments: treatments,
+      isCompleted: false
+    });
+
+  } catch (error) {
+    console.error('Error in getLatestPatientAppointment:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการจอง' 
+    });
+  }
+},
+
+// สร้างประวัติการรักษาใหม่
+createTreatmentHistory: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { 
+      patientId, 
+      treatmentId, 
+      appointmentDate, 
+      diagnosis, 
+      treatmentNotes,
+      followUpDate,
+      recommendations,
+      prescriptions
+    } = req.body;
+
+    // Validation
+    if (!patientId || !treatmentId || !appointmentDate || !diagnosis) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' 
+      });
+    }
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'Dentist not found' });
+    }
+
+    const dentist = dentistResult[0];
+    const dentistId = dentist.dentist_id;
+
+    // ตรวจสอบว่าผู้ป่วยมีอยู่จริง
+    const [patientCheck] = await db.execute(`
+      SELECT patient_id FROM patient WHERE patient_id = ?
+    `, [patientId]);
+
+    if (patientCheck.length === 0) {
+      return res.status(404).json({ success: false, error: 'Patient not found' });
+    }
+
+    // สร้างการจองใหม่ใน queue table
+    const [insertResult] = await db.execute(`
+      INSERT INTO queue (
+        patient_id, 
+        dentist_id, 
+        treatment_id, 
+        time, 
+        queue_status, 
+        diagnosis, 
+        next_appointment
+      ) VALUES (?, ?, ?, ?, 'confirm', ?, ?)
+    `, [
+      patientId, 
+      dentistId, 
+      treatmentId, 
+      appointmentDate,
+      diagnosis,
+      followUpDate || null
+    ]);
+
+    const queueId = insertResult.insertId;
+
+    // สร้าง queuedetail ถ้าต้องการ
+    const [queueDetailResult] = await db.execute(`
+      INSERT INTO queuedetail (queue_id) VALUES (?)
+    `, [queueId]);
+
+    const queuedetailId = queueDetailResult.insertId;
+
+    // บันทึกประวัติการรักษาใน treatmentHistory table
+    await db.execute(`
+      INSERT INTO treatmentHistory (
+        queuedetail_id, 
+        diagnosis, 
+        followUpdate
+      ) VALUES (?, ?, ?)
+    `, [
+      queuedetailId, 
+      diagnosis,
+      JSON.stringify({
+        treatmentNotes: treatmentNotes || '',
+        recommendations: recommendations || '',
+        prescriptions: prescriptions || '',
+        createdAt: new Date().toISOString(),
+        dentist: `${dentist.fname} ${dentist.lname}`
+      })
+    ]);
+
+    // อัพเดท queuedetail ด้วย queuedetail_id
+    await db.execute(`
+      UPDATE queue SET queuedetail_id = ? WHERE queue_id = ?
+    `, [queuedetailId, queueId]);
+
+    res.json({ 
+      success: true, 
+      message: 'บันทึกประวัติการรักษาเรียบร้อยแล้ว',
+      queueId: queueId
+    });
+
+  } catch (error) {
+    console.error('Error in createTreatmentHistory:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการบันทึกประวัติการรักษา' 
+    });
+  }
+},
   // หน้าการรักษา
   getTreatments: async (req, res) => {
     try {
@@ -1588,21 +1801,278 @@ getTreatmentHistoryPage: async (req, res) => {
 },
 
   // ฟังก์ชัน API อื่นๆ ที่เหลือ (สำหรับให้ครบตาม routes)
-  saveSchedule: async (req, res) => {
-    res.json({ success: true, message: 'Feature not implemented yet' });
-  },
+  // API: บันทึกตารางเวลา
+saveSchedule: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { date, day, status, startTime, endTime, note } = req.body;
 
-  loadSchedule: async (req, res) => {
-    res.json({ success: true, schedules: [] });
-  },
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!date || !day || !status) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'ข้อมูลไม่ครบถ้วน' 
+      });
+    }
 
-  deleteSchedule: async (req, res) => {
-    res.json({ success: true, message: 'Feature not implemented yet' });
-  },
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
 
-  getAvailableSlots: async (req, res) => {
-    res.json({ success: true, slots: [] });
-  },
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+    const scheduleDate = new Date(date);
+    const dayOfWeek = scheduleDate.getDay();
+
+    // ลบตารางเวลาเก่าของวันนี้ก่อน
+    await db.execute(`
+      DELETE FROM dentist_schedule 
+      WHERE dentist_id = ? AND schedule_date = ?
+    `, [dentistId, scheduleDate.toISOString().split('T')[0]]);
+
+    if (status === 'dayoff') {
+      // บันทึกวันหยุด
+      await db.execute(`
+        INSERT INTO dentist_schedule 
+        (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
+        VALUES (?, ?, ?, 0, 'dayoff', '00:00:00', '23:59:59', ?)
+      `, [dentistId, scheduleDate.toISOString().split('T')[0], dayOfWeek, note || '']);
+    } else {
+      // บันทึกชั่วโมงทำงาน
+      if (!startTime || !endTime) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'กรุณากำหนดเวลาเริ่มต้นและสิ้นสุด' 
+        });
+      }
+
+      const startHour = parseInt(startTime.split(':')[0]);
+      const endHour = parseInt(endTime.split(':')[0]);
+
+      // สร้าง records สำหรับแต่ละชั่วโมง
+      for (let hour = startHour; hour < endHour; hour++) {
+        const hourStartTime = `${hour.toString().padStart(2, '0')}:00:00`;
+        const hourEndTime = `${(hour + 1).toString().padStart(2, '0')}:00:00`;
+
+        await db.execute(`
+          INSERT INTO dentist_schedule 
+          (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
+          VALUES (?, ?, ?, ?, 'working', ?, ?, ?)
+        `, [
+          dentistId, 
+          scheduleDate.toISOString().split('T')[0], 
+          dayOfWeek, 
+          hour, 
+          hourStartTime, 
+          hourEndTime, 
+          note || ''
+        ]);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: status === 'dayoff' ? 'บันทึกวันหยุดเรียบร้อยแล้ว' : 'บันทึกตารางเวลาเรียบร้อยแล้ว' 
+    });
+
+  } catch (error) {
+    console.error('Error saving schedule:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการบันทึกตารางเวลา' 
+    });
+  }
+},
+
+ // API: โหลดตารางเวลา
+loadSchedule: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { startDate, endDate } = req.query;
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    // ดึงตารางเวลาจากฐานข้อมูล
+    const [scheduleResult] = await db.execute(`
+      SELECT 
+        schedule_id,
+        schedule_date,
+        day_of_week,
+        hour,
+        status,
+        start_time,
+        end_time,
+        note,
+        created_at
+      FROM dentist_schedule
+      WHERE dentist_id = ? 
+        AND schedule_date BETWEEN ? AND ?
+      ORDER BY schedule_date, hour
+    `, [dentistId, startDate, endDate]);
+
+    // ตรวจสอบว่ามีนัดหมายในช่วงเวลานั้นหรือไม่
+    const [appointmentResult] = await db.execute(`
+      SELECT 
+        DATE(time) as appointment_date,
+        HOUR(time) as appointment_hour,
+        COUNT(*) as appointment_count
+      FROM queue q
+      WHERE q.dentist_id = ? 
+        AND DATE(q.time) BETWEEN ? AND ?
+        AND q.queue_status IN ('pending', 'confirm')
+      GROUP BY DATE(time), HOUR(time)
+    `, [dentistId, startDate, endDate]);
+
+    // จัดรูปแบบข้อมูลสำหรับ frontend
+    const scheduleData = scheduleResult.map(schedule => ({
+      scheduleId: schedule.schedule_id,
+      date: schedule.schedule_date,
+      day: schedule.day_of_week,
+      hour: schedule.hour,
+      status: schedule.status,
+      startTime: schedule.start_time.substring(0, 5), // HH:MM format
+      endTime: schedule.end_time.substring(0, 5),
+      note: schedule.note,
+      hasAppointment: false // จะอัพเดทด้านล่าง
+    }));
+
+    // เพิ่มข้อมูลนัดหมาย
+    appointmentResult.forEach(appointment => {
+      const scheduleIndex = scheduleData.findIndex(s => 
+        s.date.toISOString().split('T')[0] === appointment.appointment_date.toISOString().split('T')[0] &&
+        s.hour === appointment.appointment_hour
+      );
+      
+      if (scheduleIndex !== -1) {
+        scheduleData[scheduleIndex].hasAppointment = true;
+        scheduleData[scheduleIndex].appointmentCount = appointment.appointment_count;
+      }
+    });
+
+    res.json({ 
+      success: true, 
+      schedules: scheduleData 
+    });
+
+  } catch (error) {
+    console.error('Error loading schedule:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการโหลดตารางเวลา' 
+    });
+  }
+},
+
+ // API: ลบตารางเวลา
+deleteSchedule: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { date, hour } = req.body;
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    // ตรวจสอบว่ามีนัดหมายในช่วงเวลานั้นหรือไม่
+    const [appointmentCheck] = await db.execute(`
+      SELECT COUNT(*) as count
+      FROM queue
+      WHERE dentist_id = ? 
+        AND DATE(time) = ? 
+        AND HOUR(time) = ?
+        AND queue_status IN ('pending', 'confirm')
+    `, [dentistId, date, hour]);
+
+    if (appointmentCheck[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'ไม่สามารถลบได้ เนื่องจากมีนัดหมายในช่วงเวลานี้' 
+      });
+    }
+
+    // ลบตารางเวลา
+    await db.execute(`
+      DELETE FROM dentist_schedule
+      WHERE dentist_id = ? 
+        AND schedule_date = ? 
+        AND (hour = ? OR status = 'dayoff')
+    `, [dentistId, date, hour]);
+
+    res.json({ 
+      success: true, 
+      message: 'ลบตารางเวลาเรียบร้อยแล้ว' 
+    });
+
+  } catch (error) {
+    console.error('Error deleting schedule:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการลบตารางเวลา' 
+    });
+  }
+},
+
+ getAvailableSlots: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'กรุณาระบุวันที่' 
+      });
+    }
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    // ใช้ stored procedure ที่มีอยู่ในฐานข้อมูล
+    const [availableSlots] = await db.execute(`
+      CALL get_available_slots(?, ?, ?)
+    `, [dentistId, date, date]);
+
+    res.json({ 
+      success: true, 
+      availableSlots: availableSlots[0] || [] 
+    });
+
+  } catch (error) {
+    console.error('Error getting available slots:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการดึงช่วงเวลาว่าง' 
+    });
+  }
+},
 
   getAvailableDentists: async (req, res) => {
     res.json({ success: true, dentists: [] });

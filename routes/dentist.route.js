@@ -49,6 +49,14 @@ router.get('/dashboard', requireAuth, requireDentist, dentistController.getDashb
 router.get('/schedule', requireAuth, requireDentist, dentistController.getSchedule);
 
 // =================
+// Schedule API Routes
+// =================
+router.post('/api/schedule/save', requireAuth, requireDentist, dentistController.saveSchedule);
+router.get('/api/schedule/load', requireAuth, requireDentist, dentistController.loadSchedule);
+router.delete('/api/schedule/delete', requireAuth, requireDentist, dentistController.deleteSchedule);
+router.get('/api/schedule/available-slots', requireAuth, requireDentist, dentistController.getAvailableSlots);
+
+// =================
 // Appointment Routes
 // =================
 router.get('/appointments', requireAuth, requireDentist, dentistController.getAppointments);
@@ -112,8 +120,8 @@ router.get('/api/stats/dashboard', requireAuth, requireDentist, dentistControlle
 
 // Patient API
 router.get('/api/patients/search', requireAuth, requireDentist, dentistController.searchPatients);
-router.get('/api/patients/:patientId/latest-appointments', requireAuth, requireDentist, dentistController.getPatientLatestAppointments);
-
+router.get('/api/patients/:patientId/latest-appointments', requireAuth, requireDentist, dentistController.getLatestPatientAppointment);
+router.post('/api/treatment-history/create', requireAuth, requireDentist, dentistController.createTreatmentHistory);
 // Treatment History API
 router.post('/api/treatment-history/add', requireAuth, requireDentist, dentistController.addTreatmentHistory);
 
