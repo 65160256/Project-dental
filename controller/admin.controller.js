@@ -1782,3 +1782,258 @@ async function createAppointmentNotification(queueId, patientId, dentistId) {
     console.error('Error creating appointment notification:', error);
   }
 }
+
+// ==================== Dentists API Routes ====================
+
+// API: Get all dentists for the modern interface
+exports.getDentistsAPI = async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        d.dentist_id,
+        d.fname,
+        d.lname,
+        d.phone,
+        d.specialty,
+        d.education,
+        d.address,
+        d.dob,
+        d.idcard,
+        d.photo,
+        u.email,
+        u.last_login,
+        COUNT(DISTINCT ds.schedule_id) as total_schedules,
+        COUNT(DISTINCT q.queue_id) as total_appointments
+      FROM dentist d
+      JOIN user u ON d.user_id = u.user_id
+      LEFT JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id AND ds.schedule_date >= CURDATE()
+      LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('pending', 'confirm')
+      GROUP BY d.dentist_id, d.fname, d.lname, d.phone, d.specialty, d.education, d.address, d.dob, d.idcard, d.photo, u.email, u.last_login
+      ORDER BY d.fname, d.lname
+    `);
+
+    // Format the data for the frontend
+    const dentists = rows.map(dentist => ({
+      dentist_id: dentist.dentist_id,
+      fname: dentist.fname,
+      lname: dentist.lname,
+      email: dentist.email,
+      phone: dentist.phone,
+      specialty: dentist.specialty,
+      education: dentist.education,
+      address: dentist.address,
+      dob: dentist.dob,
+      idcard: dentist.idcard,
+      photo: dentist.photo,
+      last_login: dentist.last_login,
+      stats: {
+        total_schedules: dentist.total_schedules,
+        total_appointments: dentist.total_appointments
+      }
+    }));
+
+    res.json({
+      success: true,
+      dentists: dentists,
+      total_count: dentists.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching dentists:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentists',
+      details: error.message
+    });
+  }
+};
+
+// API: Get single dentist details
+exports.getDentistByIdAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [rows] = await db.execute(`
+      SELECT 
+        d.*,
+        u.email,
+        u.last_login,
+        COUNT(DISTINCT ds.schedule_id) as total_schedules,
+        COUNT(DISTINCT q.queue_id) as total_appointments
+      FROM dentist d
+      JOIN user u ON d.user_id = u.user_id
+      LEFT JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id AND ds.schedule_date >= CURDATE()
+      LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('pending', 'confirm')
+      WHERE d.dentist_id = ?
+      GROUP BY d.dentist_id
+    `, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Dentist not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      dentist: rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error fetching dentist details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentist details',
+      details: error.message
+    });
+  }
+};
+
+// API: Delete dentist
+exports.deleteDentistAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get dentist details before deletion for notification
+    const [dentistData] = await db.execute(`
+      SELECT d.*, u.email 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.dentist_id = ?
+    `, [id]);
+
+    if (dentistData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Dentist not found'
+      });
+    }
+
+    const dentist = dentistData[0];
+    
+    // Start transaction to ensure data integrity
+    await db.execute('START TRANSACTION');
+    
+    try {
+      // Delete related schedules first (due to foreign key constraints)
+      await db.execute('DELETE FROM dentist_schedule WHERE dentist_id = ?', [id]);
+      
+      // Update any existing appointments to cancelled status instead of deleting
+      await db.execute(`
+        UPDATE queue 
+        SET queue_status = 'cancel' 
+        WHERE dentist_id = ? AND queue_status IN ('pending', 'confirm')
+      `, [id]);
+      
+      // Delete dentist-treatment relationships
+      await db.execute('DELETE FROM dentist_treatment WHERE dentist_id = ?', [id]);
+      
+      // Delete the dentist record
+      await db.execute('DELETE FROM dentist WHERE dentist_id = ?', [id]);
+      
+      // Delete the associated user account
+      await db.execute('DELETE FROM user WHERE user_id = ?', [dentist.user_id]);
+      
+      // Commit transaction
+      await db.execute('COMMIT');
+      
+      // Create notification for deletion
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, is_read, is_new)
+        VALUES (?, ?, ?, 0, 1)
+      `, [
+        'system',
+        'Dentist Account Deleted',
+        `Dr. ${dentist.fname} ${dentist.lname}'s account has been removed from the system`
+      ]);
+
+      res.json({
+        success: true,
+        message: `Dr. ${dentist.fname} ${dentist.lname} deleted successfully`
+      });
+
+    } catch (error) {
+      // Rollback transaction on error
+      await db.execute('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error deleting dentist:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete dentist',
+      details: error.message
+    });
+  }
+};
+
+// API: Get dentist specialties for filter dropdown
+exports.getDentistSpecialtiesAPI = async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT DISTINCT specialty 
+      FROM dentist 
+      WHERE specialty IS NOT NULL AND specialty != ''
+      ORDER BY specialty
+    `);
+
+    const specialties = rows.map(row => row.specialty);
+
+    res.json({
+      success: true,
+      specialties: specialties
+    });
+
+  } catch (error) {
+    console.error('Error fetching specialties:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load specialties',
+      details: error.message
+    });
+  }
+};
+
+// API: Get current user profile info for avatar
+exports.getCurrentUserAPI = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authenticated'
+      });
+    }
+
+    const [userRows] = await db.execute(`
+      SELECT u.email, u.username, r.rname 
+      FROM user u 
+      JOIN role r ON u.role_id = r.role_id 
+      WHERE u.user_id = ?
+    `, [userId]);
+
+    if (userRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      email: userRows[0].email,
+      username: userRows[0].username,
+      role: userRows[0].rname
+    });
+
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load user info',
+      details: error.message
+    });
+  }
+};

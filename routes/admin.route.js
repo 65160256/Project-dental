@@ -77,6 +77,23 @@ router.post('/dentists/:id/edit', checkAdminAuth, upload.single('photo'), adminC
 router.get('/dentists/delete/:id', checkAdminAuth, adminController.deleteDentist);
 router.get('/dentists/:id/schedule', checkAdminAuth, adminController.dentistSchedule);
 
+
+// ==================== Dentists API Routes ====================
+// API: Get all dentists data
+router.get('/api/dentists', checkAdminApiAuth, adminController.getDentistsAPI);
+
+// API: Get single dentist details
+router.get('/api/dentists/:id', checkAdminApiAuth, adminController.getDentistByIdAPI);
+
+// API: Delete dentist
+router.delete('/api/dentists/:id', checkAdminApiAuth, adminController.deleteDentistAPI);
+
+// API: Get dentist specialties for filters
+router.get('/api/dentists/specialties/list', checkAdminApiAuth, adminController.getDentistSpecialtiesAPI);
+
+// API: Get current user info
+router.get('/profile/api', checkAdminApiAuth, adminController.getCurrentUserAPI);
+
 // router.get('/patients', adminController.getPatients); 
 // // แสดงหน้า patients ทั้งหมด
 // router.get('/admin/patients', adminController.listPatients);

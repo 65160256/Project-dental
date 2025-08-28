@@ -702,11 +702,11 @@
             <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li class="active"><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
-            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
-            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+            <li class="active"><a href="dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
         </ul>
     </div>
 
@@ -749,9 +749,9 @@
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/admin/profile">My Profile</a>
+                        <a href="profile">My Profile</a>
                         <hr />
-                        <a href="/logout">Log Out</a>
+                        <a href="../logout">Log Out</a>
                     </div>
                 </div>
             </div>
@@ -882,7 +882,6 @@
         // Load notifications from database
         async function loadNotifications() {
             try {
-                // Simulate API call - replace with actual endpoint
                 const response = await fetch('/admin/api/notifications');
                 
                 if (response.ok) {
@@ -891,7 +890,6 @@
                         notificationData = data.notifications;
                     }
                 } else {
-                    // If API doesn't exist yet, create sample notifications from database data
                     await createSampleNotifications();
                 }
                 
@@ -899,48 +897,16 @@
                 updateNotificationBadge();
             } catch (error) {
                 console.error('Error loading notifications:', error);
-                // Create sample notifications as fallback
                 await createSampleNotifications();
                 renderNotifications();
                 updateNotificationBadge();
             }
         }
 
-        // Create sample notifications based on recent appointments
+        // Create sample notifications
         async function createSampleNotifications() {
-            try {
-                // Get recent appointments and schedule changes
-                const scheduleResponse = await fetch('/admin/api/schedule');
-                const scheduleData = await scheduleResponse.json();
-                
-                notificationData = [];
-                
-                if (scheduleData.success && scheduleData.events) {
-                    // Create notifications based on appointments
-                    scheduleData.events.forEach((event, index) => {
-                        if (event.extendedProps && event.extendedProps.hasAppointments) {
-                            notificationData.push({
-                                id: index + 1,
-                                type: 'appointment',
-                                title: 'New Appointment',
-                                message: `Appointment scheduled with ${event.extendedProps.dentist}`,
-                                date: new Date(event.start).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }),
-                                isRead: Math.random() > 0.3, // 70% chance of being unread
-                                isNew: Math.random() > 0.7,  // 30% chance of being new
-                                timestamp: new Date(event.start)
-                            });
-                        }
-                    });
-                }
-
-                // Add some general notifications
-                notificationData.unshift({
+            notificationData = [
+                {
                     id: 'new_1',
                     type: 'appointment',
                     title: 'New Appointment Request',
@@ -949,9 +915,8 @@
                     isRead: false,
                     isNew: true,
                     timestamp: new Date('2025-04-10T14:00:00')
-                });
-
-                notificationData.unshift({
+                },
+                {
                     id: 'new_2',
                     type: 'appointment',
                     title: 'Appointment Request',
@@ -960,13 +925,11 @@
                     isRead: false,
                     isNew: false,
                     timestamp: new Date('2025-04-11T15:00:00')
-                });
-            } catch (error) {
-                console.error('Error creating sample notifications:', error);
-            }
+                }
+            ];
         }
 
-        // Render notifications in dropdown
+        // Render notifications dropdown
         function renderNotifications() {
             const notificationContent = document.getElementById('notificationContent');
             
@@ -980,7 +943,6 @@
                 return;
             }
 
-            // Sort by timestamp (newest first)
             const sortedNotifications = notificationData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             notificationContent.innerHTML = sortedNotifications.map(notification => `
@@ -1024,7 +986,7 @@
             
             if (notificationDropdownOpen) {
                 dropdown.classList.add('show');
-                loadNotifications(); // Refresh when opening
+                loadNotifications();
             } else {
                 dropdown.classList.remove('show');
             }
@@ -1034,23 +996,16 @@
         function viewNotificationDetails(id) {
             const notification = notificationData.find(n => n.id == id);
             if (notification) {
-                // Mark as read
                 notification.isRead = true;
                 notification.isNew = false;
                 
-                // Show modal with details
                 showNotificationModal(notification);
-                
-                // Update UI
                 renderNotifications();
                 updateNotificationBadge();
-                
-                // In real app, send to server
-                markNotificationAsReadInDatabase(id);
             }
         }
 
-        // Show notification detail modal
+        // Show notification modal
         function showNotificationModal(notification) {
             const modal = document.getElementById('notificationModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -1099,9 +1054,6 @@
                 renderNotifications();
                 updateNotificationBadge();
                 showToast('Notification marked as read', 'success');
-                
-                // In real app, send to server
-                markNotificationAsReadInDatabase(id);
             }
         }
 
@@ -1122,9 +1074,6 @@
             renderNotifications();
             updateNotificationBadge();
             showToast(`${unreadCount} notifications marked as read`, 'success');
-            
-            // In real app, send to server
-            markAllNotificationsAsReadInDatabase();
         }
 
         // Handle calendar event click
@@ -1148,7 +1097,7 @@
             modalContent += `
                 </div>
                 <div style="text-align: right;">
-                    <button onclick="closeEventModal()" style="
+                    <button onclick="closeNotificationModal()" style="
                         background: #4A90E2;
                         color: white;
                         border: none;
@@ -1166,11 +1115,6 @@
             modal.style.display = 'flex';
         }
 
-        // Close event modal (same as notification modal)
-        function closeEventModal() {
-            closeNotificationModal();
-        }
-
         // Profile dropdown toggle
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
@@ -1181,7 +1125,6 @@
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             if (searchTerm.length > 0) {
-                // This would filter events in real implementation
                 showToast('Search functionality will filter schedules', 'info');
             }
         });
@@ -1204,43 +1147,19 @@
             }, 3000);
         }
 
-        // API simulation functions (replace with real implementations)
-        async function markNotificationAsReadInDatabase(id) {
-            try {
-                // Replace with actual API call
-                // await fetch(`/admin/api/notifications/${id}/read`, { method: 'POST' });
-                console.log(`Marked notification ${id} as read`);
-            } catch (error) {
-                console.error('Error marking notification as read:', error);
-            }
-        }
-
-        async function markAllNotificationsAsReadInDatabase() {
-            try {
-                // Replace with actual API call
-                // await fetch('/admin/api/notifications/read-all', { method: 'POST' });
-                console.log('Marked all notifications as read');
-            } catch (error) {
-                console.error('Error marking all notifications as read:', error);
-            }
-        }
-
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            // Close profile dropdown
             const profileDropdown = document.querySelector('.profile-dropdown');
             if (!profileDropdown.contains(event.target)) {
                 document.getElementById('profileDropdown').style.display = 'none';
             }
             
-            // Close notification dropdown
             const notificationContainer = document.querySelector('.notification-container');
             if (!notificationContainer.contains(event.target)) {
                 document.getElementById('notificationDropdown').classList.remove('show');
                 notificationDropdownOpen = false;
             }
             
-            // Close modal when clicking outside
             const modal = document.getElementById('notificationModal');
             if (event.target === modal) {
                 closeNotificationModal();
@@ -1252,31 +1171,6 @@
             loadNotifications();
             loadScheduleEvents();
         });
-
-        // Simulate new notifications periodically (remove in production)
-        setTimeout(() => {
-            const newNotification = {
-                id: 'sim_' + Date.now(),
-                type: 'appointment',
-                title: 'New Appointment Request',
-                message: 'Appointment request from: Ms. Anna Thompson',
-                date: new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }),
-                isRead: false,
-                isNew: true,
-                timestamp: new Date()
-            };
-            
-            notificationData.unshift(newNotification);
-            renderNotifications();
-            updateNotificationBadge();
-            showToast('New notification received!', 'info');
-        }, 10000); // After 10 seconds for demo
     </script>
 </body>
 </html>
