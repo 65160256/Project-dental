@@ -1,16 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controller/admin.controller');
-const upload = require('../middlewares/upload');
 
-// // GET: Admin Dashboard
-// router.get('/dashboard', (req, res) => {
-//   if (!req.session.userId || req.session.role != 1) {
-//     return res.redirect('/login');
-//   }
-//   // เปลี่ยนจากการ render ธรรมดาเป็นการเรียก controller
-//   adminController.getDashboard(req, res);
-// });
+
+const upload = require('../middlewares/upload');
 
 // Middleware to check admin authentication
 const checkAdminAuth = (req, res, next) => {
@@ -19,13 +12,6 @@ const checkAdminAuth = (req, res, next) => {
   }
   next();
 };
-
-// router.get('/api/schedule', (req, res) => {
-//   if (!req.session.userId || req.session.role != 1) {
-//     return res.status(401).json({ success: false, error: 'Unauthorized' });
-//   }
-//   adminController.getScheduleAPI(req, res);
-// });
 
 // Middleware for API authentication
 const checkAdminApiAuth = (req, res, next) => {
@@ -36,81 +22,39 @@ const checkAdminApiAuth = (req, res, next) => {
 };
 
 // ==================== Dashboard Routes ====================
-// GET: Admin Dashboard
 router.get('/dashboard', checkAdminAuth, adminController.getDashboard);
-
-// API: Get schedule data for calendar
 router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
-
-// router.get('/profile', adminController.getProfile);
-// router.post('/change-password', adminController.changePassword);
 
 // ==================== Profile Routes ====================
 router.get('/profile', checkAdminAuth, adminController.getProfile);
 router.post('/change-password', checkAdminAuth, adminController.changePassword);
-
-// router.get('/appointments', adminController.viewAppointments);
-// router.get('/appointments/ajax', adminController.ajaxAppointments);
-// router.get('/appointments/week', adminController.renderWeekCalendar);
 
 // ==================== Appointments Routes ====================
 router.get('/appointments', checkAdminAuth, adminController.viewAppointments);
 router.get('/appointments/ajax', checkAdminAuth, adminController.ajaxAppointments);
 router.get('/appointments/week', checkAdminAuth, adminController.renderWeekCalendar);
 
-// router.get('/dentists', adminController.viewDentists);
-// router.get('/dentists/add', adminController.addDentistForm);
-// router.post('/dentists/add', upload.single('photo'), adminController.addDentist);
-// router.get('/dentists/:id', adminController.viewDentist);
-// router.get('/dentists/:id/edit', adminController.editDentistForm);
-// router.post('/dentists/:id/edit', upload.single('photo'), adminController.editDentist);
-// router.get('/dentists/delete/:id', adminController.deleteDentist);
-// router.get('/dentists/:id/schedule', adminController.dentistSchedule);
-
 // ==================== Dentists Routes ====================
 router.get('/dentists', checkAdminAuth, adminController.viewDentists);
 router.get('/dentists/add', checkAdminAuth, adminController.addDentistForm);
 router.post('/dentists/add', checkAdminAuth, upload.single('photo'), adminController.addDentist);
+
+
 router.get('/dentists/:id', checkAdminAuth, adminController.viewDentist);
 router.get('/dentists/:id/edit', checkAdminAuth, adminController.editDentistForm);
+
 router.post('/dentists/:id/edit', checkAdminAuth, upload.single('photo'), adminController.editDentist);
+
+
 router.get('/dentists/delete/:id', checkAdminAuth, adminController.deleteDentist);
 router.get('/dentists/:id/schedule', checkAdminAuth, adminController.dentistSchedule);
 
-
 // ==================== Dentists API Routes ====================
-// API: Get all dentists data
 router.get('/api/dentists', checkAdminApiAuth, adminController.getDentistsAPI);
-
-// API: Get single dentist details
 router.get('/api/dentists/:id', checkAdminApiAuth, adminController.getDentistByIdAPI);
-
-// API: Delete dentist
 router.delete('/api/dentists/:id', checkAdminApiAuth, adminController.deleteDentistAPI);
-
-// API: Get dentist specialties for filters
 router.get('/api/dentists/specialties/list', checkAdminApiAuth, adminController.getDentistSpecialtiesAPI);
-
-// API: Get current user info
 router.get('/profile/api', checkAdminApiAuth, adminController.getCurrentUserAPI);
-
-// router.get('/patients', adminController.getPatients); 
-// // แสดงหน้า patients ทั้งหมด
-// router.get('/admin/patients', adminController.listPatients);
-// // หน้าเพิ่ม patient
-// router.get('/patients/add', adminController.showAddPatientForm);
-// router.post('/patients/add', adminController.addPatient);
-// // หน้าแก้ไข patient
-// router.get('/patients/:id/edit', adminController.showEditPatientForm);
-// router.post('/patients/:id/edit', adminController.editPatient);
-// // ดูรายละเอียด patient
-// router.get('/patients/:id', adminController.viewPatient);
-// // ลบ patient
-// router.get('/patients/:id/delete', adminController.deletePatient);
-// router.get('/patients/:id/treatments', adminController.viewPatientTreatmentHistory);
-// // router.get('/patients/:patientId/treatments/:treatmentId', adminController.viewTreatmentDetail);
-// router.get('/patients/:id/treatments/:queueId', adminController.viewTreatmentDetails);
-
 
 // ==================== Patients Routes ====================
 router.get('/patients', checkAdminAuth, adminController.getPatients);
@@ -123,18 +67,68 @@ router.get('/patients/:id', checkAdminAuth, adminController.viewPatient);
 router.get('/patients/:id/delete', checkAdminAuth, adminController.deletePatient);
 router.get('/patients/:id/treatments', checkAdminAuth, adminController.viewPatientTreatmentHistory);
 router.get('/patients/:id/treatments/:queueId', checkAdminAuth, adminController.viewTreatmentDetails);
+router.get('/patients/api', checkAdminAuth, adminController.getPatientsAPI);
+// ==================== Patients API Routes ====================
+router.get('/api/patients', checkAdminApiAuth, adminController.getPatientsAPI);
+router.get('/api/patients/:id', checkAdminApiAuth, adminController.getPatientByIdAPI);
+router.delete('/api/patients/:id', checkAdminApiAuth, adminController.deletePatientAPI);
 
-// // -----treatments-------
-// router.get('/treatments', adminController.listTreatments);
-// // ✅ ต้องอยู่ก่อน /:id
-// router.get('/treatments/add', adminController.showAddTreatmentForm);
-// router.post('/treatments/add', adminController.addTreatment);
-// // แล้วค่อยตามด้วย
-// router.get('/treatments/:id', adminController.viewTreatment);
-// router.get('/treatments/:id/edit', adminController.showEditTreatmentForm);
-// router.post('/treatments/:id/edit', adminController.updateTreatment);
-// router.get('/treatments/:id/delete', adminController.deleteTreatment);
+// API route สำหรับการอัปเดตข้อมูลผู้ป่วย
+router.put('/api/patients/:id', checkAdminApiAuth, adminController.updatePatientAPI);
 
+// ตรวจสอบอีเมลแบบเฉพาะเจาะจง สำหรับ patients (ยกเว้นอีเมลปัจจุบันของผู้ป่วย)
+router.get('/api/patients/:id/check-email', checkAdminApiAuth, adminController.checkPatientEmailAvailability);
+
+// Modern edit patient form (ใช้หน้าใหม่)
+router.get('/patients/:id/edit-modern', checkAdminAuth, adminController.showEditPatientFormModern);
+
+// ==================== อัปเดต check-email route ให้รองรับ patient ====================
+
+// อัปเดต route check-email เดิมให้รองรับการยกเว้น patient
+router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
+  const db = require('../models/db'); // ต้อง import db
+  
+  try {
+    const { email, exclude_patient_id, exclude_user_id } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+    let params = [email];
+
+    // ยกเว้นอีเมลของผู้ป่วยปัจจุบัน ถ้าระบุ
+    if (exclude_patient_id) {
+      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
+      params.push(exclude_patient_id);
+    }
+    
+    // หรือยกเว้นโดย user_id โดยตรง
+    if (exclude_user_id) {
+      query += ' AND user_id != ?';
+      params.push(exclude_user_id);
+    }
+
+    const [existingUser] = await db.execute(query, params);
+    const exists = existingUser[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+});
 // ==================== Treatments Routes ====================
 router.get('/treatments', checkAdminAuth, adminController.listTreatments);
 router.get('/treatments/add', checkAdminAuth, adminController.showAddTreatmentForm);
@@ -145,22 +139,40 @@ router.post('/treatments/:id/edit', checkAdminAuth, adminController.updateTreatm
 router.get('/treatments/:id/delete', checkAdminAuth, adminController.deleteTreatment);
 
 // ==================== Notifications API Routes ====================
-// GET: Get all notifications
 router.get('/api/notifications', checkAdminApiAuth, adminController.getNotifications);
-
-// GET: Get single notification details
 router.get('/api/notifications/:id', checkAdminApiAuth, adminController.getNotificationById);
-
-// POST: Mark notification as read
 router.post('/api/notifications/:id/read', checkAdminApiAuth, adminController.markNotificationAsRead);
-
-// POST: Mark all notifications as read
 router.post('/api/notifications/read-all', checkAdminApiAuth, adminController.markAllNotificationsAsRead);
-
-// DELETE: Delete notification
 router.delete('/api/notifications/:id', checkAdminApiAuth, adminController.deleteNotification);
-
-// POST: Create notification (for testing/manual creation)
 router.post('/api/notifications', checkAdminApiAuth, adminController.createNotification);
+
+// Add this route for email checking
+router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    const exists = existingUser[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+});
 
 module.exports = router;

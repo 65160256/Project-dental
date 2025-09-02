@@ -5,6 +5,7 @@ const path = require('path');
 const methodOverride = require('method-override');
 const multer = require('multer');
 const flash = require('express-flash');
+const fs = require('fs');
 
 require('dotenv').config();
 
@@ -17,13 +18,20 @@ const patientRoutes = require('./routes/patient.route');
 
 const app = express();
 
+// สร้าง uploads directory หากไม่มี
+const uploadsDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Created uploads directory:', uploadsDir);
+}
+
 // ตั้งค่า View Engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// เสิร์ฟไฟล์ static เช่น CSS, รูป
+// เสิร์ฟไฟล์ static - ✅ แก้ไขการตั้งค่า
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'))); // ✅ แก้ไขให้ถูกต้อง
 
 // ✅ Body Parser สำหรับ POST form (ย้ายมาไว้ก่อน session)
 app.use(express.urlencoded({ extended: true }));
@@ -43,6 +51,20 @@ app.use(session({
 
 app.use(methodOverride('_method'));
 app.use(flash());
+
+// Debug middleware - เพิ่มเพื่อดู uploads
+app.use((req, res, next) => {
+  if (req.path.startsWith('/uploads/')) {
+    console.log('📷 Image request:', req.path);
+    const filePath = path.join(__dirname, 'public', req.path);
+    const exists = fs.existsSync(filePath);
+    console.log('   File exists:', exists);
+    if (!exists) {
+      console.log('   Full path:', filePath);
+    }
+  }
+  next();
+});
 
 // Current user middleware (ใส่ก่อน routes)
 app.use((req, res, next) => {
@@ -133,9 +155,41 @@ app.use('/patient', (req, res, next) => {
   next();
 }, patientRoutes);
 
+// เพิ่ม route สำหรับทดสอบ uploads
+app.get('/test-uploads', (req, res) => {
+  const uploadsPath = path.join(__dirname, 'public/uploads');
+  
+  try {
+    const files = fs.readdirSync(uploadsPath);
+    res.json({
+      success: true,
+      uploads_directory: uploadsPath,
+      files: files,
+      total_files: files.length
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      uploads_directory: uploadsPath,
+      directory_exists: fs.existsSync(uploadsPath)
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('❌ Application Error:', err.stack);
+  
+  // Multer error handling
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: 'File size too large. Maximum size is 5MB.'
+      });
+    }
+  }
   
   // ถ้ามี error view
   try {
@@ -154,6 +208,8 @@ app.use((err, req, res, next) => {
 
 // ถ้า route ไม่ตรงใด ๆ เลย แสดง 404
 app.use((req, res) => {
+  console.log('❓ 404 - Route not found:', req.path);
+  
   try {
     res.status(404).render('error', {
       message: 'หน้าที่คุณต้องการไม่พบ',
@@ -171,7 +227,10 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
-  console.log(`📂 Available routes:`);
+  console.log(`📂 Static files served from: ${path.join(__dirname, 'public')}`);
+  console.log(`🖼️ Uploads served from: ${path.join(__dirname, 'public/uploads')}`);
+  console.log(`🧪 Test uploads endpoint: http://localhost:${PORT}/test-uploads`);
+  console.log(`📋 Available routes:`);
   console.log(`   - GET  / (redirect based on role)`);
   console.log(`   - GET  /login`);
   console.log(`   - POST /login`);

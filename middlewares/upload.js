@@ -1,5 +1,12 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// สร้างโฟลเดอร์หากไม่มี
+const uploadsDir = 'public/uploads/';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -11,5 +18,9 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
-module.exports = upload;
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+module.exports = upload; 

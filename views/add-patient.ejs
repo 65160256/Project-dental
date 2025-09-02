@@ -1,95 +1,1549 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Add Patient</title>
-  <link rel="stylesheet" href="/css/add-patient.css" />
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Patient - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .page-info h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .empty-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-notifications i {
+            font-size: 32px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Form Content */
+        .content {
+            padding: 30px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            padding: 25px 30px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .form-header h2 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-header p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #4A90E2;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-control:invalid {
+            border-color: #e74c3c;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e1e5e9;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-fill.weak { background: #e74c3c; width: 25%; }
+        .strength-fill.fair { background: #f39c12; width: 50%; }
+        .strength-fill.good { background: #f1c40f; width: 75%; }
+        .strength-fill.strong { background: #27ae60; width: 100%; }
+
+        .strength-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .strength-text.weak { color: #e74c3c; }
+        .strength-text.fair { color: #f39c12; }
+        .strength-text.good { color: #f1c40f; }
+        .strength-text.strong { color: #27ae60; }
+
+        /* Form Actions */
+        .form-actions {
+            background: #f8f9fa;
+            padding: 25px 30px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Loading States */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Validation States */
+        .form-group.error .form-control {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .form-group.success .form-control {
+            border-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* Progress Indicator */
+        .form-progress {
+            background: white;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .progress-step.active {
+            color: #4A90E2;
+            font-weight: 500;
+        }
+
+        .progress-step i {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+        }
+
+        .progress-step.active i {
+            background: #4A90E2;
+        }
+
+        .progress-step.completed i {
+            background: #27ae60;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo"><img src="/img/logo.png" /></div>
-    <ul>
-      <li><a href="/admin/dashboard">Schedule</a></li>
-      <li><a href="/admin/appointments">Appointments</a></li>
-      <li><a href="/admin/dentists">Dentists</a></li>
-      <li class="active"><a href="/admin/patients">Patients</a></li>
-      <li><a href="/admin/treatments">Treatments</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="header">
-      <h2>Add Patient</h2>
-      <div class="top-right">
-        <img src="/img/notification-bell.png" class="notif-icon" />
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar" />
-            <div>
-              <strong>Hello Admin</strong><br />
-              <small>admin</small>
-            </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
-            <a href="/profile">My Profile</a><hr />
-            <a href="/logout">Log Out</a>
-          </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
     </div>
 
-    <form action="/admin/patients/add" method="POST" class="form-container">
-      <div class="form-group">
-        <h3>Personal Information</h3>
-        <label>Firstname:</label>
-        <input type="text" name="fname" required>
-        <label>Lastname:</label>
-        <input type="text" name="lname" required>
-        <label>Date of Birth:</label>
-        <input type="date" name="dob" required>
-        <label>ID Card Number:</label>
-        <input type="text" name="idcard" required>
-      </div>
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>Add New Patient</h1>
+                <p>Create a new patient profile in the system</p>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">Mark all as read</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>Loading notifications...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>Hello Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      <div class="form-group">
-        <h3>Login Information</h3>
-        <label>Email:</label>
-        <input type="email" name="email" required>
-        <label>Password:</label>
-        <input type="password" name="password" required>
-        <label>Confirm password:</label>
-        <input type="password" name="confirmPassword" required>
-      </div>
+        <!-- Form Progress -->
+        <div class="form-progress">
+            <div class="progress-step active" id="step1">
+                <i class="fas fa-user"></i>
+                <span>Personal Info</span>
+            </div>
+            <div class="progress-step" id="step2">
+                <i class="fas fa-envelope"></i>
+                <span>Account</span>
+            </div>
+            <div class="progress-step" id="step3">
+                <i class="fas fa-phone"></i>
+                <span>Contact</span>
+            </div>
+        </div>
 
-      <div class="form-group">
-        <h3>Contact Information</h3>
-        <label>Address:</label>
-        <textarea name="address" rows="2"></textarea>
-        <label>Phone:</label>
-        <input type="text" name="phone" required>
-      </div>
+        <!-- Content -->
+        <div class="content">
+            <form id="addPatientForm" class="form-container">
+                <div class="form-header">
+                    <h2>Patient Information</h2>
+                    <p>Please fill in all required fields marked with (*)</p>
+                </div>
 
-      <div class="buttons">
-        <button type="submit" class="btn-green">Confirm</button>
-        <a href="/admin/patients" class="btn-red">Cancel</a>
-      </div>
-    </form>
-  </div>
+                <div class="form-body">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user"></i>
+                            Personal Information
+                        </h3>
 
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fname">First Name <span class="required">*</span></label>
+                                <input type="text" id="fname" name="fname" class="form-control" required />
+                                <div class="error-message">First name is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="lname">Last Name <span class="required">*</span></label>
+                                <input type="text" id="lname" name="lname" class="form-control" required />
+                                <div class="error-message">Last name is required</div>
+                            </div>
+                        </div>
 
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
-  </script>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dob">Date of Birth <span class="required">*</span></label>
+                                <input type="date" id="dob" name="dob" class="form-control" required />
+                                <div class="error-message">Please select a valid date of birth</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="idcard">ID Card Number <span class="required">*</span></label>
+                                <input type="text" id="idcard" name="idcard" class="form-control" required maxlength="13" />
+                                <div class="field-help">13-digit Thai ID card number</div>
+                                <div class="error-message">Please enter a valid 13-digit ID card number</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-key"></i>
+                            Account Information
+                        </h3>
+
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label for="email">Email Address <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" class="form-control" required />
+                                <div class="field-help">This will be used for login and notifications</div>
+                                <div class="error-message">Please enter a valid email address</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password">Password <span class="required">*</span></label>
+                                <input type="password" id="password" name="password" class="form-control" required minlength="6" />
+                                <div class="password-strength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="strengthFill"></div>
+                                    </div>
+                                    <div class="strength-text" id="strengthText">Enter password</div>
+                                </div>
+                                <div class="error-message">Password must be at least 6 characters</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+                                <div class="error-message">Passwords do not match</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-address-book"></i>
+                            Contact Information
+                        </h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone Number <span class="required">*</span></label>
+                                <input type="tel" id="phone" name="phone" class="form-control" required />
+                                <div class="field-help">Format: 08xxxxxxxx or 02xxxxxxx</div>
+                                <div class="error-message">Please enter a valid phone number</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea id="address" name="address" class="form-control" rows="3" placeholder="Full address including province"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div>
+                        <a href="/admin/patients" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo"></i>
+                            Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-plus"></i>
+                            Add Patient
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and submission
+        let isSubmitting = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            loadUserInfo();
+            loadNotifications();
+            setupPasswordValidation();
+            setupFormValidation();
+        });
+
+        // Initialize form functionality
+        function initializeForm() {
+            const form = document.getElementById('addPatientForm');
+            form.addEventListener('submit', handleFormSubmission);
+        }
+
+        // Load user information for avatar
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                        
+                        // Update user info in dropdown
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) {
+                            userDetails.textContent = `Hello ${data.role || 'Admin'}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showEmptyNotifications();
+            }
+        }
+
+        // Update notification display
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            // Update badge
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            // Update content
+            if (notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+                return `
+                    <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                         onclick="markAsRead(${notification.id})">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show empty notifications
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No new notifications</p>
+                </div>
+            `;
+        }
+
+        // Password strength validation
+        function setupPasswordValidation() {
+            const passwordInput = document.getElementById('password');
+            const confirmInput = document.getElementById('confirmPassword');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strength = calculatePasswordStrength(password);
+                
+                strengthFill.className = `strength-fill ${strength.level}`;
+                strengthText.className = `strength-text ${strength.level}`;
+                strengthText.textContent = strength.text;
+            });
+
+            confirmInput.addEventListener('input', function() {
+                validatePasswordMatch();
+            });
+
+            passwordInput.addEventListener('input', function() {
+                if (confirmInput.value) {
+                    validatePasswordMatch();
+                }
+            });
+        }
+
+        // Calculate password strength
+        function calculatePasswordStrength(password) {
+            if (password.length === 0) {
+                return { level: '', text: 'Enter password' };
+            }
+            
+            let score = 0;
+            
+            if (password.length >= 6) score++;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            if (score < 3) return { level: 'weak', text: 'Weak password' };
+            if (score < 4) return { level: 'fair', text: 'Fair password' };
+            if (score < 5) return { level: 'good', text: 'Good password' };
+            return { level: 'strong', text: 'Strong password' };
+        }
+
+        // Validate password match
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const confirmGroup = document.getElementById('confirmPassword').parentElement;
+
+            if (confirm && password !== confirm) {
+                confirmGroup.classList.add('error');
+                confirmGroup.classList.remove('success');
+            } else if (confirm && password === confirm) {
+                confirmGroup.classList.remove('error');
+                confirmGroup.classList.add('success');
+            } else {
+                confirmGroup.classList.remove('error', 'success');
+            }
+        }
+
+        // Setup form validation
+        function setupFormValidation() {
+            const form = document.getElementById('addPatientForm');
+            const inputs = form.querySelectorAll('.form-control[required]');
+
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.parentElement.classList.contains('error')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            // ID Card validation
+            const idcardInput = document.getElementById('idcard');
+            idcardInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 13);
+                validateField(this);
+            });
+
+            // Phone validation
+            const phoneInput = document.getElementById('phone');
+            phoneInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 10);
+                validateField(this);
+            });
+
+            // Email validation
+            const emailInput = document.getElementById('email');
+            emailInput.addEventListener('blur', function() {
+                checkEmailAvailability(this.value);
+            });
+        }
+
+        // Validate individual field
+        function validateField(field) {
+            const group = field.parentElement;
+            const value = field.value.trim();
+
+            group.classList.remove('error', 'success');
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                return false;
+            }
+
+            // Specific validations
+            if (field.type === 'email' && value && !isValidEmail(value)) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'idcard' && value && value.length !== 13) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'phone' && value && (value.length < 9 || value.length > 10)) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'dob' && value) {
+                const birthDate = new Date(value);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                if (age < 1 || age > 120) {
+                    group.classList.add('error');
+                    return false;
+                }
+            }
+
+            group.classList.add('success');
+            return true;
+        }
+
+        // Email validation
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Check email availability
+        async function checkEmailAvailability(email) {
+            if (!email || !isValidEmail(email)) return;
+
+            try {
+                // Note: This endpoint would need to be implemented in the backend
+                const response = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const emailGroup = document.getElementById('email').parentElement;
+                    
+                    if (data.exists) {
+                        emailGroup.classList.add('error');
+                        const errorMsg = emailGroup.querySelector('.error-message');
+                        errorMsg.textContent = 'Email address is already in use';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not check email availability');
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmission(e) {
+            e.preventDefault();
+            
+            if (isSubmitting) return;
+
+            const form = e.target;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Validate all fields
+            if (!validateAllFields()) {
+                showToast('Please fix the errors in the form', 'error');
+                return;
+            }
+
+            // Check password match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            isSubmitting = true;
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            try {
+                // Collect form data as JSON
+                const formData = {};
+                const fields = ['fname', 'lname', 'dob', 'idcard', 'email', 'password', 'phone', 'address'];
+                fields.forEach(field => {
+                    const input = document.getElementById(field);
+                    if (input) {
+                        formData[field] = input.value.trim();
+                    }
+                });
+                
+                const response = await fetch('/admin/patients/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast('Patient added successfully!', 'success');
+                        clearDraft(); // Clear the saved draft
+                        setTimeout(() => {
+                            window.location.href = result.redirect || '/admin/patients';
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error || 'Failed to add patient');
+                    }
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+                    throw new Error(errorData.error || 'Failed to add patient');
+                }
+
+            } catch (error) {
+                console.error('Error adding patient:', error);
+                showToast('Error adding patient: ' + error.message, 'error');
+            } finally {
+                isSubmitting = false;
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Validate all form fields
+        function validateAllFields() {
+            const form = document.getElementById('addPatientForm');
+            const requiredFields = form.querySelectorAll('.form-control[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        // Reset form
+        function resetForm() {
+            const form = document.getElementById('addPatientForm');
+            form.reset();
+            
+            // Reset validation states
+            const formGroups = form.querySelectorAll('.form-group');
+            formGroups.forEach(group => {
+                group.classList.remove('error', 'success');
+            });
+
+            // Reset password strength
+            document.getElementById('strengthFill').className = 'strength-fill';
+            document.getElementById('strengthText').textContent = 'Enter password';
+            document.getElementById('strengthText').className = 'strength-text';
+
+            // Reset progress
+            updateFormProgress();
+
+            showToast('Form reset successfully', 'info');
+        }
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (isVisible) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                loadNotifications(); // Refresh notifications
+            }
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/admin/api/notifications/read-all', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                    showToast('All notifications marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+                showToast('Failed to mark notifications as read', 'error');
+            }
+        }
+
+        // Toggle profile dropdown
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Get time ago text
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Form progress tracking
+        function updateFormProgress() {
+            const steps = ['step1', 'step2', 'step3'];
+            const personalFields = ['fname', 'lname', 'dob', 'idcard'];
+            const accountFields = ['email', 'password', 'confirmPassword'];
+            const contactFields = ['phone'];
+
+            // Check personal info completion
+            const personalComplete = personalFields.every(field => {
+                const input = document.getElementById(field);
+                return input && input.value.trim() !== '';
+            });
+
+            // Check account info completion
+            const accountComplete = accountFields.every(field => {
+                const input = document.getElementById(field);
+                return input && input.value.trim() !== '';
+            });
+
+            // Check contact info completion
+            const contactComplete = contactFields.some(field => {
+                const input = document.getElementById(field);
+                return input && input.value.trim() !== '';
+            });
+
+            // Update step indicators
+            updateStepIndicator('step1', personalComplete);
+            updateStepIndicator('step2', accountComplete);
+            updateStepIndicator('step3', contactComplete);
+        }
+
+        // Update step indicator
+        function updateStepIndicator(stepId, isComplete) {
+            const step = document.getElementById(stepId);
+            const icon = step.querySelector('i');
+            
+            if (isComplete) {
+                step.classList.add('completed');
+                icon.className = 'fas fa-check';
+            } else {
+                step.classList.remove('completed');
+                // Reset to original icon
+                if (stepId === 'step1') icon.className = 'fas fa-user';
+                if (stepId === 'step2') icon.className = 'fas fa-envelope';
+                if (stepId === 'step3') icon.className = 'fas fa-phone';
+            }
+        }
+
+        // Auto-save draft functionality
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('addPatientForm'));
+            const draftData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (key !== 'password' && key !== 'confirmPassword') {
+                    draftData[key] = value;
+                }
+            }
+            
+            try {
+                localStorage.setItem('patient_draft', JSON.stringify(draftData));
+            } catch (error) {
+                console.log('Could not save draft');
+            }
+        }
+
+        // Load draft on page load
+        function loadDraft() {
+            try {
+                const draft = localStorage.getItem('patient_draft');
+                if (draft) {
+                    const draftData = JSON.parse(draft);
+                    Object.keys(draftData).forEach(key => {
+                        const input = document.getElementById(key);
+                        if (input) {
+                            input.value = draftData[key];
+                        }
+                    });
+                    updateFormProgress();
+                }
+            } catch (error) {
+                console.log('Could not load draft');
+            }
+        }
+
+        // Clear draft
+        function clearDraft() {
+            try {
+                localStorage.removeItem('patient_draft');
+            } catch (error) {
+                console.log('Could not clear draft');
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            // Close profile dropdown
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+            
+            // Close notification dropdown
+            const notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer.contains(event.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+S to save draft
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                saveDraft();
+                showToast('Draft saved', 'info');
+            }
+            
+            // ESC to close dropdowns
+            if (event.key === 'Escape') {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // Auto-save draft every 30 seconds
+        setInterval(() => {
+            const form = document.getElementById('addPatientForm');
+            const hasData = Array.from(form.querySelectorAll('.form-control')).some(input => input.value.trim() !== '');
+            
+            if (hasData) {
+                saveDraft();
+            }
+        }, 30000);
+
+        // Monitor form changes for progress tracking
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('form-control')) {
+                updateFormProgress();
+            }
+        });
+
+        // Load draft on page load
+        window.addEventListener('load', function() {
+            loadDraft();
+        });
+
+        // Clear draft when form is successfully submitted
+        window.addEventListener('beforeunload', function() {
+            if (isSubmitting) {
+                clearDraft();
+            }
+        });
+
+        // Auto-refresh notifications every 60 seconds
+        setInterval(() => {
+            loadNotifications();
+        }, 60000);
+    </script>
 </body>
 </html>

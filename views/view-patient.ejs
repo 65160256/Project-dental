@@ -1,111 +1,1375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Patient Information</title>
-  <link rel="stylesheet" href="/css/view-patient.css" />
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Information - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        .notification-badge.show {
+            display: flex;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 400px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .empty-notifications {
+            padding: 30px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-notifications i {
+            font-size: 24px;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .admin-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .admin-details {
+            color: #333;
+        }
+
+        .admin-details strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .admin-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .admin-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 150px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+
+        .admin-dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            transition: background 0.2s ease;
+        }
+
+        .admin-dropdown a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            max-width: 1200px;
+        }
+
+        /* Left Panel - Avatar */
+        .left-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            height: fit-content;
+            text-align: center;
+        }
+
+        .patient-avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border: 3px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 60px;
+            font-weight: 600;
+        }
+
+        .patient-id-badge {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        /* Right Panel - Information */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4A90E2;
+            font-size: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .info-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Action Buttons */
+        .action-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Confirmation Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #fee2e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            font-size: 24px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4A90E2;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .left-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo"><img src="/img/logo.png" alt="Smile Clinic" /></div>
-    <ul>
-      <li><a href="/admin/dashboard">Schedule</a></li>
-      <li><a href="/admin/appointments">Appointments</a></li>
-      <li><a href="/admin/dentists">Dentists</a></li>
-      <li class="active"><a href="/admin/patients">Patients</a></li>
-      <li><a href="/admin/treatments">Treatments</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="header">
-      <h2>Patient Information</h2>
-      <div class="top-right">
-        
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar" />
-            <div>
-              <strong>Hello Admin</strong><br />
-              <small>admin</small>
-            </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
-            <a href="/profile">My Profile</a><hr />
-            <a href="/logout">Log Out</a>
-          </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
     </div>
 
-    <div class="section">
-        <a href="/admin/patients/<%= patient.patient_id %>/treatments" class="btn-blue">Treatment History</a>
-      <h4>Personal Information</h4>
-      <p>Name: <%= patient.fname %> <%= patient.lname %></p>
-      <p>Patient ID: <%= patient.patient_id %></p>
-      <p>Date of Birth: <%= patient.dob.toISOString().split('T')[0] %></p>
-      <p>ID Card Number: <%= patient.idcard %></p>
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Header -->
+        <div class="header">
+            <h2>Patient Information</h2>
+            <div class="top-right">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <span>Notifications</span>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">Mark all read</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>Loading notifications...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-info" onclick="toggleAdminDropdown()">
+                    <div class="admin-avatar" id="adminAvatar">A</div>
+                    <div class="admin-details">
+                        <strong>Hello Admin</strong>
+                        <small>Administrator</small>
+                    </div>
+                    <i class="fas fa-caret-down"></i>
+                    
+                    <div class="admin-dropdown" id="adminDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Left Panel - Avatar and Basic Info -->
+            <div class="left-panel">
+                <div class="patient-avatar" id="patientAvatar">P</div>
+                <div class="patient-id-badge" id="patientIdBadge">ID: 001</div>
+                <div class="status-badge">Active</div>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAppointments">0</div>
+                        <div class="stat-label">Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalTreatments">0</div>
+                        <div class="stat-label">Treatments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Detailed Information -->
+            <div class="right-panel">
+                <!-- Personal Information -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="section-title">Personal Information</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Full Name</div>
+                            <div class="info-value loading" id="fullName">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Date of Birth</div>
+                            <div class="info-value loading" id="birthDate">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">ID Card Number</div>
+                            <div class="info-value loading" id="idCard">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Last Visit</div>
+                            <div class="info-value loading" id="lastVisit">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Last Login</div>
+                            <div class="info-value loading" id="lastLogin">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-address-book"></i>
+                        </div>
+                        <h3 class="section-title">Contact Information</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Address</div>
+                            <div class="info-value loading" id="address">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Phone Number</div>
+                            <div class="info-value loading" id="phone">Loading...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value loading" id="email">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h3 class="section-title">Actions</h3>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="#" class="btn btn-primary" id="treatmentBtn">
+                            <i class="fas fa-history"></i>
+                            Treatment History
+                        </a>
+                        <a href="#" class="btn btn-warning" id="editBtn">
+                            <i class="fas fa-edit"></i>
+                            Edit Information
+                        </a>
+                        <button class="btn btn-secondary" onclick="goBack()">
+                            <i class="fas fa-arrow-left"></i>
+                            Back
+                        </button>
+                        <button class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="section">
-      <h4>Contact Information</h4>
-      <p>Address: <%= patient.address %></p>
-      <p>Phone: <%= patient.phone %></p>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="modal-title">Confirm Deletion</h3>
+            <div class="modal-message">
+                Are you sure you want to delete this patient's information?<br>
+                This action cannot be undone.
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deletePatient()">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="section">
-      <h4>Login Information</h4>
-      <p>Email: <%= patient.email %></p>
-      <p>Password: ******</p>
-    </div>
+    <script>
+        // Global variables
+        let patientId = null;
+        let patientData = null;
 
-    <!-- ปุ่มลบ -->
-<div class="button-group">
-  <a href="/admin/patients/<%= patient.patient_id %>/edit" class="btn-yellow">Edit</a>
-  <button class="btn-red" onclick="openDeleteModal()">Delete</button>
-</div>
+        document.addEventListener('DOMContentLoaded', function() {
+            extractPatientId();
+            loadPatientData();
+            loadUserInfo();
+            loadNotifications();
+        });
 
-<!-- Modal -->
-<div id="deleteModal" class="modal">
-  <div class="modal-content">
-    <h3>Confirm Deletion</h3>
-    <p>Are you sure you want to delete this patient?</p>
-    <div class="modal-buttons">
-      <a href="/admin/patients/<%= patient.patient_id %>/delete" class="btn-red">Yes, Delete</a>
-      <button onclick="closeDeleteModal()" class="btn-gray">Cancel</button>
-    </div>
-  </div>
-</div>
+        // Extract patient ID from URL
+        function extractPatientId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/patients\/(\d+)$/);
+            if (matches) {
+                patientId = parseInt(matches[1]);
+                document.getElementById('patientIdBadge').textContent = `ID: ${String(patientId).padStart(3, '0')}`;
+            } else {
+                showToast('Invalid patient ID', 'error');
+                setTimeout(() => window.location.href = '/admin/patients', 2000);
+            }
+        }
 
+        // Load patient data from database
+        async function loadPatientData() {
+            if (!patientId) return;
 
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+            try {
+                const response = await fetch(`/admin/api/patients/${patientId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    patientData = data.patient;
+                    populateData(patientData);
+                } else {
+                    throw new Error(data.error || 'Failed to load patient data');
+                }
+                
+            } catch (error) {
+                console.error('Error loading patient data:', error);
+                showToast('Failed to load patient data: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '/admin/patients', 3000);
+            }
+        }
 
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
+        // Populate data with patient information
+        function populateData(patient) {
+            console.log('Patient data received:', patient);
+            
+            // Update full name and avatar
+            const fullName = `${patient.fname || ''} ${patient.lname || ''}`.trim();
+            document.getElementById('fullName').textContent = fullName;
+            document.getElementById('fullName').classList.remove('loading');
+            
+            // Update avatar with initials
+            const initials = (patient.fname && patient.lname) 
+                ? (patient.fname.charAt(0) + patient.lname.charAt(0)).toUpperCase()
+                : 'P';
+            document.getElementById('patientAvatar').textContent = initials;
+            
+            // Date of birth
+            const birthDateEl = document.getElementById('birthDate');
+            if (patient.dob) {
+                const date = new Date(patient.dob);
+                birthDateEl.textContent = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } else {
+                birthDateEl.innerHTML = '<span class="empty">Not specified</span>';
+            }
+            birthDateEl.classList.remove('loading');
+            
+            // ID Card
+            const idCardEl = document.getElementById('idCard');
+            if (patient.idcard) {
+                idCardEl.textContent = patient.idcard;
+            } else {
+                idCardEl.innerHTML = '<span class="empty">Not specified</span>';
+            }
+            idCardEl.classList.remove('loading');
+            
+            // Address
+            const addressEl = document.getElementById('address');
+            if (patient.address) {
+                addressEl.textContent = patient.address;
+            } else {
+                addressEl.innerHTML = '<span class="empty">Not specified</span>';
+            }
+            addressEl.classList.remove('loading');
+            
+            // Phone
+            const phoneEl = document.getElementById('phone');
+            if (patient.phone) {
+                phoneEl.textContent = patient.phone;
+            } else {
+                phoneEl.innerHTML = '<span class="empty">Not specified</span>';
+            }
+            phoneEl.classList.remove('loading');
+            
+            // Email
+            const emailEl = document.getElementById('email');
+            if (patient.email) {
+                emailEl.textContent = patient.email;
+            } else {
+                emailEl.innerHTML = '<span class="empty">Not specified</span>';
+            }
+            emailEl.classList.remove('loading');
+            
+            // Last visit
+            const lastVisitEl = document.getElementById('lastVisit');
+            if (patient.last_visit) {
+                const visitDate = new Date(patient.last_visit);
+                lastVisitEl.textContent = formatDateTime(visitDate);
+            } else {
+                lastVisitEl.innerHTML = '<span class="empty">No visits yet</span>';
+            }
+            lastVisitEl.classList.remove('loading');
+            
+            // Last login
+            const lastLoginEl = document.getElementById('lastLogin');
+            if (patient.last_login) {
+                const loginDate = new Date(patient.last_login);
+                lastLoginEl.textContent = formatDateTime(loginDate);
+            } else {
+                lastLoginEl.innerHTML = '<span class="empty">Never logged in</span>';
+            }
+            lastLoginEl.classList.remove('loading');
 
-    function openDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'flex';
-  }
+            // Update stats
+            document.getElementById('totalAppointments').textContent = patient.stats?.total_appointments || 0;
+            
+            // Count treatments from last visit info
+            const totalTreatments = patient.stats?.total_appointments || 0; // Using appointments as proxy for treatments
+            document.getElementById('totalTreatments').textContent = totalTreatments;
 
-  function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-  }
+            // Update action button links
+            document.getElementById('treatmentBtn').href = `/admin/patients/${patientId}/treatments`;
+            document.getElementById('editBtn').href = `/admin/patients/${patientId}/edit`;
+        }
 
-  document.addEventListener('click', function (e) {
-    const modal = document.getElementById('deleteModal');
-    if (e.target === modal) closeDeleteModal();
-  });
-    
-  </script>
+        // Load user information for avatar
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('adminAvatar').textContent = firstLetter;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('adminAvatar').textContent = 'A';
+            }
+        }
+
+        // Load notifications from database
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showEmptyNotifications();
+            }
+        }
+
+        // Update notification display with real data
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            // Update badge
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            // Update content
+            if (notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+                return `
+                    <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                         onclick="markAsRead(${notification.id})">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show empty notifications
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No new notifications</p>
+                </div>
+            `;
+        }
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (isVisible) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                loadNotifications(); // Refresh notifications
+            }
+        }
+
+        // Toggle admin dropdown
+        function toggleAdminDropdown() {
+            const dropdown = document.getElementById('adminDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                    showToast('Notification marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/admin/api/notifications/read-all', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                    showToast('All notifications marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+                showToast('Failed to mark notifications as read', 'error');
+            }
+        }
+
+        // Show confirmation modal for delete
+        function confirmDelete() {
+            if (!patientData) {
+                showToast('Cannot delete: patient data not loaded', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('deleteModal');
+            const message = document.querySelector('.modal-message');
+            message.innerHTML = `
+                Are you sure you want to delete<br>
+                <strong>${patientData.fname} ${patientData.lname}</strong>?<br>
+                This action cannot be undone.
+            `;
+            modal.style.display = 'flex';
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'none';
+        }
+
+        // Delete patient
+        async function deletePatient() {
+            if (!patientId) return;
+
+            try {
+                showToast('Deleting patient...', 'info');
+                
+                const response = await fetch(`/admin/api/patients/${patientId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeModal();
+                    showToast('Patient deleted successfully', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin/patients';
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Failed to delete patient');
+                }
+
+            } catch (error) {
+                console.error('Error deleting patient:', error);
+                showToast('Error deleting patient: ' + error.message, 'error');
+            }
+        }
+
+        // Go back to patients list
+        function goBack() {
+            window.location.href = '/admin/patients';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Get time ago text
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString('en-US');
+        }
+
+        // Format date time
+        function formatDateTime(date) {
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            // Close admin dropdown
+            const adminInfo = document.querySelector('.admin-info');
+            if (!adminInfo.contains(event.target)) {
+                document.getElementById('adminDropdown').style.display = 'none';
+            }
+            
+            // Close notification dropdown
+            const notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer.contains(event.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            }
+
+            // Close modal when clicking outside
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // ESC to close dropdowns and modal
+            if (event.key === 'Escape') {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                document.getElementById('adminDropdown').style.display = 'none';
+                closeModal();
+            }
+
+            // E to edit
+            if (event.key === 'e' || event.key === 'E') {
+                if (patientId && !event.ctrlKey && !event.metaKey) {
+                    window.location.href = `/admin/patients/${patientId}/edit`;
+                }
+            }
+
+            // T to view treatment history
+            if (event.key === 't' || event.key === 'T') {
+                if (patientId && !event.ctrlKey && !event.metaKey) {
+                    window.location.href = `/admin/patients/${patientId}/treatments`;
+                }
+            }
+
+            // B to go back
+            if (event.key === 'b' || event.key === 'B') {
+                if (!event.ctrlKey && !event.metaKey) {
+                    goBack();
+                }
+            }
+
+            // Enter to confirm delete in modal
+            if (event.key === 'Enter' && document.getElementById('deleteModal').style.display === 'flex') {
+                event.preventDefault();
+                deletePatient();
+            }
+        });
+
+        // Auto-refresh notifications every 60 seconds
+        setInterval(() => {
+            loadNotifications();
+        }, 60000);
+
+        // Enhanced error handling
+        window.addEventListener('online', function() {
+            showToast('Connection restored', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            showToast('Connection lost', 'warning');
+        });
+
+        // Initialize accessibility
+        function initializeAccessibility() {
+            // Add tooltips to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.setAttribute('role', 'button');
+                button.setAttribute('tabindex', '0');
+            });
+
+            // Add keyboard navigation for custom dropdowns
+            const dropdownTriggers = document.querySelectorAll('[onclick*="toggle"]');
+            dropdownTriggers.forEach(trigger => {
+                trigger.setAttribute('tabindex', '0');
+                trigger.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        trigger.click();
+                    }
+                });
+            });
+        }
+
+        // Call initialization
+        setTimeout(() => {
+            initializeAccessibility();
+        }, 1000);
+
+        // Debug mode for development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.debugViewPatient = {
+                patientData,
+                patientId,
+                loadPatientData,
+                loadNotifications,
+                showToast
+            };
+        }
+    </script>
 </body>
 </html>

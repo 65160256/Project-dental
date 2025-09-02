@@ -1,5 +1,7 @@
 const db = require('../models/db');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 
 // -------------------- แสดงโปรไฟล์ --------------------
 exports.getProfile = async (req, res) => {
@@ -485,18 +487,51 @@ exports.addDentist = async (req, res) => {
     specialty, education, address, phone
   } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const [userResult] = await db.execute(
-    `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
-    [email, hashedPassword]
-  );
-  const userId = userResult.insertId;
-  await db.execute(
-    `INSERT INTO dentist (user_id, fname, lname, dob, idcard, specialty, education, address, phone, photo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [userId, fname, lname, dob, idcard, specialty, education, address, phone, req.file?.filename || null]
-  );
-  res.redirect('/admin/dentists');
+  console.log('📋 Form data received:', req.body);
+  console.log('📁 File uploaded:', req.file);
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // สร้าง user record
+    const [userResult] = await db.execute(
+      `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
+      [email, hashedPassword]
+    );
+    const userId = userResult.insertId;
+    
+    // กำหนด photo filename
+    let photoFilename = null;
+    if (req.file) {
+      photoFilename = req.file.filename;
+      console.log('✅ Photo saved as:', photoFilename);
+    } else {
+      console.log('ℹ️ No photo uploaded, using default');
+    }
+    
+    // สร้าง dentist record
+    await db.execute(
+      `INSERT INTO dentist (user_id, fname, lname, dob, idcard, specialty, education, address, phone, photo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, fname, lname, dob, idcard, specialty, education, address, phone, photoFilename]
+    );
+    
+    console.log('✅ Dentist created successfully');
+    res.redirect('/admin/dentists');
+    
+  } catch (error) {
+    console.error('❌ Error creating dentist:', error);
+    
+    // ลบไฟล์ที่อัพโหลดแล้วหากเกิดข้อผิดพลาด
+    if (req.file) {
+      const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+    
+    res.status(500).send('Error creating dentist: ' + error.message);
+  }
 };
 
 exports.viewDentist = async (req, res) => {
@@ -548,13 +583,17 @@ exports.editDentist = async (req, res) => {
     phone = ''
   } = req.body;
 
+  console.log('📋 Edit form data received:', req.body);
+  console.log('📁 New file uploaded:', req.file);
+
   try {
-    const [dentistRow] = await db.execute(`SELECT user_id FROM dentist WHERE dentist_id = ?`, [id]);
+    const [dentistRow] = await db.execute(`SELECT user_id, photo FROM dentist WHERE dentist_id = ?`, [id]);
     if (dentistRow.length === 0) return res.status(404).send('Dentist not found');
 
     const userId = dentistRow[0].user_id;
+    const oldPhoto = dentistRow[0].photo;
 
-    // เตรียมคำสั่งและพารามิเตอร์สำหรับ user
+    // อัปเดต user table
     if (password) {
       const hashed = await bcrypt.hash(password, 10);
       await db.execute(
@@ -568,25 +607,47 @@ exports.editDentist = async (req, res) => {
       );
     }
 
-    // เตรียมคำสั่งและพารามิเตอร์สำหรับ dentist
-    const sql = `
+    // จัดการรูปภาพ
+    let photoFilename = oldPhoto;
+    
+    if (req.file) {
+      photoFilename = req.file.filename;
+      console.log('✅ New photo uploaded:', photoFilename);
+      
+      if (oldPhoto && oldPhoto !== 'default-avatar.png') {
+        const oldPhotoPath = path.join(__dirname, '../public/uploads/', oldPhoto);
+        fs.unlink(oldPhotoPath, (err) => {
+          if (err) console.log('Could not delete old photo:', err.message);
+          else console.log('🗑️ Old photo deleted:', oldPhoto);
+        });
+      }
+    }
+
+    // ⭐ จุดสำคัญ: แปลง empty string เป็น NULL สำหรับฟิลด์วันที่
+    const dobValue = dob && dob.trim() !== '' && dob !== 'null' ? dob : null;
+
+    // อัปเดต dentist table ด้วยค่าที่ปรับแล้ว
+    await db.execute(`
       UPDATE dentist SET
         fname = ?, lname = ?, dob = ?, idcard = ?,
-        specialty = ?, education = ?, address = ?, phone = ?
-        ${req.file ? ', photo = ?' : ''}
+        specialty = ?, education = ?, address = ?, phone = ?, photo = ?
       WHERE dentist_id = ?
-    `;
+    `, [fname, lname, dobValue, idcard, specialty, education, address, phone, photoFilename, id]);
 
-    const values = req.file
-      ? [fname, lname, dob, idcard, specialty, education, address, phone, req.file.filename, id]
-      : [fname, lname, dob, idcard, specialty, education, address, phone, id];
-
-    await db.execute(sql, values);
-
+    console.log('✅ Dentist updated successfully');
     res.redirect('/admin/dentists');
+    
   } catch (err) {
-    console.error('Edit dentist error:', err);
-    res.status(500).send('Server error during update.');
+    console.error('❌ Edit dentist error:', err);
+    
+    if (req.file) {
+      const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+    
+    res.status(500).send('Server error during update: ' + err.message);
   }
 };
 
@@ -624,6 +685,189 @@ exports.getPatients = async (req, res) => {
   }
 };
 
+// API: Get all patients for the modern interface
+exports.getPatientsAPI = async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        p.patient_id,
+        p.fname,
+        p.lname,
+        p.phone,
+        p.dob,
+        p.address,
+        p.idcard,
+        u.email,
+        u.last_login,
+        MAX(q.time) as last_visit,
+        COUNT(DISTINCT q.queue_id) as total_appointments
+      FROM patient p
+      LEFT JOIN user u ON p.user_id = u.user_id
+      LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
+      GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.idcard, u.email, u.last_login
+      ORDER BY p.fname, p.lname
+    `);
+
+    // Format the data for the frontend
+    const patients = rows.map(patient => ({
+      patient_id: patient.patient_id,
+      fname: patient.fname,
+      lname: patient.lname,
+      phone: patient.phone,
+      dob: patient.dob,
+      address: patient.address,
+      idcard: patient.idcard,
+      email: patient.email,
+      last_login: patient.last_login,
+      last_visit: patient.last_visit,
+      stats: {
+        total_appointments: patient.total_appointments
+      }
+    }));
+
+    res.json({
+      success: true,
+      patients: patients,
+      total_count: patients.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load patients',
+      details: error.message
+    });
+  }
+};
+
+// API: Get single patient details
+exports.getPatientByIdAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [rows] = await db.execute(`
+      SELECT 
+        p.*,
+        u.email,
+        u.last_login,
+        COUNT(DISTINCT q.queue_id) as total_appointments,
+        MAX(q.time) as last_visit
+      FROM patient p
+      LEFT JOIN user u ON p.user_id = u.user_id
+      LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
+      WHERE p.patient_id = ?
+      GROUP BY p.patient_id
+    `, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Patient not found'
+      });
+    }
+
+    const patient = rows[0];
+    
+    res.json({
+      success: true,
+      patient: patient
+    });
+
+  } catch (error) {
+    console.error('Error fetching patient details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load patient details',
+      details: error.message
+    });
+  }
+};
+
+// API: Delete patient
+exports.deletePatientAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get patient details before deletion for notification
+    const [patientData] = await db.execute(`
+      SELECT p.*, u.email 
+      FROM patient p 
+      LEFT JOIN user u ON p.user_id = u.user_id 
+      WHERE p.patient_id = ?
+    `, [id]);
+
+    if (patientData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Patient not found'
+      });
+    }
+
+    const patient = patientData[0];
+    
+    // Start transaction to ensure data integrity
+    await db.execute('START TRANSACTION');
+    
+    try {
+      // Update any existing appointments to cancelled status instead of deleting
+      await db.execute(`
+        UPDATE queue 
+        SET queue_status = 'cancel' 
+        WHERE patient_id = ? AND queue_status IN ('pending', 'confirm')
+      `, [id]);
+      
+      // Delete treatment history first
+      await db.execute(`
+        DELETE th FROM treatmentHistory th
+        JOIN queuedetail qd ON th.queuedetail_id = qd.queuedetail_id
+        WHERE qd.patient_id = ?
+      `, [id]);
+      
+      // Delete queue details
+      await db.execute('DELETE FROM queuedetail WHERE patient_id = ?', [id]);
+      
+      // Delete the patient record
+      await db.execute('DELETE FROM patient WHERE patient_id = ?', [id]);
+      
+      // Delete the associated user account if exists
+      if (patient.user_id) {
+        await db.execute('DELETE FROM user WHERE user_id = ?', [patient.user_id]);
+      }
+      
+      // Commit transaction
+      await db.execute('COMMIT');
+      
+      // Create notification for deletion
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, is_read, is_new)
+        VALUES (?, ?, ?, 0, 1)
+      `, [
+        'patient',
+        'Patient Record Deleted',
+        `Patient ${patient.fname || 'Unknown'} ${patient.lname || 'Patient'} has been removed from the system`
+      ]);
+
+      res.json({
+        success: true,
+        message: `${patient.fname || 'Unknown'} ${patient.lname || 'Patient'} deleted successfully`
+      });
+
+    } catch (error) {
+      // Rollback transaction on error
+      await db.execute('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error deleting patient:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete patient',
+      details: error.message
+    });
+  }
+};
 
 // แสดงฟอร์มเพิ่ม patient
 exports.showAddPatientForm = (req, res) => {
@@ -642,21 +886,143 @@ exports.listPatients = async (req, res) => {
   }
 };
 
-// เพิ่ม patient
+// Updated addPatient function to handle the new form structure
 exports.addPatient = async (req, res) => {
-  const { fname, lname, dob, phone, address } = req.body;
-  if (!fname || !lname) return res.status(400).send('Missing required fields');
+  console.log('📥 Request body:', req.body); // Debug log
+  
+  const { fname, lname, dob, idcard, email, password, phone, address } = req.body;
+  
+  // Validate required fields
+  if (!fname || !lname || !dob || !idcard || !email || !password || !phone) {
+    console.log('❌ Missing required fields');
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields: fname, lname, dob, idcard, email, password, phone are required'
+    });
+  }
+
   try {
-    await db.execute(`
-      INSERT INTO patient (fname, lname, dob, phone, address)
-      VALUES (?, ?, ?, ?, ?)`,
-      [fname, lname, dob || null, phone || '', address || '']
-    );
-    req.flash('success', 'Patient added successfully.');
-    res.redirect('/admin/patients');
-  } catch (err) {
-    console.error('Add patient error:', err);
-    res.status(500).send('Server error while adding patient');
+    // Check if email already exists
+    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    if (existingUser[0].count > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email address is already in use'
+      });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Start transaction using query instead of execute
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Create user record first (role_id = 3 for patients, adjust as needed)
+      const [userResult] = await db.execute(
+        `INSERT INTO user (email, password, role_id) VALUES (?, ?, 3)`,
+        [email, hashedPassword]
+      );
+      const userId = userResult.insertId;
+      
+      // Create patient record
+      const [patientResult] = await db.execute(`
+        INSERT INTO patient (user_id, fname, lname, dob, idcard, phone, address)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, fname, lname, dob, idcard, phone, address || '']
+      );
+      
+      const patientId = patientResult.insertId;
+      
+      // Commit transaction using query
+      await db.query('COMMIT');
+      
+      // Create notification for new patient (outside transaction)
+      try {
+        await db.execute(`
+          INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
+        `, [
+          'patient',
+          'New Patient Registered',
+          `New patient ${fname} ${lname} has been added to the system`,
+          patientId
+        ]);
+      } catch (notificationError) {
+        console.warn('Could not create notification:', notificationError.message);
+        // Don't fail the entire operation if notification fails
+      }
+
+      console.log('✅ Patient created successfully');
+      
+      // Return success response
+      res.json({
+        success: true,
+        message: 'Patient added successfully',
+        redirect: '/admin/patients'
+      });
+      
+    } catch (error) {
+      // Rollback transaction on error using query
+      await db.query('ROLLBACK');
+      throw error;
+    }
+    
+  } catch (error) {
+    console.error('❌ Error creating patient:', error);
+    
+    // Handle specific database errors
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        success: false,
+        error: 'Email address is already in use'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add patient: ' + error.message
+    });
+  }
+};
+
+// Helper function to get unread notification count
+async function getUnreadNotificationCount() {
+  try {
+    const [result] = await db.execute('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0');
+    return result[0].count;
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return 0;
+  }
+}
+
+// Email availability check function
+exports.checkEmailAvailability = async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    const exists = existingUser[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
   }
 };
 
@@ -748,6 +1114,239 @@ exports.deletePatient = async (req, res) => {
   }
 };
 
+// API: Update patient information
+exports.updatePatientAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    console.log('📝 Updating patient:', id, 'with data:', updateData);
+    
+    // ตรวจสอบว่าผู้ป่วยมีอยู่จริง
+    const [currentPatient] = await db.execute(`
+      SELECT p.*, u.email, u.user_id 
+      FROM patient p 
+      LEFT JOIN user u ON p.user_id = u.user_id 
+      WHERE p.patient_id = ?
+    `, [id]);
+
+    if (currentPatient.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Patient not found'
+      });
+    }
+
+    const patient = currentPatient[0];
+    
+    // เริ่ม transaction - ใช้ query แทน execute
+    await db.query('START TRANSACTION');
+    
+    try {
+      // ตรวจสอบอีเมลซ้ำ (ถ้ามีการเปลี่ยนแปลงอีเมล)
+      if (updateData.email && updateData.email !== patient.email) {
+        const [existingEmail] = await db.execute(
+          'SELECT COUNT(*) as count FROM user WHERE email = ? AND user_id != ?', 
+          [updateData.email, patient.user_id]
+        );
+        
+        if (existingEmail[0].count > 0) {
+          await db.query('ROLLBACK');
+          return res.status(400).json({
+            success: false,
+            error: 'Email address is already in use'
+          });
+        }
+      }
+
+      // อัปเดตตาราง user (email และ password)
+      if (updateData.email || updateData.password) {
+        let userUpdateQuery = 'UPDATE user SET ';
+        let userUpdateParams = [];
+        let userUpdateFields = [];
+
+        if (updateData.email) {
+          userUpdateFields.push('email = ?');
+          userUpdateParams.push(updateData.email);
+        }
+
+        if (updateData.password) {
+          const bcrypt = require('bcrypt');
+          const hashedPassword = await bcrypt.hash(updateData.password, 10);
+          userUpdateFields.push('password = ?');
+          userUpdateParams.push(hashedPassword);
+        }
+
+        if (userUpdateFields.length > 0) {
+          userUpdateQuery += userUpdateFields.join(', ') + ' WHERE user_id = ?';
+          userUpdateParams.push(patient.user_id);
+          
+          await db.execute(userUpdateQuery, userUpdateParams);
+          console.log('✅ User table updated');
+        }
+      }
+
+      // อัปเดตตาราง patient
+      const patientFields = ['fname', 'lname', 'dob', 'idcard', 'phone', 'address'];
+      let patientUpdateFields = [];
+      let patientUpdateParams = [];
+
+      patientFields.forEach(field => {
+        if (updateData.hasOwnProperty(field)) {
+          patientUpdateFields.push(`${field} = ?`);
+          // จัดการค่า null สำหรับฟิลด์วันที่
+          if (field === 'dob' && (!updateData[field] || updateData[field] === 'null')) {
+            patientUpdateParams.push(null);
+          } else {
+            patientUpdateParams.push(updateData[field] || null);
+          }
+        }
+      });
+
+      if (patientUpdateFields.length > 0) {
+        const patientUpdateQuery = `UPDATE patient SET ${patientUpdateFields.join(', ')} WHERE patient_id = ?`;
+        patientUpdateParams.push(id);
+        
+        await db.execute(patientUpdateQuery, patientUpdateParams);
+        console.log('✅ Patient table updated');
+      }
+      
+      // Commit transaction - ใช้ query แทน execute
+      await db.query('COMMIT');
+      console.log('✅ Transaction committed');
+      
+      // สร้าง notification สำหรับการอัปเดต
+      try {
+        await db.execute(`
+          INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
+        `, [
+          'patient_update',
+          'Patient Information Updated',
+          `Patient ${updateData.fname || patient.fname} ${updateData.lname || patient.lname}'s information has been updated`,
+          id
+        ]);
+        console.log('✅ Notification created');
+      } catch (notificationError) {
+        console.warn('⚠️ Could not create notification:', notificationError.message);
+      }
+
+      res.json({
+        success: true,
+        message: 'Patient updated successfully'
+      });
+
+    } catch (error) {
+      // Rollback transaction on error - ใช้ query แทน execute
+      await db.query('ROLLBACK');
+      console.error('❌ Transaction rolled back due to error');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('❌ Error updating patient:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update patient: ' + error.message
+    });
+  }
+};
+
+
+
+// Enhanced email check function สำหรับ patients (ไม่รวมอีเมลปัจจุบันของผู้ป่วย)
+exports.checkPatientEmailAvailability = async (req, res) => {
+  try {
+    const { email, patient_id } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+    let params = [email];
+
+    // ถ้าเป็นการตรวจสอบสำหรับผู้ป่วยเฉพาะ ให้ยกเว้นอีเมลปัจจุบันของเขา
+    if (patient_id) {
+      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
+      params.push(patient_id);
+    }
+
+    const [result] = await db.execute(query, params);
+    const exists = result[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+};
+
+// แสดงฟอร์มแก้ไข patient แบบ modern
+exports.showEditPatientFormModern = async (req, res) => {
+  const id = req.params.id;
+  
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        p.*,
+        u.email,
+        u.last_login,
+        u.created_at,
+        u.updated_at as user_updated_at
+      FROM patient p
+      LEFT JOIN user u ON p.user_id = u.user_id
+      WHERE p.patient_id = ?
+    `, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).render('error', { 
+        message: 'Patient not found',
+        backUrl: '/admin/patients'
+      });
+    }
+
+    const patient = rows[0];
+    
+    // Format date สำหรับ HTML input
+    if (patient.dob) {
+      patient.dob = new Date(patient.dob).toISOString().split('T')[0];
+    }
+
+    // เพิ่มสถิติ
+    const [appointmentStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as total_appointments,
+        COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed_appointments,
+        COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending_appointments,
+        COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled_appointments,
+        MAX(time) as last_appointment
+      FROM queue 
+      WHERE patient_id = ?
+    `, [id]);
+
+    patient.stats = appointmentStats[0];
+
+    // ใช้ template ใหม่
+    res.render('edit-patient-modern', { patient });
+  } catch (err) {
+    console.error('Error loading patient for edit:', err);
+    res.status(500).render('error', { 
+      message: 'Error loading patient information',
+      backUrl: '/admin/patients'
+    });
+  }
+};
 // ----Treatment History----
 
 exports.viewPatientTreatmentHistory = async (req, res) => {
@@ -1067,7 +1666,7 @@ exports.getNotifications = async (req, res) => {
       LIMIT ? OFFSET ?
     `, [...params, parseInt(limit), parseInt(offset)]);
 
-    // Get total count
+    // Get total count with same WHERE clause
     const [countResult] = await db.execute(`
       SELECT COUNT(*) as total FROM notifications n ${whereClause}
     `, params);
@@ -1875,9 +2474,27 @@ exports.getDentistByIdAPI = async (req, res) => {
       });
     }
 
+    const dentist = rows[0];
+    
+    // ตรวจสอบว่ามีไฟล์รูปจริงหรือไม่
+    if (dentist.photo && dentist.photo !== 'default-avatar.png') {
+      const photoPath = path.join(__dirname, '../public/uploads/', dentist.photo);
+      const photoExists = fs.existsSync(photoPath);
+      
+      console.log(`🔍 Checking photo: ${dentist.photo} - Exists: ${photoExists}`);
+      
+      if (!photoExists) {
+        console.log('⚠️ Photo file not found, setting to null');
+        dentist.photo = null;
+        
+        // อัปเดต database ให้ตรงกับความเป็นจริง
+        await db.execute('UPDATE dentist SET photo = NULL WHERE dentist_id = ?', [id]);
+      }
+    }
+
     res.json({
       success: true,
-      dentist: rows[0]
+      dentist: dentist
     });
 
   } catch (error) {
