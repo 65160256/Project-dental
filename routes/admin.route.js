@@ -5,6 +5,7 @@ const adminController = require('../controller/admin.controller');
 
 const upload = require('../middlewares/upload');
 
+
 // Middleware to check admin authentication
 const checkAdminAuth = (req, res, next) => {
   if (!req.session.userId || req.session.role != 1) {
@@ -137,6 +138,18 @@ router.get('/treatments/:id', checkAdminAuth, adminController.viewTreatment);
 router.get('/treatments/:id/edit', checkAdminAuth, adminController.showEditTreatmentForm);
 router.post('/treatments/:id/edit', checkAdminAuth, adminController.updateTreatment);
 router.get('/treatments/:id/delete', checkAdminAuth, adminController.deleteTreatment);
+router.delete('/treatments/:id/delete', checkAdminAuth, adminController.deleteTreatment);
+// In your admin routes file, add:
+router.get('/api/treatments', checkAdminApiAuth, adminController.getTreatmentsAPI);
+router.get('/api/treatments/:id', checkAdminApiAuth, adminController.getTreatmentByIdAPI);
+router.get('/api/treatments/:id/dentists', checkAdminApiAuth, adminController.getTreatmentDentistsAPI);
+router.put('/api/treatments/:id', checkAdminApiAuth, adminController.updateTreatmentAPI);
+router.post('/api/treatments', checkAdminApiAuth, adminController.createTreatmentAPI);
+// Make sure this route exists
+router.delete('/api/treatments/:id', checkAdminApiAuth, (req, res, next) => {
+  console.log('DELETE request received for treatment:', req.params.id);
+  adminController.deleteTreatmentAPI(req, res, next);
+});
 
 // ==================== Notifications API Routes ====================
 router.get('/api/notifications', checkAdminApiAuth, adminController.getNotifications);

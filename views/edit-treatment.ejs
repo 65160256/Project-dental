@@ -1,84 +1,1763 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Edit Treatments</title>
-  <link rel="stylesheet" href="/css/edit-treatment.css" />
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Treatment - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .page-info h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .empty-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-notifications i {
+            font-size: 32px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            padding: 25px 30px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-header-left h2 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .treatment-id-badge {
+            background: #4A90E2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #4A90E2;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-control:invalid {
+            border-color: #e74c3c;
+        }
+
+        .field-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .field-changed {
+            border-color: #f39c12 !important;
+            background: #fef9e7 !important;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        .form-group.error .form-control {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .form-group.success .form-control {
+            border-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        /* Multi-select styling */
+        .dentist-selector {
+            position: relative;
+        }
+
+        .selected-dentists {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 40px;
+            padding: 8px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .dentist-chip {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dentist-chip .remove-btn {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(25, 118, 210, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .dentist-chip .remove-btn:hover {
+            background: rgba(25, 118, 210, 0.3);
+        }
+
+        .dentist-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .dentist-dropdown.show {
+            display: block;
+        }
+
+        .dentist-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+
+        .dentist-option:hover {
+            background: #f8f9fa;
+        }
+
+        .dentist-option.selected {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .add-dentist-btn {
+            background: #f8f9fa;
+            border: 1px dashed #e1e5e9;
+            color: #666;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .add-dentist-btn:hover {
+            background: #e9ecef;
+            border-color: #4A90E2;
+            color: #4A90E2;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            background: #f8f9fa;
+            padding: 25px 30px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .changes-summary {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .changes-count {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        /* Loading States */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 32px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff3cd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #856404;
+            font-size: 18px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-message {
+            margin-bottom: 25px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo"><img src="/img/logo.png" /></div>
-    <ul>
-      <li><a href="/admin/dashboard">Schedule</a></li>
-      <li><a href="/admin/appointments">Appointment</a></li>
-      <li><a href="/admin/dentists">Dentist</a></li>
-      <li><a href="/admin/patients">Patients</a></li>
-      <li class="active"><a href="/admin/treatments">Treatments</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="header">
-      <h2>Edit Treatments</h2>
-      <div class="top-right">
-        <img src="/img/notification-bell.png" class="notif-icon" />
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar" />
-            <div>
-              <strong>Hello Admin</strong><br />
-              <small>admin</small>
-            </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
-            <a href="/profile">My Profile</a>
-            <hr />
-            <a href="/logout">Log Out</a>
-          </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li class="active"><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
     </div>
 
-    <form action="/admin/treatments/<%= treatment.treatment_id %>?_method=PUT" method="POST" class="form-container">
-      <div class="form-group">
-        <label>Treatment Name:</label>
-        <input type="text" name="treatment_name" value="<%= treatment.treatment_name %>" required>
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>Edit Treatment</h1>
+                <p>Modify treatment information and assigned dentists</p>
+            </div>
 
-        <label>Duration (minutes):</label>
-        <input type="number" name="duration" value="<%= treatment.duration %>" required>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">Mark all as read</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>Loading notifications...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>Hello Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <label>Select Dentist:</label>
-        <select name="dentist_ids[]" multiple required>
-          <% dentists.forEach(dentist => { %>
-            <option value="<%= dentist.dentist_id %>" <%= treatment.dentist_ids?.includes(dentist.dentist_id) ? 'selected' : '' %>>
-              <%= dentist.fname %> <%= dentist.lname %>
-            </option>
-          <% }) %>
-        </select>
-      </div>
+        <!-- Content -->
+        <div class="content">
+            <div class="loading" id="loadingState">
+                <i class="fas fa-spinner"></i>
+                <p>Loading treatment data...</p>
+            </div>
 
-      <div class="buttons">
-        <button type="submit" class="btn-green">Save</button>
-        <a href="/admin/treatments" class="btn-red">Cancel</a>
-      </div>
-    </form>
-  </div>
+            <form id="editTreatmentForm" class="form-container" style="display: none;">
+                <div class="form-header">
+                    <div class="form-header-left">
+                        <h2>Treatment Information</h2>
+                        <p>Update treatment details and dentist assignments</p>
+                    </div>
+                    <div class="treatment-id-badge" id="treatmentIdBadge">
+                        Loading...
+                    </div>
+                </div>
 
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+                <div class="form-body">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-tooth"></i>
+                            Treatment Details
+                        </h3>
 
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
-  </script>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="treatmentName">Treatment Name <span class="required">*</span></label>
+                                <input type="text" id="treatmentName" name="treatment_name" class="form-control" required />
+                                <div class="error-message">Treatment name is required</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="duration">Duration (minutes) <span class="required">*</span></label>
+                                <input type="number" id="duration" name="duration" class="form-control" required min="1" max="480" />
+                                <div class="field-help">Duration in minutes (1-480)</div>
+                                <div class="error-message">Please enter a valid duration</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dentist Assignment -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user-md"></i>
+                            Assigned Dentists
+                        </h3>
+
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label>Select Dentists <span class="required">*</span></label>
+                                <div class="dentist-selector">
+                                    <div class="selected-dentists" id="selectedDentists">
+                                        <div class="add-dentist-btn" onclick="toggleDentistDropdown()">
+                                            <i class="fas fa-plus"></i>
+                                            Add Dentist
+                                        </div>
+                                    </div>
+                                    <div class="dentist-dropdown" id="dentistDropdown">
+                                        <!-- Dentist options will be loaded here -->
+                                    </div>
+                                </div>
+                                <div class="field-help">Select one or more dentists who can perform this treatment</div>
+                                <div class="error-message">At least one dentist must be selected</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="changes-summary">
+                        <span id="changesText">No changes made</span>
+                    </div>
+                    <div>
+                        <a href="/admin/treatments" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </a>
+                        <button type="button" class="btn btn-warning" onclick="resetChanges()" id="resetBtn" disabled>
+                            <i class="fas fa-undo"></i>
+                            Reset Changes
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Confirm Changes</h3>
+            </div>
+            <div class="modal-message" id="modalMessage">
+                Are you sure you want to save these changes to the treatment?
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-success" id="confirmSaveBtn">
+                    <i class="fas fa-check"></i>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let originalData = {};
+        let currentData = {};
+        let treatmentId = null;
+        let isSubmitting = false;
+        let hasChanges = false;
+        let allDentists = [];
+        let selectedDentistIds = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            extractTreatmentId();
+            loadTreatmentData();
+            loadUserInfo();
+            loadNotifications();
+            setupFormHandlers();
+            setupChangeTracking();
+        });
+
+        // Extract treatment ID from URL
+        function extractTreatmentId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/treatments\/(\d+)\/edit/);
+            if (matches) {
+                treatmentId = parseInt(matches[1]);
+                document.getElementById('treatmentIdBadge').textContent = `Treatment ID: ${treatmentId}`;
+            } else {
+                showToast('Invalid treatment ID', 'error');
+                setTimeout(() => window.location.href = '/admin/treatments', 2000);
+            }
+        }
+
+        // Load treatment data from database
+        async function loadTreatmentData() {
+            if (!treatmentId) return;
+
+            try {
+                showLoading(true);
+                
+                // Load treatment details
+                const treatmentResponse = await fetch(`/admin/api/treatments/${treatmentId}`);
+                if (!treatmentResponse.ok) {
+                    throw new Error('Failed to load treatment data');
+                }
+                
+                const treatmentData = await treatmentResponse.json();
+                if (!treatmentData.success) {
+                    throw new Error(treatmentData.error || 'Failed to load treatment data');
+                }
+
+                // Load all dentists
+                const dentistsResponse = await fetch('/admin/api/dentists');
+                if (!dentistsResponse.ok) {
+                    throw new Error('Failed to load dentists');
+                }
+                
+                const dentistsData = await dentistsResponse.json();
+                if (!dentistsData.success) {
+                    throw new Error(dentistsData.error || 'Failed to load dentists');
+                }
+
+                // Load treatment dentists
+                const treatmentDentistsResponse = await fetch(`/admin/api/treatments/${treatmentId}/dentists`);
+                let assignedDentists = [];
+                if (treatmentDentistsResponse.ok) {
+                    const treatmentDentistsData = await treatmentDentistsResponse.json();
+                    if (treatmentDentistsData.success) {
+                        assignedDentists = treatmentDentistsData.dentists;
+                    }
+                }
+
+                allDentists = dentistsData.dentists || [];
+                selectedDentistIds = assignedDentists.map(d => d.dentist_id);
+                
+                populateForm(treatmentData.treatment, assignedDentists);
+                setupDentistSelector();
+                
+                originalData = {
+                    treatment_name: treatmentData.treatment.treatment_name,
+                    duration: treatmentData.treatment.duration,
+                    dentist_ids: [...selectedDentistIds]
+                };
+                currentData = { ...originalData };
+                
+            } catch (error) {
+                console.error('Error loading treatment data:', error);
+                showToast('Failed to load treatment data: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '/admin/treatments', 3000);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Populate form with treatment data
+        function populateForm(treatment, assignedDentists) {
+            document.getElementById('treatmentName').value = treatment.treatment_name || '';
+            document.getElementById('duration').value = treatment.duration || '';
+            
+            // Show the form
+            document.getElementById('editTreatmentForm').style.display = 'block';
+            
+            // Update selected dentists display
+            updateSelectedDentistsDisplay();
+        }
+
+        // Setup dentist selector
+        function setupDentistSelector() {
+            const dropdown = document.getElementById('dentistDropdown');
+            
+            dropdown.innerHTML = allDentists.map(dentist => `
+                <div class="dentist-option" data-id="${dentist.dentist_id}" onclick="toggleDentistSelection(${dentist.dentist_id})">
+                    Dr. ${dentist.fname} ${dentist.lname} - ${dentist.specialty || 'General'}
+                </div>
+            `).join('');
+            
+            updateDentistOptions();
+        }
+
+        // Update selected dentists display
+        function updateSelectedDentistsDisplay() {
+            const container = document.getElementById('selectedDentists');
+            const selectedDentists = allDentists.filter(d => selectedDentistIds.includes(d.dentist_id));
+            
+            container.innerHTML = selectedDentists.map(dentist => `
+                <div class="dentist-chip">
+                    Dr. ${dentist.fname} ${dentist.lname}
+                    <span class="remove-btn" onclick="removeDentist(${dentist.dentist_id})">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            `).join('') + `
+                <div class="add-dentist-btn" onclick="toggleDentistDropdown()">
+                    <i class="fas fa-plus"></i>
+                    Add Dentist
+                </div>
+            `;
+        }
+
+        // Update dentist options in dropdown
+        function updateDentistOptions() {
+            const options = document.querySelectorAll('.dentist-option');
+            options.forEach(option => {
+                const dentistId = parseInt(option.dataset.id);
+                if (selectedDentistIds.includes(dentistId)) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+        }
+
+        // Toggle dentist dropdown
+        function toggleDentistDropdown() {
+            const dropdown = document.getElementById('dentistDropdown');
+            dropdown.classList.toggle('show');
+            updateDentistOptions();
+        }
+
+        // Toggle dentist selection
+        function toggleDentistSelection(dentistId) {
+            if (selectedDentistIds.includes(dentistId)) {
+                selectedDentistIds = selectedDentistIds.filter(id => id !== dentistId);
+            } else {
+                selectedDentistIds.push(dentistId);
+            }
+            
+            updateSelectedDentistsDisplay();
+            updateDentistOptions();
+            trackChange('dentist_ids', selectedDentistIds);
+        }
+
+        // Remove dentist
+        function removeDentist(dentistId) {
+            selectedDentistIds = selectedDentistIds.filter(id => id !== dentistId);
+            updateSelectedDentistsDisplay();
+            updateDentistOptions();
+            trackChange('dentist_ids', selectedDentistIds);
+        }
+
+        // Setup form handlers
+        function setupFormHandlers() {
+            const form = document.getElementById('editTreatmentForm');
+
+            // Form submission
+            form.addEventListener('submit', handleFormSubmission);
+
+            // Input validation
+            const inputs = form.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.parentElement.classList.contains('error')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            // Duration validation
+            const durationInput = document.getElementById('duration');
+            durationInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^\d]/g, '');
+                if (parseInt(this.value) > 480) this.value = '480';
+                validateField(this);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const selector = document.querySelector('.dentist-selector');
+                if (!selector.contains(event.target)) {
+                    document.getElementById('dentistDropdown').classList.remove('show');
+                }
+            });
+        }
+
+        // Setup change tracking
+        function setupChangeTracking() {
+            const form = document.getElementById('editTreatmentForm');
+            const inputs = form.querySelectorAll('.form-control');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const fieldName = this.name;
+                    const currentValue = this.value;
+                    const originalValue = originalData[fieldName] || '';
+                    
+                    if (currentValue !== originalValue) {
+                        trackChange(fieldName, currentValue);
+                        this.classList.add('field-changed');
+                    } else {
+                        untrackChange(fieldName);
+                        this.classList.remove('field-changed');
+                    }
+                });
+            });
+        }
+
+        // Track field changes
+        function trackChange(fieldName, value) {
+            currentData[fieldName] = value;
+            updateChangesDisplay();
+        }
+
+        // Untrack field changes
+        function untrackChange(fieldName) {
+            currentData[fieldName] = originalData[fieldName];
+            updateChangesDisplay();
+        }
+
+        // Update changes display
+        function updateChangesDisplay() {
+            const changedFields = [];
+            
+            Object.keys(currentData).forEach(key => {
+                if (key === 'dentist_ids') {
+                    // Compare arrays
+                    const current = Array.isArray(currentData[key]) ? currentData[key] : [];
+                    const original = Array.isArray(originalData[key]) ? originalData[key] : [];
+                    if (JSON.stringify(current.sort()) !== JSON.stringify(original.sort())) {
+                        changedFields.push(key);
+                    }
+                } else {
+                    if (currentData[key] !== (originalData[key] || '')) {
+                        changedFields.push(key);
+                    }
+                }
+            });
+
+            hasChanges = changedFields.length > 0;
+            
+            const changesText = document.getElementById('changesText');
+            const submitBtn = document.getElementById('submitBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            if (hasChanges) {
+                changesText.innerHTML = `<span class="changes-count">${changedFields.length}</span> field${changedFields.length > 1 ? 's' : ''} changed`;
+                submitBtn.disabled = false;
+                resetBtn.disabled = false;
+            } else {
+                changesText.textContent = 'No changes made';
+                submitBtn.disabled = true;
+                resetBtn.disabled = true;
+            }
+        }
+
+        // Reset changes
+        function resetChanges() {
+            // Reset form fields
+            document.getElementById('treatmentName').value = originalData.treatment_name || '';
+            document.getElementById('duration').value = originalData.duration || '';
+            
+            // Reset selected dentists
+            selectedDentistIds = [...(originalData.dentist_ids || [])];
+            updateSelectedDentistsDisplay();
+            updateDentistOptions();
+            
+            // Reset data
+            currentData = { ...originalData };
+            
+            // Remove change indicators
+            const changedFields = document.querySelectorAll('.field-changed');
+            changedFields.forEach(field => field.classList.remove('field-changed'));
+            
+            updateChangesDisplay();
+            showToast('Changes reset successfully', 'info');
+        }
+
+        // Validate individual field
+        function validateField(field) {
+            const group = field.parentElement;
+            const value = field.value.trim();
+
+            group.classList.remove('error', 'success');
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                return false;
+            }
+
+            // Specific validations
+            if (field.name === 'duration' && value) {
+                const duration = parseInt(value);
+                if (isNaN(duration) || duration < 1 || duration > 480) {
+                    group.classList.add('error');
+                    return false;
+                }
+            }
+
+            group.classList.add('success');
+            return true;
+        }
+
+        // Handle form submission
+        async function handleFormSubmission(e) {
+            e.preventDefault();
+            
+            if (isSubmitting || !hasChanges) return;
+
+            // Validate all fields
+            if (!validateAllFields()) {
+                showToast('Please fix the errors in the form', 'error');
+                return;
+            }
+
+            // Validate dentist selection
+            if (selectedDentistIds.length === 0) {
+                showToast('At least one dentist must be selected', 'error');
+                return;
+            }
+
+            // Show confirmation modal
+            showConfirmationModal();
+        }
+
+        // Show confirmation modal
+        function showConfirmationModal() {
+            const modal = document.getElementById('confirmModal');
+            const message = document.getElementById('modalMessage');
+            
+            const changedFields = [];
+            Object.keys(currentData).forEach(key => {
+                if (key === 'dentist_ids') {
+                    const current = Array.isArray(currentData[key]) ? currentData[key] : [];
+                    const original = Array.isArray(originalData[key]) ? originalData[key] : [];
+                    if (JSON.stringify(current.sort()) !== JSON.stringify(original.sort())) {
+                        changedFields.push('Assigned Dentists');
+                    }
+                } else {
+                    if (currentData[key] !== (originalData[key] || '')) {
+                        changedFields.push(formatFieldName(key));
+                    }
+                }
+            });
+            
+            message.innerHTML = `
+                <p>You are about to save changes to the following fields:</p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    ${changedFields.map(field => `<li><strong>${field}</strong></li>`).join('')}
+                </ul>
+                <p>This will update the treatment information. Are you sure?</p>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // Format field names for display
+        function formatFieldName(fieldName) {
+            const fieldNames = {
+                treatment_name: 'Treatment Name',
+                duration: 'Duration',
+                dentist_ids: 'Assigned Dentists'
+            };
+            
+            return fieldNames[fieldName] || fieldName;
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'none';
+        }
+
+        // Confirm and save changes
+        document.getElementById('confirmSaveBtn').addEventListener('click', async function() {
+            closeModal();
+            await saveChanges();
+        });
+
+        // Save changes to database
+        async function saveChanges() {
+            isSubmitting = true;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            try {
+                const updateData = {
+                    treatment_name: currentData.treatment_name,
+                    duration: parseInt(currentData.duration),
+                    dentist_ids: selectedDentistIds
+                };
+
+                const response = await fetch(`/admin/api/treatments/${treatmentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast('Treatment updated successfully!', 'success');
+                    
+                    // Create notification
+                    try {
+                        await fetch('/admin/api/notifications', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                type: 'treatment_update',
+                                title: 'Treatment Updated',
+                                message: `Treatment "${updateData.treatment_name}" has been updated`
+                            })
+                        });
+                    } catch (notificationError) {
+                        console.warn('Could not create notification:', notificationError);
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin/treatments';
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'Failed to update treatment');
+                }
+
+            } catch (error) {
+                console.error('Error updating treatment:', error);
+                showToast('Failed to update treatment: ' + error.message, 'error');
+            } finally {
+                isSubmitting = false;
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Validate all form fields
+        function validateAllFields() {
+            const form = document.getElementById('editTreatmentForm');
+            const requiredFields = form.querySelectorAll('.form-control[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        // Show/hide loading state
+        function showLoading(show) {
+            const loadingState = document.getElementById('loadingState');
+            const form = document.getElementById('editTreatmentForm');
+
+            if (show) {
+                loadingState.style.display = 'block';
+                form.style.display = 'none';
+            } else {
+                loadingState.style.display = 'none';
+            }
+        }
+
+        // Load user information for avatar
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                        
+                        // Update user info in dropdown
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) {
+                            userDetails.textContent = `Hello ${data.role || 'Admin'}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showEmptyNotifications();
+            }
+        }
+
+        // Update notification display
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            // Update badge
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            // Update content
+            if (notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+                return `
+                    <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                         onclick="markAsRead(${notification.id})">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show empty notifications
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No new notifications</p>
+                </div>
+            `;
+        }
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (isVisible) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                loadNotifications(); // Refresh notifications
+            }
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/admin/api/notifications/read-all', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                    showToast('All notifications marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+                showToast('Failed to mark notifications as read', 'error');
+            }
+        }
+
+        // Toggle profile dropdown
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Get time ago text
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            // Close profile dropdown
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+            
+            // Close notification dropdown
+            const notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer.contains(event.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            }
+
+            // Close modal when clicking outside
+            const modal = document.getElementById('confirmModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+S to save
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                if (hasChanges) {
+                    showConfirmationModal();
+                }
+            }
+            
+            // Ctrl+R to reset changes
+            if (event.ctrlKey && event.key === 'r') {
+                event.preventDefault();
+                if (hasChanges) {
+                    resetChanges();
+                }
+            }
+            
+            // ESC to close dropdowns and modal
+            if (event.key === 'Escape') {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                document.getElementById('profileDropdown').style.display = 'none';
+                document.getElementById('dentistDropdown').classList.remove('show');
+                closeModal();
+            }
+        });
+
+        // Warn user about unsaved changes
+        window.addEventListener('beforeunload', function(e) {
+            if (hasChanges && !isSubmitting) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+
+        // Auto-refresh notifications every 60 seconds
+        setInterval(() => {
+            loadNotifications();
+        }, 60000);
+
+    </script>
 </body>
 </html>

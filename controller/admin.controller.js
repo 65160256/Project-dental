@@ -1619,15 +1619,33 @@ exports.updateTreatment = async (req, res) => {
 
 exports.deleteTreatment = async (req, res) => {
   const treatmentId = req.params.id;
+  
   try {
-    await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [treatmentId]);
-    res.redirect('/admin/treatments');
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Delete dentist-treatment relationships first
+      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [treatmentId]);
+      
+      // Delete the treatment
+      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [treatmentId]);
+      
+      await db.query('COMMIT');
+      
+      req.flash('success', 'Treatment deleted successfully.');
+      res.redirect('/admin/treatments'); // ✅ ตอนนี้ route นี้มีแล้ว
+      
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+    
   } catch (error) {
-    console.error('Delete Treatment Error:', error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error deleting treatment:', error);
+    req.flash('error', 'Failed to delete treatment.');
+    res.redirect('/admin/treatments'); // ✅ fallback redirect
   }
 };
-
 // ==================== Notifications Functions ====================
 
 // Get all notifications for admin
@@ -2652,5 +2670,271 @@ exports.getCurrentUserAPI = async (req, res) => {
       error: 'Failed to load user info',
       details: error.message
     });
+  }
+};
+
+// Get treatments API
+exports.getTreatmentsAPI = async (req, res) => {
+  try {
+    const [treatments] = await db.execute(`
+      SELECT 
+        t.treatment_id,
+        t.treatment_name,
+        t.duration,
+        COUNT(dt.dentist_id) as dentist_count
+      FROM treatment t
+      LEFT JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
+      GROUP BY t.treatment_id, t.treatment_name, t.duration
+      ORDER BY t.treatment_name
+    `);
+
+    res.json({
+      success: true,
+      treatments: treatments
+    });
+  } catch (error) {
+    console.error('Error loading treatments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load treatments'
+    });
+  }
+};
+
+// Delete treatment API
+exports.deleteTreatmentAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Delete dentist-treatment relationships
+      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [id]);
+      
+      // Delete the treatment
+      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [id]);
+      
+      await db.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: 'Treatment deleted successfully'
+      });
+      
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+    
+  } catch (error) {
+    console.error('Error deleting treatment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete treatment'
+    });
+  }
+};
+
+// Get single treatment details
+exports.getTreatmentByIdAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [treatments] = await db.execute(`
+      SELECT treatment_id, treatment_name, duration
+      FROM treatment 
+      WHERE treatment_id = ?
+    `, [id]);
+
+    if (treatments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Treatment not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      treatment: treatments[0]
+    });
+
+  } catch (error) {
+    console.error('Error loading treatment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load treatment'
+    });
+  }
+};
+
+// Get dentists for a specific treatment
+exports.getTreatmentDentistsAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [dentists] = await db.execute(`
+      SELECT d.dentist_id, d.fname, d.lname, d.specialty
+      FROM dentist d
+      JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id
+      WHERE dt.treatment_id = ?
+      ORDER BY d.fname, d.lname
+    `, [id]);
+
+    res.json({
+      success: true,
+      dentists: dentists
+    });
+
+  } catch (error) {
+    console.error('Error loading treatment dentists:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load treatment dentists'
+    });
+  }
+};
+
+// Update treatment API
+exports.updateTreatmentAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { treatment_name, duration, dentist_ids } = req.body;
+    
+    // Validate input
+    if (!treatment_name || !duration || !dentist_ids || !Array.isArray(dentist_ids)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
+      });
+    }
+
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Update treatment
+      await db.execute(`
+        UPDATE treatment 
+        SET treatment_name = ?, duration = ? 
+        WHERE treatment_id = ?
+      `, [treatment_name, parseInt(duration), id]);
+
+      // Delete existing dentist assignments
+      await db.execute(
+        'DELETE FROM dentist_treatment WHERE treatment_id = ?',
+        [id]
+      );
+
+      // Add new dentist assignments
+      for (const dentistId of dentist_ids) {
+        await db.execute(
+          'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
+          [dentistId, id]
+        );
+      }
+
+      await db.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: 'Treatment updated successfully'
+      });
+
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error updating treatment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update treatment'
+    });
+  }
+};
+
+// Create new treatment API
+exports.createTreatmentAPI = async (req, res) => {
+  try {
+    const { name, duration, dentist_ids } = req.body;
+    
+    // Validate input
+    if (!name || !duration || !dentist_ids || !Array.isArray(dentist_ids) || dentist_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: name, duration, and at least one dentist must be selected'
+      });
+    }
+
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Create treatment
+      const [treatmentResult] = await db.execute(`
+        INSERT INTO treatment (treatment_name, duration) 
+        VALUES (?, ?)
+      `, [name.trim(), parseInt(duration)]);
+
+      const treatmentId = treatmentResult.insertId;
+
+      // Add dentist assignments
+      for (const dentistId of dentist_ids) {
+        await db.execute(
+          'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
+          [dentistId, treatmentId]
+        );
+      }
+
+      await db.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: 'Treatment created successfully',
+        treatment_id: treatmentId
+      });
+
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error creating treatment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create treatment'
+    });
+  }
+};
+
+// Traditional delete route handler
+exports.deleteTreatment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Delete dentist-treatment relationships first
+      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [id]);
+      
+      // Delete the treatment
+      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [id]);
+      
+      await db.query('COMMIT');
+      
+      req.flash('success', 'Treatment deleted successfully.');
+      res.redirect('/admin/treatments');
+      
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+    
+  } catch (error) {
+    console.error('Error deleting treatment:', error);
+    req.flash('error', 'Failed to delete treatment.');
+    res.redirect('/admin/treatments');
   }
 };

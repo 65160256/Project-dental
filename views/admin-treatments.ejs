@@ -1,136 +1,1546 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Treatments</title>
-  <link rel="stylesheet" href="/css/admin-patients.css" />
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatments - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .page-info {
+            flex-grow: 1;
+        }
+
+        .page-info h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-right: 20px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .empty-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-notifications i {
+            font-size: 32px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Tools Bar */
+        .tools-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stats-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stats-info i {
+            color: #4A90E2;
+            font-size: 16px;
+        }
+
+        .tools-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .treatments-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .treatments-table thead {
+            background: #f8f9fa;
+        }
+
+        .treatments-table th {
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #e1e5e9;
+            font-size: 14px;
+        }
+
+        .treatments-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .treatments-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .treatments-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .treatment-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .duration-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #138496;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-edit:hover {
+            background: #e0a800;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff3cd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #856404;
+            font-size: 18px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-message {
+            margin-bottom: 25px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .empty-state p {
+            margin: 0 0 25px 0;
+            font-size: 14px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 24px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .search-section {
+                margin-right: 0;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .tools-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .tools-actions {
+                justify-content: center;
+            }
+            
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo"><img src="/img/logo.png" alt="Logo" /></div>
-    <ul>
-      <li><a href="/admin/dashboard">Schedule</a></li>
-      <li><a href="/admin/appointments">Appointments</a></li>
-      <li><a href="/admin/dentists">Dentists</a></li>
-      <li><a href="/admin/patients">Patients</a></li>
-      <li class="active"><a href="/admin/treatments">Treatments</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="header">
-      <h2>Treatments</h2>
-      <div class="search">
-        <label>Search:</label>
-        <input type="text" id="searchInput" placeholder="Treatment name..." />
-      </div>
-      <div class="top-right">
-        <img src="/img/notification-bell.png" class="notification-icon" />
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar" />
-            <div>
-              <strong>Hello Admin</strong><br />
-              <small>admin</small>
-            </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown" style="display:none;">
-            <a href="/profile">My Profile</a><hr />
-            <a href="/logout">Log Out</a>
-          </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li class="active"><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
     </div>
 
-    <div class="tools-bar">
-      <span><i class="fa fa-tooth"></i> <%= treatments.length %> total treatments</span>
-      <div>
-        <button class="btn-light">Filters</button>
-        <a href="/admin/treatments/add" class="btn-blue">+ Add Treatment</a>
-      </div>
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>Treatments Management</h1>
+                <p>Manage dental treatments and procedures</p>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search treatments...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+            
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">Mark all as read</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>Loading notifications...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>Hello Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tools Bar -->
+            <div class="tools-bar">
+                <div class="stats-info">
+                    <i class="fas fa-tooth"></i>
+                    <span id="treatmentCount">Loading...</span> total treatments
+                </div>
+                <div class="tools-actions">
+                    <button class="btn btn-secondary" onclick="toggleFilters()">
+                        <i class="fas fa-filter"></i>
+                        Filters
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddTreatmentModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Treatment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>All Treatments</h3>
+                </div>
+                
+                <div id="tableContent">
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading treatments...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <table class="patients-table">
-      <thead>
-        <tr>
-          <th>No.</th>
-          <th>Treatment Name</th>
-          <th>Duration</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="treatmentsTable">
-        <% treatments.forEach((t, i) => { %>
-          <tr>
-            <td><%= i + 1 %></td>
-            <td><%= t.treatment_name %></td>
-            <td><%= t.duration %> min</td>
-            <td>
-              <a href="/admin/treatments/<%= t.treatment_id %>" class="btn-gray">View</a>
-              <a href="/admin/treatments/<%= t.treatment_id %>/edit" class="btn-yellow">Edit</a>
-              <button class="btn-red" onclick="confirmDelete('<%= t.treatment_id %>', '<%= t.treatment_name %>')">Delete</button>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Delete Confirmation Modal -->
-  <div id="deleteModal" class="modal">
-    <div class="modal-content">
-      <h3>Confirm Deletion</h3>
-      <p id="deleteMessage">Are you sure you want to delete this treatment?</p>
-      <div class="modal-buttons">
-        <button id="confirmDeleteBtn" class="btn-red">Delete</button>
-        <button class="btn-gray" onclick="closeModal()">Cancel</button>
-      </div>
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Confirm Deletion</h3>
+            </div>
+            <div class="modal-message" id="deleteMessage">
+                Are you sure you want to delete this treatment?
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+    <!-- Add/Edit Treatment Modal -->
+    <div id="treatmentModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-icon" style="background: #e3f2fd; color: #1976d2;">
+                    <i class="fas fa-tooth"></i>
+                </div>
+                <h3 class="modal-title" id="treatmentModalTitle">Add New Treatment</h3>
+            </div>
+            <form id="treatmentForm">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Treatment Name *</label>
+                    <input type="text" id="treatmentName" name="name" required 
+                           style="width: 100%; padding: 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Duration (minutes) *</label>
+                    <input type="number" id="treatmentDuration" name="duration" required min="1" max="480"
+                           style="width: 100%; padding: 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Available Dentists *</label>
+                    <div id="dentistSelection" style="max-height: 200px; overflow-y: auto; border: 1px solid #e1e5e9; border-radius: 8px; padding: 10px;">
+                        <div class="loading">
+                            <i class="fas fa-spinner"></i>
+                            <p>Loading dentists...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTreatmentModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveTreatmentBtn">
+                        <i class="fas fa-save"></i>
+                        Save Treatment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
+    <script>
+        // Global variables
+        let treatments = [];
+        let dentists = [];
+        let currentEditId = null;
+        let deleteTreatmentId = null;
 
-    document.getElementById("searchInput").addEventListener("keyup", function () {
-      const value = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#treatmentsTable tr");
-      rows.forEach(row => {
-        const name = row.children[1].textContent.toLowerCase();
-        row.style.display = name.includes(value) ? "" : "none";
-      });
-    });
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTreatments();
+            loadDentists();
+            loadUserInfo();
+            loadNotifications();
+            setupEventListeners();
+        });
 
-    let deleteTreatmentId = null;
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                filterTreatments(this.value);
+            });
 
-    function confirmDelete(id, name) {
-      deleteTreatmentId = id;
-      document.getElementById('deleteMessage').innerText =
-        `Are you sure you want to delete "${name}"?`;
-      document.getElementById('deleteModal').style.display = 'flex';
-    }
+            // Treatment form submission
+            document.getElementById('treatmentForm').addEventListener('submit', handleTreatmentSubmit);
 
-    function closeModal() {
-      document.getElementById('deleteModal').style.display = 'none';
-      deleteTreatmentId = null;
-    }
+            // Delete confirmation
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (deleteTreatmentId) {
+                    deleteTreatment(deleteTreatmentId);
+                }
+            });
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-      if (deleteTreatmentId) {
-        window.location.href = `/admin/treatments/${deleteTreatmentId}/delete`;
-      }
-    });
-  </script>
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                // Close profile dropdown
+                const profileDropdown = document.querySelector('.profile-dropdown');
+                if (!profileDropdown.contains(event.target)) {
+                    document.getElementById('profileDropdown').style.display = 'none';
+                }
+                
+                // Close notification dropdown
+                const notificationContainer = document.querySelector('.notification-container');
+                if (!notificationContainer.contains(event.target)) {
+                    document.getElementById('notificationDropdown').classList.remove('show');
+                }
+
+                // Close modals when clicking outside
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Load treatments from database
+        async function loadTreatments() {
+            try {
+                const response = await fetch('/admin/api/treatments');
+                const data = await response.json();
+                
+                if (data.success) {
+                    treatments = data.treatments;
+                    displayTreatments(treatments);
+                    updateTreatmentCount(treatments.length);
+                } else {
+                    throw new Error(data.error || 'Failed to load treatments');
+                }
+            } catch (error) {
+                console.error('Error loading treatments:', error);
+                showError('Failed to load treatments');
+                displayEmptyState();
+            }
+        }
+
+        // Load dentists for treatment assignment
+        async function loadDentists() {
+            try {
+                const response = await fetch('/admin/api/dentists');
+                const data = await response.json();
+                
+                if (data.success) {
+                    dentists = data.dentists;
+                } else {
+                    throw new Error(data.error || 'Failed to load dentists');
+                }
+            } catch (error) {
+                console.error('Error loading dentists:', error);
+            }
+        }
+
+        // Display treatments in table
+        function displayTreatments(treatmentList) {
+            const tableContent = document.getElementById('tableContent');
+            
+            if (treatmentList.length === 0) {
+                displayEmptyState();
+                return;
+            }
+
+            const tableHTML = `
+                <table class="treatments-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Treatment Name</th>
+                            <th>Duration</th>
+                            <th>Dentists</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${treatmentList.map((treatment, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td class="treatment-name">${treatment.treatment_name}</td>
+                                <td><span class="duration-badge">${treatment.duration} min</span></td>
+                                <td>${treatment.dentist_count || 0} dentist${treatment.dentist_count !== 1 ? 's' : ''}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-view" onclick="viewTreatment(${treatment.treatment_id})">
+                                            <i class="fas fa-eye"></i>
+                                            View
+                                        </button>
+                                        <button class="btn btn-sm btn-edit" onclick="editTreatment(${treatment.treatment_id})">
+                                            <i class="fas fa-edit"></i>
+                                            Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-delete" onclick="confirmDelete(${treatment.treatment_id}, '${treatment.treatment_name}')">
+                                            <i class="fas fa-trash"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            tableContent.innerHTML = tableHTML;
+        }
+
+        // Display empty state
+        function displayEmptyState() {
+            const tableContent = document.getElementById('tableContent');
+            tableContent.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-tooth"></i>
+                    <h3>No treatments found</h3>
+                    <p>Start by adding your first dental treatment</p>
+                    <button class="btn btn-primary" onclick="showAddTreatmentModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Treatment
+                    </button>
+                </div>
+            `;
+        }
+
+        // Update treatment count
+        function updateTreatmentCount(count) {
+            document.getElementById('treatmentCount').textContent = count;
+        }
+
+        // Filter treatments
+        function filterTreatments(searchTerm) {
+            const filtered = treatments.filter(treatment => 
+                treatment.treatment_name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            displayTreatments(filtered);
+            updateTreatmentCount(filtered.length);
+        }
+
+        // Show add treatment modal
+        function showAddTreatmentModal() {
+            currentEditId = null;
+            document.getElementById('treatmentModalTitle').textContent = 'Add New Treatment';
+            document.getElementById('treatmentName').value = '';
+            document.getElementById('treatmentDuration').value = '';
+            document.getElementById('saveTreatmentBtn').innerHTML = '<i class="fas fa-save"></i> Save Treatment';
+            
+            populateDentistSelection();
+            document.getElementById('treatmentModal').style.display = 'flex';
+        }
+
+        // Show edit treatment modal
+        async function editTreatment(treatmentId) {
+            currentEditId = treatmentId;
+            
+            try {
+                const response = await fetch(`/admin/api/treatments/${treatmentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const treatment = data.treatment;
+                    
+                    document.getElementById('treatmentModalTitle').textContent = 'Edit Treatment';
+                    document.getElementById('treatmentName').value = treatment.treatment_name;
+                    document.getElementById('treatmentDuration').value = treatment.duration;
+                    document.getElementById('saveTreatmentBtn').innerHTML = '<i class="fas fa-save"></i> Update Treatment';
+                    
+                    await populateDentistSelection(treatmentId);
+                    document.getElementById('treatmentModal').style.display = 'flex';
+                } else {
+                    throw new Error(data.error || 'Failed to load treatment details');
+                }
+            } catch (error) {
+                console.error('Error loading treatment for edit:', error);
+                showToast('Failed to load treatment details', 'error');
+            }
+        }
+
+        // Populate dentist selection
+        async function populateDentistSelection(treatmentId = null) {
+            const container = document.getElementById('dentistSelection');
+            
+            if (dentists.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-user-md" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>No dentists available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let selectedDentists = [];
+            if (treatmentId) {
+                try {
+                    const response = await fetch(`/admin/api/treatments/${treatmentId}/dentists`);
+                    const data = await response.json();
+                    if (data.success) {
+                        selectedDentists = data.dentists.map(d => d.dentist_id);
+                    }
+                } catch (error) {
+                    console.error('Error loading treatment dentists:', error);
+                }
+            }
+
+            const dentistHTML = dentists.map(dentist => `
+                <div style="display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #f1f3f4;">
+                    <input type="checkbox" id="dentist_${dentist.dentist_id}" 
+                           value="${dentist.dentist_id}" name="dentist_ids"
+                           ${selectedDentists.includes(dentist.dentist_id) ? 'checked' : ''}
+                           style="margin-right: 10px;">
+                    <label for="dentist_${dentist.dentist_id}" style="flex-grow: 1; cursor: pointer; font-size: 14px;">
+                        Dr. ${dentist.fname} ${dentist.lname}
+                        ${dentist.specialty ? `<span style="color: #666; font-size: 12px;"> - ${dentist.specialty}</span>` : ''}
+                    </label>
+                </div>
+            `).join('');
+
+            container.innerHTML = dentistHTML;
+        }
+
+        // Handle treatment form submission
+        async function handleTreatmentSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const selectedDentists = Array.from(document.querySelectorAll('input[name="dentist_ids"]:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            if (selectedDentists.length === 0) {
+                showToast('Please select at least one dentist', 'warning');
+                return;
+            }
+
+            const treatmentData = {
+                name: formData.get('name'),
+                duration: parseInt(formData.get('duration')),
+                dentist_ids: selectedDentists
+            };
+
+            const submitBtn = document.getElementById('saveTreatmentBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
+
+            try {
+                let response;
+                if (currentEditId) {
+                    response = await fetch(`/admin/api/treatments/${currentEditId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(treatmentData)
+                    });
+                } else {
+                    response = await fetch('/admin/api/treatments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(treatmentData)
+                    });
+                }
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showToast(currentEditId ? 'Treatment updated successfully!' : 'Treatment created successfully!', 'success');
+                    closeTreatmentModal();
+                    loadTreatments(); // Reload the list
+                } else {
+                    throw new Error(result.error || 'Failed to save treatment');
+                }
+            } catch (error) {
+                console.error('Error saving treatment:', error);
+                showToast('Failed to save treatment: ' + error.message, 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // View treatment details
+        async function viewTreatment(treatmentId) {
+            try {
+                const response = await fetch(`/admin/api/treatments/${treatmentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // For now, redirect to traditional view page
+                    window.location.href = `/admin/treatments/${treatmentId}`;
+                } else {
+                    throw new Error(data.error || 'Failed to load treatment');
+                }
+            } catch (error) {
+                console.error('Error viewing treatment:', error);
+                showToast('Failed to load treatment details', 'error');
+            }
+        }
+
+        // Confirm delete treatment
+        function confirmDelete(treatmentId, treatmentName) {
+            console.log('confirmDelete called with:', treatmentId, treatmentName); // Debug log
+            
+            deleteTreatmentId = treatmentId;
+            const safeTitle = treatmentName ? treatmentName.replace(/'/g, "&#39;") : 'this treatment';
+            
+            document.getElementById('deleteMessage').innerHTML = 
+                `Are you sure you want to delete "<strong>${safeTitle}</strong>"? This action cannot be undone.`;
+            document.getElementById('deleteModal').style.display = 'flex';
+            
+            console.log('Modal should be visible now'); // Debug log
+        }
+
+        // Delete treatment
+        async function deleteTreatment(treatmentId) {
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            confirmBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/admin/api/treatments/${treatmentId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showToast('Treatment deleted successfully', 'success');
+                    closeModal();
+                    loadTreatments(); // Reload the list
+                } else {
+                    throw new Error(result.error || 'Failed to delete treatment');
+                }
+            } catch (error) {
+                console.error('Error deleting treatment:', error);
+                showToast('Failed to delete treatment: ' + error.message, 'error');
+            } finally {
+                confirmBtn.innerHTML = originalText;
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // Close modals
+        function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            deleteTreatmentId = null;
+        }
+
+        function closeTreatmentModal() {
+            document.getElementById('treatmentModal').style.display = 'none';
+            currentEditId = null;
+        }
+
+        // Load user information for avatar
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                        
+                        // Update user info in dropdown
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) {
+                            userDetails.textContent = `Hello ${data.role || 'Admin'}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showEmptyNotifications();
+            }
+        }
+
+        // Update notification display
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            // Update badge
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            // Update content
+            if (notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+                return `
+                    <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                         onclick="markAsRead(${notification.id})">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show empty notifications
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No new notifications</p>
+                </div>
+            `;
+        }
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (isVisible) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                loadNotifications(); // Refresh notifications
+            }
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/admin/api/notifications/read-all', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications(); // Refresh notifications
+                    showToast('All notifications marked as read', 'success');
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+                showToast('Failed to mark notifications as read', 'error');
+            }
+        }
+
+        // Toggle profile dropdown
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Toggle filters (placeholder)
+        function toggleFilters() {
+            showToast('Filters feature coming soon!', 'info');
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Show error state
+        function showError(message) {
+            const tableContent = document.getElementById('tableContent');
+            tableContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #dc3545;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 15px;"></i>
+                    <h3>Error Loading Treatments</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="loadTreatments()">
+                        <i class="fas fa-refresh"></i>
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // Get time ago text
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Auto-refresh notifications every 60 seconds
+        setInterval(() => {
+            loadNotifications();
+        }, 60000);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // ESC to close modals and dropdowns
+            if (event.key === 'Escape') {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                document.getElementById('profileDropdown').style.display = 'none';
+                closeModal();
+                closeTreatmentModal();
+            }
+
+            // Ctrl+N to add new treatment
+            if (event.ctrlKey && event.key === 'n') {
+                event.preventDefault();
+                showAddTreatmentModal();
+            }
+        });
+
+        // Error handling for failed API calls
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            showToast('An unexpected error occurred', 'error');
+        });
+    </script>
 </body>
 </html>
