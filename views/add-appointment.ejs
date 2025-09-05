@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book an Appointment - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .page-title-section h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 0;
+        }
+
+        .appointment-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        /* Left Panel - Form */
+        .left-panel {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e1e5e9;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .walk-in-indicator {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            animation: glow 2s infinite alternate;
+        }
+
+        .walk-in-indicator.show {
+            display: flex;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(255, 107, 53, 0.5); }
+            to { box-shadow: 0 0 20px rgba(255, 107, 53, 0.8); }
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-control.loading {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .search-input {
+            position: relative;
+        }
+
+        .search-input i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .search-input input {
+            padding-left: 40px;
+        }
+
+        .patient-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .patient-suggestion {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+            transition: background 0.2s ease;
+        }
+
+        .patient-suggestion:hover {
+            background: #f8f9fa;
+        }
+
+        .patient-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .patient-suggestion .name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .patient-suggestion .details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #357abd;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e6ea;
+        }
+
+        .btn-warning {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e55a2e;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .mode-toggle {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Right Panel - Calendar */
+        .right-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #e1e5e9;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: #4A90E2;
+            color: white;
+            border-color: #4A90E2;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .current-date {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .calendar-body {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+        }
+
+        .time-slots {
+            display: grid;
+            gap: 8px;
+        }
+
+        .time-slot {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .time-slot:hover:not(.booked):not(.past) {
+            border-color: #4A90E2;
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .time-slot.available {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .time-slot.available:hover {
+            background: rgba(40, 167, 69, 0.1);
+            border-color: #1e7e34;
+        }
+
+        .time-slot.booked {
+            background: rgba(220, 53, 69, 0.05);
+            border-color: #dc3545;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.past {
+            background: rgba(108, 117, 125, 0.05);
+            border-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.selected {
+            background: #4A90E2;
+            border-color: #4A90E2;
+            color: white;
+        }
+
+        .time-slot.walk-in-allowed {
+            border-color: #ff6b35;
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .time-slot.walk-in-allowed:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .time-info {
+            flex: 1;
+        }
+
+        .time-label {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .dentist-info {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .slot-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-available {
+            background: #d1f2eb;
+            color: #0c5a40;
+        }
+
+        .status-booked {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-past {
+            background: #e2e3e5;
+            color: #495057;
+        }
+
+        .status-walk-in {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .no-schedule {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-schedule i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .no-schedule h3 {
+            margin: 0 0 10px 0;
+            color: #999;
+        }
+
+        .no-schedule p {
+            margin: 0;
+            color: #aaa;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(74, 144, 226, 0.1);
+            border-top: 3px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Confirmation Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .modal-header i {
+            font-size: 24px;
+            color: #f59e0b;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .conflict-details {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .appointment-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .left-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e1e5e9;
+            }
+            
+            .right-panel {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .left-panel {
+                padding: 20px;
+            }
+            
+            .calendar-header {
+                padding: 15px 20px;
+            }
+            
+            .calendar-body {
+                padding: 15px 20px;
+            }
+        }
+
+        .validation-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .treatment-auto-select {
+            background: #e8f5e8;
+            border-color: #28a745;
+            position: relative;
+        }
+
+        .treatment-auto-select::after {
+            content: 'Auto-assigned';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #28a745;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-title-section">
+                <h1>Book an Appointment</h1>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong id="userName">Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="appointment-container">
+                <!-- Left Panel - Form -->
+                <div class="left-panel">
+                    <!-- Walk-in Mode Indicator -->
+                    <div class="walk-in-indicator" id="walkInIndicator">
+                        <i class="fas fa-walking"></i>
+                        <span>Walk-in Mode Active - Extended booking rules apply</span>
+                    </div>
+
+                    <!-- Mode Toggle -->
+                    <div class="mode-toggle">
+                        <button type="button" class="btn btn-secondary" id="walkInToggle" onclick="toggleWalkInMode()">
+                            <i class="fas fa-walking"></i> Walk-in Mode
+                        </button>
+                    </div>
+
+                    <form id="appointmentForm">
+                        <div class="form-section">
+                            <h3><i class="fas fa-user"></i> Patient Information</h3>
+                            <div class="form-group">
+                                <label for="patientSearch">Search Patient *</label>
+                                <div class="search-input" style="position: relative;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" 
+                                           id="patientSearch" 
+                                           class="form-control" 
+                                           placeholder="Type patient name, phone, or email..."
+                                           autocomplete="off"
+                                           required>
+                                    <div class="patient-suggestions" id="patientSuggestions"></div>
+                                </div>
+                                <div class="error-message" id="patientError">Please select a patient</div>
+                            </div>
+                            <input type="hidden" id="selectedPatientId" name="patient_id">
+                        </div>
+
+                        <div class="form-section">
+                            <h3><i class="fas fa-tooth"></i> Treatment Details</h3>
+                            <div class="form-group">
+                                <label for="treatmentSelect">Treatment *</label>
+                                <select id="treatmentSelect" name="treatment_id" class="form-control" required>
+                                    <option value="">Select treatment...</option>
+                                </select>
+                                <div class="error-message" id="treatmentError">Please select a treatment</div>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                <i class="fas fa-info-circle"></i> Dentist will be automatically assigned based on availability and treatment type
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3><i class="fas fa-sticky-note"></i> Additional Notes</h3>
+                            <div class="form-group">
+                                <label for="notes">Notes (Optional)</label>
+                                <textarea id="notes" 
+                                         name="notes" 
+                                         class="form-control" 
+                                         rows="3" 
+                                         placeholder="Any additional information or special requirements..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <a href="/admin/appointments" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="bookButton" disabled>
+                                <i class="fas fa-calendar-plus"></i> Book Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Panel - Calendar -->
+                <div class="right-panel">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button type="button" class="nav-btn" id="prevDate">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="current-date" id="currentDate">April 4, 2025</div>
+                            <button type="button" class="nav-btn" id="nextDate">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="calendar-body">
+                        <div class="time-slots" id="timeSlots">
+                            <!-- Time slots will be loaded here -->
+                        </div>
+                        <div class="loading-overlay" id="calendarLoading" style="display: none;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conflict Confirmation Modal -->
+    <div class="modal" id="conflictModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3 class="modal-title">Scheduling Conflict Detected</h3>
+            </div>
+            <div class="modal-body" id="conflictMessage">
+                <!-- Conflict details will be shown here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConflictModal()">Cancel</button>
+                <button class="btn btn-warning" onclick="proceedWithConflict()">Proceed Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDate = new Date();
+        let selectedTimeSlot = null;
+        let selectedPatient = null;
+        let patients = [];
+        let treatments = [];
+        let scheduleData = [];
+        let isWalkInMode = false;
+        let pendingAppointmentData = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            setupEventListeners();
+            loadUserProfile();
+        });
+
+        // Initialize page data
+        async function initializePage() {
+            try {
+                // Load basic data
+                await Promise.all([
+                    loadPatients(),
+                    loadTreatments()
+                ]);
+                
+                // Update date display
+                updateDateDisplay();
+                
+                // Load initial schedule
+                await loadSchedule();
+                
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                showToast('Failed to initialize page data', 'error');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Patient search
+            const patientSearch = document.getElementById('patientSearch');
+            patientSearch.addEventListener('input', handlePatientSearch);
+            patientSearch.addEventListener('blur', () => {
+                setTimeout(() => hideSuggestions(), 150);
+            });
+
+            // Treatment change
+            document.getElementById('treatmentSelect').addEventListener('change', handleTreatmentChange);
+
+            // Date navigation
+            document.getElementById('prevDate').addEventListener('click', () => {
+                const yesterday = new Date(currentDate);
+                yesterday.setDate(currentDate.getDate() - 1);
+                
+                // Prevent going to past dates unless in walk-in mode
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (yesterday >= today || isWalkInMode) {
+                    currentDate = yesterday;
+                    updateDateDisplay();
+                    loadSchedule();
+                } else {
+                    showToast('Cannot select past dates (use Walk-in Mode for same-day appointments)', 'warning');
+                }
+            });
+
+            document.getElementById('nextDate').addEventListener('click', () => {
+                currentDate.setDate(currentDate.getDate() + 1);
+                updateDateDisplay();
+                loadSchedule();
+            });
+
+            // Form submission
+            document.getElementById('appointmentForm').addEventListener('submit', handleFormSubmit);
+
+            // Click outside to close dropdowns
+            document.addEventListener('click', function(event) {
+                const profileDropdown = document.querySelector('.profile-dropdown');
+                if (!profileDropdown.contains(event.target)) {
+                    document.getElementById('profileDropdown').style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle Walk-in Mode
+        function toggleWalkInMode() {
+            isWalkInMode = !isWalkInMode;
+            const walkInButton = document.getElementById('walkInToggle');
+            const walkInIndicator = document.getElementById('walkInIndicator');
+            
+            if (isWalkInMode) {
+                walkInButton.innerHTML = '<i class="fas fa-times"></i> Exit Walk-in Mode';
+                walkInButton.classList.remove('btn-secondary');
+                walkInButton.classList.add('btn-warning');
+                walkInIndicator.classList.add('show');
+                showToast('Walk-in Mode activated - Extended booking rules apply', 'warning');
+            } else {
+                walkInButton.innerHTML = '<i class="fas fa-walking"></i> Walk-in Mode';
+                walkInButton.classList.remove('btn-warning');
+                walkInButton.classList.add('btn-secondary');
+                walkInIndicator.classList.remove('show');
+                showToast('Walk-in Mode deactivated', 'info');
+            }
+            
+            loadSchedule(); // Reload schedule with new mode
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const userName = data.email || 'Admin';
+                        const avatar = userName.charAt(0).toUpperCase();
+                        
+                        document.getElementById('userName').textContent = userName;
+                        document.getElementById('userAvatar').textContent = avatar;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+            }
+        }
+
+        // Load patients
+        async function loadPatients() {
+            try {
+                const response = await fetch('/admin/api/patients');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        patients = data.patients;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading patients:', error);
+            }
+        }
+
+        // Load treatments
+        async function loadTreatments() {
+            try {
+                const response = await fetch('/admin/api/treatments');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        treatments = data.treatments;
+                        populateTreatmentSelect();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading treatments:', error);
+            }
+        }
+
+        // Populate treatment select
+        function populateTreatmentSelect() {
+            const select = document.getElementById('treatmentSelect');
+            select.innerHTML = '<option value="">Select treatment...</option>';
+            
+            treatments.forEach(treatment => {
+                const option = document.createElement('option');
+                option.value = treatment.treatment_id;
+                option.textContent = `${treatment.treatment_name} (${treatment.duration} min)`;
+                select.appendChild(option);
+            });
+        }
+
+        // Handle patient search
+        function handlePatientSearch(event) {
+            const query = event.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            const filteredPatients = patients.filter(patient => 
+                (patient.fname && patient.fname.toLowerCase().includes(query)) ||
+                (patient.lname && patient.lname.toLowerCase().includes(query)) ||
+                (patient.phone && patient.phone.includes(query)) ||
+                (patient.email && patient.email.toLowerCase().includes(query))
+            );
+
+            showSuggestions(filteredPatients);
+        }
+
+        // Show patient suggestions
+        function showSuggestions(filteredPatients) {
+            const suggestionsDiv = document.getElementById('patientSuggestions');
+            
+            if (filteredPatients.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionsDiv.innerHTML = filteredPatients.map(patient => `
+                <div class="patient-suggestion" onclick="selectPatient(${patient.patient_id})">
+                    <div class="name">${patient.fname || ''} ${patient.lname || ''}</div>
+                    <div class="details">${patient.phone || ''} • ${patient.email || ''}</div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.style.display = 'block';
+        }
+
+        // Hide suggestions
+        function hideSuggestions() {
+            document.getElementById('patientSuggestions').style.display = 'none';
+        }
+
+        // Select patient
+        function selectPatient(patientId) {
+            const patient = patients.find(p => p.patient_id === patientId);
+            if (patient) {
+                selectedPatient = patient;
+                document.getElementById('selectedPatientId').value = patientId;
+                document.getElementById('patientSearch').value = `${patient.fname || ''} ${patient.lname || ''}`.trim();
+                hideSuggestions();
+                clearError('patientError');
+                validateForm();
+            }
+        }
+
+        // Handle treatment change
+        function handleTreatmentChange() {
+            clearError('treatmentError');
+            validateForm();
+            loadSchedule(); // Reload schedule when treatment changes
+        }
+
+        // Update date display
+        function updateDateDisplay() {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('en-US', options);
+            
+            // Update navigation button states
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const currentDateOnly = new Date(currentDate);
+            currentDateOnly.setHours(0, 0, 0, 0);
+            
+            const prevBtn = document.getElementById('prevDate');
+            if (currentDateOnly <= today && !isWalkInMode) {
+                prevBtn.disabled = true;
+                prevBtn.style.opacity = '0.5';
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.style.opacity = '1';
+            }
+        }
+
+        // Load schedule for current date
+        async function loadSchedule() {
+            const calendarLoading = document.getElementById('calendarLoading');
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            
+            try {
+                calendarLoading.style.display = 'flex';
+                
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const treatmentId = document.getElementById('treatmentSelect').value;
+                
+                // If no treatment selected, show message
+                if (!treatmentId) {
+                    timeSlotsContainer.innerHTML = `
+                        <div class="no-schedule">
+                            <i class="fas fa-tooth"></i>
+                            <h3>Select a Treatment</h3>
+                            <p>Please select a treatment to view available time slots and auto-assign dentist</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Fetch available dentists for this treatment
+                const dentistsResponse = await fetch(`/admin/api/treatments/${treatmentId}/dentists`);
+                if (!dentistsResponse.ok) {
+                    throw new Error('Failed to load dentists for treatment');
+                }
+
+                const dentistsData = await dentistsResponse.json();
+                if (!dentistsData.success || dentistsData.dentists.length === 0) {
+                    timeSlotsContainer.innerHTML = `
+                        <div class="no-schedule">
+                            <i class="fas fa-user-md"></i>
+                            <h3>No Dentists Available</h3>
+                            <p>No dentists are available for the selected treatment</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Get all available time slots for all qualified dentists
+                const allSlots = [];
+                
+                for (const dentist of dentistsData.dentists) {
+                    const scheduleResponse = await fetch(`/admin/api/schedule?start=${dateStr}&end=${dateStr}`);
+                    if (scheduleResponse.ok) {
+                        const scheduleData = await scheduleResponse.json();
+                        if (scheduleData.success) {
+                            const dentistSchedule = scheduleData.events.filter(event => 
+                                event.start === dateStr && 
+                                event.extendedProps && 
+                                event.extendedProps.dentist.includes(dentist.fname)
+                            );
+
+                            // Get existing appointments for this dentist
+                            const appointmentsResponse = await fetch(`/admin/api/appointments?date=${dateStr}`);
+                            let existingAppointments = [];
+                            if (appointmentsResponse.ok) {
+                                const appointmentsData = await appointmentsResponse.json();
+                                if (appointmentsData.success) {
+                                    existingAppointments = appointmentsData.appointments.filter(apt => 
+                                        apt.dentist_id == dentist.dentist_id
+                                    );
+                                }
+                            }
+
+                            // Generate slots for this dentist
+                            const dentistSlots = generateSlotsForDentist(dentist, dentistSchedule, existingAppointments, dateStr);
+                            allSlots.push(...dentistSlots);
+                        }
+                    }
+                }
+
+                renderTimeSlots(allSlots);
+
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                timeSlotsContainer.innerHTML = `
+                    <div class="no-schedule">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Schedule</h3>
+                        <p>Failed to load schedule data. Please try again.</p>
+                    </div>
+                `;
+                showToast('Failed to load schedule: ' + error.message, 'error');
+            } finally {
+                calendarLoading.style.display = 'none';
+            }
+        }
+
+        // Generate slots for a specific dentist
+        function generateSlotsForDentist(dentist, scheduleEvents, appointments, dateStr) {
+            const slots = [];
+            const now = new Date();
+            
+            // Create slots for working hours (8 AM to 6 PM)
+            for (let hour = 8; hour <= 18; hour++) {
+                const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+                const slotDateTime = new Date(dateStr + 'T' + timeStr + ':00');
+                
+                // Check if there's an existing appointment at this time
+                const existingAppointment = appointments.find(apt => {
+                    const aptTime = new Date(apt.time);
+                    return aptTime.getHours() === hour;
+                });
+
+                // Check if dentist is working at this hour
+                const isWorking = scheduleEvents.some(event => {
+                    if (event.extendedProps?.type === 'working') {
+                        const startTime = parseInt(event.extendedProps.startTime?.split(':')[0] || '0');
+                        const endTime = parseInt(event.extendedProps.endTime?.split(':')[0] || '0');
+                        return hour >= startTime && hour < endTime;
+                    }
+                    return false;
+                });
+
+                if (isWorking) {
+                    const isPast = slotDateTime < now;
+                    const isBooked = !!existingAppointment;
+                    
+                    // In walk-in mode, allow past time slots within today
+                    const canBook = isWalkInMode ? 
+                        (slotDateTime.toDateString() === now.toDateString() || slotDateTime > now) && !isBooked :
+                        slotDateTime > now && !isBooked;
+
+                    slots.push({
+                        time: timeStr,
+                        hour: hour,
+                        datetime: slotDateTime,
+                        dentist: dentist,
+                        isBooked: isBooked,
+                        isPast: isPast,
+                        canBook: canBook,
+                        appointment: existingAppointment
+                    });
+                }
+            }
+
+            return slots;
+        }
+
+        // Render time slots
+        function renderTimeSlots(allSlots) {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            
+            if (allSlots.length === 0) {
+                timeSlotsContainer.innerHTML = `
+                    <div class="no-schedule">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No Available Slots</h3>
+                        <p>No available time slots found for the selected treatment on this date</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group slots by time and pick the best dentist for each slot
+            const slotsByTime = {};
+            allSlots.forEach(slot => {
+                if (!slotsByTime[slot.time] || slot.canBook) {
+                    slotsByTime[slot.time] = slot;
+                }
+            });
+
+            // Sort by time
+            const sortedSlots = Object.values(slotsByTime).sort((a, b) => a.hour - b.hour);
+
+            // Render slots
+            timeSlotsContainer.innerHTML = sortedSlots.map(slot => {
+                let statusClass = '';
+                let statusText = '';
+                let clickHandler = '';
+
+                if (slot.isBooked) {
+                    statusClass = 'booked';
+                    statusText = 'Booked';
+                } else if (slot.isPast && !isWalkInMode) {
+                    statusClass = 'past';
+                    statusText = 'Past';
+                } else if (slot.canBook) {
+                    statusClass = isWalkInMode && slot.isPast ? 'walk-in-allowed' : 'available';
+                    statusText = isWalkInMode && slot.isPast ? 'Walk-in OK' : 'Available';
+                    clickHandler = `onclick="selectTimeSlot('${slot.time}', ${slot.hour}, ${slot.dentist.dentist_id})"`;
+                } else {
+                    statusClass = 'past';
+                    statusText = 'Unavailable';
+                }
+                
+                return `
+                    <div class="time-slot ${statusClass}" ${clickHandler}>
+                        <div class="time-info">
+                            <div class="time-label">${slot.time}</div>
+                            <div class="dentist-info">
+                                Dr. ${slot.dentist.fname} ${slot.dentist.lname}
+                                ${slot.dentist.specialty ? `- ${slot.dentist.specialty}` : ''}
+                            </div>
+                        </div>
+                        <div class="slot-status status-${statusClass.replace('walk-in-allowed', 'walk-in')}">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Select time slot
+        function selectTimeSlot(time, hour, dentistId) {
+            // Remove previous selection
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+
+            // Add selection to clicked slot
+            event.target.closest('.time-slot').classList.add('selected');
+
+            // Store selected slot
+            selectedTimeSlot = {
+                time: time,
+                hour: hour,
+                date: currentDate.toISOString().split('T')[0],
+                dentist_id: dentistId
+            };
+
+            validateForm();
+            
+            const selectedDentist = document.querySelector('.time-slot.selected .dentist-info').textContent;
+            showToast(`Selected ${time} with ${selectedDentist}`, 'success');
+        }
+
+        // Validate form
+        function validateForm() {
+            const patientId = document.getElementById('selectedPatientId').value;
+            const treatmentId = document.getElementById('treatmentSelect').value;
+            
+            const isValid = patientId && treatmentId && selectedTimeSlot;
+            
+            document.getElementById('bookButton').disabled = !isValid;
+            
+            return isValid;
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            if (!validateForm()) {
+                showValidationErrors();
+                return;
+            }
+
+            const bookButton = document.getElementById('bookButton');
+            const originalText = bookButton.innerHTML;
+            
+            try {
+                // Disable button and show loading
+                bookButton.disabled = true;
+                bookButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+                // Prepare appointment data
+                const appointmentDateTime = new Date(selectedTimeSlot.date + 'T' + selectedTimeSlot.time + ':00');
+                
+                const appointmentData = {
+                    patient_id: document.getElementById('selectedPatientId').value,
+                    treatment_id: document.getElementById('treatmentSelect').value,
+                    dentist_id: selectedTimeSlot.dentist_id,
+                    appointment_time: appointmentDateTime.toISOString(),
+                    notes: document.getElementById('notes').value || null,
+                    is_walk_in: isWalkInMode
+                };
+
+                // Submit appointment
+                const response = await fetch('/admin/api/appointments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(appointmentData)
+                });
+
+                const data = await response.json();
+
+                if (data.warning) {
+                    // Store data for potential conflict resolution
+                    pendingAppointmentData = { ...appointmentData, force_create: true };
+                    showConflictModal(data);
+                } else if (response.ok && data.success) {
+                    showToast('Appointment booked successfully!', 'success');
+                    
+                    // Redirect to appointments page after short delay
+                    setTimeout(() => {
+                        window.location.href = '/admin/appointments';
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Failed to book appointment');
+                }
+
+            } catch (error) {
+                console.error('Error booking appointment:', error);
+                showToast('Failed to book appointment: ' + error.message, 'error');
+                
+                // Re-enable button
+                bookButton.disabled = false;
+                bookButton.innerHTML = originalText;
+            }
+        }
+
+        // Show conflict modal
+        function showConflictModal(conflictData) {
+            const modal = document.getElementById('conflictModal');
+            const messageDiv = document.getElementById('conflictMessage');
+            
+            let conflictHtml = `
+                <p><strong>Warning:</strong> ${conflictData.message}</p>
+            `;
+            
+            if (conflictData.conflict_details) {
+                conflictHtml += `
+                    <div class="conflict-details">
+                        <h4>Conflict Details:</h4>
+                        <ul>
+                            <li><strong>Next Appointment:</strong> ${new Date(conflictData.conflict_details.next_appointment_time).toLocaleString()}</li>
+                            <li><strong>Next Patient:</strong> ${conflictData.conflict_details.next_patient}</li>
+                            <li><strong>Estimated Overlap:</strong> ${conflictData.conflict_details.estimated_overlap} minutes</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            conflictHtml += `
+                <p>Do you want to proceed with this appointment despite the potential conflict?</p>
+            `;
+            
+            messageDiv.innerHTML = conflictHtml;
+            modal.classList.add('show');
+        }
+
+        // Close conflict modal
+        function closeConflictModal() {
+            const modal = document.getElementById('conflictModal');
+            modal.classList.remove('show');
+            pendingAppointmentData = null;
+            
+            // Re-enable form
+            const bookButton = document.getElementById('bookButton');
+            bookButton.disabled = false;
+            bookButton.innerHTML = '<i class="fas fa-calendar-plus"></i> Book Appointment';
+        }
+
+        // Proceed with conflicted appointment
+        async function proceedWithConflict() {
+            if (!pendingAppointmentData) return;
+            
+            try {
+                const response = await fetch('/admin/api/appointments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pendingAppointmentData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    closeConflictModal();
+                    showToast('Appointment booked successfully with conflict override!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin/appointments';
+                    }, 1500);
+                } else {
+                    throw new Error(data.error || 'Failed to book appointment');
+                }
+
+            } catch (error) {
+                showToast('Failed to book appointment: ' + error.message, 'error');
+                closeConflictModal();
+            }
+        }
+
+        // Show validation errors
+        function showValidationErrors() {
+            if (!document.getElementById('selectedPatientId').value) {
+                showError('patientError', 'Please select a patient');
+            }
+            if (!document.getElementById('treatmentSelect').value) {
+                showError('treatmentError', 'Please select a treatment');
+            }
+            if (!selectedTimeSlot) {
+                showToast('Please select a time slot', 'error');
+            }
+        }
+
+        // Show error
+        function showError(errorId, message) {
+            const errorElement = document.getElementById(errorId);
+            const inputElement = errorElement.previousElementSibling.querySelector('input, select');
+            
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+            inputElement.classList.add('validation-error');
+        }
+
+        // Clear error
+        function clearError(errorId) {
+            const errorElement = document.getElementById(errorId);
+            const inputElement = errorElement.previousElementSibling.querySelector('input, select');
+            
+            errorElement.classList.remove('show');
+            if (inputElement) {
+                inputElement.classList.remove('validation-error');
+            }
+        }
+
+        // Toggle notifications
+        function toggleNotifications() {
+            showToast('Notifications feature - Coming soon!', 'info');
+        }
+
+        // Toggle profile dropdown
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Auto-refresh on window focus
+        window.addEventListener('focus', () => {
+            loadSchedule();
+        });
+
+        // Click outside modal to close
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('conflictModal');
+            if (event.target === modal) {
+                closeConflictModal();
+            }
+        });
+    </script>
+</body>
+</html>

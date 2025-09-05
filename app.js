@@ -31,7 +31,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // เสิร์ฟไฟล์ static - ✅ แก้ไขการตั้งค่า
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'))); // ✅ แก้ไขให้ถูกต้อง
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'))); 
 
 // ✅ Body Parser สำหรับ POST form (ย้ายมาไว้ก่อน session)
 app.use(express.urlencoded({ extended: true }));
@@ -223,6 +223,19 @@ app.use((req, res) => {
   }
 });
 
+// หรือสร้าง custom middleware เพื่อจัดการรูปภาพที่ไม่มี
+app.use('/uploads', (req, res, next) => {
+  const fs = require('fs');
+  const filePath = path.join(__dirname, 'public/uploads', req.path);
+  
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      // ถ้าไฟล์ไม่มี ให้ส่งรูปภาพ default
+      return res.sendFile(path.join(__dirname, 'public/img/default-doctor.png'));
+    }
+    next();
+  });
+}, express.static(path.join(__dirname, 'public/uploads')));
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

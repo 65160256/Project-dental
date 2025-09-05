@@ -18,10 +18,184 @@
             margin: 0;
         }
 
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+        }
+
+        .sidebar .logo h3 {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         .booking-header {
@@ -216,6 +390,12 @@
             transform: translateY(-2px);
         }
 
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-secondary {
             background: #6c757d;
             color: white;
@@ -281,126 +461,203 @@
         .summary-item:last-child {
             border-bottom: none;
         }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .booking-form {
+                padding: 20px;
+            }
+
+            .booking-steps {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .dentist-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .time-slots {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="booking-header">
-            <h1><i class="fas fa-calendar-plus"></i> จองนัดหมาย</h1>
-            <p>เลือกวันที่ หมอฟัน และเวลาที่ต้องการ</p>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="/img/logo.png" alt="Smile Clinic" />
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/patient/dashboard">Dashboard</a></li>
+            <li class="active"><a href="/patient/appointments">Appointment</a></li>
+            <li><a href="/patient/history">History</a></li>
+            <li><a href="/patient/my-treatments">My Treatments</a></li>
+            <li><a href="/patient/dentists">Dentists</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Firstname or Lastname..." />
+                </div>
+            </div>
+            <div class="user-section">
+                <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <img src="/img/user-icon.png" class="avatar"/>
+                        <div class="user-details">
+                            <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
+                            <small>patient</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/patient/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Steps -->
-        <div class="booking-steps">
-            <div class="step active" id="step1">
-                <div class="step-number">1</div>
-                <h3>เลือกวันที่</h3>
-                <p>เลือกวันที่ที่ต้องการมาหาหมอ</p>
+        <div class="container">
+            <!-- Header -->
+            <div class="booking-header">
+                <h1><i class="fas fa-calendar-plus"></i> จองนัดหมาย</h1>
+                <p>เลือกวันที่ หมอฟัน และเวลาที่ต้องการ</p>
             </div>
-            <div class="step" id="step2">
-                <div class="step-number">2</div>
-                <h3>เลือกหมอฟัน</h3>
-                <p>เลือกหมอฟันที่ต้องการ</p>
-            </div>
-            <div class="step" id="step3">
-                <div class="step-number">3</div>
-                <h3>ยืนยันการจอง</h3>
-                <p>ตรวจสอบและยืนยันข้อมูล</p>
-            </div>
-        </div>
 
-        <!-- Booking Form -->
-        <div class="booking-form">
-            <!-- Step 1: เลือกวันที่ -->
-            <div class="form-section active" id="section1">
-                <h2><i class="fas fa-calendar-alt"></i> เลือกวันที่</h2>
-                <div class="form-group">
-                    <label class="form-label">วันที่ที่ต้องการจองนัดหมาย:</label>
-                    <input type="date" class="form-control" id="appointmentDate" 
-                           min="<%= new Date().toISOString().split('T')[0] %>">
+            <!-- Steps -->
+            <div class="booking-steps">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <h3>เลือกวันที่</h3>
+                    <p>เลือกวันที่ที่ต้องการมาหาหมอ</p>
                 </div>
-                
-                <div class="navigation-buttons">
-                    <div></div>
-                    <button class="btn btn-primary" onclick="goToStep2()">
-                        ดูหมอฟันที่ว่าง <i class="fas fa-arrow-right"></i>
-                    </button>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <h3>เลือกหมอฟัน</h3>
+                    <p>เลือกหมอฟันที่ต้องการ</p>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <h3>ยืนยันการจอง</h3>
+                    <p>ตรวจสอบและยืนยันข้อมูล</p>
                 </div>
             </div>
 
-            <!-- Step 2: เลือกหมอฟันและเวลา -->
-            <div class="form-section" id="section2">
-                <h2><i class="fas fa-user-md"></i> เลือกหมอฟันและเวลา</h2>
-                
-                <div id="dentistsList" class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลหมอฟัน...
-                </div>
-
-                <div id="timeSlotsList" style="display: none;">
-                    <h3>เลือกเวลา:</h3>
-                    <div class="time-slots" id="timeSlotsContainer"></div>
-                </div>
-
-                <div class="navigation-buttons">
-                    <button class="btn btn-secondary" onclick="goToStep1()">
-                        <i class="fas fa-arrow-left"></i> กลับ
-                    </button>
-                    <button class="btn btn-primary" id="goToStep3Btn" onclick="goToStep3()" disabled>
-                        ต่อไป <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 3: ยืนยันการจอง -->
-            <div class="form-section" id="section3">
-                <h2><i class="fas fa-check-circle"></i> ยืนยันการจอง</h2>
-                
-                <div class="summary-card">
-                    <h3>สรุปการจองนัดหมาย</h3>
-                    <div class="summary-item">
-                        <span>วันที่:</span>
-                        <span id="summaryDate">-</span>
+            <!-- Booking Form -->
+            <div class="booking-form">
+                <!-- Step 1: เลือกวันที่ -->
+                <div class="form-section active" id="section1">
+                    <h2><i class="fas fa-calendar-alt"></i> เลือกวันที่</h2>
+                    <div class="form-group">
+                        <label class="form-label">วันที่ที่ต้องการจองนัดหมาย:</label>
+                        <input type="date" class="form-control" id="appointmentDate" 
+                               min="<%= new Date().toISOString().split('T')[0] %>">
                     </div>
-                    <div class="summary-item">
-                        <span>เวลา:</span>
-                        <span id="summaryTime">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span>หมอฟัน:</span>
-                        <span id="summaryDentist">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span>ความเชี่ยวชาญ:</span>
-                        <span id="summarySpecialty">-</span>
+                    
+                    <div class="navigation-buttons">
+                        <div></div>
+                        <button class="btn btn-primary" onclick="goToStep2()">
+                            ดูหมอฟันที่ว่าง <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">เลือกการรักษา:</label>
-                    <select class="form-control" id="treatmentSelect" required>
-                        <option value="">-- เลือกการรักษา --</option>
-                        <% treatments.forEach(function(treatment) { %>
-                            <option value="<%= treatment.treatment_id %>">
-                                <%= treatment.treatment_name %> (<%= treatment.duration %> นาที)
-                            </option>
-                        <% }) %>
-                    </select>
+                <!-- Step 2: เลือกหมอฟันและเวลา -->
+                <div class="form-section" id="section2">
+                    <h2><i class="fas fa-user-md"></i> เลือกหมอฟันและเวลา</h2>
+                    
+                    <div id="dentistsList" class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลหมอฟัน...
+                    </div>
+
+                    <div id="timeSlotsList" style="display: none;">
+                        <h3>เลือกเวลา:</h3>
+                        <div class="time-slots" id="timeSlotsContainer"></div>
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary" onclick="goToStep1()">
+                            <i class="fas fa-arrow-left"></i> กลับ
+                        </button>
+                        <button class="btn btn-primary" id="goToStep3Btn" onclick="goToStep3()" disabled>
+                            ต่อไป <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">หมายเหตุ (ถ้ามี):</label>
-                    <textarea class="form-control" id="appointmentNote" rows="3" 
-                              placeholder="อาการ หรือข้อมูลเพิ่มเติม..."></textarea>
-                </div>
+                <!-- Step 3: ยืนยันการจอง -->
+                <div class="form-section" id="section3">
+                    <h2><i class="fas fa-check-circle"></i> ยืนยันการจอง</h2>
+                    
+                    <div class="summary-card">
+                        <h3>สรุปการจองนัดหมาย</h3>
+                        <div class="summary-item">
+                            <span>วันที่:</span>
+                            <span id="summaryDate">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>เวลา:</span>
+                            <span id="summaryTime">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>หมอฟัน:</span>
+                            <span id="summaryDentist">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>ความเชี่ยวชาญ:</span>
+                            <span id="summarySpecialty">-</span>
+                        </div>
+                    </div>
 
-                <div class="navigation-buttons">
-                    <button class="btn btn-secondary" onclick="goToStep2()">
-                        <i class="fas fa-arrow-left"></i> กลับ
-                    </button>
-                    <button class="btn btn-success" onclick="confirmBooking()">
-                        <i class="fas fa-check"></i> ยืนยันการจอง
-                    </button>
+                    <div class="form-group">
+                        <label class="form-label">เลือกการรักษา:</label>
+                        <select class="form-control" id="treatmentSelect" required>
+                            <option value="">-- เลือกการรักษา --</option>
+                            <% treatments.forEach(function(treatment) { %>
+                                <option value="<%= treatment.treatment_id %>">
+                                    <%= treatment.treatment_name %> (<%= treatment.duration %> นาที)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">หมายเหตุ (ถ้ามี):</label>
+                        <textarea class="form-control" id="appointmentNote" rows="3" 
+                                  placeholder="อาการ หรือข้อมูลเพิ่มเติม..."></textarea>
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary" onclick="goToStep2()">
+                            <i class="fas fa-arrow-left"></i> กลับ
+                        </button>
+                        <button class="btn btn-success" onclick="confirmBooking()">
+                            <i class="fas fa-check"></i> ยืนยันการจอง
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,31 +734,40 @@
         }
 
         // Display dentists
-        function displayDentists(dentists) {
-            const container = document.getElementById('dentistsList');
-            
-            if (dentists.length === 0) {
-                container.innerHTML = '<div class="alert alert-error">ไม่มีหมอฟันว่างในวันที่เลือก</div>';
-                return;
-            }
-            
-            const html = `
-                <h3>เลือกหมอฟัน (${dentists.length} คน):</h3>
-                <div class="dentist-grid">
-                    ${dentists.map(dentist => `
-                        <div class="dentist-card" onclick="selectDentist(${dentist.dentist_id}, '${dentist.fname} ${dentist.lname}', '${dentist.specialty}')">
-                            <img src="/uploads/${dentist.photo || 'default-doctor.png'}" 
-                                 alt="Dr. ${dentist.fname}" class="dentist-photo">
-                            <h4>Dr. ${dentist.fname} ${dentist.lname}</h4>
-                            <p><strong>ความเชี่ยวชาญ:</strong> ${dentist.specialty}</p>
-                            <p><strong>ช่วงเวลาว่าง:</strong> ${dentist.available_slots} ช่วงเวลา</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        }
+       function displayDentists(dentists) {
+    const container = document.getElementById('dentistsList');
+    
+    if (dentists.length === 0) {
+        container.innerHTML = '<div class="alert alert-error">ไม่มีหมอฟันว่างในวันที่เลือก</div>';
+        return;
+    }
+    
+    const html = `
+        <h3>เลือกหมอฟัน (${dentists.length} คน):</h3>
+        <div class="dentist-grid">
+            ${dentists.map(dentist => {
+                // แก้ไขการแสดงรูปภาพ
+                const photoUrl = dentist.photo && dentist.photo !== 'default-avatar.png' 
+                    ? `/uploads/${dentist.photo}` 
+                    : '/img/default-doctor.png'; // ใช้รูปที่มีอยู่แล้ว
+                
+                return `
+                    <div class="dentist-card" onclick="selectDentist(${dentist.dentist_id}, '${dentist.fname} ${dentist.lname}', '${dentist.specialty}')">
+                        <img src="${photoUrl}" 
+                             alt="Dr. ${dentist.fname}" 
+                             class="dentist-photo"
+                             onerror="this.src='/img/default-doctor.png'">
+                        <h4>Dr. ${dentist.fname} ${dentist.lname}</h4>
+                        <p><strong>ความเชี่ยวชาญ:</strong> ${dentist.specialty}</p>
+                        <p><strong>ช่วงเวลาว่าง:</strong> ${dentist.available_slots} ช่วงเวลา</p>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
 
         // Select dentist and load time slots
         async function selectDentist(dentistId, dentistName, specialty) {
@@ -624,6 +890,23 @@
                 alert('เกิดข้อผิดพลาดในการจองนัดหมาย');
             }
         }
+
+        // Dropdown functions
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            console.log('Notifications clicked');
+        }
+        
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
 
         // Set minimum date to today
         document.addEventListener('DOMContentLoaded', function() {

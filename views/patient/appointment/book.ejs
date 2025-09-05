@@ -1,610 +1,909 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Book an appointment</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จองนัดหมาย - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .sidebar {
-      width: 180px;
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      position: fixed;
-      height: 100vh;
-      padding: 0;
-      color: #fff;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
 
-    .sidebar .logo {
-      text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
 
-    .sidebar .logo img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
-      background: white;
-      padding: 8px;
-    }
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
 
-    .sidebar .logo h3 {
-      margin: 10px 0 0 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
+        .sidebar .logo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+        }
 
-    .sidebar ul {
-      list-style: none;
-      padding: 10px 0;
-      margin: 0;
-    }
+        .sidebar .logo h3 {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
 
-    .sidebar ul li {
-      margin: 2px 0;
-    }
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
 
-    .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.9);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      font-size: 14px;
-    }
+        .sidebar ul li {
+            margin: 2px 0;
+        }
 
-    .sidebar ul li.active a,
-    .sidebar ul li:hover a {
-      background-color: rgba(255,255,255,0.2);
-      color: white;
-      border-radius: 8px;
-      margin: 0 10px;
-    }
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
 
-    .main {
-      margin-left: 180px;
-      padding: 0;
-      min-height: 100vh;
-    }
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
 
-    .top-bar {
-      background: white;
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-    .search-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .search-section label {
-      font-weight: 500;
-      color: #555;
-      font-size: 14px;
-    }
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-    .search-box {
-      background: #f8f9fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 20px;
-      padding: 8px 15px;
-      display: flex;
-      align-items: center;
-      width: 250px;
-    }
+        .search-section label {
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
 
-    .search-box i {
-      color: #666;
-      margin-right: 8px;
-      font-size: 14px;
-    }
+        .search-box {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            width: 250px;
+        }
 
-    .search-box input {
-      border: none;
-      background: transparent;
-      outline: none;
-      width: 100%;
-      font-size: 13px;
-    }
+        .search-box i {
+            color: #666;
+            margin-right: 8px;
+            font-size: 14px;
+        }
 
-    .user-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
 
-    .notification-icon {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-    .profile-dropdown {
-      position: relative;
-    }
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
 
-    .user-info {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      gap: 10px;
-    }
+        .profile-dropdown {
+            position: relative;
+        }
 
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #666;
-    }
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
 
-    .user-details strong {
-      display: block;
-      font-size: 13px;
-      color: #333;
-    }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #666;
+        }
 
-    .user-details small {
-      color: #666;
-      font-size: 11px;
-    }
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
 
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      background: white;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 1000;
-    }
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
 
-    .dropdown-menu a {
-      display: block;
-      padding: 10px 15px;
-      text-decoration: none;
-      color: #333;
-      font-size: 13px;
-    }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
 
-    .dropdown-menu a:hover {
-      background-color: #f8f9fa;
-    }
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
 
-    .content {
-      padding: 30px;
-    }
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
 
-    .page-header {
-      margin-bottom: 30px;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
 
-    .page-header h1 {
-      font-size: 24px;
-      color: #333;
-      margin: 0 0 5px 0;
-      font-weight: 600;
-    }
+        .booking-header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
 
-    .booking-form {
-      max-width: 600px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+        .booking-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
 
-    .form-group {
-      margin-bottom: 25px;
-    }
+        .booking-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
 
-    .form-label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #333;
-      font-size: 14px;
-    }
+        .booking-steps {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
 
-    .optional {
-      color: #e74c3c;
-      font-weight: normal;
-    }
+        .step {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
 
-    .form-control {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: border-color 0.3s ease;
-      background: #fff;
-      font-family: inherit;
-    }
+        .step:hover {
+            transform: translateY(-5px);
+        }
 
-    .form-control:focus {
-      outline: none;
-      border-color: #4A90E2;
-      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-    }
+        .step.active {
+            border: 2px solid #4A90E2;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
 
-    select.form-control {
-      cursor: pointer;
-    }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4A90E2;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-weight: bold;
+        }
 
-    textarea.form-control {
-      resize: vertical;
-      min-height: 100px;
-    }
+        .step.active .step-number {
+            background: white;
+            color: #4A90E2;
+        }
 
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+        .booking-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
 
-    .form-actions {
-      margin-top: 40px;
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-    }
+        .form-section {
+            margin-bottom: 40px;
+            display: none;
+        }
 
-    .btn {
-      padding: 12px 30px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-      min-width: 120px;
-    }
+        .form-section.active {
+            display: block;
+        }
 
-    .btn-primary {
-      background: #28a745;
-      color: white;
-      box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-    }
+        .form-group {
+            margin-bottom: 25px;
+        }
 
-    .btn-primary:hover {
-      background: #218838;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
-    }
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
 
-    .btn-secondary {
-      background: #dc3545;
-      color: white;
-      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
-    }
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
 
-    .btn-secondary:hover {
-      background: #c82333;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
-    }
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
 
-    .time-display {
-      background: #f8f9fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      padding: 12px 15px;
-      font-size: 14px;
-      color: #555;
-      font-weight: 500;
-    }
+        .dentist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
 
-    .alert {
-      padding: 15px 20px;
-      border-radius: 6px;
-      margin-bottom: 25px;
-      font-weight: 500;
-      font-size: 14px;
-    }
+        .dentist-card {
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .alert-success {
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
-      color: #155724;
-    }
+        .dentist-card:hover {
+            border-color: #4A90E2;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
 
-    .alert-error {
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-    }
+        .dentist-card.selected {
+            border-color: #4A90E2;
+            background: linear-gradient(135deg, #f8fbff, #e3f2fd);
+        }
 
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      
-      .main {
-        margin-left: 0;
-      }
+        .dentist-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 3px solid #ddd;
+        }
 
-      .content {
-        padding: 20px;
-      }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-      .booking-form {
-        padding: 20px;
-      }
+        .time-slot {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
 
-      .form-row {
-        grid-template-columns: 1fr;
-        gap: 25px;
-      }
+        .time-slot:hover {
+            border-color: #4A90E2;
+            background: #f8fbff;
+        }
 
-      .form-actions {
-        flex-direction: column;
-        align-items: center;
-      }
+        .time-slot.selected {
+            border-color: #4A90E2;
+            background: #4A90E2;
+            color: white;
+        }
 
-      .btn {
-        width: 100%;
-        max-width: 300px;
-      }
-    }
-  </style>
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .summary-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .booking-form {
+                padding: 20px;
+            }
+
+            .booking-steps {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .dentist-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .time-slots {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo">
-      <img src="/img/logo.png" alt="Smile Clinic" />
-      <h3>Smile Clinic</h3>
-    </div>
-    <ul>
-      <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li class="active"><a href="/patient/appointments">Appointment</a></li>
-      <li><a href="/patient/history">History</a></li>
-      <li><a href="/patient/my-treatments">My Treatments</a></li>
-      <li><a href="/patient/dentists">Dentists</a></li>
-    </ul>
-  </div>
-
-  <div class="main">
-    <div class="top-bar">
-      <div class="search-section">
-        <label>Search:</label>
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Firstname or Lastname..." />
+    <div class="sidebar">
+        <div class="logo">
+            <img src="/img/logo.png" alt="Smile Clinic" />
+            <h3>Smile Clinic</h3>
         </div>
-      </div>
-      <div class="user-section">
-        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
-        <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar"/>
-            <div class="user-details">
-              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
-              <small>patient</small>
+        <ul>
+            <li><a href="/patient/dashboard">Dashboard</a></li>
+            <li class="active"><a href="/patient/appointments">Appointment</a></li>
+            <li><a href="/patient/history">History</a></li>
+            <li><a href="/patient/my-treatments">My Treatments</a></li>
+            <li><a href="/patient/dentists">Dentists</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="search-section">
+                <label>Search:</label>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Firstname or Lastname..." />
+                </div>
             </div>
-            <i class="fas fa-caret-down"></i>
-          </div>
-          <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile">My Profile</a>
-            <hr />
-            <a href="/logout">Log Out</a>
-          </div>
+            <div class="user-section">
+                <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <img src="/img/user-icon.png" class="avatar"/>
+                        <div class="user-details">
+                            <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
+                            <small>patient</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/patient/profile">My Profile</a>
+                        <hr />
+                        <a href="/logout">Log Out</a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="container">
+            <!-- Header -->
+            <div class="booking-header">
+                <h1><i class="fas fa-calendar-plus"></i> จองนัดหมาย</h1>
+                <p>เลือกวันที่ หมอฟัน และเวลาที่ต้องการ</p>
+            </div>
+
+            <!-- Steps -->
+            <div class="booking-steps">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <h3>เลือกวันที่</h3>
+                    <p>เลือกวันที่ที่ต้องการมาหาหมอ</p>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <h3>เลือกหมอฟัน</h3>
+                    <p>เลือกหมอฟันที่ต้องการ</p>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <h3>ยืนยันการจอง</h3>
+                    <p>ตรวจสอบและยืนยันข้อมูล</p>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="booking-form">
+                <!-- Step 1: เลือกวันที่ -->
+                <div class="form-section active" id="section1">
+                    <h2><i class="fas fa-calendar-alt"></i> เลือกวันที่</h2>
+                    <div class="form-group">
+                        <label class="form-label">วันที่ที่ต้องการจองนัดหมาย:</label>
+                        <input type="date" class="form-control" id="appointmentDate" 
+                               min="<%= new Date().toISOString().split('T')[0] %>">
+                    </div>
+                    
+                    <div class="navigation-buttons">
+                        <div></div>
+                        <button class="btn btn-primary" onclick="goToStep2()">
+                            ดูหมอฟันที่ว่าง <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: เลือกหมอฟันและเวลา -->
+                <div class="form-section" id="section2">
+                    <h2><i class="fas fa-user-md"></i> เลือกหมอฟันและเวลา</h2>
+                    
+                    <div id="dentistsList" class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูลหมอฟัน...
+                    </div>
+
+                    <div id="timeSlotsList" style="display: none;">
+                        <h3>เลือกเวลา:</h3>
+                        <div class="time-slots" id="timeSlotsContainer"></div>
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary" onclick="goToStep1()">
+                            <i class="fas fa-arrow-left"></i> กลับ
+                        </button>
+                        <button class="btn btn-primary" id="goToStep3Btn" onclick="goToStep3()" disabled>
+                            ต่อไป <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: ยืนยันการจอง -->
+                <div class="form-section" id="section3">
+                    <h2><i class="fas fa-check-circle"></i> ยืนยันการจอง</h2>
+                    
+                    <div class="summary-card">
+                        <h3>สรุปการจองนัดหมาย</h3>
+                        <div class="summary-item">
+                            <span>วันที่:</span>
+                            <span id="summaryDate">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>เวลา:</span>
+                            <span id="summaryTime">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>หมอฟัน:</span>
+                            <span id="summaryDentist">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>ความเชี่ยวชาญ:</span>
+                            <span id="summarySpecialty">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">เลือกการรักษา:</label>
+                        <select class="form-control" id="treatmentSelect" required>
+                            <option value="">-- เลือกการรักษา --</option>
+                            <% treatments.forEach(function(treatment) { %>
+                                <option value="<%= treatment.treatment_id %>">
+                                    <%= treatment.treatment_name %> (<%= treatment.duration %> นาที)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">หมายเหตุ (ถ้ามี):</label>
+                        <textarea class="form-control" id="appointmentNote" rows="3" 
+                                  placeholder="อาการ หรือข้อมูลเพิ่มเติม..."></textarea>
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary" onclick="goToStep2()">
+                            <i class="fas fa-arrow-left"></i> กลับ
+                        </button>
+                        <button class="btn btn-success" onclick="confirmBooking()">
+                            <i class="fas fa-check"></i> ยืนยันการจอง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="content">
-      <div class="page-header">
-        <h1>Book an appointment</h1>
-      </div>
+    <script>
+        let selectedDate = '';
+        let selectedDentistId = '';
+        let selectedHour = '';
+        let selectedDentistName = '';
+        let selectedSpecialty = '';
+        let selectedTimeDisplay = '';
 
-      <% if (typeof success !== 'undefined' && success) { %>
-      <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> Appointment booked successfully! We will confirm your appointment soon.
-      </div>
-      <% } %>
-
-      <% if (typeof error !== 'undefined' && error) { %>
-      <div class="alert alert-error">
-        <i class="fas fa-exclamation-circle"></i> There was an error booking your appointment. Please try again.
-      </div>
-      <% } %>
-
-      <form class="booking-form" method="POST" action="/patient/appointment/book">
-        <div class="form-group">
-          <label class="form-label" for="name">Name:</label>
-          <input type="text" id="name" name="name" class="form-control" 
-                 value="<%= patient.fname %> <%= patient.lname %>" readonly style="background-color: #f8f9fa;">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="treatment_id">Treatment needed:</label>
-          <select id="treatment_id" name="treatment_id" class="form-control" required>
-            <option value="">Select Treatment</option>
-            <% treatments.forEach(function(treatment) { %>
-            <option value="<%= treatment.treatment_id %>" 
-                    <%= selectedTreatment == treatment.treatment_id ? 'selected' : '' %>>
-              <%= treatment.treatment_name %> (<%= treatment.duration %> min)
-            </option>
-            <% }); %>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="symptom_details">Symptom Details:</label>
-          <textarea id="symptom_details" name="symptom_details" class="form-control" 
-                    placeholder="Please describe your symptoms or concerns..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="dentist_id">Select preferred dentist: <span class="optional">(optional)</span></label>
-          <select id="dentist_id" name="dentist_id" class="form-control">
-            <option value="">Any Available Dentist</option>
-            <% dentists.forEach(function(dentist) { %>
-            <option value="<%= dentist.dentist_id %>" 
-                    <%= selectedDentist == dentist.dentist_id ? 'selected' : '' %>>
-              Dr. <%= dentist.full_name %> - <%= dentist.specialty %>
-            </option>
-            <% }); %>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="phone">Phone:</label>
-          <input type="tel" id="phone" name="phone" class="form-control" 
-                 placeholder="Enter your phone number" required>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="date">Booking Date:</label>
-            <input type="date" id="date" name="date" class="form-control" 
-                   value="<%= selectedDate %>" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="time">Selected time:</label>
-            <select id="time" name="time" class="form-control" required>
-              <option value="">Select Time</option>
-              <% 
-              const timeSlots = [];
-              for (let hour = 10; hour <= 20; hour++) {
-                for (let min of ['00', '30']) {
-                  const time24 = `${hour.toString().padStart(2, '0')}:${min}`;
-                  const hour12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-                  const ampm = hour >= 12 ? 'PM' : 'AM';
-                  const time12 = `${hour12}:${min} ${ampm}`;
-                  timeSlots.push({time24, time12});
-                }
-              }
-              %>
-              <% timeSlots.forEach(function(slot) { %>
-              <option value="<%= slot.time24 %>" 
-                      <%= selectedTime == slot.time24 ? 'selected' : '' %>>
-                <%= slot.time12 %>
-              </option>
-              <% }); %>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">End time:</label>
-          <div class="time-display" id="endTime">11:00 AM</div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-check"></i> Confirm
-          </button>
-          <a href="/patient/appointments" class="btn btn-secondary">
-            <i class="fas fa-times"></i> Cancel
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-    
-    function toggleNotifications() {
-      console.log('Notifications clicked');
-    }
-    
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
-
-    // Calculate end time based on treatment duration and selected time
-    function updateEndTime() {
-      const treatmentSelect = document.getElementById('treatment_id');
-      const timeSelect = document.getElementById('time');
-      const endTimeDisplay = document.getElementById('endTime');
-
-      const selectedTreatment = treatmentSelect.value;
-      const selectedTime = timeSelect.value;
-
-      if (selectedTreatment && selectedTime) {
-        // Find treatment duration
-        const treatmentOption = treatmentSelect.options[treatmentSelect.selectedIndex];
-        const durationMatch = treatmentOption.text.match(/\((\d+) min\)/);
-        const duration = durationMatch ? parseInt(durationMatch[1]) : 30;
-
-        // Calculate end time
-        const [hours, minutes] = selectedTime.split(':').map(Number);
-        const startTime = new Date();
-        startTime.setHours(hours, minutes, 0, 0);
-        
-        const endTime = new Date(startTime.getTime() + duration * 60000);
-        const endHours = endTime.getHours();
-        const endMinutes = endTime.getMinutes();
-        
-        const endHour12 = endHours > 12 ? endHours - 12 : (endHours === 0 ? 12 : endHours);
-        const endAmPm = endHours >= 12 ? 'PM' : 'AM';
-        
-        endTimeDisplay.textContent = `${endHour12}:${endMinutes.toString().padStart(2, '0')} ${endAmPm}`;
-      } else {
-        endTimeDisplay.textContent = '11:00 AM';
-      }
-    }
-
-    // Add event listeners
-    document.getElementById('treatment_id').addEventListener('change', updateEndTime);
-    document.getElementById('time').addEventListener('change', updateEndTime);
-
-    // Initialize end time on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      updateEndTime();
-    });
-
-    // Form validation
-    document.querySelector('.booking-form').addEventListener('submit', function(e) {
-      const requiredFields = ['treatment_id', 'date', 'time', 'phone'];
-      let isValid = true;
-
-      requiredFields.forEach(function(fieldName) {
-        const field = document.getElementById(fieldName);
-        if (!field.value.trim()) {
-          field.style.borderColor = '#dc3545';
-          isValid = false;
-        } else {
-          field.style.borderColor = '#e1e5e9';
+        // Step Navigation
+        function goToStep1() {
+            showStep(1);
         }
-      });
 
-      if (!isValid) {
-        e.preventDefault();
-        alert('Please fill in all required fields.');
-      }
-    });
-  </script>
+        function goToStep2() {
+            const date = document.getElementById('appointmentDate').value;
+            if (!date) {
+                alert('กรุณาเลือกวันที่');
+                return;
+            }
+            selectedDate = date;
+            showStep(2);
+            loadAvailableDentists(date);
+        }
+
+        function goToStep3() {
+            if (!selectedDentistId || !selectedHour) {
+                alert('กรุณาเลือกหมอฟันและเวลา');
+                return;
+            }
+            showStep(3);
+            updateSummary();
+        }
+
+        function showStep(stepNumber) {
+            // Hide all sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(`section${stepNumber}`).classList.add('active');
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active');
+                if (index + 1 === stepNumber) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        // Load available dentists
+        async function loadAvailableDentists(date) {
+            try {
+                const response = await fetch(`/patient/api/available-dentists?date=${date}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDentists(data.dentists);
+                } else {
+                    document.getElementById('dentistsList').innerHTML = 
+                        `<div class="alert alert-error">${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('dentistsList').innerHTML = 
+                    '<div class="alert alert-error">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            }
+        }
+
+        // Display dentists
+        function displayDentists(dentists) {
+            const container = document.getElementById('dentistsList');
+            
+            if (dentists.length === 0) {
+                container.innerHTML = '<div class="alert alert-error">ไม่มีหมอฟันว่างในวันที่เลือก</div>';
+                return;
+            }
+            
+            const html = `
+                <h3>เลือกหมอฟัน (${dentists.length} คน):</h3>
+                <div class="dentist-grid">
+                    ${dentists.map(dentist => `
+                        <div class="dentist-card" onclick="selectDentist(${dentist.dentist_id}, '${dentist.fname} ${dentist.lname}', '${dentist.specialty}')">
+                            <img src="/uploads/${dentist.photo || 'default-doctor.png'}" 
+                                 alt="Dr. ${dentist.fname}" class="dentist-photo">
+                            <h4>Dr. ${dentist.fname} ${dentist.lname}</h4>
+                            <p><strong>ความเชี่ยวชาญ:</strong> ${dentist.specialty}</p>
+                            <p><strong>ช่วงเวลาว่าง:</strong> ${dentist.available_slots} ช่วงเวลา</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Select dentist and load time slots
+        async function selectDentist(dentistId, dentistName, specialty) {
+            // Update selected dentist
+            selectedDentistId = dentistId;
+            selectedDentistName = dentistName;
+            selectedSpecialty = specialty;
+            
+            // Update UI
+            document.querySelectorAll('.dentist-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.dentist-card').classList.add('selected');
+            
+            // Load time slots
+            await loadTimeSlots(selectedDate, dentistId);
+            
+            // Show time slots section
+            document.getElementById('timeSlotsList').style.display = 'block';
+        }
+
+        // Load time slots
+        async function loadTimeSlots(date, dentistId) {
+            try {
+                const response = await fetch(`/patient/api/available-slots?date=${date}&dentistId=${dentistId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTimeSlots(data.slots);
+                } else {
+                    document.getElementById('timeSlotsContainer').innerHTML = 
+                        `<div class="alert alert-error">${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('timeSlotsContainer').innerHTML = 
+                    '<div class="alert alert-error">เกิดข้อผิดพลาดในการโหลดเวลาว่าง</div>';
+            }
+        }
+
+        // Display time slots
+        function displayTimeSlots(slots) {
+            const container = document.getElementById('timeSlotsContainer');
+            
+            if (slots.length === 0) {
+                container.innerHTML = '<p>ไม่มีช่วงเวลาว่าง</p>';
+                return;
+            }
+            
+            const html = slots.map(slot => `
+                <div class="time-slot" onclick="selectTimeSlot(${slot.hour}, '${slot.time_display}')">
+                    <div><strong>${slot.time_display}</strong></div>
+                    <div style="font-size: 0.8rem; color: #666;">ว่าง</div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // Select time slot
+        function selectTimeSlot(hour, timeDisplay) {
+            selectedHour = hour;
+            selectedTimeDisplay = timeDisplay;
+            
+            // Update UI
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            event.target.closest('.time-slot').classList.add('selected');
+            
+            // Enable next button
+            document.getElementById('goToStep3Btn').disabled = false;
+        }
+
+        // Update summary
+        function updateSummary() {
+            document.getElementById('summaryDate').textContent = new Date(selectedDate).toLocaleDateString('th-TH');
+            document.getElementById('summaryTime').textContent = selectedTimeDisplay;
+            document.getElementById('summaryDentist').textContent = `Dr. ${selectedDentistName}`;
+            document.getElementById('summarySpecialty').textContent = selectedSpecialty;
+        }
+
+        // Confirm booking
+        async function confirmBooking() {
+            const treatmentId = document.getElementById('treatmentSelect').value;
+            const note = document.getElementById('appointmentNote').value;
+            
+            if (!treatmentId) {
+                alert('กรุณาเลือกการรักษา');
+                return;
+            }
+            
+            const bookingData = {
+                dentistId: selectedDentistId,
+                treatmentId: treatmentId,
+                date: selectedDate,
+                hour: selectedHour,
+                note: note
+            };
+            
+            try {
+                const response = await fetch('/patient/api/book-appointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('จองนัดหมายเรียบร้อยแล้ว!');
+                    window.location.href = '/patient/dashboard';
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการจองนัดหมาย');
+            }
+        }
+
+        // Dropdown functions
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            console.log('Notifications clicked');
+        }
+        
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // Set minimum date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').min = today;
+        });
+    </script>
 </body>
 </html>
