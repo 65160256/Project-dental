@@ -1114,31 +1114,10 @@
             document.getElementById('treatmentModal').style.display = 'flex';
         }
 
-        // Show edit treatment modal
-        async function editTreatment(treatmentId) {
-            currentEditId = treatmentId;
-            
-            try {
-                const response = await fetch(`/admin/api/treatments/${treatmentId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const treatment = data.treatment;
-                    
-                    document.getElementById('treatmentModalTitle').textContent = 'Edit Treatment';
-                    document.getElementById('treatmentName').value = treatment.treatment_name;
-                    document.getElementById('treatmentDuration').value = treatment.duration;
-                    document.getElementById('saveTreatmentBtn').innerHTML = '<i class="fas fa-save"></i> Update Treatment';
-                    
-                    await populateDentistSelection(treatmentId);
-                    document.getElementById('treatmentModal').style.display = 'flex';
-                } else {
-                    throw new Error(data.error || 'Failed to load treatment details');
-                }
-            } catch (error) {
-                console.error('Error loading treatment for edit:', error);
-                showToast('Failed to load treatment details', 'error');
-            }
+        // ✅ แก้ไขฟังก์ชัน editTreatment ให้ไปหน้า edit แทนที่จะเปิด modal
+        function editTreatment(treatmentId) {
+            // Redirect to edit page instead of opening modal
+            window.location.href = `/admin/treatments/${treatmentId}/edit`;
         }
 
         // Populate dentist selection
