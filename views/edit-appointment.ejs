@@ -14,97 +14,96 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f7fa;
             min-height: 100vh;
-            padding: 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            overflow: hidden;
+            padding: 20px;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 16px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
         .back-btn {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.2);
-            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border: none;
             padding: 12px 16px;
-            border-radius: 50%;
+            border-radius: 10px;
             cursor: pointer;
+            font-size: 16px;
             transition: all 0.3s ease;
-            font-size: 18px;
         }
 
         .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-50%) scale(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .form-container {
-            padding: 40px;
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
         }
 
-        .form-grid {
+        .appointment-id {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
+            margin-bottom: 20px;
         }
 
         .form-group label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #555;
             font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .form-group label i {
-            color: #667eea;
-            width: 18px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-control {
+            width: 100%;
             padding: 12px 16px;
             border: 2px solid #e9ecef;
             border-radius: 10px;
@@ -113,54 +112,94 @@
             background: #f8f9fa;
         }
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
+        .form-control:focus {
             outline: none;
             border-color: #667eea;
             background: white;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .info-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border-left: 5px solid #667eea;
-        }
-
-        .info-card h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
-            display: flex;
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            text-decoration: none;
         }
 
-        .info-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 10px;
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(253, 121, 168, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .info-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f4;
         }
 
-        .info-item strong {
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
             color: #555;
-            min-width: 80px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
         }
 
         .status-badge {
@@ -189,70 +228,26 @@
         .action-buttons {
             display: flex;
             gap: 15px;
-            justify-content: flex-end;
-            padding-top: 30px;
-            border-top: 2px solid #e9ecef;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f3f4;
         }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 120px;
-            justify-content: center;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: #f8f9fa;
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
             color: #666;
-            border: 2px solid #e9ecef;
-        }
-
-        .btn-secondary:hover {
-            background: #e9ecef;
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #fd79a8, #e84393);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(253, 121, 168, 0.3);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
         }
 
         .loading-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e9ecef;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
         }
 
         @keyframes spin {
@@ -328,181 +323,226 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-
-            .header {
-                padding: 20px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .form-container {
-                padding: 20px;
-            }
-
-            .form-grid {
+            .main-content {
                 grid-template-columns: 1fr;
-                gap: 20px;
             }
-
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
             .action-buttons {
                 flex-direction: column;
             }
+        }
 
-            .back-btn {
-                left: 15px;
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #e17055, #d63031);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
 
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.9);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 20px;
+        .datetime-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
-        .loading-overlay .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e9ecef;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .time-slot {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .time-slot:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .time-slot.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .time-slot.unavailable {
+            background: #ffeaa7;
+            color: #856404;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
     </style>
 </head>
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>Loading data...</p>
-    </div>
-
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <button class="back-btn" onclick="goBack()">
                 <i class="fas fa-arrow-left"></i>
             </button>
             <h1>Edit Appointment</h1>
-            <p>Manage and update patient appointment details</p>
+            <div class="appointment-id" id="appointmentIdBadge">ID: Loading...</div>
         </div>
 
-        <div class="form-container">
-            <div class="alert" id="alertMessage">
-                <i class="fas fa-check-circle"></i>
-                <span></span>
-            </div>
+        <!-- Alert Messages -->
+        <div class="alert" id="alertMessage">
+            <i class="fas fa-check-circle"></i>
+            <span></span>
+        </div>
 
-            <!-- Current Appointment Info -->
-            <div class="info-card" id="currentInfo">
-                <h3><i class="fas fa-info-circle"></i> Current Appointment Information</h3>
-                <div class="info-row">
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading appointment data...</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent" style="display: none;">
+            <!-- Current Information -->
+            <div class="card">
+                <h2><i class="fas fa-info-circle"></i> Current Information</h2>
+                <div id="currentInfo">
                     <div class="info-item">
-                        <strong>Patient:</strong>
-                        <span id="currentPatient">-</span>
+                        <span class="info-label">Patient:</span>
+                        <span class="info-value" id="currentPatient">-</span>
                     </div>
                     <div class="info-item">
-                        <strong>Dentist:</strong>
-                        <span id="currentDentist">-</span>
+                        <span class="info-label">Dentist:</span>
+                        <span class="info-value" id="currentDentist">-</span>
                     </div>
                     <div class="info-item">
-                        <strong>Treatment:</strong>
-                        <span id="currentTreatment">-</span>
+                        <span class="info-label">Treatment:</span>
+                        <span class="info-value" id="currentTreatment">-</span>
                     </div>
                     <div class="info-item">
-                        <strong>Status:</strong>
-                        <span id="currentStatus" class="status-badge">-</span>
-                    </div>
-                </div>
-                <div class="info-row">
-                    <div class="info-item">
-                        <strong>Date:</strong>
-                        <span id="currentDate">-</span>
+                        <span class="info-label">Date & Time:</span>
+                        <span class="info-value" id="currentDateTime">-</span>
                     </div>
                     <div class="info-item">
-                        <strong>Time:</strong>
-                        <span id="currentTime">-</span>
+                        <span class="info-label">Status:</span>
+                        <span class="info-value">
+                            <span id="currentStatus" class="status-badge">-</span>
+                        </span>
                     </div>
                     <div class="info-item">
-                        <strong>Phone:</strong>
-                        <span id="currentPhone">-</span>
+                        <span class="info-label">Phone:</span>
+                        <span class="info-value" id="currentPhone">-</span>
                     </div>
                 </div>
             </div>
 
             <!-- Edit Form -->
-            <form id="editForm">
-                <div class="form-grid">
+            <div class="card">
+                <h2><i class="fas fa-edit"></i> Edit Details</h2>
+                <form id="editForm">
                     <div class="form-group">
-                        <label><i class="fas fa-user-md"></i> Dentist</label>
-                        <select id="dentistSelect" name="dentist_id" required>
+                        <label for="dentistSelect">Dentist</label>
+                        <select id="dentistSelect" name="dentist_id" class="form-control" required>
                             <option value="">Select Dentist</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label><i class="fas fa-tooth"></i> Treatment</label>
-                        <select id="treatmentSelect" name="treatment_id" required>
+                        <label for="treatmentSelect">Treatment</label>
+                        <select id="treatmentSelect" name="treatment_id" class="form-control" required>
                             <option value="">Select Treatment</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Date</label>
-                        <input type="date" id="appointmentDate" name="appointment_date" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-clock"></i> Time</label>
-                        <select id="timeSelect" name="appointment_time" required>
-                            <option value="">Select Time</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-info-circle"></i> Status</label>
-                        <select id="statusSelect" name="status" required>
+                        <label for="statusSelect">Status</label>
+                        <select id="statusSelect" name="status" class="form-control" required>
                             <option value="pending">Pending</option>
                             <option value="confirm">Confirmed</option>
                             <option value="cancel">Cancelled</option>
                         </select>
                     </div>
 
+                    <div class="datetime-group">
+                        <div class="form-group">
+                            <label for="appointmentDate">Date</label>
+                            <input type="date" id="appointmentDate" name="appointment_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentTime">Time</label>
+                            <input type="time" id="appointmentTime" name="appointment_time" class="form-control" required>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label><i class="fas fa-calendar-plus"></i> Next Appointment</label>
-                        <input type="date" id="nextAppointment" name="next_appointment">
+                        <label>Available Time Slots</label>
+                        <div class="time-slots" id="timeSlots">
+                            <div style="grid-column: 1 / -1; text-align: center; color: #666; padding: 20px;">
+                                Select a date and dentist to view available times
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group full-width">
-                        <label><i class="fas fa-notes-medical"></i> Diagnosis/Notes</label>
-                        <textarea id="diagnosis" name="diagnosis" placeholder="Enter diagnosis or additional notes..."></textarea>
+                    <div class="form-group">
+                        <label for="diagnosis">Diagnosis/Notes</label>
+                        <textarea id="diagnosis" name="diagnosis" class="form-control" rows="3" placeholder="Enter diagnosis or notes..."></textarea>
                     </div>
-                </div>
 
-                <div class="action-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="goBack()">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="deleteAppointment()">
-                        <i class="fas fa-trash"></i> Delete Appointment
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label for="nextAppointment">Next Appointment (Optional)</label>
+                        <input type="date" id="nextAppointment" name="next_appointment" class="form-control">
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="deleteAppointment()">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        <button type="submit" class="btn btn-success" id="saveBtn">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -524,11 +564,11 @@
         // Global variables
         let appointmentId = null;
         let currentAppointmentData = null;
-        let availableTimeSlots = [];
+        let dentistsData = [];
+        let treatmentsData = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Get appointment ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             appointmentId = urlParams.get('id');
             
@@ -538,6 +578,7 @@
                 return;
             }
 
+            document.getElementById('appointmentIdBadge').textContent = `ID: ${appointmentId}`;
             initializePage();
         });
 
@@ -554,9 +595,10 @@
                 
                 setupEventListeners();
                 showLoading(false);
+                document.getElementById('mainContent').style.display = 'grid';
             } catch (error) {
                 console.error('Error initializing page:', error);
-                showAlert('Error loading data', 'error');
+                showAlert('Error loading data: ' + error.message, 'error');
                 showLoading(false);
             }
         }
@@ -567,20 +609,21 @@
                 const response = await fetch(`/admin/api/appointments/${appointmentId}`);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`Failed to load appointment (${response.status}): ${errorText}`);
                 }
                 
                 const data = await response.json();
                 
                 if (data.success) {
                     currentAppointmentData = data.appointment;
-                    populateCurrentInfo(currentAppointmentData);
-                    populateForm(currentAppointmentData);
+                    populateCurrentInfo();
+                    populateForm();
                 } else {
                     throw new Error(data.error || 'Failed to load appointment data');
                 }
             } catch (error) {
-                console.error('Error loading appointment data:', error);
+                console.error('Error loading appointment:', error);
                 throw error;
             }
         }
@@ -592,15 +635,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    const select = document.getElementById('dentistSelect');
-                    select.innerHTML = '<option value="">Select Dentist</option>';
-                    
-                    data.dentists.forEach(dentist => {
-                        const option = document.createElement('option');
-                        option.value = dentist.dentist_id;
-                        option.textContent = `Dr. ${dentist.fname} ${dentist.lname} - ${dentist.specialty}`;
-                        select.appendChild(option);
-                    });
+                    dentistsData = data.dentists;
+                    populateDentistSelect();
+                } else {
+                    throw new Error('Failed to load dentists');
                 }
             } catch (error) {
                 console.error('Error loading dentists:', error);
@@ -615,15 +653,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    const select = document.getElementById('treatmentSelect');
-                    select.innerHTML = '<option value="">Select Treatment</option>';
-                    
-                    data.treatments.forEach(treatment => {
-                        const option = document.createElement('option');
-                        option.value = treatment.treatment_id;
-                        option.textContent = `${treatment.treatment_name} (${treatment.duration} minutes)`;
-                        select.appendChild(option);
-                    });
+                    treatmentsData = data.treatments;
+                    populateTreatmentSelect();
+                } else {
+                    throw new Error('Failed to load treatments');
                 }
             } catch (error) {
                 console.error('Error loading treatments:', error);
@@ -631,140 +664,91 @@
             }
         }
 
-        // Populate current info display
-        function populateCurrentInfo(appointment) {
-            document.getElementById('currentPatient').textContent = appointment.patient_name || 'N/A';
-            document.getElementById('currentDentist').textContent = `Dr. ${appointment.dentist_name}` || 'N/A';
-            document.getElementById('currentTreatment').textContent = appointment.treatment_name || 'N/A';
-            document.getElementById('currentPhone').textContent = appointment.phone || 'N/A';
+        // Populate current information display
+        function populateCurrentInfo() {
+            if (!currentAppointmentData) return;
+
+            const apt = currentAppointmentData;
+            
+            document.getElementById('currentPatient').textContent = apt.patient_name || 'N/A';
+            document.getElementById('currentDentist').textContent = `Dr. ${apt.dentist_name}` || 'N/A';
+            document.getElementById('currentTreatment').textContent = apt.treatment_name || 'N/A';
+            document.getElementById('currentPhone').textContent = apt.phone || 'N/A';
             
             // Format date and time
-            if (appointment.time) {
-                const appointmentDate = new Date(appointment.time);
-                document.getElementById('currentDate').textContent = appointmentDate.toLocaleDateString('en-US');
-                document.getElementById('currentTime').textContent = appointmentDate.toLocaleTimeString('en-US', {
+            if (apt.time) {
+                const date = new Date(apt.time);
+                const formatted = date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                 });
+                document.getElementById('currentDateTime').textContent = formatted;
             }
             
             // Status badge
             const statusElement = document.getElementById('currentStatus');
-            const statusText = appointment.queue_status === 'pending' ? 'Pending' : 
-                             appointment.queue_status === 'confirm' ? 'Confirmed' : 'Cancelled';
+            const statusText = apt.queue_status.charAt(0).toUpperCase() + apt.queue_status.slice(1);
             statusElement.textContent = statusText;
-            statusElement.className = `status-badge status-${appointment.queue_status}`;
+            statusElement.className = `status-badge status-${apt.queue_status}`;
+        }
+
+        // Populate dentist select
+        function populateDentistSelect() {
+            const select = document.getElementById('dentistSelect');
+            select.innerHTML = '<option value="">Select Dentist</option>';
+            
+            dentistsData.forEach(dentist => {
+                const option = document.createElement('option');
+                option.value = dentist.dentist_id;
+                option.textContent = `Dr. ${dentist.fname} ${dentist.lname} - ${dentist.specialty}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Populate treatment select
+        function populateTreatmentSelect() {
+            const select = document.getElementById('treatmentSelect');
+            select.innerHTML = '<option value="">Select Treatment</option>';
+            
+            treatmentsData.forEach(treatment => {
+                const option = document.createElement('option');
+                option.value = treatment.treatment_id;
+                option.textContent = `${treatment.treatment_name} (${treatment.duration} min)`;
+                select.appendChild(option);
+            });
         }
 
         // Populate form with current data
-        function populateForm(appointment) {
-            // Set dentist
-            document.getElementById('dentistSelect').value = appointment.dentist_id || '';
+        function populateForm() {
+            if (!currentAppointmentData) return;
+
+            const apt = currentAppointmentData;
             
-            // Set treatment
-            document.getElementById('treatmentSelect').value = appointment.treatment_id || '';
+            // Set form values
+            document.getElementById('dentistSelect').value = apt.dentist_id || '';
+            document.getElementById('treatmentSelect').value = apt.treatment_id || '';
+            document.getElementById('statusSelect').value = apt.queue_status || 'pending';
+            document.getElementById('diagnosis').value = apt.diagnosis || '';
             
-            // Set status
-            document.getElementById('statusSelect').value = appointment.queue_status || 'pending';
-            
-            // Set diagnosis
-            document.getElementById('diagnosis').value = appointment.diagnosis || '';
-            
-            // Set next appointment
-            if (appointment.next_appointment) {
-                document.getElementById('nextAppointment').value = appointment.next_appointment;
+            if (apt.next_appointment) {
+                document.getElementById('nextAppointment').value = apt.next_appointment;
             }
             
             // Set date and time
-            if (appointment.time) {
-                const appointmentDate = new Date(appointment.time);
-                document.getElementById('appointmentDate').value = appointmentDate.toISOString().split('T')[0];
-                
-                // Load available time slots for the current date
-                loadTimeSlots(appointmentDate.toISOString().split('T')[0], appointment.dentist_id);
-            }
-        }
-
-        // Load available time slots
-        async function loadTimeSlots(date, dentistId) {
-            if (!date || !dentistId) return;
-            
-            try {
-                const response = await fetch(`/admin/api/dentists/${dentistId}/schedule?date=${date}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    populateTimeSlots(data.timeSlots || []);
-                } else {
-                    // Fallback to default time slots
-                    populateDefaultTimeSlots();
-                }
-            } catch (error) {
-                console.error('Error loading time slots:', error);
-                populateDefaultTimeSlots();
-            }
-        }
-
-        // Populate time slots
-        function populateTimeSlots(timeSlots) {
-            const select = document.getElementById('timeSelect');
-            select.innerHTML = '<option value="">Select Time</option>';
-            
-            // If no time slots provided, use default
-            if (timeSlots.length === 0) {
-                populateDefaultTimeSlots();
-                return;
+            if (apt.time) {
+                const date = new Date(apt.time);
+                document.getElementById('appointmentDate').value = date.toISOString().split('T')[0];
+                document.getElementById('appointmentTime').value = date.toTimeString().substr(0, 5);
             }
             
-            timeSlots.forEach(slot => {
-                const option = document.createElement('option');
-                option.value = slot.time;
-                option.textContent = `${slot.time} ${slot.available ? '' : '(Unavailable)'}`;
-                if (!slot.available && slot.time !== getCurrentTimeValue()) {
-                    option.disabled = true;
-                }
-                select.appendChild(option);
-            });
-            
-            // Set current time if it exists
-            if (currentAppointmentData && currentAppointmentData.time) {
-                const currentTime = new Date(currentAppointmentData.time);
-                const timeString = currentTime.toTimeString().substr(0, 5);
-                select.value = timeString;
+            // Load time slots if dentist and date are set
+            if (apt.dentist_id && apt.time) {
+                loadTimeSlots();
             }
-        }
-
-        // Populate default time slots
-        function populateDefaultTimeSlots() {
-            const select = document.getElementById('timeSelect');
-            select.innerHTML = '<option value="">Select Time</option>';
-            
-            // Generate time slots from 8:00 to 18:00
-            for (let hour = 8; hour <= 18; hour++) {
-                for (let minute = 0; minute < 60; minute += 30) {
-                    const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const option = document.createElement('option');
-                    option.value = timeString;
-                    option.textContent = timeString;
-                    select.appendChild(option);
-                }
-            }
-            
-            // Set current time if it exists
-            if (currentAppointmentData && currentAppointmentData.time) {
-                const currentTime = new Date(currentAppointmentData.time);
-                const timeString = currentTime.toTimeString().substr(0, 5);
-                select.value = timeString;
-            }
-        }
-
-        // Get current time value
-        function getCurrentTimeValue() {
-            if (currentAppointmentData && currentAppointmentData.time) {
-                const currentTime = new Date(currentAppointmentData.time);
-                return currentTime.toTimeString().substr(0, 5);
-            }
-            return null;
         }
 
         // Setup event listeners
@@ -772,21 +756,103 @@
             // Form submission
             document.getElementById('editForm').addEventListener('submit', handleFormSubmit);
             
-            // Dentist change - reload time slots
-            document.getElementById('dentistSelect').addEventListener('change', function() {
-                const date = document.getElementById('appointmentDate').value;
-                if (date && this.value) {
-                    loadTimeSlots(date, this.value);
+            // Date/dentist change - reload time slots
+            document.getElementById('appointmentDate').addEventListener('change', loadTimeSlots);
+            document.getElementById('dentistSelect').addEventListener('change', loadTimeSlots);
+        }
+
+        // Load time slots
+        async function loadTimeSlots() {
+            const date = document.getElementById('appointmentDate').value;
+            const dentistId = document.getElementById('dentistSelect').value;
+            
+            const container = document.getElementById('timeSlots');
+            
+            if (!date || !dentistId) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #666; padding: 20px;">Select a date and dentist to view available times</div>';
+                return;
+            }
+
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #666; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const response = await fetch(`/admin/api/dentists/${dentistId}/schedule?date=${date}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    renderTimeSlots(data.timeSlots || []);
+                } else {
+                    renderDefaultTimeSlots();
                 }
+            } catch (error) {
+                console.error('Error loading time slots:', error);
+                renderDefaultTimeSlots();
+            }
+        }
+
+        // Render time slots
+        function renderTimeSlots(timeSlots) {
+            const container = document.getElementById('timeSlots');
+            
+            if (timeSlots.length === 0) {
+                renderDefaultTimeSlots();
+                return;
+            }
+
+            let slotsHTML = '';
+            timeSlots.forEach(slot => {
+                const currentTime = document.getElementById('appointmentTime').value;
+                const isSelected = slot.time === currentTime;
+                const statusClass = isSelected ? 'selected' : (slot.available ? '' : 'unavailable');
+                
+                slotsHTML += `
+                    <div class="time-slot ${statusClass}" 
+                         onclick="${slot.available || isSelected ? `selectTimeSlot('${slot.time}')` : ''}"
+                         data-time="${slot.time}">
+                        ${slot.time}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = slotsHTML;
+        }
+
+        // Render default time slots
+        function renderDefaultTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            let slotsHTML = '';
+
+            for (let hour = 8; hour <= 18; hour++) {
+                const timeValue = `${hour.toString().padStart(2, '0')}:00`;
+                const currentTime = document.getElementById('appointmentTime').value;
+                const isSelected = timeValue === currentTime;
+                
+                slotsHTML += `
+                    <div class="time-slot ${isSelected ? 'selected' : ''}" 
+                         onclick="selectTimeSlot('${timeValue}')"
+                         data-time="${timeValue}">
+                        ${timeValue}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = slotsHTML;
+        }
+
+        // Select time slot
+        function selectTimeSlot(time) {
+            // Update time input
+            document.getElementById('appointmentTime').value = time;
+            
+            // Update visual selection
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
             });
             
-            // Date change - reload time slots
-            document.getElementById('appointmentDate').addEventListener('change', function() {
-                const dentistId = document.getElementById('dentistSelect').value;
-                if (this.value && dentistId) {
-                    loadTimeSlots(this.value, dentistId);
-                }
-            });
+            const selectedSlot = document.querySelector(`[data-time="${time}"]`);
+            if (selectedSlot) {
+                selectedSlot.classList.add('selected');
+            }
         }
 
         // Handle form submission
@@ -798,30 +864,30 @@
             
             // Disable button and show loading
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '<div class="loading-spinner"></div> Saving...';
-            
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
             try {
                 const formData = new FormData(event.target);
+                
+                // Combine date and time
+                const date = formData.get('appointment_date');
+                const time = formData.get('appointment_time');
+                const datetime = `${date}T${time}:00`;
+                
                 const appointmentData = {
                     dentist_id: formData.get('dentist_id'),
                     treatment_id: formData.get('treatment_id'),
-                    appointment_date: formData.get('appointment_date'),
-                    appointment_time: formData.get('appointment_time'),
+                    appointment_datetime: datetime,
                     status: formData.get('status'),
-                    diagnosis: formData.get('diagnosis'),
+                    diagnosis: formData.get('diagnosis') || null,
                     next_appointment: formData.get('next_appointment') || null
                 };
-                
+
                 // Validate required fields
-                if (!appointmentData.dentist_id || !appointmentData.treatment_id || 
-                    !appointmentData.appointment_date || !appointmentData.appointment_time) {
+                if (!appointmentData.dentist_id || !appointmentData.treatment_id || !date || !time) {
                     throw new Error('Please fill in all required fields');
                 }
-                
-                // Combine date and time
-                const dateTimeString = `${appointmentData.appointment_date}T${appointmentData.appointment_time}:00`;
-                appointmentData.appointment_datetime = dateTimeString;
-                
+
                 const response = await fetch(`/admin/api/appointments/${appointmentId}`, {
                     method: 'PUT',
                     headers: {
@@ -829,25 +895,30 @@
                     },
                     body: JSON.stringify(appointmentData)
                 });
-                
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
                 const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    showAlert('Changes saved successfully', 'success');
+
+                if (result.success) {
+                    showAlert('Appointment updated successfully!', 'success');
                     
-                    // Update current info display
+                    // Reload appointment data
                     await loadAppointmentData();
                     
-                    // Redirect back after short delay
+                    // Redirect after delay
                     setTimeout(() => {
                         goBack();
-                    }, 1500);
+                    }, 2000);
                 } else {
-                    throw new Error(result.error || 'Failed to save changes');
+                    throw new Error(result.error || 'Failed to update appointment');
                 }
-                
+
             } catch (error) {
-                console.error('Error saving appointment:', error);
+                console.error('Error updating appointment:', error);
                 showAlert(error.message, 'error');
             } finally {
                 // Restore button
@@ -877,10 +948,15 @@
                 const response = await fetch(`/admin/api/appointments/${appointmentId}`, {
                     method: 'DELETE'
                 });
-                
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
                 const result = await response.json();
                 
-                if (response.ok && result.success) {
+                if (result.success) {
                     showAlert('Appointment deleted successfully', 'success');
                     setTimeout(() => {
                         goBack();
@@ -892,14 +968,13 @@
             } catch (error) {
                 console.error('Error deleting appointment:', error);
                 showAlert(error.message, 'error');
-            } finally {
                 showLoading(false);
             }
         }
 
-        // Go back to previous page
+        // Go back to appointments list
         function goBack() {
-            if (document.referrer) {
+            if (document.referrer && document.referrer.includes('/admin/appointments')) {
                 window.history.back();
             } else {
                 window.location.href = '/admin/appointments';
@@ -908,97 +983,42 @@
 
         // Show loading overlay
         function showLoading(show) {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = show ? 'flex' : 'none';
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('mainContent').style.display = show ? 'none' : 'grid';
         }
 
         // Show alert message
         function showAlert(message, type = 'info') {
-            const alert = document.getElementById('alertMessage');
-            const span = alert.querySelector('span');
-            const icon = alert.querySelector('i');
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
             
-            // Update content
-            span.textContent = message;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
             
-            // Update classes
-            alert.className = `alert ${type}`;
+            document.body.appendChild(toast);
             
-            // Update icon
-            switch(type) {
-                case 'success':
-                    icon.className = 'fas fa-check-circle';
-                    break;
-                case 'error':
-                    icon.className = 'fas fa-exclamation-circle';
-                    break;
-                case 'info':
-                default:
-                    icon.className = 'fas fa-info-circle';
-                    break;
-            }
-            
-            // Show alert
-            alert.style.display = 'flex';
-            
-            // Auto hide after 5 seconds
+            // Auto remove after 4 seconds
             setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-        }
-
-        // Validate form before submission
-        function validateForm() {
-            const requiredFields = [
-                { id: 'dentistSelect', name: 'Dentist' },
-                { id: 'treatmentSelect', name: 'Treatment' },
-                { id: 'appointmentDate', name: 'Date' },
-                { id: 'timeSelect', name: 'Time' }
-            ];
-            
-            for (let field of requiredFields) {
-                const element = document.getElementById(field.id);
-                if (!element.value) {
-                    showAlert(`Please select ${field.name}`, 'error');
-                    element.focus();
-                    return false;
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.remove();
+                        }
+                    }, 300);
                 }
-            }
-            
-            // Validate date is not in the past
-            const selectedDate = new Date(document.getElementById('appointmentDate').value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (selectedDate < today) {
-                showAlert('Cannot select a date in the past', 'error');
-                document.getElementById('appointmentDate').focus();
-                return false;
-            }
-            
-            return true;
+            }, 4000);
         }
 
-        // Handle network errors
-        window.addEventListener('online', () => {
-            showAlert('Internet connection restored', 'success');
-        });
-
-        window.addEventListener('offline', () => {
-            showAlert('Internet connection lost', 'error');
-        });
-
-        // Keyboard shortcuts
+        // Handle keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            // Ctrl+S to save
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                if (validateForm()) {
-                    document.getElementById('editForm').dispatchEvent(new Event('submit'));
-                }
-            }
-            
-            // Escape to cancel
+            // Escape to close modals or go back
             if (e.key === 'Escape') {
                 const modal = document.getElementById('deleteModal');
                 if (modal.style.display === 'flex') {
@@ -1007,6 +1027,94 @@
                     goBack();
                 }
             }
+            
+            // Ctrl+S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('editForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Auto-save draft functionality
+        let autoSaveTimeout;
+        function setupAutoSave() {
+            const formElements = document.querySelectorAll('#editForm input, #editForm select, #editForm textarea');
+            
+            formElements.forEach(element => {
+                element.addEventListener('change', () => {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(saveDraft, 2000);
+                });
+            });
+        }
+
+        function saveDraft() {
+            if (!appointmentId) return;
+            
+            const formData = new FormData(document.getElementById('editForm'));
+            const draftData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                draftData[key] = value;
+            }
+            
+            try {
+                localStorage.setItem(`appointment_draft_${appointmentId}`, JSON.stringify(draftData));
+                console.log('Draft saved automatically');
+            } catch (error) {
+                console.warn('Could not save draft:', error);
+            }
+        }
+
+        function loadDraft() {
+            if (!appointmentId) return;
+            
+            try {
+                const draftData = localStorage.getItem(`appointment_draft_${appointmentId}`);
+                if (draftData) {
+                    const data = JSON.parse(draftData);
+                    
+                    Object.keys(data).forEach(key => {
+                        const element = document.querySelector(`[name="${key}"]`);
+                        if (element && data[key]) {
+                            element.value = data[key];
+                        }
+                    });
+                    
+                    showAlert('Draft data loaded', 'info');
+                }
+            } catch (error) {
+                console.warn('Could not load draft:', error);
+            }
+        }
+
+        function clearDraft() {
+            if (appointmentId) {
+                try {
+                    localStorage.removeItem(`appointment_draft_${appointmentId}`);
+                } catch (error) {
+                    console.warn('Could not clear draft:', error);
+                }
+            }
+        }
+
+        // Initialize auto-save after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(setupAutoSave, 1000);
+        });
+
+        // Clear draft after successful save
+        window.addEventListener('beforeunload', function() {
+            // Don't clear draft on page unload in case user wants to come back
+        });
+
+        // Handle online/offline status
+        window.addEventListener('online', () => {
+            showAlert('Connection restored', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showAlert('Connection lost - Working offline', 'error');
         });
     </script>
 </body>

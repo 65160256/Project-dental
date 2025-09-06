@@ -2075,6 +2075,10 @@ exports.getAppointmentById = async (req, res) => {
 
 // Update appointment details
 exports.updateAppointment = async (req, res) => {
+  console.log('=== UPDATE APPOINTMENT START ===');
+  console.log('Appointment ID:', req.params.id);
+  console.log('Request body:', req.body);
+
   try {
     const { id } = req.params;
     const { 
@@ -2086,255 +2090,147 @@ exports.updateAppointment = async (req, res) => {
       next_appointment 
     } = req.body;
 
-    // Validate required fields
-    if (!dentist_id || !treatment_id || !appointment_datetime) {
+    // Basic validation
+    if (!id || !dentist_id || !treatment_id || !appointment_datetime) {
+      console.log('❌ Validation failed - missing required fields');
       return res.status(400).json({
         success: false,
-        error: 'ข้อมูลไม่ครบถ้วน: ต้องระบุแพทย์, การรักษา และวันเวลานัด'
-      });
-    }
-
-    // Validate appointment datetime
-    const appointmentDate = new Date(appointment_datetime);
-    if (isNaN(appointmentDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        error: 'รูปแบบวันที่เวลาไม่ถูกต้อง'
+        error: 'Missing required fields'
       });
     }
 
     // Check if appointment exists
+    console.log('🔍 Checking if appointment exists...');
     const [existingAppointment] = await db.execute(`
       SELECT 
-        q.*, 
+        q.*,
         CONCAT(p.fname, ' ', p.lname) as patient_name,
-        p.phone as patient_phone,
-        u.email as patient_email
+        p.phone as patient_phone
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      LEFT JOIN user u ON p.user_id = u.user_id
       WHERE q.queue_id = ?
     `, [id]);
 
     if (existingAppointment.length === 0) {
+      console.log('❌ Appointment not found');
       return res.status(404).json({
         success: false,
-        error: 'ไม่พบการจองที่ระบุ'
+        error: 'Appointment not found'
       });
     }
 
+    console.log('✅ Appointment found:', existingAppointment[0]);
     const currentAppointment = existingAppointment[0];
-    const oldStatus = currentAppointment.queue_status;
 
-    // Check if the new time slot is available (except for current appointment)
-    const [conflictingAppointments] = await db.execute(`
-      SELECT COUNT(*) as count 
-      FROM queue 
-      WHERE dentist_id = ? 
-      AND time = ? 
-      AND queue_status IN ('pending', 'confirm')
-      AND queue_id != ?
-    `, [dentist_id, appointment_datetime, id]);
+    // Simple update query
+    console.log('📝 Updating appointment...');
+    const [updateResult] = await db.execute(`
+      UPDATE queue 
+      SET dentist_id = ?, 
+          treatment_id = ?, 
+          time = ?, 
+          queue_status = ?, 
+          diagnosis = ?, 
+          next_appointment = ?
+      WHERE queue_id = ?
+    `, [
+      dentist_id, 
+      treatment_id, 
+      appointment_datetime, 
+      status || 'pending', 
+      diagnosis || null, 
+      next_appointment || null, 
+      id
+    ]);
 
-    if (conflictingAppointments[0].count > 0) {
+    console.log('📊 Update result:', updateResult);
+
+    if (updateResult.affectedRows === 0) {
+      console.log('❌ No rows affected');
       return res.status(400).json({
         success: false,
-        error: 'เวลานัดนี้มีการจองแล้ว กรุณาเลือกเวลาอื่น'
+        error: 'No changes were made'
       });
     }
 
-    // Validate dentist availability (check schedule)
-    const appointmentDateOnly = appointmentDate.toISOString().split('T')[0];
-    const appointmentHour = appointmentDate.getHours();
-
-    const [scheduleCheck] = await db.execute(`
-      SELECT COUNT(*) as available_count
-      FROM dentist_schedule 
-      WHERE dentist_id = ? 
-      AND schedule_date = ? 
-      AND hour = ? 
-      AND status = 'working'
-    `, [dentist_id, appointmentDateOnly, appointmentHour]);
-
-    if (scheduleCheck[0].available_count === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'แพทย์ไม่สามารถให้บริการในเวลาที่เลือกได้'
-      });
-    }
-
-    // Start transaction
-    await db.query('START TRANSACTION');
-
-    try {
-      // Update queue table
-      await db.execute(`
-        UPDATE queue 
-        SET dentist_id = ?, 
-            treatment_id = ?, 
-            time = ?, 
-            queue_status = ?, 
-            diagnosis = ?, 
-            next_appointment = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE queue_id = ?
-      `, [
-        dentist_id, 
-        treatment_id, 
-        appointment_datetime, 
-        status || 'pending', 
-        diagnosis || null, 
-        next_appointment || null, 
-        id
-      ]);
-
-      // Update queuedetail table if it exists
-      if (currentAppointment.queuedetail_id) {
+    // Try to update queuedetail if it exists
+    if (currentAppointment.queuedetail_id) {
+      try {
+        const appointmentDate = new Date(appointment_datetime).toISOString().split('T')[0];
         await db.execute(`
           UPDATE queuedetail 
           SET dentist_id = ?, 
               treatment_id = ?, 
               date = ?
           WHERE queuedetail_id = ?
-        `, [
-          dentist_id, 
-          treatment_id, 
-          appointmentDateOnly, 
-          currentAppointment.queuedetail_id
-        ]);
+        `, [dentist_id, treatment_id, appointmentDate, currentAppointment.queuedetail_id]);
+        console.log('✅ QueueDetail updated');
+      } catch (queueDetailError) {
+        console.log('⚠️ QueueDetail update failed (but continuing):', queueDetailError.message);
       }
-
-      // Get updated appointment details for notification
-      const [updatedAppointment] = await db.execute(`
-        SELECT 
-          q.*,
-          CONCAT(p.fname, ' ', p.lname) as patient_name,
-          CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          d.specialty as dentist_specialty,
-          t.treatment_name,
-          t.duration as treatment_duration
-        FROM queue q
-        JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.queue_id = ?
-      `, [id]);
-
-      const appointment = updatedAppointment[0];
-
-      // Create notification for appointment update
-      let notificationMessage = `การจองของคุณได้รับการอัปเดต:\n`;
-      notificationMessage += `แพทย์: Dr. ${appointment.dentist_name}\n`;
-      notificationMessage += `การรักษา: ${appointment.treatment_name}\n`;
-      notificationMessage += `วันที่: ${new Date(appointment.time).toLocaleDateString('th-TH')}\n`;
-      notificationMessage += `เวลา: ${new Date(appointment.time).toLocaleTimeString('th-TH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })}`;
-
-      // Insert notification for patient
-      await db.execute(`
-        INSERT INTO notifications (
-          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-      `, [
-        'appointment_updated',
-        'การจองได้รับการอัปเดต',
-        notificationMessage,
-        id,
-        dentist_id,
-        currentAppointment.patient_id
-      ]);
-
-      // If status changed, create additional notification
-      if (status && status !== oldStatus) {
-        let statusNotificationTitle = '';
-        let statusNotificationMessage = '';
-
-        if (status === 'confirm' && oldStatus !== 'confirm') {
-          statusNotificationTitle = 'การจองได้รับการยืนยัน';
-          statusNotificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ได้รับการยืนยันแล้ว`;
-        } else if (status === 'cancel') {
-          statusNotificationTitle = 'การจองถูกยกเลิก';
-          statusNotificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ถูกยกเลิก`;
-        }
-
-        if (statusNotificationTitle) {
-          await db.execute(`
-            INSERT INTO notifications (
-              type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-          `, [
-            status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
-            statusNotificationTitle,
-            statusNotificationMessage,
-            id,
-            dentist_id,
-            currentAppointment.patient_id
-          ]);
-        }
-      }
-
-      // Create admin log notification
-      await db.execute(`
-        INSERT INTO notifications (
-          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-      `, [
-        'admin_action',
-        'แก้ไขการจองโดยแอดมิน',
-        `แอดมินได้แก้ไขการจองของ ${currentAppointment.patient_name}`,
-        id,
-        dentist_id,
-        currentAppointment.patient_id
-      ]);
-
-      // Send email notification if patient has email
-      if (currentAppointment.patient_email) {
-        try {
-          await sendAppointmentUpdateEmail(
-            currentAppointment.patient_email,
-            appointment,
-            oldStatus,
-            status
-          );
-        } catch (emailError) {
-          console.error('Failed to send email notification:', emailError);
-        }
-      }
-
-      // Commit transaction
-      await db.query('COMMIT');
-
-      // Log the action
-      console.log(`[AUDIT] Admin updated appointment ${id}. Patient: ${currentAppointment.patient_name}, New time: ${appointment_datetime}`);
-
-      res.json({
-        success: true,
-        message: 'อัปเดตการจองเรียบร้อยแล้ว',
-        appointment: {
-          queue_id: id,
-          patient_name: appointment.patient_name,
-          dentist_name: appointment.dentist_name,
-          treatment_name: appointment.treatment_name,
-          appointment_time: appointment.time,
-          status: appointment.queue_status,
-          old_status: oldStatus
-        }
-      });
-
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
     }
 
+    // Create a simple notification
+    try {
+      await db.execute(`
+        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+      `, [
+        'appointment_updated',
+        'Appointment Updated',
+        `Appointment updated for ${currentAppointment.patient_name}`,
+        id,
+        dentist_id,
+        currentAppointment.patient_id
+      ]);
+      console.log('✅ Notification created');
+    } catch (notificationError) {
+      console.log('⚠️ Notification creation failed (but continuing):', notificationError.message);
+    }
+
+    // Get updated appointment data
+    const [updatedAppointment] = await db.execute(`
+      SELECT 
+        q.*,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        t.treatment_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE q.queue_id = ?
+    `, [id]);
+
+    console.log('✅ Update successful');
+    
+    res.json({
+      success: true,
+      message: 'Appointment updated successfully',
+      appointment: updatedAppointment[0] || {
+        queue_id: id,
+        patient_name: currentAppointment.patient_name,
+        status: status || 'pending'
+      }
+    });
+
   } catch (error) {
-    console.error('Error updating appointment:', error);
+    console.error('❌ ERROR in updateAppointment:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sql: error.sql,
+      stack: error.stack
+    });
+    
     res.status(500).json({
       success: false,
-      error: 'เกิดข้อผิดพลาดในการอัปเดตการจอง',
+      error: 'Failed to update appointment',
       details: error.message
     });
+  } finally {
+    console.log('=== UPDATE APPOINTMENT END ===');
   }
 };
 
@@ -2478,7 +2374,7 @@ exports.validateAppointmentTime = async (req, res) => {
     if (!dentist_id || !appointment_datetime) {
       return res.status(400).json({
         success: false,
-        error: 'ต้องระบุแพทย์และเวลานัด'
+        error: 'Dentist ID and appointment datetime are required'
       });
     }
 
@@ -2509,7 +2405,7 @@ exports.validateAppointmentTime = async (req, res) => {
     console.error('Error validating appointment time:', error);
     res.status(500).json({
       success: false,
-      error: 'ไม่สามารถตรวจสอบเวลานัดได้',
+      error: 'Failed to validate appointment time',
       details: error.message
     });
   }
@@ -3847,5 +3743,233 @@ exports.showEditAppointmentForm = async (req, res) => {
     console.error('Error loading edit appointment page:', error);
     req.flash('error', 'Error loading appointment');
     res.redirect('/admin/appointments');
+  }
+};
+
+// Show add appointment form
+exports.showAddAppointmentForm = async (req, res) => {
+  try {
+    res.render('add-appointment', { 
+      title: 'Book New Appointment - Smile Clinic'
+    });
+  } catch (error) {
+    console.error('Error loading add appointment page:', error);
+    req.flash('error', 'Error loading appointment booking page');
+    res.redirect('/admin/appointments');
+  }
+};
+
+// Create new appointment (API)
+exports.createAppointmentAPI = async (req, res) => {
+  try {
+    const { 
+      patient_id, 
+      treatment_id, 
+      dentist_id, 
+      appointment_time, 
+      notes 
+    } = req.body;
+
+    // Validate required fields
+    if (!patient_id || !treatment_id || !dentist_id || !appointment_time) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: patient_id, treatment_id, dentist_id, appointment_time'
+      });
+    }
+
+    // Parse appointment time
+    const appointmentDate = new Date(appointment_time);
+    const dateStr = appointmentDate.toISOString().split('T')[0];
+    const hour = appointmentDate.getHours();
+
+    // Check if dentist is available at the requested time
+    const [scheduleCheck] = await db.execute(`
+      SELECT COUNT(*) as schedule_exists
+      FROM dentist_schedule 
+      WHERE dentist_id = ? AND schedule_date = ? AND hour = ? AND status = 'working'
+    `, [dentist_id, dateStr, hour]);
+
+    if (scheduleCheck[0].schedule_exists === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dentist is not available at the requested time'
+      });
+    }
+
+    // Check for existing appointments at the same time
+    const [existingAppointment] = await db.execute(`
+      SELECT COUNT(*) as appointment_exists
+      FROM queue 
+      WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
+    `, [dentist_id, appointment_time]);
+
+    if (existingAppointment[0].appointment_exists > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Time slot is already booked'
+      });
+    }
+
+    // Start transaction
+    await db.query('START TRANSACTION');
+
+    try {
+      // Create queuedetail first
+      const [queueDetailResult] = await db.execute(`
+        INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `, [patient_id, treatment_id, dentist_id, dateStr]);
+
+      const queueDetailId = queueDetailResult.insertId;
+
+      // Create queue entry
+      const [queueResult] = await db.execute(`
+        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?)
+      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time, notes || null]);
+
+      const queueId = queueResult.insertId;
+
+      // Commit transaction
+      await db.query('COMMIT');
+
+      // Get appointment details for response
+      const [appointmentDetails] = await db.execute(`
+        SELECT 
+          q.queue_id,
+          q.time,
+          q.queue_status,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          t.treatment_name
+        FROM queue q
+        JOIN patient p ON q.patient_id = p.patient_id
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        WHERE q.queue_id = ?
+      `, [queueId]);
+
+      // Create success notification
+      try {
+        await db.execute(`
+          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        `, [
+          'appointment',
+          'New Appointment Created',
+          `New appointment created for ${appointmentDetails[0].patient_name} with Dr. ${appointmentDetails[0].dentist_name}`,
+          queueId,
+          dentist_id,
+          patient_id
+        ]);
+      } catch (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+        // Don't fail the entire operation if notification fails
+      }
+
+      res.json({
+        success: true,
+        message: 'Appointment created successfully',
+        appointment: {
+          id: queueId,
+          time: appointment_time,
+          patient_name: appointmentDetails[0].patient_name,
+          dentist_name: appointmentDetails[0].dentist_name,
+          treatment_name: appointmentDetails[0].treatment_name,
+          status: 'pending'
+        }
+      });
+
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create appointment: ' + error.message
+    });
+  }
+};
+
+// Get dentist schedule API
+exports.getDentistScheduleAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: 'Date parameter is required'
+      });
+    }
+
+    // Get dentist schedule for the specified date
+    const [scheduleData] = await db.execute(`
+      SELECT 
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        COUNT(q.queue_id) as booked_count
+      FROM dentist_schedule ds
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      WHERE ds.dentist_id = ? 
+        AND ds.schedule_date = ?
+        AND ds.status = 'working'
+      GROUP BY ds.hour, ds.start_time, ds.end_time, ds.status
+      ORDER BY ds.hour
+    `, [id, date]);
+
+    // Generate time slots based on schedule
+    const timeSlots = [];
+    
+    if (scheduleData.length === 0) {
+      // If no schedule found, generate default working hours (10 AM - 8 PM)
+      for (let hour = 10; hour <= 20; hour++) {
+        const timeString = `${hour.toString().padStart(2, '0')}:00`;
+        timeSlots.push({
+          time: timeString,
+          available: true,
+          note: 'Available'
+        });
+      }
+    } else {
+      // Generate time slots based on actual schedule
+      scheduleData.forEach(slot => {
+        const startHour = parseInt(slot.start_time.split(':')[0]);
+        const endHour = parseInt(slot.end_time.split(':')[0]);
+        
+        for (let hour = startHour; hour < endHour; hour++) {
+          const timeString = `${hour.toString().padStart(2, '0')}:00`;
+          timeSlots.push({
+            time: timeString,
+            available: slot.booked_count === 0,
+            note: slot.booked_count > 0 ? 'Booked' : 'Available'
+          });
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      timeSlots: timeSlots,
+      date: date
+    });
+
+  } catch (error) {
+    console.error('Error getting dentist schedule:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentist schedule',
+      details: error.message
+    });
   }
 };

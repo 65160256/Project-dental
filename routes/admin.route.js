@@ -211,21 +211,30 @@ router.put('/api/appointments/bulk-status', adminController.bulkUpdateAppointmen
 // Get appointments with enhanced filtering
 router.get('/api/appointments', adminController.getAppointmentsAPI);
 
-// Get single appointment details
-router.get('/api/appointments/:id', adminController.getAppointmentById);
-// Update appointment details (for edit page)
-router.put('/api/appointments/:id', adminController.updateAppointment);
+// Get single appointment details (make sure this exists)
+router.get('/api/appointments/:id', checkAdminApiAuth, adminController.getAppointmentById);
+
+// Update appointment (this is the one causing the 500 error)
+router.put('/api/appointments/:id', checkAdminApiAuth, adminController.updateAppointment);
+
 
 // Create new appointment
 router.post('/api/appointments', adminController.createAppointment);
 
 // Delete appointment
-router.delete('/api/appointments/:id', adminController.deleteAppointment);
-
+router.delete('/api/appointments/:id', checkAdminApiAuth, adminController.deleteAppointment);
 // Validate appointment time conflicts
 router.get('/api/appointments/validate-time', adminController.validateAppointmentTime);
 
 
+// Show add appointment form
+router.get('/appointments/add', checkAdminAuth, adminController.showAddAppointmentForm);
+
+// Create new appointment (API endpoint)
+router.post('/api/appointments', checkAdminApiAuth, adminController.createAppointmentAPI);
+
+// Get available time slots for dentist on specific date
+router.get('/api/dentists/:id/schedule', checkAdminApiAuth, adminController.getDentistScheduleAPI);
 
 // ==================== Notification Routes ====================
 
@@ -252,11 +261,12 @@ router.post('/api/notifications', adminController.createNotification);
 // Get current user info
 router.get('/api/user/current', adminController.getCurrentUserAPI);
 
-// Get dentists for filters
-router.get('/api/dentists', adminController.getDentistsAPI);
+// Get dentists list
+router.get('/api/dentists', checkAdminApiAuth, adminController.getDentistsAPI);
 
-// Get treatments for filters
-router.get('/api/treatments', adminController.getTreatmentsAPI);
+// Get treatments list  
+router.get('/api/treatments', checkAdminApiAuth, adminController.getTreatmentsAPI);
+
 
 
 // Edit appointment page
@@ -273,13 +283,25 @@ router.get('/appointments/edit', checkAdminAuth, (req, res) => {
 });
 
 router.get('/appointments/edit/:id', checkAdminAuth, (req, res) => {
-  res.render('edit-appointment', { appointmentId: req.params.id });
+  res.render('edit-appointment', { 
+    appointmentId: req.params.id,
+    title: 'Edit Appointment - Smile Clinic'
+  });
 });
 // Show edit appointment form
 router.get('/appointments/edit/:id', checkAdminAuth, adminController.showEditAppointmentForm);
 
 // Alternative route using query parameter
 router.get('/appointments/edit', checkAdminAuth, adminController.showEditAppointmentForm);
-
+router.get('/appointments/edit', checkAdminAuth, (req, res) => {
+  const appointmentId = req.query.id;
+  if (!appointmentId) {
+    return res.redirect('/admin/appointments');
+  }
+  res.render('edit-appointment', { 
+    appointmentId: appointmentId,
+    title: 'Edit Appointment - Smile Clinic'
+  });
+});
 
 module.exports = router;
