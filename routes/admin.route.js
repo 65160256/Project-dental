@@ -35,6 +35,7 @@ router.get('/appointments', checkAdminAuth, adminController.viewAppointments);
 router.get('/appointments/ajax', checkAdminAuth, adminController.ajaxAppointments);
 router.get('/appointments/week', checkAdminAuth, adminController.renderWeekCalendar);
 
+
 // ==================== Dentists Routes ====================
 router.get('/dentists', checkAdminAuth, adminController.viewDentists);
 router.get('/dentists/add', checkAdminAuth, adminController.addDentistForm);
@@ -56,6 +57,9 @@ router.get('/api/dentists/:id', checkAdminApiAuth, adminController.getDentistByI
 router.delete('/api/dentists/:id', checkAdminApiAuth, adminController.deleteDentistAPI);
 router.get('/api/dentists/specialties/list', checkAdminApiAuth, adminController.getDentistSpecialtiesAPI);
 router.get('/profile/api', checkAdminApiAuth, adminController.getCurrentUserAPI);
+
+// Get dentist schedule/availability
+router.get('/api/dentists/:id/schedule', adminController.getDentistSchedule);
 
 // ==================== Patients Routes ====================
 router.get('/patients', checkAdminAuth, adminController.getPatients);
@@ -187,5 +191,95 @@ router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
     });
   }
 });
+
+// Update appointment status (confirm/cancel)
+router.put('/api/appointments/:id/status', adminController.updateAppointmentStatus);
+// Update appointment status (confirm/cancel)
+router.put('/api/appointments/:id/status', adminController.updateAppointmentStatus);
+
+// Get pending appointments count
+router.get('/api/appointments/pending/count', adminController.getPendingAppointmentsCount);
+
+// Get appointment statistics
+router.get('/api/appointments/statistics', adminController.getAppointmentStatistics);
+
+// Bulk update appointment status
+router.put('/api/appointments/bulk-status', adminController.bulkUpdateAppointmentStatus);
+
+// ==================== Enhanced Appointment API Routes ====================
+
+// Get appointments with enhanced filtering
+router.get('/api/appointments', adminController.getAppointmentsAPI);
+
+// Get single appointment details
+router.get('/api/appointments/:id', adminController.getAppointmentById);
+// Update appointment details (for edit page)
+router.put('/api/appointments/:id', adminController.updateAppointment);
+
+// Create new appointment
+router.post('/api/appointments', adminController.createAppointment);
+
+// Delete appointment
+router.delete('/api/appointments/:id', adminController.deleteAppointment);
+
+// Validate appointment time conflicts
+router.get('/api/appointments/validate-time', adminController.validateAppointmentTime);
+
+
+
+// ==================== Notification Routes ====================
+
+// Get all notifications
+router.get('/api/notifications', adminController.getNotifications);
+
+// Get single notification
+router.get('/api/notifications/:id', adminController.getNotificationById);
+
+// Mark notification as read
+router.put('/api/notifications/:id/read', adminController.markNotificationAsRead);
+
+// Mark all notifications as read
+router.put('/api/notifications/mark-all-read', adminController.markAllNotificationsAsRead);
+
+// Delete notification
+router.delete('/api/notifications/:id', adminController.deleteNotification);
+
+// Create notification (for testing)
+router.post('/api/notifications', adminController.createNotification);
+
+// ==================== Other API Routes ====================
+
+// Get current user info
+router.get('/api/user/current', adminController.getCurrentUserAPI);
+
+// Get dentists for filters
+router.get('/api/dentists', adminController.getDentistsAPI);
+
+// Get treatments for filters
+router.get('/api/treatments', adminController.getTreatmentsAPI);
+
+
+// Edit appointment page
+router.get('/appointments/edit', (req, res) => {
+  res.render('edit-appointment'); // or serve the HTML file
+});
+
+router.get('/appointments/edit', checkAdminAuth, (req, res) => {
+  const appointmentId = req.query.id;
+  if (!appointmentId) {
+    return res.redirect('/admin/appointments');
+  }
+  res.render('edit-appointment', { appointmentId: appointmentId });
+});
+
+router.get('/appointments/edit/:id', checkAdminAuth, (req, res) => {
+  res.render('edit-appointment', { appointmentId: req.params.id });
+});
+// Show edit appointment form
+router.get('/appointments/edit/:id', checkAdminAuth, adminController.showEditAppointmentForm);
+
+// Alternative route using query parameter
+router.get('/appointments/edit', checkAdminAuth, adminController.showEditAppointmentForm);
+
 
 module.exports = router;

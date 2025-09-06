@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Appointment - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label i {
+            color: #667eea;
+            width: 18px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .info-item strong {
+            color: #555;
+            min-width: 80px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            color: #2d3436;
+        }
+
+        .status-confirm {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+            color: white;
+        }
+
+        .status-cancel {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding-top: 30px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(253, 121, 168, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .alert.success {
+            background: linear-gradient(135deg, #d1f2eb, #a3e9d0);
+            color: #0c5a40;
+            border-left: 4px solid #00b894;
+        }
+
+        .alert.error {
+            background: linear-gradient(135deg, #f8d7da, #f1aeb5);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert.info {
+            background: linear-gradient(135deg, #cce5ff, #99d6ff);
+            color: #004085;
+            border-left: 4px solid #007bff;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .back-btn {
+                left: 15px;
+            }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-overlay .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1>Edit Appointment</h1>
+            <p>Manage and update patient appointment details</p>
+        </div>
+
+        <div class="form-container">
+            <div class="alert" id="alertMessage">
+                <i class="fas fa-check-circle"></i>
+                <span></span>
+            </div>
+
+            <!-- Current Appointment Info -->
+            <div class="info-card" id="currentInfo">
+                <h3><i class="fas fa-info-circle"></i> Current Appointment Information</h3>
+                <div class="info-row">
+                    <div class="info-item">
+                        <strong>Patient:</strong>
+                        <span id="currentPatient">-</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Dentist:</strong>
+                        <span id="currentDentist">-</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Treatment:</strong>
+                        <span id="currentTreatment">-</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Status:</strong>
+                        <span id="currentStatus" class="status-badge">-</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-item">
+                        <strong>Date:</strong>
+                        <span id="currentDate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Time:</strong>
+                        <span id="currentTime">-</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Phone:</strong>
+                        <span id="currentPhone">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <form id="editForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><i class="fas fa-user-md"></i> Dentist</label>
+                        <select id="dentistSelect" name="dentist_id" required>
+                            <option value="">Select Dentist</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-tooth"></i> Treatment</label>
+                        <select id="treatmentSelect" name="treatment_id" required>
+                            <option value="">Select Treatment</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Date</label>
+                        <input type="date" id="appointmentDate" name="appointment_date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Time</label>
+                        <select id="timeSelect" name="appointment_time" required>
+                            <option value="">Select Time</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-info-circle"></i> Status</label>
+                        <select id="statusSelect" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="confirm">Confirmed</option>
+                            <option value="cancel">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar-plus"></i> Next Appointment</label>
+                        <input type="date" id="nextAppointment" name="next_appointment">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label><i class="fas fa-notes-medical"></i> Diagnosis/Notes</label>
+                        <textarea id="diagnosis" name="diagnosis" placeholder="Enter diagnosis or additional notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="goBack()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteAppointment()">
+                        <i class="fas fa-trash"></i> Delete Appointment
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i> Confirm Delete</h3>
+                <p>Are you sure you want to delete this appointment? This action cannot be undone.</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete Appointment</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let appointmentId = null;
+        let currentAppointmentData = null;
+        let availableTimeSlots = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get appointment ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            appointmentId = urlParams.get('id');
+            
+            if (!appointmentId) {
+                showAlert('Appointment ID not found', 'error');
+                setTimeout(() => goBack(), 2000);
+                return;
+            }
+
+            initializePage();
+        });
+
+        // Initialize page data
+        async function initializePage() {
+            showLoading(true);
+            
+            try {
+                await Promise.all([
+                    loadAppointmentData(),
+                    loadDentists(),
+                    loadTreatments()
+                ]);
+                
+                setupEventListeners();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                showAlert('Error loading data', 'error');
+                showLoading(false);
+            }
+        }
+
+        // Load appointment data
+        async function loadAppointmentData() {
+            try {
+                const response = await fetch(`/admin/api/appointments/${appointmentId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentAppointmentData = data.appointment;
+                    populateCurrentInfo(currentAppointmentData);
+                    populateForm(currentAppointmentData);
+                } else {
+                    throw new Error(data.error || 'Failed to load appointment data');
+                }
+            } catch (error) {
+                console.error('Error loading appointment data:', error);
+                throw error;
+            }
+        }
+
+        // Load dentists
+        async function loadDentists() {
+            try {
+                const response = await fetch('/admin/api/dentists');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('dentistSelect');
+                    select.innerHTML = '<option value="">Select Dentist</option>';
+                    
+                    data.dentists.forEach(dentist => {
+                        const option = document.createElement('option');
+                        option.value = dentist.dentist_id;
+                        option.textContent = `Dr. ${dentist.fname} ${dentist.lname} - ${dentist.specialty}`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading dentists:', error);
+                throw error;
+            }
+        }
+
+        // Load treatments
+        async function loadTreatments() {
+            try {
+                const response = await fetch('/admin/api/treatments');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('treatmentSelect');
+                    select.innerHTML = '<option value="">Select Treatment</option>';
+                    
+                    data.treatments.forEach(treatment => {
+                        const option = document.createElement('option');
+                        option.value = treatment.treatment_id;
+                        option.textContent = `${treatment.treatment_name} (${treatment.duration} minutes)`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading treatments:', error);
+                throw error;
+            }
+        }
+
+        // Populate current info display
+        function populateCurrentInfo(appointment) {
+            document.getElementById('currentPatient').textContent = appointment.patient_name || 'N/A';
+            document.getElementById('currentDentist').textContent = `Dr. ${appointment.dentist_name}` || 'N/A';
+            document.getElementById('currentTreatment').textContent = appointment.treatment_name || 'N/A';
+            document.getElementById('currentPhone').textContent = appointment.phone || 'N/A';
+            
+            // Format date and time
+            if (appointment.time) {
+                const appointmentDate = new Date(appointment.time);
+                document.getElementById('currentDate').textContent = appointmentDate.toLocaleDateString('en-US');
+                document.getElementById('currentTime').textContent = appointmentDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            // Status badge
+            const statusElement = document.getElementById('currentStatus');
+            const statusText = appointment.queue_status === 'pending' ? 'Pending' : 
+                             appointment.queue_status === 'confirm' ? 'Confirmed' : 'Cancelled';
+            statusElement.textContent = statusText;
+            statusElement.className = `status-badge status-${appointment.queue_status}`;
+        }
+
+        // Populate form with current data
+        function populateForm(appointment) {
+            // Set dentist
+            document.getElementById('dentistSelect').value = appointment.dentist_id || '';
+            
+            // Set treatment
+            document.getElementById('treatmentSelect').value = appointment.treatment_id || '';
+            
+            // Set status
+            document.getElementById('statusSelect').value = appointment.queue_status || 'pending';
+            
+            // Set diagnosis
+            document.getElementById('diagnosis').value = appointment.diagnosis || '';
+            
+            // Set next appointment
+            if (appointment.next_appointment) {
+                document.getElementById('nextAppointment').value = appointment.next_appointment;
+            }
+            
+            // Set date and time
+            if (appointment.time) {
+                const appointmentDate = new Date(appointment.time);
+                document.getElementById('appointmentDate').value = appointmentDate.toISOString().split('T')[0];
+                
+                // Load available time slots for the current date
+                loadTimeSlots(appointmentDate.toISOString().split('T')[0], appointment.dentist_id);
+            }
+        }
+
+        // Load available time slots
+        async function loadTimeSlots(date, dentistId) {
+            if (!date || !dentistId) return;
+            
+            try {
+                const response = await fetch(`/admin/api/dentists/${dentistId}/schedule?date=${date}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    populateTimeSlots(data.timeSlots || []);
+                } else {
+                    // Fallback to default time slots
+                    populateDefaultTimeSlots();
+                }
+            } catch (error) {
+                console.error('Error loading time slots:', error);
+                populateDefaultTimeSlots();
+            }
+        }
+
+        // Populate time slots
+        function populateTimeSlots(timeSlots) {
+            const select = document.getElementById('timeSelect');
+            select.innerHTML = '<option value="">Select Time</option>';
+            
+            // If no time slots provided, use default
+            if (timeSlots.length === 0) {
+                populateDefaultTimeSlots();
+                return;
+            }
+            
+            timeSlots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot.time;
+                option.textContent = `${slot.time} ${slot.available ? '' : '(Unavailable)'}`;
+                if (!slot.available && slot.time !== getCurrentTimeValue()) {
+                    option.disabled = true;
+                }
+                select.appendChild(option);
+            });
+            
+            // Set current time if it exists
+            if (currentAppointmentData && currentAppointmentData.time) {
+                const currentTime = new Date(currentAppointmentData.time);
+                const timeString = currentTime.toTimeString().substr(0, 5);
+                select.value = timeString;
+            }
+        }
+
+        // Populate default time slots
+        function populateDefaultTimeSlots() {
+            const select = document.getElementById('timeSelect');
+            select.innerHTML = '<option value="">Select Time</option>';
+            
+            // Generate time slots from 8:00 to 18:00
+            for (let hour = 8; hour <= 18; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    const option = document.createElement('option');
+                    option.value = timeString;
+                    option.textContent = timeString;
+                    select.appendChild(option);
+                }
+            }
+            
+            // Set current time if it exists
+            if (currentAppointmentData && currentAppointmentData.time) {
+                const currentTime = new Date(currentAppointmentData.time);
+                const timeString = currentTime.toTimeString().substr(0, 5);
+                select.value = timeString;
+            }
+        }
+
+        // Get current time value
+        function getCurrentTimeValue() {
+            if (currentAppointmentData && currentAppointmentData.time) {
+                const currentTime = new Date(currentAppointmentData.time);
+                return currentTime.toTimeString().substr(0, 5);
+            }
+            return null;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('editForm').addEventListener('submit', handleFormSubmit);
+            
+            // Dentist change - reload time slots
+            document.getElementById('dentistSelect').addEventListener('change', function() {
+                const date = document.getElementById('appointmentDate').value;
+                if (date && this.value) {
+                    loadTimeSlots(date, this.value);
+                }
+            });
+            
+            // Date change - reload time slots
+            document.getElementById('appointmentDate').addEventListener('change', function() {
+                const dentistId = document.getElementById('dentistSelect').value;
+                if (this.value && dentistId) {
+                    loadTimeSlots(this.value, dentistId);
+                }
+            });
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const originalContent = saveBtn.innerHTML;
+            
+            // Disable button and show loading
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<div class="loading-spinner"></div> Saving...';
+            
+            try {
+                const formData = new FormData(event.target);
+                const appointmentData = {
+                    dentist_id: formData.get('dentist_id'),
+                    treatment_id: formData.get('treatment_id'),
+                    appointment_date: formData.get('appointment_date'),
+                    appointment_time: formData.get('appointment_time'),
+                    status: formData.get('status'),
+                    diagnosis: formData.get('diagnosis'),
+                    next_appointment: formData.get('next_appointment') || null
+                };
+                
+                // Validate required fields
+                if (!appointmentData.dentist_id || !appointmentData.treatment_id || 
+                    !appointmentData.appointment_date || !appointmentData.appointment_time) {
+                    throw new Error('Please fill in all required fields');
+                }
+                
+                // Combine date and time
+                const dateTimeString = `${appointmentData.appointment_date}T${appointmentData.appointment_time}:00`;
+                appointmentData.appointment_datetime = dateTimeString;
+                
+                const response = await fetch(`/admin/api/appointments/${appointmentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(appointmentData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showAlert('Changes saved successfully', 'success');
+                    
+                    // Update current info display
+                    await loadAppointmentData();
+                    
+                    // Redirect back after short delay
+                    setTimeout(() => {
+                        goBack();
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'Failed to save changes');
+                }
+                
+            } catch (error) {
+                console.error('Error saving appointment:', error);
+                showAlert(error.message, 'error');
+            } finally {
+                // Restore button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalContent;
+            }
+        }
+
+        // Delete appointment
+        function deleteAppointment() {
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Confirm delete
+        async function confirmDelete() {
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'none';
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`/admin/api/appointments/${appointmentId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showAlert('Appointment deleted successfully', 'success');
+                    setTimeout(() => {
+                        goBack();
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'Failed to delete appointment');
+                }
+                
+            } catch (error) {
+                console.error('Error deleting appointment:', error);
+                showAlert(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Go back to previous page
+        function goBack() {
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = '/admin/appointments';
+            }
+        }
+
+        // Show loading overlay
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = show ? 'flex' : 'none';
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alert = document.getElementById('alertMessage');
+            const span = alert.querySelector('span');
+            const icon = alert.querySelector('i');
+            
+            // Update content
+            span.textContent = message;
+            
+            // Update classes
+            alert.className = `alert ${type}`;
+            
+            // Update icon
+            switch(type) {
+                case 'success':
+                    icon.className = 'fas fa-check-circle';
+                    break;
+                case 'error':
+                    icon.className = 'fas fa-exclamation-circle';
+                    break;
+                case 'info':
+                default:
+                    icon.className = 'fas fa-info-circle';
+                    break;
+            }
+            
+            // Show alert
+            alert.style.display = 'flex';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Validate form before submission
+        function validateForm() {
+            const requiredFields = [
+                { id: 'dentistSelect', name: 'Dentist' },
+                { id: 'treatmentSelect', name: 'Treatment' },
+                { id: 'appointmentDate', name: 'Date' },
+                { id: 'timeSelect', name: 'Time' }
+            ];
+            
+            for (let field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value) {
+                    showAlert(`Please select ${field.name}`, 'error');
+                    element.focus();
+                    return false;
+                }
+            }
+            
+            // Validate date is not in the past
+            const selectedDate = new Date(document.getElementById('appointmentDate').value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                showAlert('Cannot select a date in the past', 'error');
+                document.getElementById('appointmentDate').focus();
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Handle network errors
+        window.addEventListener('online', () => {
+            showAlert('Internet connection restored', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showAlert('Internet connection lost', 'error');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (validateForm()) {
+                    document.getElementById('editForm').dispatchEvent(new Event('submit'));
+                }
+            }
+            
+            // Escape to cancel
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('deleteModal');
+                if (modal.style.display === 'flex') {
+                    closeDeleteModal();
+                } else {
+                    goBack();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

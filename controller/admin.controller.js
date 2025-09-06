@@ -2073,52 +2073,624 @@ exports.getAppointmentById = async (req, res) => {
   }
 };
 
+// Update appointment details
+exports.updateAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      dentist_id, 
+      treatment_id, 
+      appointment_datetime, 
+      status, 
+      diagnosis, 
+      next_appointment 
+    } = req.body;
+
+    // Validate required fields
+    if (!dentist_id || !treatment_id || !appointment_datetime) {
+      return res.status(400).json({
+        success: false,
+        error: 'ข้อมูลไม่ครบถ้วน: ต้องระบุแพทย์, การรักษา และวันเวลานัด'
+      });
+    }
+
+    // Validate appointment datetime
+    const appointmentDate = new Date(appointment_datetime);
+    if (isNaN(appointmentDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: 'รูปแบบวันที่เวลาไม่ถูกต้อง'
+      });
+    }
+
+    // Check if appointment exists
+    const [existingAppointment] = await db.execute(`
+      SELECT 
+        q.*, 
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        p.phone as patient_phone,
+        u.email as patient_email
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      LEFT JOIN user u ON p.user_id = u.user_id
+      WHERE q.queue_id = ?
+    `, [id]);
+
+    if (existingAppointment.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบการจองที่ระบุ'
+      });
+    }
+
+    const currentAppointment = existingAppointment[0];
+    const oldStatus = currentAppointment.queue_status;
+
+    // Check if the new time slot is available (except for current appointment)
+    const [conflictingAppointments] = await db.execute(`
+      SELECT COUNT(*) as count 
+      FROM queue 
+      WHERE dentist_id = ? 
+      AND time = ? 
+      AND queue_status IN ('pending', 'confirm')
+      AND queue_id != ?
+    `, [dentist_id, appointment_datetime, id]);
+
+    if (conflictingAppointments[0].count > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'เวลานัดนี้มีการจองแล้ว กรุณาเลือกเวลาอื่น'
+      });
+    }
+
+    // Validate dentist availability (check schedule)
+    const appointmentDateOnly = appointmentDate.toISOString().split('T')[0];
+    const appointmentHour = appointmentDate.getHours();
+
+    const [scheduleCheck] = await db.execute(`
+      SELECT COUNT(*) as available_count
+      FROM dentist_schedule 
+      WHERE dentist_id = ? 
+      AND schedule_date = ? 
+      AND hour = ? 
+      AND status = 'working'
+    `, [dentist_id, appointmentDateOnly, appointmentHour]);
+
+    if (scheduleCheck[0].available_count === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'แพทย์ไม่สามารถให้บริการในเวลาที่เลือกได้'
+      });
+    }
+
+    // Start transaction
+    await db.query('START TRANSACTION');
+
+    try {
+      // Update queue table
+      await db.execute(`
+        UPDATE queue 
+        SET dentist_id = ?, 
+            treatment_id = ?, 
+            time = ?, 
+            queue_status = ?, 
+            diagnosis = ?, 
+            next_appointment = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE queue_id = ?
+      `, [
+        dentist_id, 
+        treatment_id, 
+        appointment_datetime, 
+        status || 'pending', 
+        diagnosis || null, 
+        next_appointment || null, 
+        id
+      ]);
+
+      // Update queuedetail table if it exists
+      if (currentAppointment.queuedetail_id) {
+        await db.execute(`
+          UPDATE queuedetail 
+          SET dentist_id = ?, 
+              treatment_id = ?, 
+              date = ?
+          WHERE queuedetail_id = ?
+        `, [
+          dentist_id, 
+          treatment_id, 
+          appointmentDateOnly, 
+          currentAppointment.queuedetail_id
+        ]);
+      }
+
+      // Get updated appointment details for notification
+      const [updatedAppointment] = await db.execute(`
+        SELECT 
+          q.*,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          d.specialty as dentist_specialty,
+          t.treatment_name,
+          t.duration as treatment_duration
+        FROM queue q
+        JOIN patient p ON q.patient_id = p.patient_id
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        WHERE q.queue_id = ?
+      `, [id]);
+
+      const appointment = updatedAppointment[0];
+
+      // Create notification for appointment update
+      let notificationMessage = `การจองของคุณได้รับการอัปเดต:\n`;
+      notificationMessage += `แพทย์: Dr. ${appointment.dentist_name}\n`;
+      notificationMessage += `การรักษา: ${appointment.treatment_name}\n`;
+      notificationMessage += `วันที่: ${new Date(appointment.time).toLocaleDateString('th-TH')}\n`;
+      notificationMessage += `เวลา: ${new Date(appointment.time).toLocaleTimeString('th-TH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })}`;
+
+      // Insert notification for patient
+      await db.execute(`
+        INSERT INTO notifications (
+          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+      `, [
+        'appointment_updated',
+        'การจองได้รับการอัปเดต',
+        notificationMessage,
+        id,
+        dentist_id,
+        currentAppointment.patient_id
+      ]);
+
+      // If status changed, create additional notification
+      if (status && status !== oldStatus) {
+        let statusNotificationTitle = '';
+        let statusNotificationMessage = '';
+
+        if (status === 'confirm' && oldStatus !== 'confirm') {
+          statusNotificationTitle = 'การจองได้รับการยืนยัน';
+          statusNotificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ได้รับการยืนยันแล้ว`;
+        } else if (status === 'cancel') {
+          statusNotificationTitle = 'การจองถูกยกเลิก';
+          statusNotificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ถูกยกเลิก`;
+        }
+
+        if (statusNotificationTitle) {
+          await db.execute(`
+            INSERT INTO notifications (
+              type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+          `, [
+            status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+            statusNotificationTitle,
+            statusNotificationMessage,
+            id,
+            dentist_id,
+            currentAppointment.patient_id
+          ]);
+        }
+      }
+
+      // Create admin log notification
+      await db.execute(`
+        INSERT INTO notifications (
+          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+      `, [
+        'admin_action',
+        'แก้ไขการจองโดยแอดมิน',
+        `แอดมินได้แก้ไขการจองของ ${currentAppointment.patient_name}`,
+        id,
+        dentist_id,
+        currentAppointment.patient_id
+      ]);
+
+      // Send email notification if patient has email
+      if (currentAppointment.patient_email) {
+        try {
+          await sendAppointmentUpdateEmail(
+            currentAppointment.patient_email,
+            appointment,
+            oldStatus,
+            status
+          );
+        } catch (emailError) {
+          console.error('Failed to send email notification:', emailError);
+        }
+      }
+
+      // Commit transaction
+      await db.query('COMMIT');
+
+      // Log the action
+      console.log(`[AUDIT] Admin updated appointment ${id}. Patient: ${currentAppointment.patient_name}, New time: ${appointment_datetime}`);
+
+      res.json({
+        success: true,
+        message: 'อัปเดตการจองเรียบร้อยแล้ว',
+        appointment: {
+          queue_id: id,
+          patient_name: appointment.patient_name,
+          dentist_name: appointment.dentist_name,
+          treatment_name: appointment.treatment_name,
+          appointment_time: appointment.time,
+          status: appointment.queue_status,
+          old_status: oldStatus
+        }
+      });
+
+    } catch (error) {
+      await db.query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัปเดตการจอง',
+      details: error.message
+    });
+  }
+};
+
+
+// Get dentist schedule/availability
+exports.getDentistSchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: 'กรุณาระบุวันที่'
+      });
+    }
+
+    // Get dentist schedule for the specified date
+    const [scheduleData] = await db.execute(`
+      SELECT 
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        COUNT(q.queue_id) as booked_count
+      FROM dentist_schedule ds
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      WHERE ds.dentist_id = ? 
+        AND ds.schedule_date = ?
+        AND ds.status = 'working'
+      GROUP BY ds.hour, ds.start_time, ds.end_time, ds.status
+      ORDER BY ds.hour
+    `, [id, date]);
+
+    // Generate time slots based on schedule
+    const timeSlots = [];
+    
+    if (scheduleData.length === 0) {
+      // If no schedule found, generate default working hours (8 AM - 6 PM)
+      for (let hour = 8; hour <= 18; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          timeSlots.push({
+            time: timeString,
+            available: true,
+            note: 'เวลาว่าง'
+          });
+        }
+      }
+    } else {
+      // Generate time slots based on actual schedule
+      scheduleData.forEach(slot => {
+        const startHour = parseInt(slot.start_time.split(':')[0]);
+        const endHour = parseInt(slot.end_time.split(':')[0]);
+        
+        for (let hour = startHour; hour < endHour; hour++) {
+          for (let minute = 0; minute < 60; minute += 30) {
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            timeSlots.push({
+              time: timeString,
+              available: slot.booked_count === 0,
+              note: slot.booked_count > 0 ? 'ไม่ว่าง' : 'เวลาว่าง'
+            });
+          }
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      timeSlots: timeSlots,
+      date: date
+    });
+
+  } catch (error) {
+    console.error('Error getting dentist schedule:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถโหลดตารางเวลาแพทย์ได้',
+      details: error.message
+    });
+  }
+};
+
+// Send appointment update email
+async function sendAppointmentUpdateEmail(email, appointment, oldStatus, newStatus) {
+  try {
+    // This is a placeholder for email service integration
+    const emailContent = {
+      to: email,
+      subject: 'การจองของคุณได้รับการอัปเดต - Smile Clinic',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #667eea;">การจองได้รับการอัปเดต</h2>
+          <p>เรียนคุณผู้ป่วย</p>
+          <p>การจองของคุณได้รับการอัปเดตรายละเอียดดังนี้:</p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>รายละเอียดการจองใหม่</h3>
+            <p><strong>แพทย์:</strong> Dr. ${appointment.dentist_name}</p>
+            <p><strong>การรักษา:</strong> ${appointment.treatment_name}</p>
+            <p><strong>วันที่:</strong> ${new Date(appointment.time).toLocaleDateString('th-TH')}</p>
+            <p><strong>เวลา:</strong> ${new Date(appointment.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong>สถานะ:</strong> ${newStatus === 'pending' ? 'รอยืนยัน' : newStatus === 'confirm' ? 'ยืนยันแล้ว' : 'ยกเลิกแล้ว'}</p>
+          </div>
+          
+          ${appointment.diagnosis ? `
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h4>หมายเหตุจากแพทย์:</h4>
+              <p>${appointment.diagnosis}</p>
+            </div>
+          ` : ''}
+          
+          <p>หากมีข้อสงสัยกรุณาติดต่อคลินิก</p>
+          <p>ขอบคุณที่ไว้วางใจ Smile Clinic</p>
+        </div>
+      `
+    };
+
+    console.log(`[EMAIL] Would send appointment update to ${email}`);
+    console.log('Email content:', emailContent);
+    
+    // Here you would integrate with your email service
+    // Example: await emailService.send(emailContent);
+    
+    return true;
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    throw error;
+  }
+}
+
+// Validate appointment time conflicts
+exports.validateAppointmentTime = async (req, res) => {
+  try {
+    const { dentist_id, appointment_datetime, exclude_appointment_id } = req.query;
+
+    if (!dentist_id || !appointment_datetime) {
+      return res.status(400).json({
+        success: false,
+        error: 'ต้องระบุแพทย์และเวลานัด'
+      });
+    }
+
+    // Check for conflicts
+    const [conflicts] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        q.time
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      WHERE q.dentist_id = ? 
+        AND q.time = ? 
+        AND q.queue_status IN ('pending', 'confirm')
+        ${exclude_appointment_id ? 'AND q.queue_id != ?' : ''}
+    `, exclude_appointment_id ? 
+      [dentist_id, appointment_datetime, exclude_appointment_id] : 
+      [dentist_id, appointment_datetime]
+    );
+
+    res.json({
+      success: true,
+      available: conflicts.length === 0,
+      conflicts: conflicts
+    });
+
+  } catch (error) {
+    console.error('Error validating appointment time:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถตรวจสอบเวลานัดได้',
+      details: error.message
+    });
+  }
+};
+
 // Update appointment status
 exports.updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, diagnosis, next_appointment } = req.body;
+    const { status, reason } = req.body;
     
     // Validate status
     const validStatuses = ['pending', 'confirm', 'cancel'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid status. Must be: pending, confirm, or cancel'
+        error: 'สถานะไม่ถูกต้อง ต้องเป็น pending, confirm หรือ cancel'
       });
     }
 
-    // Update appointment
-    const [result] = await db.execute(`
-      UPDATE queue 
-      SET queue_status = ?, diagnosis = ?, next_appointment = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE queue_id = ?
-    `, [status, diagnosis || null, next_appointment || null, id]);
+    // Get current appointment details for notification
+    const [appointmentData] = await db.execute(`
+      SELECT 
+        q.*,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        p.phone as patient_phone,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        d.specialty as dentist_specialty,
+        t.treatment_name,
+        t.duration as treatment_duration,
+        u.email as patient_email
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN user u ON p.user_id = u.user_id
+      WHERE q.queue_id = ?
+    `, [id]);
 
-    if (result.affectedRows === 0) {
+    if (appointmentData.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'Appointment not found'
+        error: 'ไม่พบการจองที่ระบุ'
       });
     }
 
-    // Create notification for status change
-    if (status === 'cancel') {
-      await createAppointmentStatusNotification(id, 'cancelled');
-    } else if (status === 'confirm') {
-      await createAppointmentStatusNotification(id, 'confirmed');
+    const appointment = appointmentData[0];
+    const oldStatus = appointment.queue_status;
+
+    // Don't update if status is the same
+    if (oldStatus === status) {
+      return res.status(400).json({
+        success: false,
+        error: 'สถานะเหมือนเดิม ไม่จำเป็นต้องอัปเดต'
+      });
     }
 
-    res.json({
-      success: true,
-      message: 'Appointment status updated successfully'
-    });
+    // Start transaction
+    await db.query('START TRANSACTION');
+    
+    try {
+      // Update appointment status
+      const [updateResult] = await db.execute(`
+        UPDATE queue 
+        SET queue_status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE queue_id = ?
+      `, [status, id]);
+
+      if (updateResult.affectedRows === 0) {
+        await db.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: 'ไม่สามารถอัปเดตสถานะการจองได้'
+        });
+      }
+
+      // Create notification for the patient
+      const notificationTitle = status === 'confirm' 
+        ? 'การจองได้รับการยืนยัน' 
+        : 'การจองถูกยกเลิก';
+      
+      let notificationMessage = '';
+      if (status === 'confirm') {
+        notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} เวลา ${new Date(appointment.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} ได้รับการยืนยันแล้ว`;
+      } else if (status === 'cancel') {
+        notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} ถูกยกเลิก${reason ? ` เหตุผล: ${reason}` : ''}`;
+      }
+
+      // Insert notification for patient
+      await db.execute(`
+        INSERT INTO notifications (
+          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+      `, [
+        status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+        notificationTitle,
+        notificationMessage,
+        id,
+        appointment.dentist_id,
+        appointment.patient_id
+      ]);
+
+      // Create admin notification for tracking
+      const adminNotificationMessage = status === 'confirm'
+        ? `ยืนยันการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`
+        : `ยกเลิกการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
+
+      await db.execute(`
+        INSERT INTO notifications (
+          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+      `, [
+        'admin_action',
+        'การดำเนินการโดยแอดมิน',
+        adminNotificationMessage,
+        id,
+        appointment.dentist_id,
+        appointment.patient_id
+      ]);
+
+      // Send email notification to patient (if email exists)
+      if (appointment.patient_email) {
+        try {
+          await sendEmailNotification(
+            appointment.patient_email,
+            notificationTitle,
+            notificationMessage,
+            appointment
+          );
+        } catch (emailError) {
+          console.error('Failed to send email notification:', emailError);
+          // Don't fail the entire operation if email fails
+        }
+      }
+
+      // Send SMS notification (if you have SMS service)
+      if (appointment.patient_phone) {
+        try {
+          await sendSMSNotification(
+            appointment.patient_phone,
+            notificationMessage
+          );
+        } catch (smsError) {
+          console.error('Failed to send SMS notification:', smsError);
+          // Don't fail the entire operation if SMS fails
+        }
+      }
+
+      // Commit transaction
+      await db.query('COMMIT');
+
+      // Log the action for audit trail
+      console.log(`[AUDIT] Admin updated appointment ${id} status from ${oldStatus} to ${status}. Patient: ${appointment.patient_name}, Time: ${new Date().toISOString()}`);
+
+      res.json({
+        success: true,
+        message: status === 'confirm' 
+          ? 'การจองได้รับการยืนยันแล้ว และส่งการแจ้งเตือนไปยังผู้ป่วยเรียบร้อย'
+          : 'การจองถูกยกเลิกแล้ว และส่งการแจ้งเตือนไปยังผู้ป่วยเรียบร้อย',
+        appointment: {
+          queue_id: id,
+          old_status: oldStatus,
+          new_status: status,
+          patient_name: appointment.patient_name,
+          dentist_name: appointment.dentist_name,
+          treatment_name: appointment.treatment_name,
+          appointment_time: appointment.time
+        }
+      });
+
+    } catch (error) {
+      // Rollback transaction on error
+      await db.query('ROLLBACK');
+      throw error;
+    }
 
   } catch (error) {
     console.error('Error updating appointment status:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update appointment status',
+      error: 'เกิดข้อผิดพลาดในการอัปเดตสถานะการจอง',
       details: error.message
     });
   }
@@ -2936,5 +3508,344 @@ exports.deleteTreatment = async (req, res) => {
     console.error('Error deleting treatment:', error);
     req.flash('error', 'Failed to delete treatment.');
     res.redirect('/admin/treatments');
+  }
+};
+
+exports.getPendingAppointmentsCount = async (req, res) => {
+  try {
+    const [result] = await db.execute(`
+      SELECT COUNT(*) as pending_count 
+      FROM queue 
+      WHERE queue_status = 'pending' 
+      AND DATE(time) >= CURDATE()
+    `);
+
+    res.json({
+      success: true,
+      pending_count: result[0].pending_count
+    });
+
+  } catch (error) {
+    console.error('Error getting pending appointments count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get pending appointments count'
+    });
+  }
+};
+
+// Send email notification to patient
+async function sendEmailNotification(email, title, message, appointment) {
+  // This is a placeholder for email service integration
+  // You can integrate with services like SendGrid, AWS SES, or Nodemailer
+  
+  try {
+    // Example with Nodemailer (you'll need to install and configure)
+    /*
+    const nodemailer = require('nodemailer');
+    
+    const transporter = nodemailer.createTransporter({
+      host: 'your-smtp-host',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'your-email',
+        pass: 'your-password'
+      }
+    });
+
+    const mailOptions = {
+      from: 'Smile Clinic <noreply@smileclinic.com>',
+      to: email,
+      subject: title,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #667eea;">${title}</h2>
+          <p>${message}</p>
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3>รายละเอียดการจอง</h3>
+            <p><strong>ผู้ป่วย:</strong> ${appointment.patient_name}</p>
+            <p><strong>แพทย์:</strong> Dr. ${appointment.dentist_name}</p>
+            <p><strong>การรักษา:</strong> ${appointment.treatment_name}</p>
+            <p><strong>วันที่:</strong> ${new Date(appointment.time).toLocaleDateString('th-TH')}</p>
+            <p><strong>เวลา:</strong> ${new Date(appointment.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+          <p>ขอบคุณที่ไว้วางใจ Smile Clinic</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    */
+    
+    console.log(`[EMAIL] Would send to ${email}: ${title} - ${message}`);
+    return true;
+    
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    throw error;
+  }
+}
+
+// Send SMS notification to patient
+async function sendSMSNotification(phone, message) {
+  // This is a placeholder for SMS service integration
+  // You can integrate with services like Twilio, AWS SNS, or local SMS providers
+  
+  try {
+    // Example SMS integration
+    /*
+    const twilio = require('twilio');
+    const client = twilio('your-account-sid', 'your-auth-token');
+
+    await client.messages.create({
+      body: message,
+      from: '+1234567890', // Your Twilio phone number
+      to: phone
+    });
+    */
+    
+    console.log(`[SMS] Would send to ${phone}: ${message}`);
+    return true;
+    
+  } catch (error) {
+    console.error('SMS sending failed:', error);
+    throw error;
+  }
+}
+
+// Get appointment statistics for admin dashboard
+exports.getAppointmentStatistics = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const startDate = start_date || new Date().toISOString().split('T')[0];
+    const endDate = end_date || new Date().toISOString().split('T')[0];
+
+    // Get total appointments by status
+    const [statusStats] = await db.execute(`
+      SELECT 
+        queue_status,
+        COUNT(*) as count,
+        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM queue WHERE DATE(time) BETWEEN ? AND ?)), 2) as percentage
+      FROM queue 
+      WHERE DATE(time) BETWEEN ? AND ?
+      GROUP BY queue_status
+    `, [startDate, endDate, startDate, endDate]);
+
+    // Get daily appointment trends
+    const [dailyTrends] = await db.execute(`
+      SELECT 
+        DATE(time) as date,
+        COUNT(*) as total_appointments,
+        COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending,
+        COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed,
+        COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled
+      FROM queue 
+      WHERE DATE(time) BETWEEN ? AND ?
+      GROUP BY DATE(time)
+      ORDER BY date
+    `, [startDate, endDate]);
+
+    // Get top treatments
+    const [topTreatments] = await db.execute(`
+      SELECT 
+        t.treatment_name,
+        COUNT(*) as booking_count,
+        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE DATE(q.time) BETWEEN ? AND ?
+      GROUP BY t.treatment_id, t.treatment_name
+      ORDER BY booking_count DESC
+      LIMIT 10
+    `, [startDate, endDate]);
+
+    // Get dentist performance
+    const [dentistStats] = await db.execute(`
+      SELECT 
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        d.specialty,
+        COUNT(*) as total_bookings,
+        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_bookings,
+        ROUND((COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) * 100.0 / COUNT(*)), 2) as confirmation_rate
+      FROM queue q
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE DATE(q.time) BETWEEN ? AND ?
+      GROUP BY q.dentist_id, d.fname, d.lname, d.specialty
+      ORDER BY total_bookings DESC
+    `, [startDate, endDate]);
+
+    res.json({
+      success: true,
+      statistics: {
+        status_distribution: statusStats,
+        daily_trends: dailyTrends,
+        top_treatments: topTreatments,
+        dentist_performance: dentistStats,
+        date_range: { start_date: startDate, end_date: endDate }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointment statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load appointment statistics',
+      details: error.message
+    });
+  }
+};
+
+// Bulk update appointment status
+exports.bulkUpdateAppointmentStatus = async (req, res) => {
+  try {
+    const { appointment_ids, status, reason } = req.body;
+    
+    if (!appointment_ids || !Array.isArray(appointment_ids) || appointment_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'กรุณาระบุรายการการจองที่ต้องการอัปเดต'
+      });
+    }
+
+    const validStatuses = ['pending', 'confirm', 'cancel'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'สถานะไม่ถูกต้อง'
+      });
+    }
+
+    let successCount = 0;
+    let failureCount = 0;
+    const results = [];
+
+    // Process each appointment
+    for (const appointmentId of appointment_ids) {
+      try {
+        // Call the single update function
+        await updateSingleAppointmentStatus(appointmentId, status, reason);
+        successCount++;
+        results.push({ appointment_id: appointmentId, success: true });
+      } catch (error) {
+        failureCount++;
+        results.push({ 
+          appointment_id: appointmentId, 
+          success: false, 
+          error: error.message 
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `อัปเดตสำเร็จ ${successCount} รายการ${failureCount > 0 ? `, ล้มเหลว ${failureCount} รายการ` : ''}`,
+      results: results,
+      summary: {
+        total: appointment_ids.length,
+        success: successCount,
+        failure: failureCount
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in bulk update:', error);
+    res.status(500).json({
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัปเดตแบบกลุ่ม',
+      details: error.message
+    });
+  }
+};
+// Helper function for single appointment status update
+async function updateSingleAppointmentStatus(appointmentId, status, reason) {
+  // Get appointment details
+  const [appointmentData] = await db.execute(`
+    SELECT 
+      q.*,
+      CONCAT(p.fname, ' ', p.lname) as patient_name,
+      CONCAT(d.fname, ' ', d.lname) as dentist_name,
+      t.treatment_name,
+      u.email as patient_email,
+      p.phone as patient_phone
+    FROM queue q
+    JOIN patient p ON q.patient_id = p.patient_id
+    JOIN dentist d ON q.dentist_id = d.dentist_id
+    JOIN treatment t ON q.treatment_id = t.treatment_id
+    LEFT JOIN user u ON p.user_id = u.user_id
+    WHERE q.queue_id = ?
+  `, [appointmentId]);
+
+  if (appointmentData.length === 0) {
+    throw new Error(`ไม่พบการจอง ID: ${appointmentId}`);
+  }
+
+  const appointment = appointmentData[0];
+
+  // Update status
+  await db.execute(`
+    UPDATE queue 
+    SET queue_status = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE queue_id = ?
+  `, [status, appointmentId]);
+
+  // Create notification
+  const notificationTitle = status === 'confirm' 
+    ? 'การจองได้รับการยืนยัน' 
+    : 'การจองถูกยกเลิก';
+  
+  let notificationMessage = '';
+  if (status === 'confirm') {
+    notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ได้รับการยืนยันแล้ว`;
+  } else if (status === 'cancel') {
+    notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} ถูกยกเลิก${reason ? ` เหตุผล: ${reason}` : ''}`;
+  }
+
+  // Insert notification
+  await db.execute(`
+    INSERT INTO notifications (
+      type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
+  `, [
+    status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+    notificationTitle,
+    notificationMessage,
+    appointmentId,
+    appointment.dentist_id,
+    appointment.patient_id
+  ]);
+
+  return true;
+}
+
+// Show edit appointment page
+exports.showEditAppointmentForm = async (req, res) => {
+  try {
+    const appointmentId = req.params.id || req.query.id;
+    
+    if (!appointmentId) {
+      req.flash('error', 'Appointment ID is required');
+      return res.redirect('/admin/appointments');
+    }
+    
+    // Verify appointment exists
+    const [appointments] = await db.execute(`
+      SELECT queue_id FROM queue WHERE queue_id = ?
+    `, [appointmentId]);
+    
+    if (appointments.length === 0) {
+      req.flash('error', 'Appointment not found');
+      return res.redirect('/admin/appointments');
+    }
+    
+    res.render('edit-appointment', { 
+      appointmentId: appointmentId,
+      title: 'Edit Appointment - Smile Clinic'
+    });
+    
+  } catch (error) {
+    console.error('Error loading edit appointment page:', error);
+    req.flash('error', 'Error loading appointment');
+    res.redirect('/admin/appointments');
   }
 };
