@@ -78,6 +78,14 @@ router.get('/api/patients', checkAdminApiAuth, adminController.getPatientsAPI);
 router.get('/api/patients/:id', checkAdminApiAuth, adminController.getPatientByIdAPI);
 router.delete('/api/patients/:id', checkAdminApiAuth, adminController.deletePatientAPI);
 
+router.get('/api/patients/:id/treatments', checkAdminApiAuth, adminController.getPatientTreatmentHistoryAPI);
+
+router.get('/patients/:id/treatments', checkAdminAuth, (req, res) => {
+  res.render('patient-treatment-history', { 
+    patientId: req.params.id,
+    title: 'Treatment History - Smile Clinic'
+  });
+});
 // API route สำหรับการอัปเดตข้อมูลผู้ป่วย
 router.put('/api/patients/:id', checkAdminApiAuth, adminController.updatePatientAPI);
 
@@ -303,5 +311,7 @@ router.get('/appointments/edit', checkAdminAuth, (req, res) => {
     title: 'Edit Appointment - Smile Clinic'
   });
 });
+
+
 
 module.exports = router;

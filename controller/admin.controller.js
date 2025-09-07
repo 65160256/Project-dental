@@ -3973,3 +3973,99 @@ exports.getDentistScheduleAPI = async (req, res) => {
     });
   }
 };
+
+// Get patient treatment history API
+exports.getPatientTreatmentHistoryAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [treatments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time as date,
+        q.queue_status,
+        q.diagnosis,
+        t.treatment_name,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        th.followUpdate as follow_update
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+      WHERE q.patient_id = ?
+      ORDER BY q.time DESC
+    `, [id]);
+
+    res.json({
+      success: true,
+      treatments: treatments
+    });
+
+  } catch (error) {
+    console.error('Error fetching treatment history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load treatment history',
+      details: error.message
+    });
+  }
+};
+
+// Get available appointment slots
+exports.getAppointmentSlots = async (req, res) => {
+  try {
+    const { date, dentist_id } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: 'Date parameter is required'
+      });
+    }
+
+    let whereClause = 'WHERE ds.schedule_date = ? AND ds.status = "working"';
+    let params = [date];
+
+    if (dentist_id) {
+      whereClause += ' AND ds.dentist_id = ?';
+      params.push(dentist_id);
+    }
+
+    const [scheduleData] = await db.execute(`
+      SELECT 
+        ds.dentist_id,
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname,
+        d.specialty,
+        COUNT(q.queue_id) as booked_count,
+        CASE WHEN COUNT(q.queue_id) = 0 THEN 1 ELSE 0 END as is_available
+      FROM dentist_schedule ds
+      JOIN dentist d ON ds.dentist_id = d.dentist_id
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      ${whereClause}
+      GROUP BY ds.dentist_id, ds.hour, ds.start_time, ds.end_time, d.fname, d.lname, d.specialty
+      ORDER BY ds.hour, d.fname
+    `, params);
+
+    res.json({
+      success: true,
+      slots: scheduleData,
+      date: date
+    });
+
+  } catch (error) {
+    console.error('Error getting appointment slots:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load appointment slots',
+      details: error.message
+    });
+  }
+};

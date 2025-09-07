@@ -716,6 +716,41 @@
             }
         }
 
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #dc3545;
+        }
+
+        .error-state i {
+            font-size: 48px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .error-state h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #dc3545;
+        }
+
+        .error-state p {
+            margin: 0 0 25px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Offline State */
+        .offline-banner {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 30px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -759,6 +794,12 @@
     </style>
 </head>
 <body>
+    <!-- Offline Banner -->
+    <div class="offline-banner" id="offlineBanner">
+        <i class="fas fa-wifi"></i>
+        Connection lost. Some features may not work properly.
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -836,14 +877,14 @@
                     <span id="treatmentCount">Loading...</span> total treatments
                 </div>
                 <div class="tools-actions">
-                    <button class="btn btn-secondary" onclick="toggleFilters()">
-                        <i class="fas fa-filter"></i>
-                        Filters
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt" id="refreshIcon"></i>
+                        Refresh
                     </button>
-                    <button class="btn btn-primary" onclick="showAddTreatmentModal()">
+                    <a href="/admin/treatments/add" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Add Treatment
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -885,73 +926,44 @@
         </div>
     </div>
 
-    <!-- Add/Edit Treatment Modal -->
-    <div id="treatmentModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <div class="modal-icon" style="background: #e3f2fd; color: #1976d2;">
-                    <i class="fas fa-tooth"></i>
-                </div>
-                <h3 class="modal-title" id="treatmentModalTitle">Add New Treatment</h3>
-            </div>
-            <form id="treatmentForm">
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Treatment Name *</label>
-                    <input type="text" id="treatmentName" name="name" required 
-                           style="width: 100%; padding: 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Duration (minutes) *</label>
-                    <input type="number" id="treatmentDuration" name="duration" required min="1" max="480"
-                           style="width: 100%; padding: 12px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px;">
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 6px; font-weight: 500; color: #333;">Available Dentists *</label>
-                    <div id="dentistSelection" style="max-height: 200px; overflow-y: auto; border: 1px solid #e1e5e9; border-radius: 8px; padding: 10px;">
-                        <div class="loading">
-                            <i class="fas fa-spinner"></i>
-                            <p>Loading dentists...</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeTreatmentModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="saveTreatmentBtn">
-                        <i class="fas fa-save"></i>
-                        Save Treatment
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         // Global variables
         let treatments = [];
-        let dentists = [];
-        let currentEditId = null;
+        let filteredTreatments = [];
         let deleteTreatmentId = null;
+        let isOnline = navigator.onLine;
 
+        // Initialize application
         document.addEventListener('DOMContentLoaded', function() {
-            loadTreatments();
-            loadDentists();
-            loadUserInfo();
-            loadNotifications();
-            setupEventListeners();
+            console.log('🚀 Initializing Treatments Management...');
+            initializeApp();
         });
+
+        // Initialize application
+        async function initializeApp() {
+            try {
+                setupEventListeners();
+                setupNetworkMonitoring();
+                await loadTreatments();
+                await loadUserInfo();
+                await loadNotifications();
+                console.log('✅ Application initialized successfully');
+            } catch (error) {
+                console.error('❌ Application initialization failed:', error);
+                showError('Failed to initialize application');
+            }
+        }
 
         // Setup event listeners
         function setupEventListeners() {
-            // Search functionality
+            // Search functionality with debounce
+            let searchTimeout;
             document.getElementById('searchInput').addEventListener('input', function() {
-                filterTreatments(this.value);
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterTreatments(this.value);
+                }, 300);
             });
-
-            // Treatment form submission
-            document.getElementById('treatmentForm').addEventListener('submit', handleTreatmentSubmit);
 
             // Delete confirmation
             document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
@@ -964,13 +976,13 @@
             document.addEventListener('click', function(event) {
                 // Close profile dropdown
                 const profileDropdown = document.querySelector('.profile-dropdown');
-                if (!profileDropdown.contains(event.target)) {
+                if (profileDropdown && !profileDropdown.contains(event.target)) {
                     document.getElementById('profileDropdown').style.display = 'none';
                 }
                 
                 // Close notification dropdown
                 const notificationContainer = document.querySelector('.notification-container');
-                if (!notificationContainer.contains(event.target)) {
+                if (notificationContainer && !notificationContainer.contains(event.target)) {
                     document.getElementById('notificationDropdown').classList.remove('show');
                 }
 
@@ -982,49 +994,130 @@
                     }
                 });
             });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(event) {
+                // ESC to close modals and dropdowns
+                if (event.key === 'Escape') {
+                    document.getElementById('notificationDropdown').classList.remove('show');
+                    document.getElementById('profileDropdown').style.display = 'none';
+                    closeModal();
+                }
+
+                // Ctrl+N to add new treatment
+                if (event.ctrlKey && event.key === 'n') {
+                    event.preventDefault();
+                    window.location.href = '/admin/treatments/add';
+                }
+
+                // Ctrl+R to refresh
+                if (event.ctrlKey && event.key === 'r') {
+                    event.preventDefault();
+                    refreshData();
+                }
+            });
         }
 
-        // Load treatments from database
+        // Setup network monitoring
+        function setupNetworkMonitoring() {
+            window.addEventListener('online', function() {
+                isOnline = true;
+                hideOfflineBanner();
+                showToast('Connection restored', 'success');
+                refreshData();
+            });
+
+            window.addEventListener('offline', function() {
+                isOnline = false;
+                showOfflineBanner();
+                showToast('Connection lost', 'warning');
+            });
+        }
+
+        // Show/hide offline banner
+        function showOfflineBanner() {
+            document.getElementById('offlineBanner').style.display = 'block';
+        }
+
+        function hideOfflineBanner() {
+            document.getElementById('offlineBanner').style.display = 'none';
+        }
+
+        // Load treatments from database with error handling
         async function loadTreatments() {
             try {
-                const response = await fetch('/admin/api/treatments');
+                console.log('📊 Loading treatments...');
+                showLoadingState();
+                
+                const response = await fetchWithTimeout('/admin/api/treatments', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
-                    treatments = data.treatments;
-                    displayTreatments(treatments);
-                    updateTreatmentCount(treatments.length);
+                    treatments = data.treatments || [];
+                    filteredTreatments = [...treatments];
+                    displayTreatments(filteredTreatments);
+                    updateTreatmentCount(filteredTreatments.length);
+                    console.log(`✅ Loaded ${treatments.length} treatments`);
                 } else {
                     throw new Error(data.error || 'Failed to load treatments');
                 }
             } catch (error) {
-                console.error('Error loading treatments:', error);
-                showError('Failed to load treatments');
-                displayEmptyState();
+                console.error('❌ Error loading treatments:', error);
+                if (!isOnline) {
+                    showOfflineMessage();
+                } else {
+                    showError('Failed to load treatments: ' + error.message);
+                }
             }
         }
 
-        // Load dentists for treatment assignment
-        async function loadDentists() {
+        // Fetch with timeout for better error handling
+        async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+
             try {
-                const response = await fetch('/admin/api/dentists');
-                const data = await response.json();
-                
-                if (data.success) {
-                    dentists = data.dentists;
-                } else {
-                    throw new Error(data.error || 'Failed to load dentists');
-                }
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
             } catch (error) {
-                console.error('Error loading dentists:', error);
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout');
+                }
+                throw error;
             }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const tableContent = document.getElementById('tableContent');
+            tableContent.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>Loading treatments...</p>
+                </div>
+            `;
         }
 
         // Display treatments in table
         function displayTreatments(treatmentList) {
             const tableContent = document.getElementById('tableContent');
             
-            if (treatmentList.length === 0) {
+            if (!treatmentList || treatmentList.length === 0) {
                 displayEmptyState();
                 return;
             }
@@ -1044,20 +1137,20 @@
                         ${treatmentList.map((treatment, index) => `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td class="treatment-name">${treatment.treatment_name}</td>
-                                <td><span class="duration-badge">${treatment.duration} min</span></td>
+                                <td class="treatment-name">${escapeHtml(treatment.treatment_name || 'Unnamed Treatment')}</td>
+                                <td><span class="duration-badge">${treatment.duration || 0} min</span></td>
                                 <td>${treatment.dentist_count || 0} dentist${treatment.dentist_count !== 1 ? 's' : ''}</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn btn-sm btn-view" onclick="viewTreatment(${treatment.treatment_id})">
+                                        <button class="btn btn-sm btn-view" onclick="viewTreatment(${treatment.treatment_id})" title="View details">
                                             <i class="fas fa-eye"></i>
                                             View
                                         </button>
-                                        <button class="btn btn-sm btn-edit" onclick="editTreatment(${treatment.treatment_id})">
+                                        <button class="btn btn-sm btn-edit" onclick="editTreatment(${treatment.treatment_id})" title="Edit treatment">
                                             <i class="fas fa-edit"></i>
                                             Edit
                                         </button>
-                                        <button class="btn btn-sm btn-delete" onclick="confirmDelete(${treatment.treatment_id}, '${treatment.treatment_name}')">
+                                        <button class="btn btn-sm btn-delete" onclick="confirmDelete(${treatment.treatment_id}, '${escapeHtml(treatment.treatment_name || 'treatment')}')" title="Delete treatment">
                                             <i class="fas fa-trash"></i>
                                             Delete
                                         </button>
@@ -1072,20 +1165,65 @@
             tableContent.innerHTML = tableHTML;
         }
 
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // Display empty state
         function displayEmptyState() {
             const tableContent = document.getElementById('tableContent');
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (searchTerm) {
+                tableContent.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No treatments found</h3>
+                        <p>No treatments match "${escapeHtml(searchTerm)}"</p>
+                        <button class="btn btn-secondary" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                            Clear Search
+                        </button>
+                    </div>
+                `;
+            } else {
+                tableContent.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tooth"></i>
+                        <h3>No treatments found</h3>
+                        <p>Start by adding your first dental treatment</p>
+                        <a href="/admin/treatments/add" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Treatment
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        // Show offline message
+        function showOfflineMessage() {
+            const tableContent = document.getElementById('tableContent');
             tableContent.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-tooth"></i>
-                    <h3>No treatments found</h3>
-                    <p>Start by adding your first dental treatment</p>
-                    <button class="btn btn-primary" onclick="showAddTreatmentModal()">
-                        <i class="fas fa-plus"></i>
-                        Add Treatment
+                <div class="error-state">
+                    <i class="fas fa-wifi"></i>
+                    <h3>Connection Lost</h3>
+                    <p>Unable to load treatments. Please check your internet connection.</p>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Try Again
                     </button>
                 </div>
             `;
+        }
+
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterTreatments('');
         }
 
         // Update treatment count
@@ -1095,186 +1233,133 @@
 
         // Filter treatments
         function filterTreatments(searchTerm) {
-            const filtered = treatments.filter(treatment => 
-                treatment.treatment_name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            displayTreatments(filtered);
-            updateTreatmentCount(filtered.length);
-        }
+            if (!treatments || treatments.length === 0) {
+                displayEmptyState();
+                return;
+            }
 
-        // Show add treatment modal
-        function showAddTreatmentModal() {
-            currentEditId = null;
-            document.getElementById('treatmentModalTitle').textContent = 'Add New Treatment';
-            document.getElementById('treatmentName').value = '';
-            document.getElementById('treatmentDuration').value = '';
-            document.getElementById('saveTreatmentBtn').innerHTML = '<i class="fas fa-save"></i> Save Treatment';
+            if (!searchTerm.trim()) {
+                filteredTreatments = [...treatments];
+            } else {
+                const term = searchTerm.toLowerCase();
+                filteredTreatments = treatments.filter(treatment => 
+                    (treatment.treatment_name || '').toLowerCase().includes(term) ||
+                    (treatment.duration || '').toString().includes(term)
+                );
+            }
             
-            populateDentistSelection();
-            document.getElementById('treatmentModal').style.display = 'flex';
+            displayTreatments(filteredTreatments);
+            updateTreatmentCount(filteredTreatments.length);
         }
 
-        // ✅ แก้ไขฟังก์ชัน editTreatment ให้ไปหน้า edit แทนที่จะเปิด modal
+        // Refresh data
+        async function refreshData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) {
+                refreshIcon.classList.add('fa-spin');
+            }
+            
+            try {
+                await loadTreatments();
+                showToast('Data refreshed successfully', 'success');
+            } catch (error) {
+                showToast('Failed to refresh data', 'error');
+            } finally {
+                if (refreshIcon) {
+                    setTimeout(() => {
+                        refreshIcon.classList.remove('fa-spin');
+                    }, 1000);
+                }
+            }
+        }
+
+        // Navigate to edit treatment page
         function editTreatment(treatmentId) {
-            // Redirect to edit page instead of opening modal
+            if (!treatmentId) {
+                showToast('Invalid treatment ID', 'error');
+                return;
+            }
             window.location.href = `/admin/treatments/${treatmentId}/edit`;
         }
 
-        // Populate dentist selection
-        async function populateDentistSelection(treatmentId = null) {
-            const container = document.getElementById('dentistSelection');
-            
-            if (dentists.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 20px; color: #666;">
-                        <i class="fas fa-user-md" style="font-size: 24px; margin-bottom: 10px;"></i>
-                        <p>No dentists available</p>
-                    </div>
-                `;
+        // Navigate to view treatment page
+        function viewTreatment(treatmentId) {
+            if (!treatmentId) {
+                showToast('Invalid treatment ID', 'error');
                 return;
             }
-
-            let selectedDentists = [];
-            if (treatmentId) {
-                try {
-                    const response = await fetch(`/admin/api/treatments/${treatmentId}/dentists`);
-                    const data = await response.json();
-                    if (data.success) {
-                        selectedDentists = data.dentists.map(d => d.dentist_id);
+            
+            // Try API first, fallback to direct navigation
+            checkTreatmentExists(treatmentId)
+                .then(exists => {
+                    if (exists) {
+                        window.location.href = `/admin/treatments/${treatmentId}`;
+                    } else {
+                        showToast('Treatment not found', 'error');
                     }
-                } catch (error) {
-                    console.error('Error loading treatment dentists:', error);
-                }
-            }
-
-            const dentistHTML = dentists.map(dentist => `
-                <div style="display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #f1f3f4;">
-                    <input type="checkbox" id="dentist_${dentist.dentist_id}" 
-                           value="${dentist.dentist_id}" name="dentist_ids"
-                           ${selectedDentists.includes(dentist.dentist_id) ? 'checked' : ''}
-                           style="margin-right: 10px;">
-                    <label for="dentist_${dentist.dentist_id}" style="flex-grow: 1; cursor: pointer; font-size: 14px;">
-                        Dr. ${dentist.fname} ${dentist.lname}
-                        ${dentist.specialty ? `<span style="color: #666; font-size: 12px;"> - ${dentist.specialty}</span>` : ''}
-                    </label>
-                </div>
-            `).join('');
-
-            container.innerHTML = dentistHTML;
-        }
-
-        // Handle treatment form submission
-        async function handleTreatmentSubmit(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const selectedDentists = Array.from(document.querySelectorAll('input[name="dentist_ids"]:checked'))
-                .map(cb => parseInt(cb.value));
-            
-            if (selectedDentists.length === 0) {
-                showToast('Please select at least one dentist', 'warning');
-                return;
-            }
-
-            const treatmentData = {
-                name: formData.get('name'),
-                duration: parseInt(formData.get('duration')),
-                dentist_ids: selectedDentists
-            };
-
-            const submitBtn = document.getElementById('saveTreatmentBtn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            submitBtn.disabled = true;
-
-            try {
-                let response;
-                if (currentEditId) {
-                    response = await fetch(`/admin/api/treatments/${currentEditId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(treatmentData)
-                    });
-                } else {
-                    response = await fetch('/admin/api/treatments', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(treatmentData)
-                    });
-                }
-
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    showToast(currentEditId ? 'Treatment updated successfully!' : 'Treatment created successfully!', 'success');
-                    closeTreatmentModal();
-                    loadTreatments(); // Reload the list
-                } else {
-                    throw new Error(result.error || 'Failed to save treatment');
-                }
-            } catch (error) {
-                console.error('Error saving treatment:', error);
-                showToast('Failed to save treatment: ' + error.message, 'error');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        }
-
-        // View treatment details
-        async function viewTreatment(treatmentId) {
-            try {
-                const response = await fetch(`/admin/api/treatments/${treatmentId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    // For now, redirect to traditional view page
+                })
+                .catch(() => {
+                    // Fallback: navigate directly
                     window.location.href = `/admin/treatments/${treatmentId}`;
-                } else {
-                    throw new Error(data.error || 'Failed to load treatment');
-                }
+                });
+        }
+
+        // Check if treatment exists
+        async function checkTreatmentExists(treatmentId) {
+            try {
+                const response = await fetchWithTimeout(`/admin/api/treatments/${treatmentId}`, {}, 5000);
+                return response.ok;
             } catch (error) {
-                console.error('Error viewing treatment:', error);
-                showToast('Failed to load treatment details', 'error');
+                console.warn('Could not verify treatment existence:', error);
+                return true; // Assume it exists and let the server handle it
             }
         }
 
         // Confirm delete treatment
         function confirmDelete(treatmentId, treatmentName) {
-            console.log('confirmDelete called with:', treatmentId, treatmentName); // Debug log
+            if (!treatmentId) {
+                showToast('Invalid treatment ID', 'error');
+                return;
+            }
             
             deleteTreatmentId = treatmentId;
-            const safeTitle = treatmentName ? treatmentName.replace(/'/g, "&#39;") : 'this treatment';
+            const safeName = treatmentName ? escapeHtml(treatmentName) : 'this treatment';
             
             document.getElementById('deleteMessage').innerHTML = 
-                `Are you sure you want to delete "<strong>${safeTitle}</strong>"? This action cannot be undone.`;
+                `Are you sure you want to delete "<strong>${safeName}</strong>"? This action cannot be undone.`;
             document.getElementById('deleteModal').style.display = 'flex';
-            
-            console.log('Modal should be visible now'); // Debug log
         }
 
         // Delete treatment
         async function deleteTreatment(treatmentId) {
+            if (!isOnline) {
+                showToast('Cannot delete treatment while offline', 'error');
+                return;
+            }
+
             const confirmBtn = document.getElementById('confirmDeleteBtn');
             const originalText = confirmBtn.innerHTML;
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
             confirmBtn.disabled = true;
 
             try {
-                const response = await fetch(`/admin/api/treatments/${treatmentId}`, {
-                    method: 'DELETE'
+                const response = await fetchWithTimeout(`/admin/api/treatments/${treatmentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
                 const result = await response.json();
                 
-                if (response.ok && result.success) {
+                if (result.success) {
                     showToast('Treatment deleted successfully', 'success');
                     closeModal();
-                    loadTreatments(); // Reload the list
+                    await loadTreatments(); // Reload the list
                 } else {
                     throw new Error(result.error || 'Failed to delete treatment');
                 }
@@ -1287,25 +1372,20 @@
             }
         }
 
-        // Close modals
+        // Close modal
         function closeModal() {
             document.getElementById('deleteModal').style.display = 'none';
             deleteTreatmentId = null;
         }
 
-        function closeTreatmentModal() {
-            document.getElementById('treatmentModal').style.display = 'none';
-            currentEditId = null;
-        }
-
         // Load user information for avatar
         async function loadUserInfo() {
             try {
-                const response = await fetch('/admin/profile/api');
+                const response = await fetchWithTimeout('/admin/profile/api', {}, 5000);
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.success) {
-                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                    if (data.success && data.email) {
+                        const firstLetter = data.email.charAt(0).toUpperCase();
                         document.getElementById('userAvatar').textContent = firstLetter;
                         
                         // Update user info in dropdown
@@ -1316,7 +1396,8 @@
                     }
                 }
             } catch (error) {
-                console.error('Error loading user info:', error);
+                console.warn('Could not load user info:', error);
+                // Use default avatar
                 document.getElementById('userAvatar').textContent = 'A';
             }
         }
@@ -1324,15 +1405,15 @@
         // Load notifications
         async function loadNotifications() {
             try {
-                const response = await fetch('/admin/api/notifications?limit=10');
+                const response = await fetchWithTimeout('/admin/api/notifications?limit=10', {}, 5000);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                        updateNotificationDisplay(data.notifications || [], data.pagination?.unread_count || 0);
                     }
                 }
             } catch (error) {
-                console.error('Error loading notifications:', error);
+                console.warn('Could not load notifications:', error);
                 showEmptyNotifications();
             }
         }
@@ -1351,7 +1432,7 @@
             }
 
             // Update content
-            if (notifications.length === 0) {
+            if (!notifications || notifications.length === 0) {
                 showEmptyNotifications();
                 return;
             }
@@ -1361,8 +1442,8 @@
                 return `
                     <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
                          onclick="markAsRead(${notification.id})">
-                        <div class="notification-title">${notification.title}</div>
-                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-title">${escapeHtml(notification.title || 'Notification')}</div>
+                        <div class="notification-message">${escapeHtml(notification.message || '')}</div>
                         <div class="notification-time">${timeAgo}</div>
                     </div>
                 `;
@@ -1394,32 +1475,45 @@
 
         // Mark notification as read
         async function markAsRead(notificationId) {
+            if (!isOnline) return;
+            
             try {
-                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
-                    method: 'POST'
-                });
+                const response = await fetchWithTimeout(`/admin/api/notifications/${notificationId}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }, 5000);
                 
                 if (response.ok) {
                     loadNotifications(); // Refresh notifications
                 }
             } catch (error) {
-                console.error('Error marking notification as read:', error);
+                console.warn('Could not mark notification as read:', error);
             }
         }
 
         // Mark all notifications as read
         async function markAllAsRead() {
+            if (!isOnline) {
+                showToast('Cannot update notifications while offline', 'warning');
+                return;
+            }
+            
             try {
-                const response = await fetch('/admin/api/notifications/read-all', {
-                    method: 'POST'
-                });
+                const response = await fetchWithTimeout('/admin/api/notifications/read-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }, 5000);
                 
                 if (response.ok) {
                     loadNotifications(); // Refresh notifications
                     showToast('All notifications marked as read', 'success');
                 }
             } catch (error) {
-                console.error('Error marking all notifications as read:', error);
+                console.warn('Could not mark all notifications as read:', error);
                 showToast('Failed to mark notifications as read', 'error');
             }
         }
@@ -1427,16 +1521,16 @@
         // Toggle profile dropdown
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Toggle filters (placeholder)
-        function toggleFilters() {
-            showToast('Filters feature coming soon!', 'info');
+            const isVisible = menu.style.display === 'block';
+            menu.style.display = isVisible ? 'none' : 'block';
         }
 
         // Show toast notification
         function showToast(message, type = 'info') {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             
@@ -1449,7 +1543,7 @@
 
             toast.innerHTML = `
                 <i class="${icon[type]}"></i>
-                ${message}
+                ${escapeHtml(message)}
             `;
             
             document.body.appendChild(toast);
@@ -1468,12 +1562,12 @@
         function showError(message) {
             const tableContent = document.getElementById('tableContent');
             tableContent.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #dc3545;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 15px;"></i>
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
                     <h3>Error Loading Treatments</h3>
-                    <p>${message}</p>
-                    <button class="btn btn-primary" onclick="loadTreatments()">
-                        <i class="fas fa-refresh"></i>
+                    <p>${escapeHtml(message)}</p>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i>
                         Try Again
                     </button>
                 </div>
@@ -1482,6 +1576,8 @@
 
         // Get time ago text
         function getTimeAgo(date) {
+            if (!date || isNaN(date.getTime())) return 'Unknown';
+            
             const now = new Date();
             const diffInSeconds = Math.floor((now - date) / 1000);
             
@@ -1493,33 +1589,49 @@
             return date.toLocaleDateString();
         }
 
-        // Auto-refresh notifications every 60 seconds
+        // Auto-refresh notifications every 60 seconds (only when online)
         setInterval(() => {
-            loadNotifications();
+            if (isOnline) {
+                loadNotifications();
+            }
         }, 60000);
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(event) {
-            // ESC to close modals and dropdowns
-            if (event.key === 'Escape') {
-                document.getElementById('notificationDropdown').classList.remove('show');
-                document.getElementById('profileDropdown').style.display = 'none';
-                closeModal();
-                closeTreatmentModal();
+        // Auto-refresh treatments every 5 minutes (only when online)
+        setInterval(() => {
+            if (isOnline && document.visibilityState === 'visible') {
+                loadTreatments();
             }
+        }, 300000);
 
-            // Ctrl+N to add new treatment
-            if (event.ctrlKey && event.key === 'n') {
-                event.preventDefault();
-                showAddTreatmentModal();
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && isOnline) {
+                loadNotifications();
             }
         });
 
-        // Error handling for failed API calls
+        // Error handling for unhandled promise rejections
         window.addEventListener('unhandledrejection', function(event) {
             console.error('Unhandled promise rejection:', event.reason);
             showToast('An unexpected error occurred', 'error');
+            event.preventDefault();
         });
+
+        // Handle global errors
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+            if (event.error && event.error.message) {
+                showToast('Application error: ' + event.error.message, 'error');
+            }
+        });
+
+        // Initialize service worker for offline support (if available)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+
     </script>
 </body>
 </html>

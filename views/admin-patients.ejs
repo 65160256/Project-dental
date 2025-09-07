@@ -124,6 +124,12 @@
             display: flex;
             align-items: center;
             width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
         }
 
         .search-box i {
@@ -233,10 +239,41 @@
         .notification-content {
             max-height: 400px;
             overflow-y: auto;
-            padding: 20px;
+            padding: 10px;
+        }
+
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+
+        .notification-message {
             color: #666;
-            text-align: center;
-            font-style: italic;
+            font-size: 12px;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
         }
 
         .profile-dropdown {
@@ -248,6 +285,13 @@
             align-items: center;
             cursor: pointer;
             gap: 10px;
+            padding: 5px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-info:hover {
+            background-color: #f8f9fa;
         }
 
         .avatar {
@@ -286,6 +330,7 @@
             min-width: 160px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             z-index: 1000;
+            overflow: hidden;
         }
 
         .dropdown-menu a {
@@ -294,10 +339,17 @@
             text-decoration: none;
             color: #333;
             font-size: 13px;
+            transition: background-color 0.2s ease;
         }
 
         .dropdown-menu a:hover {
             background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            border-top: 1px solid #e1e5e9;
         }
 
         /* Content */
@@ -343,6 +395,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -363,6 +416,7 @@
 
         .btn-secondary:hover {
             background: #e9ecef;
+            border-color: #d1d3d6;
         }
 
         .stats-bar {
@@ -393,6 +447,23 @@
             display: flex;
             gap: 10px;
             align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:hover,
+        .filter-select:focus {
+            border-color: #4A90E2;
+            outline: none;
         }
 
         /* Table Section */
@@ -435,6 +506,7 @@
             font-weight: 600;
             color: #555;
             border-bottom: 1px solid #e1e5e9;
+            position: relative;
         }
 
         .patients-table td {
@@ -444,7 +516,7 @@
         }
 
         .patients-table tr:hover {
-            background: #f8f9fa;
+            background: rgba(74, 144, 226, 0.05);
         }
 
         .patient-info {
@@ -464,6 +536,7 @@
             color: white;
             font-size: 16px;
             font-weight: 600;
+            text-transform: uppercase;
         }
 
         .patient-details h4 {
@@ -492,6 +565,7 @@
         .action-buttons {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn-sm {
@@ -503,6 +577,10 @@
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
         }
 
         .btn-view {
@@ -513,6 +591,7 @@
 
         .btn-view:hover {
             background: #c8e6c9;
+            transform: translateY(-1px);
         }
 
         .btn-edit {
@@ -524,6 +603,7 @@
         .btn-edit:hover {
             background: #ffcc02;
             color: white;
+            transform: translateY(-1px);
         }
 
         .btn-schedule {
@@ -534,6 +614,7 @@
 
         .btn-schedule:hover {
             background: #bbdefb;
+            transform: translateY(-1px);
         }
 
         .btn-delete {
@@ -544,6 +625,7 @@
 
         .btn-delete:hover {
             background: #ffcdd2;
+            transform: translateY(-1px);
         }
 
         /* Modal */
@@ -568,6 +650,18 @@
             width: 90%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-header {
@@ -668,6 +762,7 @@
             z-index: 4000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             animation: slideInRight 0.3s ease;
+            max-width: 300px;
         }
 
         .toast.success {
@@ -682,6 +777,10 @@
             background: #3b82f6;
         }
 
+        .toast.warning {
+            background: #f59e0b;
+        }
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -693,7 +792,19 @@
             }
         }
 
-        /* Responsive */
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .btn-sm {
+                justify-content: center;
+                min-width: 80px;
+            }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 100%;
@@ -703,6 +814,16 @@
             
             .main {
                 margin-left: 0;
+            }
+            
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
             }
             
             .page-header {
@@ -717,8 +838,44 @@
                 gap: 15px;
             }
             
-            .action-buttons {
+            .filter-section {
+                flex-wrap: wrap;
+            }
+            
+            .patients-table {
+                font-size: 12px;
+            }
+            
+            .patients-table th,
+            .patients-table td {
+                padding: 10px;
+            }
+            
+            .patient-info {
                 flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .patient-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .notification-dropdown {
+                min-width: 300px;
+                max-width: 320px;
             }
         }
     </style>
@@ -760,7 +917,10 @@
                             <h3>Notifications</h3>
                         </div>
                         <div class="notification-content" id="notificationContent">
-                            No new notifications
+                            <div style="text-align: center; color: #666; padding: 20px;">
+                                <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px; color: #ccc;"></i>
+                                <p>No new notifications</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -775,9 +935,9 @@
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/admin/profile">My Profile</a>
+                        <a href="/admin/profile"><i class="fas fa-user"></i> My Profile</a>
                         <hr />
-                        <a href="/logout">Log Out</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                     </div>
                 </div>
             </div>
@@ -792,7 +952,7 @@
                     <p>Manage patient profiles, appointments, and medical history</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-secondary">
+                    <button class="btn btn-secondary" onclick="exportPatients()">
                         <i class="fas fa-download"></i>
                         Export
                     </button>
@@ -810,29 +970,32 @@
                     <span><strong id="totalPatients">0</strong> total patients</span>
                 </div>
                 <div class="filter-section">
-                    <select class="btn btn-secondary" id="ageFilter">
+                    <select class="filter-select" id="ageFilter">
                         <option value="">All Ages</option>
                         <option value="0-18">0-18 years</option>
                         <option value="19-35">19-35 years</option>
                         <option value="36-50">36-50 years</option>
                         <option value="51+">51+ years</option>
                     </select>
-                    <select class="btn btn-secondary" id="visitFilter">
+                    <select class="filter-select" id="visitFilter">
                         <option value="">All Visits</option>
                         <option value="recent">Recent</option>
                         <option value="never">Never visited</option>
                     </select>
+                    <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
                 </div>
             </div>
 
             <!-- Loading -->
-            <div class="loading" id="loading" style="display: none;">
+            <div class="loading" id="loading">
                 <div class="loading-spinner"></div>
                 <p>Loading patients data...</p>
             </div>
 
             <!-- Table Section -->
-            <div class="table-section" id="tableSection">
+            <div class="table-section" id="tableSection" style="display: none;">
                 <div class="table-header">
                     <h3>All Patients</h3>
                     <div class="filter-section">
@@ -843,20 +1006,22 @@
                     </div>
                 </div>
                 
-                <table class="patients-table">
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Contact Info</th>
-                            <th>Age</th>
-                            <th>Last Visit</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="patientsTableBody">
-                        <!-- Data will be loaded here -->
-                    </tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table class="patients-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Contact Info</th>
+                                <th>Age</th>
+                                <th>Last Visit</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Empty State -->
@@ -888,7 +1053,10 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-delete" id="confirmDeleteBtn">Delete Patient</button>
+                <button class="btn btn-delete" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete Patient
+                </button>
             </div>
         </div>
     </div>
@@ -898,28 +1066,36 @@
         let patientsData = [];
         let filteredPatients = [];
         let currentDeleteId = null;
+        let isLoading = false;
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing Patients Management page...');
             loadPatients();
             setupFilters();
             setupSearch();
             updateUserAvatar();
             loadNotifications();
+            
+            // Setup keyboard shortcuts
+            setupKeyboardShortcuts();
         });
 
         // Load patients data from database
         async function loadPatients() {
+            if (isLoading) return;
+            
             const loading = document.getElementById('loading');
             const tableSection = document.getElementById('tableSection');
             const emptyState = document.getElementById('emptyState');
             
+            isLoading = true;
             loading.style.display = 'block';
             tableSection.style.display = 'none';
             emptyState.style.display = 'none';
             
             try {
-                // เรียก API จากระบบที่มีอยู่แล้ว
+                console.log('Fetching patients from API...');
                 const response = await fetch('/admin/api/patients');
                 
                 if (!response.ok) {
@@ -927,20 +1103,23 @@
                 }
                 
                 const data = await response.json();
+                console.log('API Response:', data);
                 
-                if (data.success) {
+                if (data.success && Array.isArray(data.patients)) {
                     patientsData = data.patients;
                     filteredPatients = [...patientsData];
+                    console.log(`Loaded ${patientsData.length} patients`);
                 } else {
-                    throw new Error(data.error || 'Failed to load patients');
+                    throw new Error(data.error || 'Invalid response format');
                 }
                 
             } catch (error) {
                 console.error('Error loading patients:', error);
-                showToast('Failed to load patients: ' + error.message, 'error');
+                showToast(`Failed to load patients: ${error.message}`, 'error');
                 patientsData = [];
                 filteredPatients = [];
             } finally {
+                isLoading = false;
                 loading.style.display = 'none';
                 
                 if (filteredPatients.length === 0) {
@@ -958,19 +1137,36 @@
         function renderPatientsTable() {
             const tbody = document.getElementById('patientsTableBody');
             
+            if (!tbody) {
+                console.error('Table body element not found');
+                return;
+            }
+            
+            if (filteredPatients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                            No patients match your current filters
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
             tbody.innerHTML = filteredPatients.map(patient => {
-                const initials = (patient.fname ? patient.fname.charAt(0) : 'U') + 
-                               (patient.lname ? patient.lname.charAt(0) : 'U');
+                const initials = getPatientInitials(patient);
                 const age = calculateAge(patient.dob);
                 const lastVisit = formatDate(patient.last_visit);
+                const patientName = getPatientName(patient);
                 
                 return `
-                    <tr data-id="${patient.patient_id}">
+                    <tr data-id="${patient.patient_id}" onclick="highlightRow(this)">
                         <td>
                             <div class="patient-info">
                                 <div class="patient-avatar">${initials}</div>
                                 <div class="patient-details">
-                                    <h4>${patient.fname || 'Unknown'} ${patient.lname || 'Patient'}</h4>
+                                    <h4>${patientName}</h4>
                                     <p>ID: ${String(patient.patient_id).padStart(3, '0')}</p>
                                 </div>
                             </div>
@@ -987,16 +1183,24 @@
                         <td>${lastVisit}</td>
                         <td>
                             <div class="action-buttons">
-                                <a href="/admin/patients/${patient.patient_id}" class="btn-sm btn-view">
+                                <a href="/admin/patients/${patient.patient_id}" 
+                                   class="btn-sm btn-view" 
+                                   title="View patient details">
                                     <i class="fas fa-eye"></i> View
                                 </a>
-                                <a href="/admin/patients/${patient.patient_id}/edit" class="btn-sm btn-edit">
+                                <a href="/admin/patients/${patient.patient_id}/edit" 
+                                   class="btn-sm btn-edit" 
+                                   title="Edit patient information">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <a href="/admin/patients/${patient.patient_id}/treatments" class="btn-sm btn-schedule">
+                                <a href="/admin/patients/${patient.patient_id}/treatments" 
+                                   class="btn-sm btn-schedule" 
+                                   title="View treatment history">
                                     <i class="fas fa-history"></i> History
                                 </a>
-                                <button class="btn-sm btn-delete" onclick="confirmDelete(${patient.patient_id}, '${patient.fname}', '${patient.lname}')">
+                                <button class="btn-sm btn-delete" 
+                                        onclick="event.stopPropagation(); confirmDelete(${patient.patient_id}, '${escapeHtml(patient.fname || '')}', '${escapeHtml(patient.lname || '')}')"
+                                        title="Delete patient">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
@@ -1006,41 +1210,90 @@
             }).join('');
         }
 
+        // Helper functions
+        function getPatientInitials(patient) {
+            const fname = patient.fname || 'U';
+            const lname = patient.lname || 'P';
+            return (fname.charAt(0) + lname.charAt(0)).toUpperCase();
+        }
+
+        function getPatientName(patient) {
+            const fname = patient.fname || 'Unknown';
+            const lname = patient.lname || 'Patient';
+            return `${fname} ${lname}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function highlightRow(row) {
+            // Remove previous highlights
+            document.querySelectorAll('.patients-table tr').forEach(tr => {
+                tr.style.backgroundColor = '';
+            });
+            // Add highlight to clicked row
+            row.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+        }
+
         // Calculate age from date of birth
         function calculateAge(dob) {
             if (!dob) return 'Unknown age';
             
-            const today = new Date();
-            const birthDate = new Date(dob);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
+            try {
+                const today = new Date();
+                const birthDate = new Date(dob);
+                
+                if (isNaN(birthDate.getTime())) {
+                    return 'Invalid date';
+                }
+                
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                return age >= 0 ? `${age} years old` : 'Unknown age';
+            } catch (error) {
+                console.error('Error calculating age:', error);
+                return 'Unknown age';
             }
-            
-            return age > 0 ? `${age} years old` : 'Unknown age';
         }
 
-        // Format date
+        // Format date for display
         function formatDate(date) {
             if (!date) return 'Never';
-            const d = new Date(date);
-            const now = new Date();
-            const diffTime = Math.abs(now - d);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             
-            if (diffDays === 0) return 'Today';
-            if (diffDays === 1) return 'Yesterday';
-            if (diffDays < 7) return `${diffDays} days ago`;
-            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-            if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-            return `${Math.floor(diffDays / 365)} years ago`;
+            try {
+                const d = new Date(date);
+                if (isNaN(d.getTime())) return 'Invalid date';
+                
+                const now = new Date();
+                const diffTime = Math.abs(now - d);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return `${diffDays} days ago`;
+                if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+                if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+                return `${Math.floor(diffDays / 365)} years ago`;
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return 'Unknown';
+            }
         }
 
         // Update statistics
         function updateStats() {
-            document.getElementById('totalPatients').textContent = filteredPatients.length;
+            const totalElement = document.getElementById('totalPatients');
+            if (totalElement) {
+                totalElement.textContent = filteredPatients.length;
+            }
         }
 
         // Setup filters
@@ -1048,15 +1301,15 @@
             const ageFilter = document.getElementById('ageFilter');
             const visitFilter = document.getElementById('visitFilter');
             
-            ageFilter.addEventListener('change', applyFilters);
-            visitFilter.addEventListener('change', applyFilters);
+            if (ageFilter) ageFilter.addEventListener('change', applyFilters);
+            if (visitFilter) visitFilter.addEventListener('change', applyFilters);
         }
 
         // Apply filters
         function applyFilters() {
-            const ageFilter = document.getElementById('ageFilter').value;
-            const visitFilter = document.getElementById('visitFilter').value;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const ageFilter = document.getElementById('ageFilter')?.value || '';
+            const visitFilter = document.getElementById('visitFilter')?.value || '';
+            const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
             
             filteredPatients = patientsData.filter(patient => {
                 // Age filter
@@ -1084,8 +1337,8 @@
                 let matchesSearch = true;
                 if (searchTerm) {
                     const fullName = `${patient.fname || ''} ${patient.lname || ''}`.toLowerCase();
-                    const phone = patient.phone?.toLowerCase() || '';
-                    const email = patient.email?.toLowerCase() || '';
+                    const phone = (patient.phone || '').toLowerCase();
+                    const email = (patient.email || '').toLowerCase();
                     const patientId = String(patient.patient_id).padStart(3, '0');
                     
                     matchesSearch = fullName.includes(searchTerm) || 
@@ -1100,11 +1353,24 @@
             renderPatientsTable();
             updateStats();
             
-            // Show/hide empty state
+            // Show/hide sections
             const tableSection = document.getElementById('tableSection');
             const emptyState = document.getElementById('emptyState');
             
-            if (filteredPatients.length === 0) {
+            if (filteredPatients.length === 0 && patientsData.length > 0) {
+                tableSection.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <div class="empty-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>No patients match your filters</h3>
+                    <p>Try adjusting your search criteria or clearing the filters</p>
+                    <button class="btn btn-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
+                `;
+            } else if (filteredPatients.length === 0) {
                 tableSection.style.display = 'none';
                 emptyState.style.display = 'block';
             } else {
@@ -1116,38 +1382,118 @@
         // Calculate age as number
         function calculateAgeNumber(dob) {
             if (!dob) return 0;
-            const today = new Date();
-            const birthDate = new Date(dob);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
             
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
+            try {
+                const today = new Date();
+                const birthDate = new Date(dob);
+                
+                if (isNaN(birthDate.getTime())) return 0;
+                
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                return age >= 0 ? age : 0;
+            } catch (error) {
+                return 0;
             }
-            
-            return age > 0 ? age : 0;
         }
 
         // Setup search
         function setupSearch() {
             const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', applyFilters);
+            if (searchInput) {
+                // Debounce search to improve performance
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(applyFilters, 300);
+                });
+            }
         }
 
-        // Update user avatar with first letter of admin email
+        // Clear all filters
+        function clearFilters() {
+            const ageFilter = document.getElementById('ageFilter');
+            const visitFilter = document.getElementById('visitFilter');
+            const searchInput = document.getElementById('searchInput');
+            
+            if (ageFilter) ageFilter.value = '';
+            if (visitFilter) visitFilter.value = '';
+            if (searchInput) searchInput.value = '';
+            
+            applyFilters();
+            showToast('Filters cleared', 'info');
+        }
+
+        // Export patients data
+        function exportPatients() {
+            try {
+                const csvContent = generateCSV(filteredPatients);
+                downloadCSV(csvContent, 'patients_export.csv');
+                showToast('Patients data exported successfully', 'success');
+            } catch (error) {
+                console.error('Error exporting patients:', error);
+                showToast('Failed to export patients data', 'error');
+            }
+        }
+
+        function generateCSV(data) {
+            const headers = ['ID', 'First Name', 'Last Name', 'Phone', 'Email', 'Date of Birth', 'Age', 'Address'];
+            const csvRows = [headers.join(',')];
+            
+            data.forEach(patient => {
+                const row = [
+                    patient.patient_id,
+                    `"${patient.fname || ''}"`,
+                    `"${patient.lname || ''}"`,
+                    `"${patient.phone || ''}"`,
+                    `"${patient.email || ''}"`,
+                    `"${patient.dob || ''}"`,
+                    `"${calculateAge(patient.dob)}"`,
+                    `"${patient.address || ''}"`
+                ];
+                csvRows.push(row.join(','));
+            });
+            
+            return csvRows.join('\n');
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Update user avatar
         async function updateUserAvatar() {
             try {
                 const response = await fetch('/admin/profile/api');
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.success) {
-                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
-                        document.getElementById('userAvatar').textContent = firstLetter;
+                    if (data.success && data.email) {
+                        const firstLetter = data.email.charAt(0).toUpperCase();
+                        const avatarElement = document.getElementById('userAvatar');
+                        if (avatarElement) {
+                            avatarElement.textContent = firstLetter;
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Error fetching user info:', error);
-                document.getElementById('userAvatar').textContent = 'A';
+                const avatarElement = document.getElementById('userAvatar');
+                if (avatarElement) {
+                    avatarElement.textContent = 'A';
+                }
             }
         }
 
@@ -1158,7 +1504,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                        updateNotificationDisplay(data.notifications, data.pagination?.unread_count || 0);
                     }
                 }
             } catch (error) {
@@ -1167,10 +1513,12 @@
             }
         }
 
-        // Update notification display with real data
+        // Update notification display
         function updateNotificationDisplay(notifications, unreadCount) {
             const badge = document.getElementById('notificationBadge');
             const content = document.getElementById('notificationContent');
+
+            if (!badge || !content) return;
 
             // Update badge
             if (unreadCount > 0) {
@@ -1181,7 +1529,7 @@
             }
 
             // Update content
-            if (notifications.length === 0) {
+            if (!notifications || notifications.length === 0) {
                 showEmptyNotifications();
                 return;
             }
@@ -1189,16 +1537,10 @@
             content.innerHTML = notifications.map(notification => {
                 const timeAgo = getTimeAgo(new Date(notification.created_at));
                 return `
-                    <div style="padding: 12px 0; border-bottom: 1px solid #f1f3f4;">
-                        <div style="font-weight: 600; color: #333; font-size: 13px; margin-bottom: 3px;">
-                            ${notification.title}
-                        </div>
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">
-                            ${notification.message}
-                        </div>
-                        <div style="color: #999; font-size: 11px;">
-                            ${timeAgo}
-                        </div>
+                    <div class="notification-item">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
                     </div>
                 `;
             }).join('');
@@ -1206,28 +1548,35 @@
 
         // Show empty notifications
         function showEmptyNotifications() {
-            document.getElementById('notificationContent').innerHTML = `
-                <div style="text-align: center; color: #666; padding: 20px;">
-                    <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px; color: #ccc;"></i>
-                    <p>No new notifications</p>
-                </div>
-            `;
+            const content = document.getElementById('notificationContent');
+            if (content) {
+                content.innerHTML = `
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        <i class="fas fa-bell-slash" style="font-size: 24px; margin-bottom: 10px; color: #ccc;"></i>
+                        <p>No new notifications</p>
+                    </div>
+                `;
+            }
         }
 
         // Get time ago text
         function getTimeAgo(date) {
-            const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
-            
-            if (diffInSeconds < 60) return 'Just now';
-            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-            
-            return date.toLocaleDateString('en-US');
+            try {
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                
+                if (diffInSeconds < 60) return 'Just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+                
+                return date.toLocaleDateString('en-US');
+            } catch (error) {
+                return 'Unknown';
+            }
         }
 
-        // Refresh data from database
+        // Refresh data
         async function refreshData() {
             showToast('Refreshing patients data...', 'info');
             await loadPatients();
@@ -1240,138 +1589,205 @@
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
             
-            const name = `${fname || 'Unknown'} ${lname || 'Patient'}`;
-            message.textContent = `Are you sure you want to delete ${name}? This will also remove all associated appointments and treatment history. This action cannot be undone.`;
+            if (!modal || !message) {
+                console.error('Delete modal elements not found');
+                return;
+            }
+            
+            const name = getPatientName({ fname, lname });
+            message.innerHTML = `
+                Are you sure you want to delete <strong>${escapeHtml(name)}</strong>?
+                <br><br>
+                This will also remove all associated appointments and treatment history. 
+                <strong>This action cannot be undone.</strong>
+            `;
             modal.style.display = 'flex';
         }
 
         // Close modal
         function closeModal() {
             const modal = document.getElementById('deleteModal');
-            modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+            }
             currentDeleteId = null;
         }
 
-        // Delete patient with API call
-        document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
-            if (currentDeleteId) {
-                try {
-                    const response = await fetch(`/admin/patients/${currentDeleteId}/delete`, {
-                        method: 'GET'
-                    });
-                    
-                    if (response.ok) {
-                        // Remove from local data and refresh display
+        // Delete patient
+        async function deletePatient() {
+            if (!currentDeleteId) return;
+            
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            }
+            
+            try {
+                const response = await fetch(`/admin/api/patients/${currentDeleteId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // Remove from local data
                         const patientIndex = patientsData.findIndex(p => p.patient_id === currentDeleteId);
                         if (patientIndex > -1) {
                             const deletedPatient = patientsData[patientIndex];
                             patientsData.splice(patientIndex, 1);
-                            
                             applyFilters();
-                            showToast(`${deletedPatient.fname} ${deletedPatient.lname} deleted successfully`, 'success');
+                            showToast(`${getPatientName(deletedPatient)} deleted successfully`, 'success');
                         }
                     } else {
-                        throw new Error('Failed to delete patient');
+                        throw new Error(data.error || 'Failed to delete patient');
                     }
-                    
-                } catch (error) {
-                    console.error('Error deleting patient:', error);
-                    showToast('Error deleting patient: ' + error.message, 'error');
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
+            } catch (error) {
+                console.error('Error deleting patient:', error);
+                showToast(`Error deleting patient: ${error.message}`, 'error');
+            } finally {
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Patient';
+                }
                 closeModal();
+            }
+        }
+
+        // Setup delete button event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', deletePatient);
             }
         });
 
         // Toggle notifications dropdown
         function toggleNotifications() {
             const dropdown = document.getElementById('notificationDropdown');
-            const isVisible = dropdown.classList.contains('show');
-            
-            if (isVisible) {
-                dropdown.classList.remove('show');
-            } else {
-                dropdown.classList.add('show');
-                loadNotifications();
+            if (dropdown) {
+                const isVisible = dropdown.classList.contains('show');
+                
+                if (isVisible) {
+                    dropdown.classList.remove('show');
+                } else {
+                    dropdown.classList.add('show');
+                    loadNotifications();
+                }
             }
         }
 
         // Toggle profile dropdown
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            if (menu) {
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
         }
 
         // Show toast notification
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
+            
+            const icon = {
+                'success': 'check',
+                'error': 'exclamation-triangle',
+                'warning': 'exclamation-triangle',
+                'info': 'info-circle'
+            }[type] || 'info-circle';
+            
             toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <i class="fas fa-${icon}"></i>
                 ${message}
             `;
             
             document.body.appendChild(toast);
             
+            // Auto remove after 3 seconds
             setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.remove();
+                        }
+                    }, 300);
+                }
             }, 3000);
+        }
+
+        // Setup keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(event) {
+                // ESC to close modals and dropdowns
+                if (event.key === 'Escape') {
+                    closeModal();
+                    const notificationDropdown = document.getElementById('notificationDropdown');
+                    const profileDropdown = document.getElementById('profileDropdown');
+                    
+                    if (notificationDropdown) notificationDropdown.classList.remove('show');
+                    if (profileDropdown) profileDropdown.style.display = 'none';
+                }
+                
+                // Ctrl+F to focus search
+                if (event.ctrlKey && event.key === 'f') {
+                    event.preventDefault();
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+                
+                // Ctrl+R to refresh
+                if (event.ctrlKey && event.key === 'r') {
+                    event.preventDefault();
+                    refreshData();
+                }
+            });
         }
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
             // Close profile dropdown
             const profileDropdown = document.querySelector('.profile-dropdown');
-            if (!profileDropdown.contains(event.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
+            if (profileDropdown && !profileDropdown.contains(event.target)) {
+                const menu = document.getElementById('profileDropdown');
+                if (menu) menu.style.display = 'none';
             }
             
             // Close notification dropdown
             const notificationContainer = document.querySelector('.notification-container');
-            if (!notificationContainer.contains(event.target)) {
-                document.getElementById('notificationDropdown').classList.remove('show');
+            if (notificationContainer && !notificationContainer.contains(event.target)) {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown) dropdown.classList.remove('show');
             }
             
-            // Close modal
+            // Close modal when clicking outside
             const modal = document.getElementById('deleteModal');
-            if (event.target === modal) {
+            if (modal && event.target === modal) {
                 closeModal();
             }
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(event) {
-            // ESC to close modal
-            if (event.key === 'Escape') {
-                closeModal();
-                document.getElementById('notificationDropdown').classList.remove('show');
-                document.getElementById('profileDropdown').style.display = 'none';
-            }
-            
-            // Ctrl+F to focus search
-            if (event.ctrlKey && event.key === 'f') {
-                event.preventDefault();
-                document.getElementById('searchInput').focus();
-            }
-        });
-
-        // Auto-refresh functionality
+        // Auto-refresh notifications every minute
         setInterval(() => {
             loadNotifications();
-        }, 60000); // Check every minute
+        }, 60000);
 
-        // Handle connection status
+        // Handle online/offline status
         window.addEventListener('online', function() {
             showToast('Connection restored', 'success');
+            refreshData();
         });
 
         window.addEventListener('offline', function() {
-            showToast('Connection lost', 'error');
+            showToast('Connection lost', 'warning');
         });
 
         // Add slideOutRight animation
@@ -1389,6 +1805,20 @@
             }
         `;
         document.head.appendChild(additionalStyles);
+
+        // Performance optimization: Virtualization for large datasets
+        function optimizeTableRendering() {
+            if (filteredPatients.length > 100) {
+                // Implement virtual scrolling for large datasets
+                console.log('Large dataset detected, consider implementing virtual scrolling');
+            }
+        }
+
+        // Error boundary
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+            showToast('An unexpected error occurred', 'error');
+        });
     </script>
 </body>
 </html>
