@@ -312,6 +312,4 @@ router.get('/appointments/edit', checkAdminAuth, (req, res) => {
   });
 });
 
-
-
 module.exports = router;
