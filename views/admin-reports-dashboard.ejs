@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Reports Dashboard - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Header Section */
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text h1 {
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .total-patients {
+            text-align: center;
+        }
+
+        .total-patients .number {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .total-patients .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+
+        .patient-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 10px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Appointment Report Card */
+        .appointment-report {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .period-selector {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .period-btn.active {
+            background: white;
+            color: #4A90E2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .appointment-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .stat-item.confirmed {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .stat-item.pending {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .stat-item.cancelled {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        /* Today's Doctors */
+        .todays-doctors {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .doctor-card {
+            text-align: center;
+            padding: 20px 15px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .doctor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .doctor-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 5px 0;
+        }
+
+        .doctor-specialty {
+            font-size: 11px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Treatment Statistics */
+        .treatment-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            height: 300px;
+            position: relative;
+        }
+
+        /* Upcoming Appointments */
+        .upcoming-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .calendar-section {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .month-year {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day.header {
+            background: none;
+            color: #666;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+
+        .calendar-day:not(.header):not(.today):hover {
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .appointments-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .appointment-item {
+            padding: 12px;
+            border-left: 4px solid #4A90E2;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .appointment-item:hover {
+            background: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .appointment-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .appointment-patient {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .appointment-treatment {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Patient Statistics per Doctor */
+        .doctor-stats-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .doctor-stats-chart {
+            margin-top: 20px;
+            height: 300px;
+            position: relative;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(74, 144, 226, 0.1);
+            border-top: 3px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .stats-grid,
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .appointment-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .doctors-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li class="active"><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div></div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon"></i>
+                </div>
+                
+                <div class="user-info">
+                    <div class="avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <strong>Hello Admin</strong>
+                        <small>administrator</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="header-content">
+                    <div class="welcome-text">
+                        <h1>Hello Admin</h1>
+                        <p id="currentDateTime">24/05/2025 11:00 AM</p>
+                    </div>
+                    <div class="total-patients" onclick="window.location.href='/admin/patients'">
+                        <div class="patient-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h2 class="number" id="totalPatientsDisplay"><%= dashboardData.totalPatients %></h2>
+                        <p class="label">Total Patients</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <!-- Appointment Report -->
+                <div class="appointment-report">
+                    <div class="card-header">
+                        <h3 class="card-title">Appointment Report:</h3>
+                        <div class="period-selector">
+                            <button class="period-btn active" data-period="day">Day</button>
+                            <button class="period-btn" data-period="week">Week</button>
+                            <button class="period-btn" data-period="month">Month</button>
+                        </div>
+                    </div>
+                    
+                    <div class="appointment-stats">
+                        <div class="stat-item confirmed" onclick="showAppointmentDetails('confirmed')">
+                            <h3 class="stat-number" id="confirmedCount"><%= dashboardData.appointmentSummary.confirmed %></h3>
+                            <p class="stat-label">Confirmed</p>
+                        </div>
+                        <div class="stat-item pending" onclick="showAppointmentDetails('pending')">
+                            <h3 class="stat-number" id="pendingCount"><%= dashboardData.appointmentSummary.pending %></h3>
+                            <p class="stat-label">Pending</p>
+                        </div>
+                        <div class="stat-item cancelled" onclick="showAppointmentDetails('cancelled')">
+                            <h3 class="stat-number" id="cancelledCount"><%= dashboardData.appointmentSummary.cancelled %></h3>
+                            <p class="stat-label">Cancelled</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Doctors -->
+                <div class="todays-doctors">
+                    <h3 class="card-title">Today's Doctors</h3>
+                    <div class="doctors-grid" id="doctorsGrid">
+                        <% dashboardData.todaysDoctors.forEach(doctor => { %>
+                        <div class="doctor-card" onclick="window.location.href='/admin/dentists/<%= doctor.dentist_id %>'">
+                            <div class="doctor-avatar">
+                                <% if (doctor.photo && doctor.photo !== 'default-avatar.png') { %>
+                                    <img src="/uploads/<%= doctor.photo %>" alt="<%= doctor.fname %>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                <% } else { %>
+                                    <%= doctor.fname.charAt(0) %><%= doctor.lname.charAt(0) %>
+                                <% } %>
+                            </div>
+                            <p class="doctor-name">Dr. <%= doctor.fname %> <%= doctor.lname %></p>
+                            <p class="doctor-specialty"><%= doctor.specialty || 'General' %></p>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Treatment Statistics -->
+                <div class="treatment-section">
+                    <div class="card-header">
+                        <h3 class="card-title">Treatments:</h3>
+                        <div class="period-selector">
+                            <button class="period-btn" data-period="week">Week</button>
+                            <button class="period-btn active" data-period="month">Month</button>
+                            <button class="period-btn" data-period="year">Year</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="treatmentChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments -->
+                <div class="upcoming-section">
+                    <h3 class="card-title">April 2025</h3>
+                    
+                    <!-- Mini Calendar -->
+                    <div class="calendar-section">
+                        <div class="calendar-header">
+                            <h4 class="month-year" id="calendarMonthYear">April 2025</h4>
+                            <div class="calendar-nav">
+                                <button class="nav-btn" onclick="changeMonth(-1)">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="nav-btn" onclick="changeMonth(1)">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- Calendar will be generated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 15px; color: #333;">Upcoming Appointments</h4>
+                    <div class="appointments-list" id="appointmentsList">
+                        <% dashboardData.upcomingAppointments.forEach(appointment => { %>
+                        <div class="appointment-item" onclick="window.location.href='/admin/appointments/edit/<%= appointment.queue_id %>'">
+                            <div class="appointment-time">
+                                <%= new Date(appointment.time).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                }) %> - <%= new Date(appointment.time).toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                }) %>
+                            </div>
+                            <div class="appointment-patient"><%= appointment.patient_name %></div>
+                            <div class="appointment-treatment"><%= appointment.treatment_name %></div>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Statistics per Doctor -->
+            <div class="doctor-stats-section">
+                <h3 class="card-title">Patient Statistics per Doctor:</h3>
+                <div class="period-selector" style="margin-top: 15px;">
+                    <button class="period-btn" data-period="week">Week</button>
+                    <button class="period-btn active" data-period="month">Month</button>
+                    <button class="period-btn" data-period="year">Year</button>
+                </div>
+                <div class="doctor-stats-chart">
+                    <canvas id="doctorStatsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let treatmentChart;
+        let doctorStatsChart;
+        let currentDate = new Date();
+        let currentPeriod = 'month';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            initializeCharts();
+            generateCalendar();
+            setupEventListeners();
+            loadUserInfo();
+            
+            // Update time every minute
+            setInterval(updateDateTime, 60000);
+        });
+
+        // Update current date and time
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-GB', options).replace(',', '');
+        }
+
+        // Load user information
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.email) {
+                        const firstLetter = data.email.charAt(0).toUpperCase();
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            initializeTreatmentChart();
+            initializeDoctorStatsChart();
+        }
+
+        // Initialize treatment chart
+        function initializeTreatmentChart() {
+            const ctx = document.getElementById('treatmentChart').getContext('2d');
+            
+            const treatmentData = <%- JSON.stringify(dashboardData.treatmentStats) %>;
+            
+            treatmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: treatmentData.map(item => item.treatment_name),
+                    datasets: [{
+                        label: 'Number of Treatments',
+                        data: treatmentData.map(item => item.count),
+                        backgroundColor: [
+                            '#4A90E2',
+                            '#50C878',
+                            '#FFB347',
+                            '#FF6B6B',
+                            '#9B59B6',
+                            '#3498DB',
+                            '#E74C3C',
+                            '#F39C12',
+                            '#2ECC71',
+                            '#1ABC9C'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f3f4'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize doctor stats chart
+        function initializeDoctorStatsChart() {
+            const ctx = document.getElementById('doctorStatsChart').getContext('2d');
+            
+            const doctorData = <%- JSON.stringify(dashboardData.doctorStats) %>;
+            
+            doctorStatsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: doctorData.map(item => item.doctor_name),
+                    datasets: [
+                        {
+                            label: 'Unique Patients',
+                            data: doctorData.map(item => item.unique_patients),
+                            backgroundColor: '#4A90E2',
+                            borderRadius: 8,
+                        },
+                        {
+                            label: 'Total Appointments',
+                            data: doctorData.map(item => item.total_appointments),
+                            backgroundColor: '#50C878',
+                            borderRadius: 8,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f3f4'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Period selector buttons
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const section = this.closest('.appointment-report, .treatment-section, .doctor-stats-section');
+                    section.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const period = this.dataset.period;
+                    updateStats(period);
+                });
+            });
+        }
+
+        // Update statistics based on period
+        async function updateStats(period) {
+            try {
+                // Update appointment stats
+                const appointmentResponse = await fetch(`/admin/api/dashboard/appointments?period=${period}`);
+                if (appointmentResponse.ok) {
+                    const appointmentData = await appointmentResponse.json();
+                    if (appointmentData.success) {
+                        updateAppointmentDisplay(appointmentData.appointments);
+                    }
+                }
+
+                // Update treatment stats
+                const treatmentResponse = await fetch(`/admin/api/dashboard/treatments?period=${period}`);
+                if (treatmentResponse.ok) {
+                    const treatmentData = await treatmentResponse.json();
+                    if (treatmentData.success) {
+                        updateTreatmentChart(treatmentData.treatments);
+                    }
+                }
+
+                showToast(`Statistics updated for ${period}`, 'success');
+            } catch (error) {
+                console.error('Error updating stats:', error);
+                showToast('Failed to update statistics', 'error');
+            }
+        }
+
+        // Update appointment display
+        function updateAppointmentDisplay(appointments) {
+            const confirmed = appointments.filter(apt => apt.queue_status === 'confirm').length;
+            const pending = appointments.filter(apt => apt.queue_status === 'pending').length;
+            const cancelled = appointments.filter(apt => apt.queue_status === 'cancel').length;
+
+            document.getElementById('confirmedCount').textContent = confirmed;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('cancelledCount').textContent = cancelled;
+        }
+
+        // Update treatment chart
+        function updateTreatmentChart(treatments) {
+            treatmentChart.data.labels = treatments.map(item => item.treatment_name);
+            treatmentChart.data.datasets[0].data = treatments.map(item => item.count);
+            treatmentChart.update();
+        }
+
+        // Show appointment details
+        function showAppointmentDetails(status) {
+            const params = new URLSearchParams();
+            params.append('status', status);
+            params.append('period', currentPeriod);
+            
+            window.location.href = `/admin/appointments?${params.toString()}`;
+        }
+
+        // Generate calendar
+        function generateCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // Update month year display
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day header';
+                dayElement.textContent = day;
+                calendarGrid.appendChild(dayElement);
+            });
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day other-month';
+                calendarGrid.appendChild(dayElement);
+            }
+            
+            // Add days of the month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                
+                // Highlight today
+                if (year === today.getFullYear() && 
+                    month === today.getMonth() && 
+                    day === today.getDate()) {
+                    dayElement.classList.add('today');
+                }
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        // Change month
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            generateCalendar();
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 4000);
+        }
+
+        // Handle online/offline status
+        window.addEventListener('online', () => {
+            showToast('Connection restored', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showToast('Connection lost', 'error');
+        });
+    </script>
+</body>
+</html>

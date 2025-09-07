@@ -23,8 +23,52 @@ const checkAdminApiAuth = (req, res, next) => {
 };
 
 // ==================== Dashboard Routes ====================
-router.get('/dashboard', checkAdminAuth, adminController.getDashboard);
+router.get('/dashboard', checkAdminAuth, adminController.getReportsDashboard);
+
+router.get('/schedule', checkAdminAuth, adminController.getDashboard);
+
 router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
+
+// ==================== Dashboard API Routes ====================
+// Get appointment statistics for dashboard
+router.get('/api/dashboard/appointments', checkAdminApiAuth, adminController.getAppointmentStatsAPI);
+// Get treatment statistics for dashboard  
+router.get('/api/dashboard/treatments', checkAdminApiAuth, adminController.getTreatmentStatsAPI);
+
+// Get dashboard summary data
+router.get('/api/dashboard/summary', checkAdminApiAuth, async (req, res) => {
+  try {
+    const db = require('../models/db');
+    
+    // Get counts for dashboard cards
+    const [patientCount] = await db.execute('SELECT COUNT(*) as count FROM patient');
+    const [dentistCount] = await db.execute('SELECT COUNT(*) as count FROM dentist');
+    const [todayAppointments] = await db.execute(`
+      SELECT COUNT(*) as count FROM queue 
+      WHERE DATE(time) = CURDATE()
+    `);
+    const [pendingAppointments] = await db.execute(`
+      SELECT COUNT(*) as count FROM queue 
+      WHERE queue_status = 'pending' AND DATE(time) >= CURDATE()
+    `);
+
+    res.json({
+      success: true,
+      summary: {
+        totalPatients: patientCount[0].count,
+        totalDentists: dentistCount[0].count,
+        todayAppointments: todayAppointments[0].count,
+        pendingAppointments: pendingAppointments[0].count
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard summary:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dashboard summary'
+    });
+  }
+});
 
 // ==================== Profile Routes ====================
 router.get('/profile', checkAdminAuth, adminController.getProfile);

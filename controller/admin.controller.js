@@ -4011,3 +4011,249 @@ exports.getPatientTreatmentHistoryAPI = async (req, res) => {
     });
   }
 };
+
+// Enhanced Dashboard with Reports
+exports.getReportsDashboard = async (req, res) => {
+  try {
+    // Get current date and month for calculations
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
+    const lastDayOfMonth = new Date(currentYear, currentMonth, 0);
+
+    // 1. Total Patients Count
+    const [totalPatientsResult] = await db.execute(`
+      SELECT COUNT(*) as total_patients FROM patient
+    `);
+    const totalPatients = totalPatientsResult[0].total_patients;
+
+    // 2. Appointment Statistics by Status
+    const [appointmentStats] = await db.execute(`
+      SELECT 
+        queue_status,
+        COUNT(*) as count
+      FROM queue 
+      WHERE DATE(time) BETWEEN ? AND ?
+      GROUP BY queue_status
+    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
+
+    // Format appointment stats
+    const appointmentSummary = {
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      total: 0
+    };
+
+    appointmentStats.forEach(stat => {
+      appointmentSummary[stat.queue_status] = stat.count;
+      appointmentSummary.total += stat.count;
+    });
+
+    // 3. Treatment Statistics for current month
+    const [treatmentStats] = await db.execute(`
+      SELECT 
+        t.treatment_name,
+        COUNT(q.queue_id) as count
+      FROM treatment t
+      LEFT JOIN queue q ON t.treatment_id = q.treatment_id 
+        AND DATE(q.time) BETWEEN ? AND ?
+      GROUP BY t.treatment_id, t.treatment_name
+      ORDER BY count DESC
+      LIMIT 10
+    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
+
+    // 4. Patient Statistics per Doctor
+    const [doctorStats] = await db.execute(`
+      SELECT 
+        d.dentist_id,
+        CONCAT(d.fname, ' ', d.lname) as doctor_name,
+        d.specialty,
+        COUNT(DISTINCT q.patient_id) as unique_patients,
+        COUNT(q.queue_id) as total_appointments
+      FROM dentist d
+      LEFT JOIN queue q ON d.dentist_id = q.dentist_id 
+        AND DATE(q.time) BETWEEN ? AND ?
+      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
+      ORDER BY total_appointments DESC
+    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
+
+    // 5. Today's Doctors (dentists with schedules today)
+    const [todaysDoctors] = await db.execute(`
+      SELECT DISTINCT
+        d.dentist_id,
+        d.fname,
+        d.lname,
+        d.specialty,
+        d.photo
+      FROM dentist d
+      JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
+      WHERE ds.schedule_date = CURDATE() AND ds.status = 'working'
+      ORDER BY d.fname, d.lname
+    `);
+
+    // 6. Upcoming Appointments for next 7 days
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    
+    const [upcomingAppointments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        CONCAT(d.fname, ' ', d.lname) as doctor_name,
+        t.treatment_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE DATE(q.time) BETWEEN CURDATE() AND ?
+        AND q.queue_status IN ('pending', 'confirm')
+      ORDER BY q.time ASC
+      LIMIT 10
+    `, [nextWeek.toISOString().split('T')[0]]);
+
+    // 7. Monthly trend data for charts
+    const [monthlyTrends] = await db.execute(`
+      SELECT 
+        DATE(time) as appointment_date,
+        COUNT(*) as daily_count
+      FROM queue
+      WHERE DATE(time) BETWEEN ? AND ?
+      GROUP BY DATE(time)
+      ORDER BY appointment_date
+    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
+
+    // Prepare data for frontend
+    const dashboardData = {
+      totalPatients,
+      appointmentSummary,
+      treatmentStats,
+      doctorStats,
+      todaysDoctors,
+      upcomingAppointments,
+      monthlyTrends,
+      currentMonth: today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    };
+
+    res.render('admin-reports-dashboard', { 
+      dashboardData,
+      user: req.session.user || { email: 'admin@clinic.com' }
+    });
+
+  } catch (error) {
+    console.error('Error loading reports dashboard:', error);
+    res.render('admin-reports-dashboard', { 
+      dashboardData: {
+        totalPatients: 0,
+        appointmentSummary: { confirmed: 0, pending: 0, cancelled: 0, total: 0 },
+        treatmentStats: [],
+        doctorStats: [],
+        todaysDoctors: [],
+        upcomingAppointments: [],
+        monthlyTrends: [],
+        currentMonth: 'Current Month'
+      },
+      user: req.session.user || { email: 'admin@clinic.com' }
+    });
+  }
+};
+
+
+// API endpoint for appointment statistics
+exports.getAppointmentStatsAPI = async (req, res) => {
+  try {
+    const { period = 'month', status } = req.query;
+    
+    let dateFilter = '';
+    let params = [];
+    
+    if (period === 'today') {
+      dateFilter = 'DATE(time) = CURDATE()';
+    } else if (period === 'week') {
+      dateFilter = 'DATE(time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
+    } else if (period === 'month') {
+      dateFilter = 'MONTH(time) = MONTH(CURDATE()) AND YEAR(time) = YEAR(CURDATE())';
+    }
+    
+    let statusFilter = '';
+    if (status && status !== 'all') {
+      statusFilter = 'AND queue_status = ?';
+      params.push(status);
+    }
+
+    const [appointments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        t.treatment_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE ${dateFilter} ${statusFilter}
+      ORDER BY q.time DESC
+    `, params);
+
+    res.json({
+      success: true,
+      appointments,
+      total: appointments.length,
+      period,
+      status: status || 'all'
+    });
+
+  } catch (error) {
+    console.error('Error fetching appointment stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch appointment statistics'
+    });
+  }
+};
+
+// API endpoint for treatment statistics
+exports.getTreatmentStatsAPI = async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    
+    let dateFilter = '';
+    if (period === 'today') {
+      dateFilter = 'AND DATE(q.time) = CURDATE()';
+    } else if (period === 'week') {
+      dateFilter = 'AND DATE(q.time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
+    } else if (period === 'month') {
+      dateFilter = 'AND MONTH(q.time) = MONTH(CURDATE()) AND YEAR(q.time) = YEAR(CURDATE())';
+    }
+
+    const [treatmentStats] = await db.execute(`
+      SELECT 
+        t.treatment_name,
+        COUNT(q.queue_id) as count,
+        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
+      FROM treatment t
+      LEFT JOIN queue q ON t.treatment_id = q.treatment_id ${dateFilter}
+      GROUP BY t.treatment_id, t.treatment_name
+      HAVING count > 0
+      ORDER BY count DESC
+    `);
+
+    res.json({
+      success: true,
+      treatments: treatmentStats,
+      period
+    });
+
+  } catch (error) {
+    console.error('Error fetching treatment stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch treatment statistics'
+    });
+  }
+};
