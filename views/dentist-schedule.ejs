@@ -489,6 +489,10 @@
             background: linear-gradient(135deg, #fff3cd, #ffeaa7);
         }
 
+        .calendar-cell.has-appointments {
+            background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+        }
+
         .cell-date {
             font-size: 12px;
             font-weight: 600;
@@ -514,6 +518,10 @@
 
         .schedule-indicator.day-off {
             background: #f59e0b;
+        }
+
+        .schedule-indicator.has-appointments {
+            background: #e91e63;
         }
 
         /* Schedule Details Modal */
@@ -616,6 +624,11 @@
             border-color: #ffeaa7;
         }
 
+        .schedule-item.has-appointments {
+            background: #fce4ec;
+            border-color: #f8bbd9;
+        }
+
         .schedule-time {
             font-weight: 600;
             color: #4A90E2;
@@ -625,6 +638,13 @@
         .schedule-status {
             font-size: 12px;
             color: #666;
+        }
+
+        .appointment-info {
+            font-size: 11px;
+            color: #e91e63;
+            font-weight: 500;
+            margin-top: 2px;
         }
 
         /* Loading */
@@ -802,7 +822,7 @@
             <!-- Loading -->
             <div class="loading" id="loading">
                 <div class="loading-spinner"></div>
-                <p>Loading schedule data...</p>
+                <p>Loading schedule data from database...</p>
             </div>
 
             <!-- Main Content -->
@@ -963,6 +983,8 @@
                 
                 loading.style.display = 'none';
                 mainContent.style.display = 'grid';
+                
+                showToast('Schedule loaded from database', 'success');
             } catch (error) {
                 console.error('Error initializing page:', error);
                 showToast('Error loading data: ' + error.message, 'error');
@@ -970,11 +992,12 @@
             }
         }
 
-        // Load dentist data
+        // Load dentist data from API
         async function loadDentistData() {
             if (!dentistId) return;
 
             try {
+                console.log(`Loading dentist data for ID: ${dentistId}`);
                 const response = await fetch(`/admin/api/dentists/${dentistId}`);
                 
                 if (!response.ok) {
@@ -986,6 +1009,7 @@
                 if (data.success) {
                     dentistData = data.dentist;
                     populateDentistInfo();
+                    console.log('Dentist data loaded successfully:', dentistData);
                 } else {
                     throw new Error(data.error || 'Failed to load dentist data');
                 }
@@ -1008,7 +1032,7 @@
             // Display photo with fallback to avatar
             displayDentistPhoto(dentistData);
 
-            // Update stats
+            // Update stats with actual data from database
             document.getElementById('totalSchedules').textContent = dentistData.total_schedules || 0;
             document.getElementById('totalAppointments').textContent = dentistData.total_appointments || 0;
         }
@@ -1077,7 +1101,7 @@
             return 'data:image/svg+xml;base64,' + btoa(svg);
         }
 
-        // Load schedule data from database
+        // Load real schedule data from database
         async function loadScheduleData() {
             if (!dentistId) return;
 
@@ -1089,7 +1113,9 @@
                 const startDateStr = startDate.toISOString().split('T')[0];
                 const endDateStr = endDate.toISOString().split('T')[0];
 
-                const response = await fetch(`/admin/api/dentists/${dentistId}/schedule?start_date=${startDateStr}&end_date=${endDateStr}`);
+                console.log(`Loading schedule for dentist ${dentistId} from ${startDateStr} to ${endDateStr}`);
+
+                const response = await fetch(`/admin/api/dentists/${dentistId}/schedule-data?start_date=${startDateStr}&end_date=${endDateStr}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1099,88 +1125,19 @@
                 
                 if (data.success) {
                     scheduleData = data.schedules || [];
+                    console.log(`Loaded ${scheduleData.length} schedule records from database`);
                 } else {
-                    // If API endpoint doesn't exist, try alternative or use sample data
-                    console.warn('Schedule API not available, using sample data');
-                    scheduleData = generateSampleScheduleData();
+                    throw new Error(data.error || 'Failed to load schedule data');
                 }
                 
             } catch (error) {
                 console.error('Error loading schedule data:', error);
-                // Use sample data for demonstration
-                scheduleData = generateSampleScheduleData();
-                showToast('Using sample schedule data - API endpoint not configured', 'info');
+                scheduleData = [];
+                showToast('Failed to load schedule data: ' + error.message, 'error');
             }
         }
 
-        // Generate sample schedule data for demonstration
-        function generateSampleScheduleData() {
-            const sampleData = [];
-            const startDate = new Date(currentYear, currentMonth, 1);
-            const endDate = new Date(currentYear, currentMonth + 1, 0);
-            
-            // Generate working schedules for weekdays
-            for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-                const dayOfWeek = date.getDay();
-                
-                // Skip weekends for regular schedules
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    // Add some weekend schedules occasionally
-                    if (Math.random() < 0.3) {
-                        sampleData.push({
-                            schedule_date: new Date(date).toISOString().split('T')[0],
-                            day_of_week: dayOfWeek,
-                            hour: 10,
-                            start_time: '10:00:00',
-                            end_time: '14:00:00',
-                            status: 'working',
-                            note: 'Weekend emergency coverage'
-                        });
-                    }
-                    continue;
-                }
-
-                // Regular weekday schedules
-                const workingHours = [
-                    { hour: 9, start: '09:00:00', end: '10:00:00' },
-                    { hour: 10, start: '10:00:00', end: '11:00:00' },
-                    { hour: 11, start: '11:00:00', end: '12:00:00' },
-                    { hour: 14, start: '14:00:00', end: '15:00:00' },
-                    { hour: 15, start: '15:00:00', end: '16:00:00' },
-                    { hour: 16, start: '16:00:00', end: '17:00:00' }
-                ];
-
-                // Add some day offs randomly
-                if (Math.random() < 0.1) {
-                    sampleData.push({
-                        schedule_date: new Date(date).toISOString().split('T')[0],
-                        day_of_week: dayOfWeek,
-                        hour: 12,
-                        start_time: '09:00:00',
-                        end_time: '17:00:00',
-                        status: 'dayoff',
-                        note: 'Personal day off'
-                    });
-                } else {
-                    // Add working hours
-                    workingHours.forEach(schedule => {
-                        sampleData.push({
-                            schedule_date: new Date(date).toISOString().split('T')[0],
-                            day_of_week: dayOfWeek,
-                            hour: schedule.hour,
-                            start_time: schedule.start,
-                            end_time: schedule.end,
-                            status: 'working',
-                            note: null
-                        });
-                    });
-                }
-            }
-
-            return sampleData;
-        }
-
-        // Render calendar
+        // Render calendar with real database data
         function renderCalendar() {
             updateCurrentMonthDisplay();
             
@@ -1221,7 +1178,7 @@
                     cell.classList.add('today');
                 }
 
-                // Get schedule for this date
+                // Get schedule for this date from database
                 const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
                 
                 // Create cell content
@@ -1233,6 +1190,7 @@
                 if (daySchedules.length > 0) {
                     const hasWorkingHours = daySchedules.some(s => s.status === 'working');
                     const hasDayOff = daySchedules.some(s => s.status === 'dayoff');
+                    const hasAppointments = daySchedules.some(s => s.appointment_count > 0);
                     
                     if (hasDayOff) {
                         cell.classList.add('day-off');
@@ -1245,13 +1203,22 @@
                         scheduleInfo.textContent = 'Day Off';
                         cell.appendChild(scheduleInfo);
                     } else if (hasWorkingHours) {
-                        cell.classList.add('has-schedule');
-                        const indicator = document.createElement('div');
-                        indicator.className = 'schedule-indicator';
-                        cell.appendChild(indicator);
+                        if (hasAppointments) {
+                            cell.classList.add('has-appointments');
+                            const indicator = document.createElement('div');
+                            indicator.className = 'schedule-indicator has-appointments';
+                            cell.appendChild(indicator);
+                        } else {
+                            cell.classList.add('has-schedule');
+                            const indicator = document.createElement('div');
+                            indicator.className = 'schedule-indicator';
+                            cell.appendChild(indicator);
+                        }
                         
                         const workingSchedules = daySchedules.filter(s => s.status === 'working');
                         if (workingSchedules.length > 0) {
+                            // Sort by hour to get first and last
+                            workingSchedules.sort((a, b) => a.hour - b.hour);
                             const firstSchedule = workingSchedules[0];
                             const lastSchedule = workingSchedules[workingSchedules.length - 1];
                             
@@ -1259,6 +1226,15 @@
                             scheduleInfo.className = 'cell-schedule';
                             scheduleInfo.textContent = `${firstSchedule.start_time.substr(0, 5)} - ${lastSchedule.end_time.substr(0, 5)}`;
                             cell.appendChild(scheduleInfo);
+
+                            // Show appointment count if any
+                            if (hasAppointments) {
+                                const totalAppointments = daySchedules.reduce((sum, s) => sum + s.appointment_count, 0);
+                                const appointmentInfo = document.createElement('div');
+                                appointmentInfo.className = 'appointment-info';
+                                appointmentInfo.textContent = `${totalAppointments} appointment${totalAppointments > 1 ? 's' : ''}`;
+                                cell.appendChild(appointmentInfo);
+                            }
                         }
                     }
                 }
@@ -1306,7 +1282,7 @@
 
         // Refresh schedule
         async function refreshSchedule() {
-            showToast('Refreshing schedule...', 'info');
+            showToast('Refreshing schedule from database...', 'info');
             
             try {
                 await loadScheduleData();
@@ -1317,7 +1293,7 @@
             }
         }
 
-        // Show schedule details in modal
+        // Show schedule details in modal with real data
         function showScheduleDetails(date, schedules) {
             const modal = document.getElementById('scheduleModal');
             const modalTitle = document.getElementById('modalTitle');
@@ -1338,6 +1314,10 @@
                     <div class="detail-label">Date</div>
                     <div class="detail-value">${formattedDate}</div>
                 </div>
+                <div class="schedule-detail">
+                    <div class="detail-label">Database Records</div>
+                    <div class="detail-value">${schedules.length} schedule entries found</div>
+                </div>
             `;
             
             if (schedules.length === 0) {
@@ -1354,8 +1334,12 @@
                         <div class="schedule-list">
                 `;
                 
+                // Sort schedules by hour
+                schedules.sort((a, b) => a.hour - b.hour);
+                
                 schedules.forEach(schedule => {
-                    const scheduleClass = schedule.status === 'dayoff' ? 'day-off' : '';
+                    const scheduleClass = schedule.status === 'dayoff' ? 'day-off' : 
+                                        schedule.appointment_count > 0 ? 'has-appointments' : '';
                     modalContent += `
                         <div class="schedule-item ${scheduleClass}">
                             <div class="schedule-time">
@@ -1365,6 +1349,11 @@
                                 ${schedule.status === 'dayoff' ? 'Day Off' : 'Working Hours'}
                                 ${schedule.note ? ` - ${schedule.note}` : ''}
                             </div>
+                            ${schedule.appointment_count > 0 ? `
+                                <div class="appointment-info">
+                                    ${schedule.appointment_count} appointment${schedule.appointment_count > 1 ? 's' : ''} scheduled
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 });
@@ -1387,7 +1376,7 @@
 
         // Toggle notifications dropdown
         function toggleNotifications() {
-            showToast('Notification feature coming soon', 'info');
+            showToast('Notification feature available in full system', 'info');
         }
 
         // Toggle profile dropdown
@@ -1481,7 +1470,7 @@
             showToast('Connection lost', 'error');
         });
 
-        // Auto-refresh every 5 minutes
+        // Auto-refresh every 5 minutes to keep data current
         setInterval(() => {
             loadScheduleData().then(() => {
                 renderCalendar();
@@ -1497,7 +1486,7 @@
         // Performance monitoring
         window.addEventListener('load', function() {
             const loadTime = performance.now();
-            console.log(`Schedule page loaded in ${Math.round(loadTime)}ms`);
+            console.log(`Real schedule page loaded in ${Math.round(loadTime)}ms`);
         });
     </script>
 </body>

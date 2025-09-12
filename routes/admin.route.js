@@ -105,6 +105,9 @@ router.get('/profile/api', checkAdminApiAuth, adminController.getCurrentUserAPI)
 // Get dentist schedule/availability
 router.get('/api/dentists/:id/schedule', adminController.getDentistSchedule);
 
+// Add this new route for getting real dentist schedule data
+router.get('/api/dentists/:id/schedule-data', checkAdminApiAuth, adminController.getDentistScheduleData);
+
 // ==================== Patients Routes ====================
 router.get('/patients', checkAdminAuth, adminController.getPatients);
 router.get('/admin/patients', checkAdminAuth, adminController.listPatients);

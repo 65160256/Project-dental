@@ -4279,3 +4279,80 @@ exports.getTreatmentStatsAPI = async (req, res) => {
     });
   }
 };
+
+// Get dentist schedule data from database
+exports.getDentistScheduleData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { start_date, end_date } = req.query;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dentist ID is required'
+      });
+    }
+
+    // Default date range if not provided (current month)
+    const today = new Date();
+    const startDate = start_date || new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const endDate = end_date || new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    console.log(`📅 Getting schedule for dentist ${id} from ${startDate} to ${endDate}`);
+
+    // Get schedule data with appointment counts
+    const [schedules] = await db.execute(`
+      SELECT 
+        ds.schedule_id,
+        ds.schedule_date,
+        ds.day_of_week,
+        ds.hour,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        ds.note,
+        COUNT(q.queue_id) as appointment_count
+      FROM dentist_schedule ds
+      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+        AND DATE(q.time) = ds.schedule_date 
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      WHERE ds.dentist_id = ? 
+        AND ds.schedule_date BETWEEN ? AND ?
+      GROUP BY ds.schedule_id, ds.schedule_date, ds.day_of_week, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note
+      ORDER BY ds.schedule_date, ds.hour
+    `, [id, startDate, endDate]);
+
+    console.log(`📊 Found ${schedules.length} schedule entries`);
+
+    // Format the data for frontend
+    const formattedSchedules = schedules.map(schedule => ({
+      schedule_id: schedule.schedule_id,
+      schedule_date: schedule.schedule_date.toISOString().split('T')[0],
+      day_of_week: schedule.day_of_week,
+      hour: schedule.hour,
+      start_time: schedule.start_time,
+      end_time: schedule.end_time,
+      status: schedule.status,
+      note: schedule.note,
+      appointment_count: schedule.appointment_count
+    }));
+
+    res.json({
+      success: true,
+      schedules: formattedSchedules,
+      date_range: {
+        start_date: startDate,
+        end_date: endDate
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error loading dentist schedule:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentist schedule',
+      details: error.message
+    });
+  }
+};
