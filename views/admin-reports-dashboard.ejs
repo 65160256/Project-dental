@@ -126,11 +126,68 @@
             color: #4A90E2;
         }
 
+        .profile-dropdown {
+            position: relative;
+        }
+
         .user-info {
             display: flex;
             align-items: center;
             cursor: pointer;
             gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .user-info:hover {
+            transform: translateY(-1px);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 2000;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+            color: #4A90E2;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            border-top: 1px solid #e1e5e9;
         }
 
         .avatar {
@@ -651,11 +708,19 @@
                     <i class="fas fa-bell notification-icon"></i>
                 </div>
                 
-                <div class="user-info">
-                    <div class="avatar" id="userAvatar">A</div>
-                    <div class="user-details">
-                        <strong>Hello Admin</strong>
-                        <small>administrator</small>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>Hello Admin</strong>
+                            <small>administrator</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile"><i class="fas fa-user"></i> My Profile</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                     </div>
                 </div>
             </div>
@@ -1109,6 +1174,20 @@
                 }
             }, 4000);
         }
+
+        // Toggle profile dropdown
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').classList.remove('show');
+            }
+        });
 
         // Handle online/offline status
         window.addEventListener('online', () => {

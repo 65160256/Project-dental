@@ -28,37 +28,59 @@ exports.getProfile = async (req, res) => {
 };
 
 // -------------------- เปลี่ยนรหัสผ่าน --------------------
+// เพิ่ม API endpoint สำหรับ change password
 exports.changePassword = async (req, res) => {
   const userId = req.session.userId;
   const { currentPassword, newPassword, confirmPassword } = req.body;
 
-  if (!userId) return res.redirect('/login');
+  if (!userId) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Unauthorized' 
+    });
+  }
+  
   if (newPassword !== confirmPassword) {
-    req.flash('error', 'New password and confirm password do not match.');
-    return res.redirect('/profile');
+    return res.status(400).json({ 
+      success: false, 
+      message: 'New password and confirm password do not match.' 
+    });
   }
 
   try {
     const [rows] = await db.execute('SELECT password FROM user WHERE user_id = ?', [userId]);
-    if (rows.length === 0) return res.redirect('/login');
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
 
     const match = await bcrypt.compare(currentPassword, rows[0].password);
     if (!match) {
-      req.flash('error', 'Current password is incorrect.');
-      return res.redirect('/profile');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Current password is incorrect.' 
+      });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await db.execute('UPDATE user SET password = ? WHERE user_id = ?', [hashedPassword, userId]);
 
-    req.flash('success', 'Password changed successfully. Please log in again.');
+    // ลบ session
     req.session.destroy(() => {
-      res.redirect('/login');
+      res.json({ 
+        success: true, 
+        message: 'Password changed successfully' 
+      });
     });
 
   } catch (err) {
     console.error(err);
-    res.sendStatus(500);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
   }
 };
 
