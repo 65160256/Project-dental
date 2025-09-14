@@ -1703,3 +1703,311 @@ exports.getDentistsEnhanced = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+
+// Get patient profile
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    // Get patient info with user details - เพิ่ม id_card ในการดึงข้อมูล
+    const [patientRows] = await db.execute(
+      `SELECT 
+        p.patient_id,
+        p.fname, 
+        p.lname, 
+        p.dob, 
+        p.phone, 
+        p.address,
+        p.id_card,
+        u.email,
+        u.last_login
+       FROM patient p 
+       JOIN user u ON p.user_id = u.user_id 
+       WHERE p.user_id = ?`, 
+      [userId]
+    );
+
+    if (!patientRows[0]) return res.redirect('/login');
+    const patient = patientRows[0];
+
+    // Format the data for display
+    const profileData = {
+      ...patient,
+      dob_formatted: patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long', 
+        year: 'numeric'
+      }) : 'Not specified',
+      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' AM' : 'Never logged in',
+      full_name: `${patient.fname} ${patient.lname}`,
+      masked_password: '******',
+      // ใช้ข้อมูล ID Card จากฐานข้อมูล
+      id_card_display: patient.id_card || 'Not specified'
+    };
+
+    res.render('patient/profile', {
+      title: 'My Profile',
+      user: req.session,
+      patient: profileData
+    });
+  } catch (error) {
+    console.error('Profile error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
+
+// Show edit profile form
+exports.showEditProfile = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    // Get patient info with user details
+    const [patientRows] = await db.execute(
+      `SELECT 
+        p.patient_id,
+        p.fname, 
+        p.lname, 
+        p.dob, 
+        p.phone, 
+        p.address,
+        p.id_card,
+        u.email,
+        u.last_login
+       FROM patient p 
+       JOIN user u ON p.user_id = u.user_id 
+       WHERE p.user_id = ?`, 
+      [userId]
+    );
+
+    if (!patientRows[0]) return res.redirect('/login');
+    const patient = patientRows[0];
+
+    // Format the data for form
+    const profileData = {
+      ...patient,
+      dob_formatted: patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : '',
+      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' AM' : 'Never logged in',
+      full_name: `${patient.fname} ${patient.lname}`
+    };
+
+    res.render('patient/edit-profile', {
+      title: 'Edit My Profile',
+      user: req.session,
+      patient: profileData
+    });
+  } catch (error) {
+    console.error('Edit profile error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
+
+// Update profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    const {
+      fname,
+      lname,
+      dob,
+      id_card,
+      address,
+      phone,
+      email
+    } = req.body;
+
+    // Validate required fields
+    if (!fname || !lname || !email) {
+      return res.redirect('/patient/profile/edit?error=missing_required');
+    }
+
+    // Get patient ID
+    const [patientRows] = await db.execute(
+      'SELECT patient_id FROM patient WHERE user_id = ?',
+      [userId]
+    );
+
+    if (!patientRows[0]) return res.redirect('/login');
+    const patient_id = patientRows[0].patient_id;
+
+    // Check if email is already used by another user
+    const [emailCheck] = await db.execute(
+      'SELECT user_id FROM user WHERE email = ? AND user_id != ?',
+      [email, userId]
+    );
+
+    if (emailCheck.length > 0) {
+      return res.redirect('/patient/profile/edit?error=email_exists');
+    }
+
+    // Start transaction
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Update user table
+      await connection.execute(
+        'UPDATE user SET email = ? WHERE user_id = ?',
+        [email, userId]
+      );
+
+      // Update patient table
+      await connection.execute(
+        `UPDATE patient SET 
+         fname = ?, 
+         lname = ?, 
+         dob = ?, 
+         id_card = ?, 
+         address = ?, 
+         phone = ? 
+         WHERE patient_id = ?`,
+        [fname, lname, dob || null, id_card || null, address || null, phone || null, patient_id]
+      );
+
+      // Commit transaction
+      await connection.commit();
+      connection.release();
+
+      res.redirect('/patient/profile?success=updated');
+    } catch (error) {
+      // Rollback on error
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.redirect('/patient/profile/edit?error=update_failed');
+  }
+};
+
+
+// Show change password form
+exports.showChangePassword = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    // Get patient info with user details
+    const [patientRows] = await db.execute(
+      `SELECT 
+        p.patient_id,
+        p.fname, 
+        p.lname, 
+        u.email,
+        u.last_login
+       FROM patient p 
+       JOIN user u ON p.user_id = u.user_id 
+       WHERE p.user_id = ?`, 
+      [userId]
+    );
+
+    if (!patientRows[0]) return res.redirect('/login');
+    const patient = patientRows[0];
+
+    // Format the data for display
+    const profileData = {
+      ...patient,
+      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }) + ' AM' : 'Never logged in',
+      full_name: `${patient.fname} ${patient.lname}`
+    };
+
+    res.render('patient/change-password', {
+      title: 'Change Password',
+      user: req.session,
+      patient: profileData
+    });
+  } catch (error) {
+    console.error('Change password form error:', error);
+    res.status(500).send('Internal Server Error');
+  }
+};
+
+// Handle password change
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    const {
+      currentPassword,
+      newPassword,
+      confirmPassword
+    } = req.body;
+
+    // Validate required fields
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.redirect('/patient/profile/change-password?error=missing_fields');
+    }
+
+    // Check if new passwords match
+    if (newPassword !== confirmPassword) {
+      return res.redirect('/patient/profile/change-password?error=password_mismatch');
+    }
+
+    // Check password strength (minimum 8 characters)
+    if (newPassword.length < 8) {
+      return res.redirect('/patient/profile/change-password?error=password_weak');
+    }
+
+    // Get current user data
+    const [userRows] = await db.execute(
+      'SELECT password FROM user WHERE user_id = ?',
+      [userId]
+    );
+
+    if (!userRows[0]) return res.redirect('/login');
+
+    // Verify current password
+    const isCurrentPasswordValid = bcrypt.compareSync(currentPassword, userRows[0].password);
+    if (!isCurrentPasswordValid) {
+      return res.redirect('/patient/profile/change-password?error=current_password_wrong');
+    }
+
+    // Check if new password is different from current
+    const isSamePassword = bcrypt.compareSync(newPassword, userRows[0].password);
+    if (isSamePassword) {
+      return res.redirect('/patient/profile/change-password?error=same_password');
+    }
+
+    // Hash new password
+    const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
+
+    // Update password in database
+    await db.execute(
+      'UPDATE user SET password = ? WHERE user_id = ?',
+      [hashedNewPassword, userId]
+    );
+
+    res.redirect('/patient/profile?success=password_changed');
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.redirect('/patient/profile/change-password?error=update_failed');
+  }
+};

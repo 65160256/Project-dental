@@ -495,6 +495,28 @@ const dentistController = {
     }
   },
 
+getEditProfile: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) return res.redirect('/login');
+
+    res.render('dentist/edit-profile', { dentist: dentistResult[0] });
+  } catch (error) {
+    console.error('Error in getEditProfile:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดหน้าแก้ไขโปรไฟล์',
+      error 
+    });
+  }
+},
   // หน้าประวัติ
 getHistory: async (req, res) => {
   try {
@@ -831,80 +853,139 @@ searchPatientHistory: async (req, res) => {
 },
 
   // หน้าโปรไฟล์
-  getProfile: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
+ getProfile: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
 
-      const [dentistResult] = await db.execute(`
-        SELECT d.*, u.email, u.username 
-        FROM dentist d 
-        JOIN user u ON d.user_id = u.user_id 
-        WHERE d.user_id = ?
-      `, [userId]);
+    // ดึงข้อมูลทันตแพทย์พร้อมข้อมูล user
+    const [dentistResult] = await db.execute(`
+      SELECT 
+        d.*, 
+        u.email, 
+        u.username, 
+        u.last_login,
+        DATE_FORMAT(d.dob, '%Y-%m-%d') as formatted_dob
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
 
-      if (dentistResult.length === 0) return res.redirect('/login');
-
-      res.render('dentist/profile', { dentist: dentistResult[0] });
-    } catch (error) {
-      console.error('Error in getProfile:', error);
-      res.status(500).render('error', { 
-        message: 'เกิดข้อผิดพลาดในการโหลดโปรไฟล์',
-        error 
-      });
+    if (dentistResult.length === 0) {
+      return res.redirect('/login');
     }
-  },
+
+    const dentist = dentistResult[0];
+
+    res.render('dentist/profile', { 
+      dentist: dentist,
+      title: 'My Profile'
+    });
+  } catch (error) {
+    console.error('Error in getProfile:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดโปรไฟล์',
+      error 
+    });
+  }
+},
 
   // อัพเดทโปรไฟล์
-  updateProfile: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-      const { fname, lname, phone, specialty, address, education, work_start, work_end } = req.body;
+ updateProfile: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { fname, lname, phone, specialty, address, education, work_start, work_end, dob, idcard } = req.body;
 
-      await db.execute(`
-        UPDATE dentist 
-        SET fname = ?, lname = ?, phone = ?, specialty = ?, address = ?, education = ?, work_start = ?, work_end = ?
-        WHERE user_id = ?
-      `, [fname, lname, phone, specialty, address, education, work_start, work_end, userId]);
-
-      res.json({ success: true, message: 'อัพเดทโปรไฟล์เรียบร้อยแล้ว' });
-    } catch (error) {
-      console.error('Error in updateProfile:', error);
-      res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์' });
+    // Validation
+    if (!fname || !lname) {
+      return res.status(400).json({ success: false, error: 'First name and last name are required' });
     }
-  },
+
+    await db.execute(`
+      UPDATE dentist 
+      SET fname = ?, lname = ?, phone = ?, specialty = ?, address = ?, education = ?, 
+          work_start = ?, work_end = ?, dob = ?, idcard = ?
+      WHERE user_id = ?
+    `, [fname, lname, phone, specialty, address, education, work_start, work_end, dob, idcard, userId]);
+
+    res.json({ success: true, message: 'อัพเดทโปรไฟล์เรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Error in updateProfile:', error);
+    res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์' });
+  }
+},
 
   // เปลี่ยนรหัสผ่าน
   updatePassword: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-      const { currentPassword, newPassword, confirmPassword } = req.body;
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
-      if (newPassword !== confirmPassword) {
-        return res.status(400).json({ success: false, error: 'รหัสผ่านใหม่ไม่ตรงกัน' });
-      }
-
-      // สำหรับการทดสอบ ใช้การเปรียบเทียบแบบง่าย
-      // ในการใช้งานจริงควรใช้ bcrypt
-      const [userResult] = await db.execute(`SELECT password FROM user WHERE user_id = ?`, [userId]);
-      
-      if (userResult.length === 0) {
-        return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลผู้ใช้' });
-      }
-
-      // Simple password comparison (ใช้ bcrypt ในการใช้งานจริง)
-      if (userResult[0].password !== currentPassword) {
-        return res.status(400).json({ success: false, error: 'รหัสผ่านเดิมไม่ถูกต้อง' });
-      }
-
-      // อัพเดทรหัสผ่านใหม่
-      await db.execute(`UPDATE user SET password = ? WHERE user_id = ?`, [newPassword, userId]);
-
-      res.json({ success: true, message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' });
-    } catch (error) {
-      console.error('Error in updatePassword:', error);
-      res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน' });
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'กรุณากรอกข้อมูลให้ครบถ้วน' 
+      });
     }
-  },
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'รหัสผ่านใหม่ไม่ตรงกัน' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' 
+      });
+    }
+
+    // ดึงรหัสผ่านปัจจุบัน
+    const [userResult] = await db.execute(`
+      SELECT password FROM user WHERE user_id = ?
+    `, [userId]);
+    
+    if (userResult.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'ไม่พบข้อมูลผู้ใช้' 
+      });
+    }
+
+    // ตรวจสอบรหัสผ่านเดิม (ในการใช้งานจริงควรใช้ bcrypt)
+    // สำหรับตัวอย่างนี้ใช้การเปรียบเทียบแบบง่าย
+    const bcrypt = require('bcrypt');
+    const isValidPassword = await bcrypt.compare(currentPassword, userResult[0].password);
+    
+    if (!isValidPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'รหัสผ่านเดิมไม่ถูกต้อง' 
+      });
+    }
+
+    // เข้ารหัสรหัสผ่านใหม่
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // อัพเดทรหัสผ่านใหม่
+    await db.execute(`
+      UPDATE user SET password = ? WHERE user_id = ?
+    `, [hashedNewPassword, userId]);
+
+    res.json({ 
+      success: true, 
+      message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' 
+    });
+  } catch (error) {
+    console.error('Error in updatePassword:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน' 
+    });
+  }
+},
 
 // ดึงการจองล่าสุดของผู้ป่วยกับหมอคนนี้
 getLatestPatientAppointment: async (req, res) => {
@@ -2073,6 +2154,7 @@ deleteSchedule: async (req, res) => {
     });
   }
 },
+
 
   getAvailableDentists: async (req, res) => {
     res.json({ success: true, dentists: [] });

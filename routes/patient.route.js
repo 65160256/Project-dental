@@ -11,6 +11,14 @@ function requirePatient(req, res, next) {
     }
 }
 
+
+// === Profile routes ===
+router.get('/profile', requirePatient, patientController.getProfile);
+router.get('/profile/edit', requirePatient, patientController.showEditProfile);
+router.post('/profile/edit', requirePatient, patientController.updateProfile);
+router.get('/profile/change-password', requirePatient, patientController.showChangePassword);
+router.post('/profile/change-password', requirePatient, patientController.changePassword);
+
 // Password reset routes
 router.get('/forgot-password', patientController.showForgotPasswordForm);
 router.post('/forgot-password', patientController.handleForgotPassword);

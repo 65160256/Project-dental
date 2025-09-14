@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %></title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      position: fixed;
+      height: 100vh;
+      padding: 0;
+      color: #fff;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar .logo img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+
+    .sidebar .logo h3 {
+      margin: 10px 0 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      margin: 2px 0;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .sidebar ul li:hover a {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      margin: 0 10px;
+    }
+
+    .main {
+      margin-left: 180px;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .top-bar h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .user-details strong {
+      display: block;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f8f9fa;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #4A90E2;
+      margin-bottom: 30px;
+      padding: 5px;
+    }
+
+    .back-button:hover {
+      color: #357abd;
+    }
+
+    .profile-container {
+      max-width: 800px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .profile-header {
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .profile-header h2 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .profile-header p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .profile-body {
+      padding: 30px;
+    }
+
+    .info-section {
+      margin-bottom: 30px;
+    }
+
+    .info-section h3 {
+      color: #333;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f3f4;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .info-item {
+      margin-bottom: 15px;
+    }
+
+    .info-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      color: #333;
+      padding: 8px 0;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      padding-top: 20px;
+      border-top: 1px solid #f1f3f4;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+
+    .btn-primary {
+      background: #ffc107;
+      color: #212529;
+    }
+
+    .btn-primary:hover {
+      background: #e0a800;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+      
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/patient/dashboard">Dashboard</a></li>
+      <li><a href="/patient/appointments">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/my-treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <h1>My Profile</h1>
+      <div class="user-section">
+        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="user-details">
+              <strong>Hello <%= patient.fname %></strong>
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <button class="back-button" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <h2><%= patient.full_name %></h2>
+          <p>Last Login: <%= patient.last_login_formatted %></p>
+        </div>
+
+        <div class="profile-body">
+          <div class="info-section">
+            <h3>Login Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Email:</div>
+                <div class="info-value"><%= patient.email %></div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Password:</div>
+                <div class="info-value"><%= patient.masked_password %></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3>Personal Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Name:</div>
+                <div class="info-value"><%= patient.full_name %></div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Date of Birth:</div>
+                <div class="info-value">
+                  <% if (patient.dob) { %>
+                    <%= patient.dob_formatted %>
+                  <% } else { %>
+                    Not specified
+                  <% } %>
+                </div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">ID Card Number:</div>
+                <div class="info-value">
+                  <% if (patient.id_card) { %>
+                    <%= patient.id_card %>
+                  <% } else { %>
+                    Not specified
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3>Contact Information</h3>
+            <div class="info-grid">
+              <div class="info-item full-width">
+                <div class="info-label">Address:</div>
+                <div class="info-value">
+                  <% if (patient.address) { %>
+                    <%= patient.address %>
+                  <% } else { %>
+                    Not specified
+                  <% } %>
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Phone:</div>
+                <div class="info-value">
+                  <% if (patient.phone) { %>
+                    <%= patient.phone %>
+                  <% } else { %>
+                    Not specified
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <a href="/patient/profile/change-password" class="btn btn-secondary">
+              Change Password
+            </a>
+            <a href="/patient/profile/edit" class="btn btn-primary">
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    function toggleNotifications() {
+      console.log('Notifications clicked');
+    }
+    
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

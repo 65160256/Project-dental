@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %></title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+    }
+
+    .sidebar {
+      width: 180px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      position: fixed;
+      height: 100vh;
+      padding: 0;
+      color: #fff;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar .logo img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+
+    .sidebar .logo h3 {
+      margin: 10px 0 0 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
+
+    .sidebar ul li {
+      margin: 2px 0;
+    }
+
+    .sidebar ul li a {
+      display: block;
+      padding: 12px 20px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .sidebar ul li:hover a {
+      background-color: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      margin: 0 10px;
+    }
+
+    .main {
+      margin-left: 180px;
+      min-height: 100vh;
+      background-color: #f5f7fa;
+    }
+
+    .top-bar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .top-bar h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .user-details strong {
+      display: block;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .user-details small {
+      color: #666;
+      font-size: 11px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: #333;
+      font-size: 13px;
+    }
+
+    .dropdown-menu a:hover {
+      background-color: #f8f9fa;
+    }
+
+    .content {
+      padding: 0;
+      max-width: 800px;
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #333;
+      padding: 20px 30px 10px 30px;
+      display: flex;
+      align-items: center;
+    }
+
+    .back-button:hover {
+      color: #4A90E2;
+    }
+
+    .profile-container {
+      background: white;
+      margin: 0 30px 30px 30px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .profile-header {
+      padding: 40px;
+      text-align: center;
+      background: white;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #6c757d;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: white;
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 5px 0;
+    }
+
+    .profile-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+    }
+
+    .profile-form {
+      padding: 0;
+    }
+
+    .form-section {
+      padding: 30px 40px;
+      border-bottom: 1px solid #f1f3f4;
+    }
+
+    .form-section:last-child {
+      border-bottom: none;
+    }
+
+    .form-section h3 {
+      color: #333;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 20px 0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #333;
+      background-color: #f8f9fa;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #4A90E2;
+      background-color: white;
+    }
+
+    .form-input:disabled {
+      background-color: #e9ecef;
+      color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      padding: 30px 40px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+
+    .btn-primary {
+      background: #ffc107;
+      color: #212529;
+    }
+
+    .btn-primary:hover {
+      background: #e0a800;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .success-message {
+      background: #d1edff;
+      color: #0c5460;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="Smile Clinic" />
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/patient/dashboard">Dashboard</a></li>
+      <li><a href="/patient/appointments">Appointment</a></li>
+      <li><a href="/patient/history">History</a></li>
+      <li><a href="/patient/my-treatments">My Treatments</a></li>
+      <li><a href="/patient/dentists">Dentists</a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <h1>Edit My Profile</h1>
+      <div class="user-section">
+        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="user-details">
+              <strong>Hello Mrs. <%= patient.lname %></strong>
+              <small>patient</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/patient/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <button class="back-button" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <h2 class="profile-name">Mrs. <%= patient.full_name %></h2>
+          <p class="profile-subtitle">Last Login: <%= patient.last_login_formatted %></p>
+        </div>
+
+        <form action="/patient/profile/edit" method="POST" class="profile-form">
+          <div class="form-section">
+            <h3>Login Information</h3>
+            
+            <% if (typeof query !== 'undefined' && query.error) { %>
+              <% if (query.error === 'missing_required') { %>
+                <div class="error-message">Please fill in all required fields.</div>
+              <% } else if (query.error === 'email_exists') { %>
+                <div class="error-message">This email is already in use by another account.</div>
+              <% } else if (query.error === 'update_failed') { %>
+                <div class="error-message">Failed to update profile. Please try again.</div>
+              <% } %>
+            <% } %>
+
+            <div class="form-group">
+              <label class="form-label">Email:</label>
+              <input type="email" name="email" class="form-input" value="<%= patient.email %>" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Password:</label>
+              <input type="password" class="form-input" value="******" disabled>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Personal Information</h3>
+            
+            <div class="form-group">
+              <label class="form-label">Firstname:</label>
+              <input type="text" name="fname" class="form-input" value="<%= patient.fname %>" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Lastname:</label>
+              <input type="text" name="lname" class="form-input" value="<%= patient.lname %>" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Date of Birth:</label>
+              <input type="date" name="dob" class="form-input" value="<%= patient.dob_formatted %>">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">ID Card Number:</label>
+              <input type="text" name="id_card" class="form-input" value="<%= patient.id_card || '' %>" maxlength="13">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Contact Information</h3>
+            
+            <div class="form-group">
+              <label class="form-label">Address:</label>
+              <textarea name="address" class="form-input" rows="3" style="resize: vertical;"><%= patient.address || '' %></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Phone:</label>
+              <input type="tel" name="phone" class="form-input" value="<%= patient.phone || '' %>">
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <a href="/patient/profile/change-password" class="btn btn-secondary">
+              Change Password
+            </a>
+            <button type="submit" class="btn btn-primary">
+              Edit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('profileDropdown');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    
+    function toggleNotifications() {
+      console.log('Notifications clicked');
+    }
+    
+    document.addEventListener('click', function (e) {
+      const prof = document.querySelector('.profile-dropdown');
+      if (!prof.contains(e.target)) {
+        document.getElementById('profileDropdown').style.display = 'none';
+      }
+    });
+
+    // Form validation
+    document.querySelector('.profile-form').addEventListener('submit', function(e) {
+      const fname = document.querySelector('input[name="fname"]').value.trim();
+      const lname = document.querySelector('input[name="lname"]').value.trim();
+      const email = document.querySelector('input[name="email"]').value.trim();
+      
+      if (!fname || !lname || !email) {
+        e.preventDefault();
+        alert('Please fill in all required fields (First name, Last name, and Email).');
+        return false;
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address.');
+        return false;
+      }
+      
+      // ID Card validation (if provided)
+      const idCard = document.querySelector('input[name="id_card"]').value.trim();
+      if (idCard && idCard.length !== 13) {
+        e.preventDefault();
+        alert('ID Card number must be exactly 13 digits.');
+        return false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -84,6 +84,8 @@ router.get('/api/patient-history/:patientId', requireAuth, requireDentist, denti
 router.get('/profile', requireAuth, requireDentist, dentistController.getProfile);
 router.post('/profile/update', requireAuth, requireDentist, dentistController.updateProfile);
 router.post('/profile/update-password', requireAuth, requireDentist, dentistController.updatePassword);
+router.get('/profile/edit', requireAuth, requireDentist, dentistController.getEditProfile);
+
 
 // =================
 // Treatment Routes
