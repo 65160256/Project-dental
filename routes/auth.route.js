@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require('../controller/auth.controller');
 const registerController = require('../controller/register.controller');
 const loginController = require('../controller/login.controller');
+const passwordResetController = require('../controller/password-reset.controller');
 
 // Middleware สำหรับตรวจสอบ session และ rate limiting
 const rateLimit = require('express-rate-limit');
@@ -29,6 +30,28 @@ const registerLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// Rate limiting สำหรับ forgot password
+const forgotPasswordLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 นาที
+    max: 3, // จำกัด 3 ครั้งต่อ IP
+    message: {
+        error: 'Too many reset attempts, please try again after 15 minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Rate limiting สำหรับ reset password
+const resetPasswordLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 ชั่วโมง
+    max: 10, // จำกัด 10 ครั้งต่อ IP
+    message: {
+        error: 'Too many password reset attempts, please try again after 1 hour'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Middleware สำหรับตรวจสอบว่าล็อกอินแล้วหรือยัง
 const requireGuest = (req, res, next) => {
     if (req.session.user || req.session.userId) {
@@ -45,7 +68,7 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
-// =========== หน้าเว็บ Routes ===========
+// =========== Authentication Routes ===========
 
 // เข้าหน้า login (ต้องยังไม่ล็อกอิน)
 router.get('/login', requireGuest, authController.getLogin);
@@ -61,44 +84,19 @@ router.post('/register', registerLimiter, registerController.registerPatient);
 router.get('/logout', requireAuth, authController.logout);
 router.post('/logout', requireAuth, authController.logout); // รองรับทั้ง GET และ POST
 
-// หน้า forgot password
-router.get('/forgot-password', requireGuest, (req, res) => {
-    res.render('forgot-password', { 
-        error: null, 
-        message: req.query.message || null 
-    });
-});
+// =========== Password Reset Routes ===========
 
-// ส่ง reset password email
-router.post('/forgot-password', rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 นาที
-    max: 3, // จำกัด 3 ครั้งต่อ IP
-    message: { error: 'Too many reset attempts, please try again later' }
-}), async (req, res) => {
-    try {
-        const { email } = req.body;
-        
-        if (!email) {
-            return res.render('forgot-password', { 
-                error: 'กรุณากรอกอีเมล', 
-                message: null 
-            });
-        }
+// หน้า Forgot Password
+router.get('/forgot-password', requireGuest, passwordResetController.getForgotPassword);
 
-        // TODO: Implement password reset logic here
-        // - ตรวจสอบ email ในฐานข้อมูล
-        // - สร้าง reset token
-        // - ส่งอีเมล
-        
-        res.redirect('/login?message=หากอีเมลนี้มีในระบบ เราจะส่งลิงก์รีเซ็ตรหัสผ่านให้');
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        res.render('forgot-password', { 
-            error: 'เกิดข้อผิดพลาดในระบบ', 
-            message: null 
-        });
-    }
-});
+// ส่ง Reset Password Email
+router.post('/forgot-password', forgotPasswordLimiter, passwordResetController.sendResetEmail);
+
+// หน้า Reset Password (with token)
+router.get('/reset-password/:token', requireGuest, passwordResetController.getResetPassword);
+
+// ประมวลผล Reset Password
+router.post('/reset-password/:token', resetPasswordLimiter, passwordResetController.processResetPassword);
 
 // =========== API Routes ===========
 
@@ -205,6 +203,15 @@ router.post('/api/logout', requireAuth, (req, res) => {
     });
 });
 
+// API สำหรับ forgot password
+router.post('/api/forgot-password', forgotPasswordLimiter, passwordResetController.apiForgotPassword);
+
+// API สำหรับตรวจสอบ reset token
+router.get('/api/reset-password/:token/validate', passwordResetController.apiValidateToken);
+
+// API สำหรับ reset password
+router.post('/api/reset-password/:token', resetPasswordLimiter, passwordResetController.apiResetPassword);
+
 // API สำหรับตรวจสอบ session validity
 router.get('/api/auth/validate', (req, res) => {
     if (!req.session.user && !req.session.userId) {
@@ -252,6 +259,8 @@ router.post('/api/auth/refresh', async (req, res) => {
 // API สำหรับเปลี่ยนรหัสผ่าน (ต้องล็อกอินแล้ว)
 router.post('/api/auth/change-password', requireAuth, async (req, res) => {
     try {
+        const bcrypt = require('bcryptjs');
+        const db = require('../models/db');
         const { currentPassword, newPassword, confirmPassword } = req.body;
         
         if (!currentPassword || !newPassword || !confirmPassword) {
@@ -275,10 +284,37 @@ router.post('/api/auth/change-password', requireAuth, async (req, res) => {
             });
         }
         
-        // TODO: Implement change password logic
-        // - ตรวจสอบรหัสผ่านเดิม
-        // - เข้ารหัสรหัสผ่านใหม่
-        // - อัพเดทในฐานข้อมูล
+        const userId = req.session.user?.user_id || req.session.userId;
+        
+        // ตรวจสอบรหัสผ่านปัจจุบัน
+        const [users] = await db.execute(
+            'SELECT password FROM user WHERE user_id = ?',
+            [userId]
+        );
+        
+        if (users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'ไม่พบผู้ใช้งาน'
+            });
+        }
+        
+        const isValidPassword = await bcrypt.compare(currentPassword, users[0].password);
+        if (!isValidPassword) {
+            return res.status(400).json({
+                success: false,
+                error: 'รหัสผ่านปัจจุบันไม่ถูกต้อง'
+            });
+        }
+        
+        // เข้ารหัสรหัสผ่านใหม่
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        // อัปเดทรหัสผ่าน
+        await db.execute(
+            'UPDATE user SET password = ? WHERE user_id = ?',
+            [hashedPassword, userId]
+        );
         
         res.json({
             success: true,

@@ -6,6 +6,7 @@ const methodOverride = require('method-override');
 const multer = require('multer');
 const flash = require('express-flash');
 const fs = require('fs');
+const cron = require('node-cron');
 
 require('dotenv').config();
 
@@ -172,6 +173,16 @@ app.use('/uploads', (req, res, next) => {
   });
 });
 
+
+cron.schedule('0 * * * *', async () => {
+  try {
+    const db = require('./models/db');
+    await db.execute('DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL');
+    console.log('Cleaned up expired password reset tokens');
+  } catch (error) {
+    console.error('Cleanup error:', error);
+  }
+});
 // ===============================
 // Current User Middleware
 // ===============================
@@ -483,6 +494,19 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
+
+// ===============================
+// Initialize Cron Jobs
+// ===============================
+const { scheduleTokenCleanup } = require('./jobs/cleanup-tokens');
+
+// Start token cleanup job
+try {
+  scheduleTokenCleanup();
+  console.log('✅ Password reset token cleanup job initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize cleanup job:', error);
+}
 
 // ===============================
 // Start Server

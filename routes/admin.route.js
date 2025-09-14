@@ -359,4 +359,187 @@ router.get('/appointments/edit', checkAdminAuth, (req, res) => {
   });
 });
 
+const passwordResetController = require('../controller/password-reset.controller');
+const { runDetailedCleanup } = require('../jobs/cleanup-tokens');
+
+// ==================== PASSWORD RESET MONITORING ====================
+
+// หน้า Password Reset Dashboard
+router.get('/password-resets', async (req, res) => {
+  try {
+    const db = require('../models/db');
+    
+    // Get statistics
+    const [stats] = await db.execute(`
+      SELECT 
+        COUNT(*) as total_requests,
+        SUM(CASE WHEN expires_at > NOW() AND used_at IS NULL THEN 1 ELSE 0 END) as active_tokens,
+        SUM(CASE WHEN expires_at <= NOW() AND used_at IS NULL THEN 1 ELSE 0 END) as expired_tokens,
+        SUM(CASE WHEN used_at IS NOT NULL THEN 1 ELSE 0 END) as successful_resets,
+        AVG(CASE WHEN used_at IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, created_at, used_at) END) as avg_completion_time
+      FROM password_resets
+    `);
+
+    // Get recent activity
+    const [recentActivity] = await db.execute(`
+      SELECT 
+        pr.id,
+        pr.email,
+        pr.created_at,
+        pr.expires_at,
+        pr.used_at,
+        CASE 
+          WHEN pr.used_at IS NOT NULL THEN 'completed'
+          WHEN pr.expires_at <= NOW() THEN 'expired'
+          ELSE 'active'
+        END as status,
+        u.user_id,
+        CONCAT(
+          COALESCE(d.fname, p.fname, 'Unknown'), ' ',
+          COALESCE(d.lname, p.lname, 'User')
+        ) as user_name,
+        CASE 
+          WHEN u.role_id = 1 THEN 'Admin'
+          WHEN u.role_id = 2 THEN 'Dentist'
+          WHEN u.role_id = 3 THEN 'Patient'
+          ELSE 'Unknown'
+        END as user_role
+      FROM password_resets pr
+      LEFT JOIN user u ON pr.email = u.email
+      LEFT JOIN dentist d ON u.user_id = d.user_id
+      LEFT JOIN patient p ON u.user_id = p.user_id
+      ORDER BY pr.created_at DESC
+      LIMIT 50
+    `);
+
+    // Get daily statistics for the last 30 days
+    const [dailyStats] = await db.execute(`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(*) as total_requests,
+        SUM(CASE WHEN used_at IS NOT NULL THEN 1 ELSE 0 END) as successful_resets,
+        ROUND(AVG(CASE WHEN used_at IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, created_at, used_at) END), 1) as avg_completion_minutes
+      FROM password_resets
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+      GROUP BY DATE(created_at)
+      ORDER BY date DESC
+    `);
+
+    res.render('admin/password-resets', {
+      title: 'Password Reset Monitoring',
+      stats: stats[0] || {},
+      recentActivity: recentActivity || [],
+      dailyStats: dailyStats || []
+    });
+
+  } catch (error) {
+    console.error('Admin password resets page error:', error);
+    res.status(500).render('error', {
+      message: 'Error loading password reset data',
+      error: error
+    });
+  }
+});
+
+// API: Get password reset statistics
+router.get('/api/password-resets/stats', async (req, res) => {
+  try {
+    const db = require('../models/db');
+    
+    const [stats] = await db.execute(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN expires_at > NOW() AND used_at IS NULL THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN expires_at <= NOW() AND used_at IS NULL THEN 1 ELSE 0 END) as expired,
+        SUM(CASE WHEN used_at IS NOT NULL THEN 1 ELSE 0 END) as used,
+        ROUND(
+          (SUM(CASE WHEN used_at IS NOT NULL THEN 1 ELSE 0 END) / COUNT(*)) * 100, 
+          2
+        ) as success_rate
+      FROM password_resets
+    `);
+
+    res.json({
+      success: true,
+      data: stats[0] || {}
+    });
+
+  } catch (error) {
+    console.error('Password reset stats API error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch statistics'
+    });
+  }
+});
+
+// API: Manual cleanup expired tokens
+router.post('/api/password-resets/cleanup', async (req, res) => {
+  try {
+    const result = await runDetailedCleanup();
+    
+    res.json({
+      success: true,
+      message: 'Cleanup completed successfully',
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Manual cleanup error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Cleanup failed'
+    });
+  }
+});
+
+// API: Revoke specific token (emergency use)
+router.post('/api/password-resets/:id/revoke', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    const db = require('../models/db');
+    
+    // Mark token as used to invalidate it
+    const [result] = await db.execute(
+      'UPDATE password_resets SET used_at = NOW() WHERE id = ? AND used_at IS NULL',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Token not found or already used'
+      });
+    }
+
+    // Log the revocation
+    console.log(`🚨 Password reset token revoked by admin: ID ${id}, Reason: ${reason || 'No reason provided'}`);
+
+    res.json({
+      success: true,
+      message: 'Token revoked successfully'
+    });
+
+  } catch (error) {
+    console.error('Token revocation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to revoke token'
+    });
+  }
+});
+
+// Export these functions for use in main admin routes
+module.exports.passwordResetRoutes = {
+  getDashboard: async (req, res) => {
+    // Implementation for admin dashboard password reset summary
+  },
+  getStats: async () => {
+    const stats = await passwordResetController.getPasswordResetStats();
+    return stats;
+  }
+};
+
 module.exports = router;

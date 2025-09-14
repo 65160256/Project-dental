@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Smile Clinic</title>
+    <title><%= error.status || 'Error' %> - Dentistry</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -23,121 +23,280 @@
 
         .error-container {
             background: white;
+            border-radius: 12px;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             text-align: center;
             max-width: 500px;
-            width: 90%;
+            margin: 20px;
         }
 
-        .error-icon {
-            font-size: 4rem;
+        .error-code {
+            font-size: 72px;
+            font-weight: bold;
+            color: #dc3545;
             margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(220,53,69,0.3);
         }
 
         .error-title {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: #e74c3c;
+            font-size: 28px;
+            color: #2c5aa0;
+            margin-bottom: 15px;
         }
 
         .error-message {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
+            font-size: 16px;
             color: #666;
-            line-height: 1.5;
+            margin-bottom: 30px;
+            line-height: 1.6;
         }
 
         .error-details {
             background: #f8f9fa;
-            padding: 15px;
             border-radius: 8px;
+            padding: 20px;
             margin-bottom: 30px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: #666;
             text-align: left;
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid #dc3545;
         }
 
-        .back-button {
-            display: inline-block;
-            background: #4A90E2;
-            color: white;
-            padding: 12px 30px;
+        .error-details h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .error-details p {
+            color: #6c757d;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             text-decoration: none;
-            border-radius: 25px;
-            transition: background 0.3s ease;
-            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            min-width: 120px;
         }
 
-        .back-button:hover {
-            background: #357abd;
+        .btn-primary {
+            background: #4285f4;
+            color: white;
         }
 
-        .home-button {
-            background: #28a745;
+        .btn-primary:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
         }
 
-        .home-button:hover {
-            background: #218838;
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
         }
 
-        .status-code {
-            font-size: 6rem;
-            font-weight: bold;
-            color: #e74c3c;
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #4285f4;
+            border: 2px solid #4285f4;
+        }
+
+        .btn-outline:hover {
+            background: #4285f4;
+            color: white;
+        }
+
+        .error-icon {
+            font-size: 64px;
             margin-bottom: 20px;
-            opacity: 0.5;
+        }
+
+        .help-section {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .help-section h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .help-section ul {
+            padding-left: 20px;
+            color: #1976d2;
+        }
+
+        .help-section li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                margin: 10px;
+                padding: 30px 20px;
+            }
+
+            .error-code {
+                font-size: 48px;
+            }
+
+            .error-title {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="error-container">
         <% if (error && error.status) { %>
-            <div class="status-code"><%= error.status %></div>
-        <% } else { %>
-            <div class="error-icon">⚠️</div>
-        <% } %>
-        
-        <h1 class="error-title">
-            <% if (error && error.status === 404) { %>
-                หน้าไม่พบ
-            <% } else if (error && error.status === 403) { %>
-                ไม่มีสิทธิ์เข้าถึง
+            <% if (error.status == 404) { %>
+                <div class="error-icon">🔍</div>
+                <div class="error-code">404</div>
+                <h1 class="error-title">Page Not Found</h1>
+                <p class="error-message">
+                    Sorry, the page you are looking for could not be found.
+                </p>
+                <div class="help-section">
+                    <h4>What you can do:</h4>
+                    <ul>
+                        <li>Check if the URL is typed correctly</li>
+                        <li>Go back to the previous page</li>
+                        <li>Visit our homepage</li>
+                        <li>Contact support if this is unexpected</li>
+                    </ul>
+                </div>
+            <% } else if (error.status == 403) { %>
+                <div class="error-icon">🚫</div>
+                <div class="error-code">403</div>
+                <h1 class="error-title">Access Denied</h1>
+                <p class="error-message">
+                    You don't have permission to access this resource.
+                </p>
+                <div class="help-section">
+                    <h4>Possible reasons:</h4>
+                    <ul>
+                        <li>You need to log in with proper credentials</li>
+                        <li>Your account doesn't have the required role</li>
+                        <li>This page is restricted to certain users</li>
+                        <li>Your session may have expired</li>
+                    </ul>
+                </div>
+            <% } else if (error.status == 500) { %>
+                <div class="error-icon">⚠️</div>
+                <div class="error-code">500</div>
+                <h1 class="error-title">Internal Server Error</h1>
+                <p class="error-message">
+                    Something went wrong on our server. Please try again later.
+                </p>
+                <div class="help-section">
+                    <h4>What happened:</h4>
+                    <ul>
+                        <li>There's a temporary problem with our server</li>
+                        <li>The issue has been automatically reported</li>
+                        <li>Our team is working to fix it</li>
+                        <li>Please try again in a few minutes</li>
+                    </ul>
+                </div>
             <% } else { %>
-                เกิดข้อผิดพลาด
+                <div class="error-icon">❌</div>
+                <div class="error-code"><%= error.status %></div>
+                <h1 class="error-title">Error <%= error.status %></h1>
+                <p class="error-message">
+                    <%= message || 'An unexpected error occurred.' %>
+                </p>
             <% } %>
-        </h1>
-        
-        <p class="error-message">
-            <%= message || 'เกิดข้อผิดพลาดที่ไม่คาดคิด' %>
-        </p>
-        
+        <% } else { %>
+            <div class="error-icon">❌</div>
+            <div class="error-code">Error</div>
+            <h1 class="error-title">Something went wrong</h1>
+            <p class="error-message">
+                <%= message || 'An unexpected error occurred. Please try again.' %>
+            </p>
+        <% } %>
+
         <% if (error && error.stack && process.env.NODE_ENV === 'development') { %>
             <div class="error-details">
-                <strong>Stack Trace (Development Mode):</strong><br>
-                <%= error.stack %>
+                <h4>Error Details (Development Mode):</h4>
+                <p><%= error.stack %></p>
             </div>
         <% } %>
-        
-        <div>
-            <a href="javascript:history.back()" class="back-button">
-                ← กลับไปหน้าก่อนหน้า
-            </a>
-            <a href="/" class="back-button home-button">
-                🏠 กลับหน้าหลัก
-            </a>
+
+        <div class="action-buttons">
+            <% if (error && error.status == 403) { %>
+                <a href="/login" class="btn btn-primary">Login</a>
+                <a href="/" class="btn btn-secondary">Go Home</a>
+            <% } else if (error && error.status == 404) { %>
+                <a href="/" class="btn btn-primary">Go Home</a>
+                <button onclick="history.back()" class="btn btn-outline">Go Back</button>
+            <% } else { %>
+                <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+                <a href="/" class="btn btn-secondary">Go Home</a>
+                <button onclick="history.back()" class="btn btn-outline">Go Back</button>
+            <% } %>
         </div>
-        
-        <% if (error && error.status === 403) { %>
-            <div style="margin-top: 20px;">
-                <a href="/login" class="back-button">
-                    🔐 เข้าสู่ระบบ
-                </a>
-            </div>
-        <% } %>
+
+        <div style="margin-top: 30px; font-size: 12px; color: #999;">
+            Error ID: <span id="errorId"></span>
+        </div>
     </div>
+
+    <script>
+        // Generate error ID for tracking
+        document.getElementById('errorId').textContent = 
+            'ERR-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+
+        // Log error for analytics
+        console.error('Page error:', {
+            status: '<%= error && error.status ? error.status : "unknown" %>',
+            message: '<%= message || "Unknown error" %>',
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+
+        // Report to analytics if available
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'error_page', {
+                'event_category': 'error',
+                'event_label': '<%= error && error.status ? error.status : "unknown" %>',
+                'value': '<%= error && error.status ? error.status : 0 %>'
+            });
+        }
+    </script>
 </body>
 </html>
