@@ -1,6 +1,7 @@
 // controllers/dentist.controller.js
 const db = require('../models/db');
 const path = require('path');
+const bcrypt = require('bcrypt'); 
 
 // helper: แปลง Date เป็น 'YYYY-MM-DD' เพื่อเทียบค่าวันให้แม่น
 const toYMD = (d) => {
@@ -508,7 +509,11 @@ getEditProfile: async (req, res) => {
 
     if (dentistResult.length === 0) return res.redirect('/login');
 
-    res.render('dentist/edit-profile', { dentist: dentistResult[0] });
+    res.render('dentist/edit-profile', { 
+      dentist: dentistResult[0],
+      message: req.query.message || null,
+      messageType: req.query.type || 'success'
+    });
   } catch (error) {
     console.error('Error in getEditProfile:', error);
     res.status(500).render('error', { 
@@ -893,19 +898,28 @@ searchPatientHistory: async (req, res) => {
  updateProfile: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
-    const { fname, lname, phone, specialty, address, education, work_start, work_end, dob, idcard } = req.body;
+    // เหลือเฉพาะข้อมูลที่แก้ไขได้
+    const { phone, specialty, address, education, dob } = req.body;
 
-    // Validation
-    if (!fname || !lname) {
-      return res.status(400).json({ success: false, error: 'First name and last name are required' });
-    }
+    // แปลง undefined เป็น null
+    const dobValue = dob && dob.trim() !== '' ? dob : null;
+    const phoneValue = phone && phone.trim() !== '' ? phone : null;
+    const specialtyValue = specialty && specialty.trim() !== '' ? specialty : null;
+    const addressValue = address && address.trim() !== '' ? address : null;
+    const educationValue = education && education.trim() !== '' ? education : null;
 
     await db.execute(`
       UPDATE dentist 
-      SET fname = ?, lname = ?, phone = ?, specialty = ?, address = ?, education = ?, 
-          work_start = ?, work_end = ?, dob = ?, idcard = ?
+      SET phone = ?, specialty = ?, address = ?, education = ?, dob = ?
       WHERE user_id = ?
-    `, [fname, lname, phone, specialty, address, education, work_start, work_end, dob, idcard, userId]);
+    `, [
+      phoneValue, 
+      specialtyValue, 
+      addressValue, 
+      educationValue, 
+      dobValue, 
+      userId
+    ]);
 
     res.json({ success: true, message: 'อัพเดทโปรไฟล์เรียบร้อยแล้ว' });
   } catch (error) {
@@ -920,29 +934,116 @@ searchPatientHistory: async (req, res) => {
     const userId = req.session.user?.user_id || req.session.userId;
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'กรุณากรอกข้อมูลให้ครบถ้วน' 
-      });
-    }
-
     if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, error: 'รหัสผ่านใหม่ไม่ตรงกัน' });
+    }
+
+    // ตรวจสอบรหัสผ่านเดิม
+    const [userResult] = await db.execute(`SELECT password FROM user WHERE user_id = ?`, [userId]);
+    
+    if (userResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลผู้ใช้' });
+    }
+
+    // ใช้ bcrypt เปรียบเทียบรหัสผ่านเดิม
+    const bcrypt = require('bcrypt');
+    const isValidPassword = await bcrypt.compare(currentPassword, userResult[0].password);
+    if (!isValidPassword) {
+      return res.status(400).json({ success: false, error: 'รหัสผ่านเดิมไม่ถูกต้อง' });
+    }
+
+    // Hash รหัสผ่านใหม่
+    const saltRounds = 10;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // อัพเดทรหัสผ่านใหม่
+    await db.execute(`UPDATE user SET password = ? WHERE user_id = ?`, [hashedNewPassword, userId]);
+
+    res.json({ success: true, message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Error in updatePassword:', error);
+    res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน' });
+  }
+},
+getChangeEmail: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) return res.redirect('/login');
+
+    res.render('dentist/change-email', { dentist: dentistResult[0] });
+  } catch (error) {
+    console.error('Error in getChangeEmail:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดหน้าเปลี่ยนอีเมล',
+      error 
+    });
+  }
+},
+
+getChangePassword: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) return res.redirect('/login');
+
+    res.render('dentist/change-password', { dentist: dentistResult[0] });
+  } catch (error) {
+    console.error('Error in getChangePassword:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดหน้าเปลี่ยนรหัสผ่าน',
+      error 
+    });
+  }
+},
+
+// อัพเดทอีเมล
+updateEmail: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { newEmail, confirmEmail, password } = req.body;
+
+    console.log('Update email request:', { userId, newEmail, confirmEmail });
+
+    // Validation
+    if (!newEmail || !confirmEmail || !password) {
       return res.status(400).json({ 
         success: false, 
-        error: 'รหัสผ่านใหม่ไม่ตรงกัน' 
+        error: 'All fields are required' 
       });
     }
 
-    if (newPassword.length < 6) {
+    if (newEmail !== confirmEmail) {
       return res.status(400).json({ 
         success: false, 
-        error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' 
+        error: 'New email addresses do not match' 
       });
     }
 
-    // ดึงรหัสผ่านปัจจุบัน
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Please enter a valid email address' 
+      });
+    }
+
+    // ตรวจสอบรหัสผ่านปัจจุบัน
     const [userResult] = await db.execute(`
       SELECT password FROM user WHERE user_id = ?
     `, [userId]);
@@ -950,39 +1051,49 @@ searchPatientHistory: async (req, res) => {
     if (userResult.length === 0) {
       return res.status(404).json({ 
         success: false, 
-        error: 'ไม่พบข้อมูลผู้ใช้' 
+        error: 'User not found' 
       });
     }
 
-    // ตรวจสอบรหัสผ่านเดิม (ในการใช้งานจริงควรใช้ bcrypt)
-    // สำหรับตัวอย่างนี้ใช้การเปรียบเทียบแบบง่าย
+    // ใช้ bcrypt เปรียบเทียบรหัสผ่าน
     const bcrypt = require('bcrypt');
-    const isValidPassword = await bcrypt.compare(currentPassword, userResult[0].password);
-    
+    const isValidPassword = await bcrypt.compare(password, userResult[0].password);
     if (!isValidPassword) {
       return res.status(400).json({ 
         success: false, 
-        error: 'รหัสผ่านเดิมไม่ถูกต้อง' 
+        error: 'Current password is incorrect' 
       });
     }
 
-    // เข้ารหัสรหัสผ่านใหม่
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    // ตรวจสอบว่าอีเมลใหม่มีผู้ใช้แล้วหรือไม่
+    const [existingUser] = await db.execute(`
+      SELECT user_id FROM user WHERE email = ? AND user_id != ?
+    `, [newEmail, userId]);
 
-    // อัพเดทรหัสผ่านใหม่
+    if (existingUser.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'This email address is already in use' 
+      });
+    }
+
+    // อัพเดทอีเมล
     await db.execute(`
-      UPDATE user SET password = ? WHERE user_id = ?
-    `, [hashedNewPassword, userId]);
+      UPDATE user SET email = ? WHERE user_id = ?
+    `, [newEmail, userId]);
+
+    console.log('Email updated successfully for user:', userId);
 
     res.json({ 
       success: true, 
-      message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' 
+      message: 'Email updated successfully. Please check your inbox for confirmation.' 
     });
+
   } catch (error) {
-    console.error('Error in updatePassword:', error);
+    console.error('Error in updateEmail:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน' 
+      error: 'เกิดข้อผิดพลาดในการอัพเดทอีเมล' 
     });
   }
 },

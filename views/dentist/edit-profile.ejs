@@ -172,12 +172,12 @@
             background-color: #f8f9fa;
         }
 
-        /* Edit Profile Content */
-        .edit-profile-content {
+        /* Profile Content */
+        .profile-content {
             padding: 20px 30px;
         }
 
-        .edit-profile-header {
+        .profile-header {
             display: flex;
             align-items: center;
             margin-bottom: 30px;
@@ -202,24 +202,27 @@
             background: #e9ecef;
         }
 
-        .edit-profile-title {
+        .profile-title {
             font-size: 24px;
             font-weight: 600;
             color: #333;
         }
 
-        .edit-profile-container {
+        .profile-container {
             background: white;
             border-radius: 8px;
-            padding: 30px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             max-width: 900px;
+            display: flex;
         }
 
-        .profile-top {
+        .profile-left {
+            padding: 30px;
             display: flex;
-            gap: 30px;
-            margin-bottom: 30px;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid #f0f0f0;
+            min-width: 250px;
         }
 
         .profile-avatar {
@@ -232,29 +235,37 @@
             justify-content: center;
             font-size: 48px;
             color: white;
-            flex-shrink: 0;
+            font-weight: 600;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
-        .profile-basic {
-            flex: 1;
+        .profile-avatar:hover {
+            transform: scale(1.05);
         }
 
         .dentist-name {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
             color: #333;
             margin-bottom: 5px;
+            text-align: center;
         }
 
         .last-login {
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            text-align: center;
         }
 
-        .form-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+        .profile-right {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .edit-form {
+            width: 100%;
         }
 
         .form-section {
@@ -266,64 +277,79 @@
             font-weight: 600;
             color: #333;
             margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .form-group {
+        .form-row {
             margin-bottom: 15px;
         }
 
         .form-label {
             display: block;
-            font-weight: 500;
-            color: #555;
+            font-size: 12px;
+            color: #666;
             margin-bottom: 5px;
-            font-size: 14px;
+            font-weight: 500;
         }
 
-        .form-input {
+        .form-input, .form-textarea, .form-select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
             font-size: 14px;
             background: #f8f9fa;
-            transition: all 0.3s ease;
+            transition: border-color 0.3s ease;
         }
 
-        .form-input:focus {
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
             border-color: #4A90E2;
             background: white;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-input[readonly], .form-input[disabled] {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
         }
 
         .form-textarea {
-            height: 100px;
+            height: 80px;
             resize: vertical;
         }
 
-        .password-input {
-            background: #f0f0f0;
-            color: #666;
-            font-family: monospace;
-            font-size: 16px;
+        .readonly-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .full-width {
-            grid-column: 1 / -1;
+        .field-help {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+            display: block;
         }
 
         .action-buttons {
             display: flex;
             gap: 15px;
             margin-top: 30px;
-            justify-content: flex-end;
+            flex-wrap: wrap;
         }
 
-        .btn-edit {
-            background: #FFA726;
+        .btn-save {
+            background: #4CAF50;
             color: white;
             border: none;
             padding: 12px 30px;
@@ -332,10 +358,13 @@
             font-weight: 500;
             cursor: pointer;
             transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .btn-edit:hover {
-            background: #FF9800;
+        .btn-save:hover {
+            background: #45a049;
         }
 
         .btn-password {
@@ -348,14 +377,18 @@
             font-weight: 500;
             cursor: pointer;
             transition: background 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-password:hover {
             background: #BDBDBD;
         }
 
-        .btn-cancel {
-            background: #6c757d;
+        .btn-email {
+            background: #17a2b8;
             color: white;
             border: none;
             padding: 12px 30px;
@@ -365,60 +398,55 @@
             cursor: pointer;
             transition: background 0.3s ease;
             text-decoration: none;
-            display: inline-block;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-email:hover {
+            background: #138496;
+        }
+
+        .btn-cancel {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-cancel:hover {
-            background: #5a6268;
+            background: #555;
         }
 
-        /* Loading Spinner */
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4A90E2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Success/Error Messages */
-        .message {
-            padding: 12px 16px;
+        .security-section {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
             border-radius: 6px;
+            padding: 15px;
             margin-bottom: 20px;
-            display: none;
         }
 
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .security-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .security-description {
+            margin: 0;
+            font-size: 13px;
+            color: #555;
+            line-height: 1.4;
         }
 
         /* Responsive */
@@ -433,29 +461,43 @@
                 margin-left: 0;
             }
             
-            .form-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
+            .profile-container {
+                flex-direction: column;
+                max-width: 100%;
             }
 
-            .profile-top {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+            .profile-left {
+                border-right: none;
+                border-bottom: 1px solid #f0f0f0;
+                min-width: auto;
             }
 
             .action-buttons {
                 flex-direction: column;
             }
         }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Spinner -->
-    <div class="loading" id="loadingSpinner">
-        <div class="spinner"></div>
-    </div>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -480,7 +522,11 @@
                 <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
                 <div class="profile-dropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">👨‍⚕️</div>
+                        <div class="avatar">
+                            <%= (dentist.fname && dentist.lname) ? 
+                                (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 
+                                'DR' %>
+                        </div>
                         <div class="user-details">
                             <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
                             <small>dentist</small>
@@ -496,167 +542,167 @@
             </div>
         </div>
 
-        <!-- Edit Profile Content -->
-        <div class="edit-profile-content">
-            <div class="edit-profile-header">
+        <!-- Profile Content -->
+        <div class="profile-content">
+            <div class="profile-header">
                 <a href="/dentist/profile" class="back-button">
                     <i class="fas fa-arrow-left"></i>
                     Back
                 </a>
-                <h1 class="edit-profile-title">Edit My Profile</h1>
+                <h1 class="profile-title">Edit My Profile</h1>
             </div>
 
-            <div class="edit-profile-container">
-                <!-- Messages -->
-                <div class="message success" id="successMessage"></div>
-                <div class="message error" id="errorMessage"></div>
+            <% if (typeof message !== 'undefined' && message) { %>
+                <div class="alert alert-<%= messageType || 'success' %>">
+                    <%= message %>
+                </div>
+            <% } %>
 
-                <!-- Profile Header -->
-                <div class="profile-top">
-                    <div class="profile-avatar">
-                        👨‍⚕️
+            <div class="profile-container">
+                <div class="profile-left">
+                    <div class="profile-avatar" onclick="changeProfilePicture()">
+                        <%= (dentist.fname && dentist.lname) ? 
+                            (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 
+                            'DR' %>
                     </div>
                     
-                    <div class="profile-basic">
-                        <h2 class="dentist-name">Dr. <%= dentist.fname %> <%= dentist.lname %></h2>
-                        <p class="last-login">
-                            Last Login: <%= dentist.last_login ? 
-                                new Date(dentist.last_login).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric'
-                                }) + ' - ' + 
-                                new Date(dentist.last_login).toLocaleTimeString('en-GB', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: false
-                                }) : 'Never' %>
-                        </p>
-                    </div>
+                    <h2 class="dentist-name">Dr. <%= dentist.fname %> <%= dentist.lname %></h2>
+                    <p class="last-login">
+                        Last Login: <%= dentist.last_login ? 
+                            new Date(dentist.last_login).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            }) + ' - ' + 
+                            new Date(dentist.last_login).toLocaleTimeString('en-GB', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'Never' %>
+                    </p>
                 </div>
-
-                <!-- Edit Form -->
-                <form id="editProfileForm">
-                    <div class="form-container">
-                        <!-- Left Column -->
-                        <div>
-                            <!-- Personal Information -->
-                            <div class="form-section">
-                                <h3 class="section-title">Personal Information</h3>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Firstname:</label>
-                                    <input type="text" name="fname" class="form-input" 
-                                           value="<%= dentist.fname %>" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Lastname:</label>
-                                    <input type="text" name="lname" class="form-input" 
-                                           value="<%= dentist.lname %>" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Date of Birth:</label>
-                                    <input type="date" name="dob" class="form-input" 
-                                           value="<%= dentist.dob ? dentist.dob.toISOString().split('T')[0] : '' %>">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">ID Card Number:</label>
-                                    <input type="text" name="idcard" class="form-input" 
-                                           value="<%= dentist.idcard || '' %>" maxlength="13">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Specialist:</label>
-                                    <select name="specialty" class="form-input">
-                                        <option value="General Dentistry" <%= dentist.specialty === 'General Dentistry' ? 'selected' : '' %>>General Dentistry</option>
-                                        <option value="Tooth Extraction" <%= dentist.specialty === 'Tooth Extraction' ? 'selected' : '' %>>Tooth Extraction</option>
-                                        <option value="Orthodontics" <%= dentist.specialty === 'Orthodontics' ? 'selected' : '' %>>Orthodontics</option>
-                                        <option value="Endodontics" <%= dentist.specialty === 'Endodontics' ? 'selected' : '' %>>Endodontics</option>
-                                        <option value="Periodontics" <%= dentist.specialty === 'Periodontics' ? 'selected' : '' %>>Periodontics</option>
-                                        <option value="Oral Surgery" <%= dentist.specialty === 'Oral Surgery' ? 'selected' : '' %>>Oral Surgery</option>
-                                    </select>
-                                </div>
+                
+                <div class="profile-right">
+                    <form class="edit-form" id="editProfileForm" method="POST" action="/dentist/profile/update">
+                        
+                        <!-- System Information (Read-Only) -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-lock" style="color: #dc3545;"></i>
+                                System Information
+                            </h3>
+                            <div class="readonly-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ข้อมูลในส่วนนี้ไม่สามารถแก้ไขได้ กรุณาติดต่อแอดมินหากต้องการเปลี่ยนแปลง
                             </div>
-
-                            <!-- Login Information -->
-                            <div class="form-section">
-                                <h3 class="section-title">Login Information</h3>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Email:</label>
-                                    <input type="email" name="email" class="form-input" 
-                                           value="<%= dentist.email || '' %>" readonly 
-                                           style="background: #f0f0f0; cursor: not-allowed;">
-                                    <small style="color: #666; font-size: 12px;">Email cannot be changed</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Password:</label>
-                                    <input type="password" class="form-input password-input" 
-                                           value="••••••" readonly style="cursor: not-allowed;">
-                                    <small style="color: #666; font-size: 12px;">Use "Change Password" button to update</small>
-                                </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Doctor ID:</label>
+                                <input type="text" class="form-input" value="<%= dentist.dentist_id || 'N/A' %>" readonly>
+                                <small class="field-help">รหัสประจำตัวในระบบ</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Full Name (Official):</label>
+                                <input type="text" class="form-input" value="Dr. <%= dentist.fname || '' %> <%= dentist.lname || '' %>" readonly>
+                                <small class="field-help">ชื่อ-นามสกุลทางการ ใช้ในเวชระเบียนและเอกสารราชการ</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Login Email:</label>
+                                <input type="email" class="form-input" value="<%= dentist.email || '' %>" readonly>
+                                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบ - ติดต่อแอดมินเพื่อเปลี่ยนแปลง</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">ID Card Number:</label>
+                                <input type="text" class="form-input" value="<%= dentist.idcard || 'Not provided' %>" readonly>
+                                <small class="field-help">เลขบัตรประชาชน ใช้เป็นตัวระบุตัวตนทางการ</small>
                             </div>
                         </div>
 
-                        <!-- Right Column -->
-                        <div>
-                            <!-- Educational Background -->
-                            <div class="form-section">
-                                <h3 class="section-title">Educational Background</h3>
-                                
-                                <div class="form-group">
-                                    <textarea name="education" class="form-input form-textarea" 
-                                              placeholder="Enter your educational background..."><%= dentist.education || '' %></textarea>
-                                </div>
+                        <!-- Editable Personal Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-edit" style="color: #28a745;"></i>
+                                Editable Information
+                            </h3>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Date of Birth:</label>
+                                <input type="date" name="dob" class="form-input" value="<%= dentist.dob ? dentist.dob.toISOString().split('T')[0] : '' %>">
+                                <small class="field-help">ใช้สำหรับคำนวณอายุและรายงานสถิติ</small>
                             </div>
-
-                            <!-- Contact Information -->
-                            <div class="form-section">
-                                <h3 class="section-title">Contact Information</h3>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Address:</label>
-                                    <textarea name="address" class="form-input form-textarea" 
-                                              placeholder="Enter your address..."><%= dentist.address || '' %></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Phone:</label>
-                                    <input type="tel" name="phone" class="form-input" 
-                                           value="<%= dentist.phone || '' %>" placeholder="08XXXXXXXX">
-                                </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Primary Specialty:</label>
+                                <select name="specialty" class="form-select">
+                                    <option value="">Select Primary Specialty</option>
+                                    <option value="General Dentistry" <%= dentist.specialty === 'General Dentistry' ? 'selected' : '' %>>General Dentistry</option>
+                                    <option value="Tooth Extraction" <%= dentist.specialty === 'Tooth Extraction' ? 'selected' : '' %>>Tooth Extraction</option>
+                                    <option value="Orthodontics" <%= dentist.specialty === 'Orthodontics' ? 'selected' : '' %>>Orthodontics</option>
+                                    <option value="Endodontics" <%= dentist.specialty === 'Endodontics' ? 'selected' : '' %>>Endodontics</option>
+                                    <option value="Periodontics" <%= dentist.specialty === 'Periodontics' ? 'selected' : '' %>>Periodontics</option>
+                                    <option value="Oral Surgery" <%= dentist.specialty === 'Oral Surgery' ? 'selected' : '' %>>Oral Surgery</option>
+                                </select>
+                                <small class="field-help">ความเชี่ยวชาญหลัก แสดงให้ผู้ป่วยเห็นในการจองนัด</small>
                             </div>
-
-                            <!-- Working Hours -->
-                            <div class="form-section">
-                                <h3 class="section-title">Working Hours</h3>
-                                
-                                <div class="form-group">
-                                    <label class="form-label">Work Start:</label>
-                                    <input type="time" name="work_start" class="form-input" 
-                                           value="<%= dentist.work_start ? dentist.work_start.substring(0,5) : '' %>">
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Work End:</label>
-                                    <input type="time" name="work_end" class="form-input" 
-                                           value="<%= dentist.work_end ? dentist.work_end.substring(0,5) : '' %>">
-                                </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Additional Qualifications:</label>
+                                <textarea name="education" class="form-textarea" placeholder="Enter additional qualifications, certifications, or training..."><%= dentist.education || '' %></textarea>
+                                <small class="field-help">ใบรับรองเพิ่มเติม, หลักสูตรอบรม, หรือความเชี่ยวชาญพิเศษ</small>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <a href="/dentist/profile" class="btn-cancel">Cancel</a>
-                        <button type="button" class="btn-password" onclick="changePassword()">Change Password</button>
-                        <button type="submit" class="btn-edit">Save Changes</button>
-                    </div>
-                </form>
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-phone" style="color: #17a2b8;"></i>
+                                Contact Information
+                            </h3>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Address:</label>
+                                <textarea name="address" class="form-textarea" placeholder="Enter your current address..."><%= dentist.address || '' %></textarea>
+                                <small class="field-help">ที่อยู่ปัจจุบันหรือที่อยู่คลินิก</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label class="form-label">Phone Number:</label>
+                                <input type="tel" name="phone" class="form-input" value="<%= dentist.phone || '' %>" placeholder="08xxxxxxxx">
+                                <small class="field-help">เบอร์โทรศัพท์หลักสำหรับติดต่อผู้ป่วยและนัดหมาย</small>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-shield-alt" style="color: #6f42c1;"></i>
+                                Security Settings
+                            </h3>
+                            
+                            
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <a href="/dentist/profile/change-password" class="btn-password">
+                                    <i class="fas fa-key"></i> Change Password
+                                </a>
+                                <a href="/dentist/profile/change-email" class="btn-email">
+                                    <i class="fas fa-envelope"></i> Change Email
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button type="submit" class="btn-save">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="/dentist/profile" class="btn-cancel">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -678,59 +724,16 @@
             }
         });
 
-        function showMessage(type, message) {
-            const successMsg = document.getElementById('successMessage');
-            const errorMsg = document.getElementById('errorMessage');
-            
-            successMsg.style.display = 'none';
-            errorMsg.style.display = 'none';
-            
-            if (type === 'success') {
-                successMsg.textContent = message;
-                successMsg.style.display = 'block';
-            } else {
-                errorMsg.textContent = message;
-                errorMsg.style.display = 'block';
-            }
-            
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                successMsg.style.display = 'none';
-                errorMsg.style.display = 'none';
-            }, 5000);
+        function changeProfilePicture() {
+            alert('Profile picture upload feature will be available soon!');
         }
 
-        function showLoading(show) {
-            const loading = document.getElementById('loadingSpinner');
-            loading.style.display = show ? 'flex' : 'none';
-        }
-
-        // Handle form submission
+        // Form submission handling
         document.getElementById('editProfileForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
-
-            // Validate required fields
-            if (!data.fname || !data.lname) {
-                showMessage('error', 'First name and last name are required');
-                return;
-            }
-
-            // Validate phone number format
-            if (data.phone && !/^[0-9]{9,10}$/.test(data.phone.replace(/[^0-9]/g, ''))) {
-                showMessage('error', 'Please enter a valid phone number');
-                return;
-            }
-
-            // Validate ID card (if provided)
-            if (data.idcard && !/^[0-9]{13}$/.test(data.idcard)) {
-                showMessage('error', 'ID card number must be 13 digits');
-                return;
-            }
-
-            showLoading(true);
 
             fetch('/dentist/profile/update', {
                 method: 'POST',
@@ -741,118 +744,28 @@
             })
             .then(response => response.json())
             .then(data => {
-                showLoading(false);
                 if (data.success) {
-                    showMessage('success', 'Profile updated successfully!');
-                    // Redirect after a short delay
+                    // แสดงข้อความสำเร็จและ redirect
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Profile updated successfully!';
+                    
+                    const container = document.querySelector('.profile-content');
+                    container.insertBefore(alertDiv, container.firstChild.nextSibling);
+                    
+                    // Scroll to top และ redirect หลัง 2 วินาที
+                    window.scrollTo(0, 0);
                     setTimeout(() => {
                         window.location.href = '/dentist/profile';
                     }, 2000);
                 } else {
-                    showMessage('error', data.error || 'Failed to update profile');
+                    alert('Error: ' + data.error);
                 }
             })
             .catch(error => {
-                showLoading(false);
                 console.error('Error:', error);
-                showMessage('error', 'An error occurred while updating profile');
+                alert('An error occurred while updating profile');
             });
-        });
-
-        function changePassword() {
-            // Create password change modal
-            const modal = document.createElement('div');
-            modal.innerHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
-                    <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                        <h3 style="margin-bottom: 20px; color: #333;">Change Password</h3>
-                        <form id="changePasswordForm">
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555;">Current Password:</label>
-                                <input type="password" name="currentPassword" required 
-                                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                            </div>
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555;">New Password:</label>
-                                <input type="password" name="newPassword" required minlength="6"
-                                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                                <small style="color: #666;">At least 6 characters</small>
-                            </div>
-                            <div style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #555;">Confirm New Password:</label>
-                                <input type="password" name="confirmPassword" required minlength="6"
-                                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                            </div>
-                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" onclick="this.closest('div').parentElement.remove()" 
-                                        style="padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">
-                                    Cancel
-                                </button>
-                                <button type="submit" 
-                                        style="padding: 10px 20px; border: none; background: #4A90E2; color: white; border-radius: 4px; cursor: pointer;">
-                                    Change Password
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                const data = Object.fromEntries(formData);
-
-                if (data.newPassword !== data.confirmPassword) {
-                    alert('New passwords do not match!');
-                    return;
-                }
-
-                if (data.newPassword.length < 6) {
-                    alert('New password must be at least 6 characters long!');
-                    return;
-                }
-
-                fetch('/dentist/profile/update-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Password changed successfully!');
-                        modal.remove();
-                    } else {
-                        alert('Error: ' + (data.error || 'Failed to change password'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while changing password');
-                });
-            });
-        }
-
-        // Auto-format phone number
-        document.querySelector('input[name="phone"]').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^0-9]/g, '');
-            if (value.length > 10) {
-                value = value.substring(0, 10);
-            }
-            e.target.value = value;
-        });
-
-        // Auto-format ID card
-        document.querySelector('input[name="idcard"]').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^0-9]/g, '');
-            if (value.length > 13) {
-                value = value.substring(0, 13);
-            }
-            e.target.value = value;
         });
     </script>
 </body>

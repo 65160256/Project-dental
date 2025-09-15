@@ -133,7 +133,16 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .user-details strong {
@@ -232,6 +241,15 @@
             font-size: 48px;
             color: white;
             flex-shrink: 0;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .profile-info {
@@ -329,6 +347,21 @@
             background: #BDBDBD;
         }
 
+        .btn-email {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .btn-email:hover {
+            background: #138496;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -388,7 +421,9 @@
                 <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
                 <div class="profile-dropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">👨‍⚕️</div>
+                        <div class="avatar" id="topBarAvatar">
+                            <!-- จะถูกสร้างโดย JavaScript -->
+                        </div>
                         <div class="user-details">
                             <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
                             <small>dentist</small>
@@ -416,8 +451,8 @@
 
             <div class="profile-container">
                 <div class="profile-main">
-                    <div class="profile-avatar">
-                        👨‍⚕️
+                    <div class="profile-avatar" id="profileAvatar">
+                        <!-- จะถูกสร้างโดย JavaScript -->
                     </div>
                     
                     <div class="profile-info">
@@ -499,7 +534,12 @@
                         <!-- Action Buttons -->
                         <div class="action-buttons">
                             <button class="btn-edit" onclick="editProfile()">Edit</button>
-                            <button class="btn-password" onclick="changePassword()">Change Password</button>
+                            <a href="/dentist/profile/change-password" class="btn-password" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                            <a href="/dentist/profile/change-email" class="btn-email" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-envelope"></i> Change Email
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -508,6 +548,71 @@
     </div>
 
     <script>
+        // ข้อมูลทันตแพทย์จาก server
+        const dentist = {
+            fname: '<%= dentist.fname %>',
+            lname: '<%= dentist.lname %>',
+            photo: '<%= dentist.photo || "" %>'
+        };
+
+        // ฟังก์ชันสร้างอักษรย่อจากชื่อ
+        function generateInitials(fname, lname) {
+            let initials = '';
+            
+            if (fname && fname.trim()) {
+                initials += fname.trim().charAt(0);
+            }
+            
+            if (lname && lname.trim()) {
+                initials += lname.trim().charAt(0);
+            } else if (fname && fname.trim().length > 1) {
+                // ถ้าไม่มีนามสกุล ให้ใช้ตัวอักษร 2 ตัวแรกของชื่อ
+                initials = fname.trim().substring(0, 2);
+            }
+            
+            return initials.toUpperCase() || 'D'; // ถ้าไม่มีชื่อเลย ให้ใช้ D (Doctor)
+        }
+
+        // ฟังก์ชันสร้าง Avatar
+        function createAvatar(containerElement, size = 'normal') {
+            const initials = generateInitials(dentist.fname, dentist.lname);
+            
+            // ตรวจสอบว่ามีรูปโปรไฟล์หรือไม่
+            const hasPhoto = dentist.photo && 
+                            dentist.photo !== '' && 
+                            dentist.photo !== 'default-avatar.png' && 
+                            dentist.photo !== null;
+            
+            if (hasPhoto) {
+                // แสดงรูปโปรไฟล์
+                const img = document.createElement('img');
+                img.src = `/uploads/profiles/${dentist.photo}`;
+                img.alt = `Dr. ${dentist.fname} ${dentist.lname}`;
+                img.onerror = function() {
+                    // ถ้าโหลดรูปไม่ได้ ให้แสดงอักษรย่อแทน
+                    containerElement.innerHTML = initials;
+                };
+                containerElement.appendChild(img);
+            } else {
+                // แสดงอักษรย่อ
+                containerElement.textContent = initials;
+            }
+        }
+
+        // สร้าง Avatar เมื่อหน้าเว็บโหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            const topBarAvatar = document.getElementById('topBarAvatar');
+            const profileAvatar = document.getElementById('profileAvatar');
+            
+            if (topBarAvatar) {
+                createAvatar(topBarAvatar, 'small');
+            }
+            
+            if (profileAvatar) {
+                createAvatar(profileAvatar, 'large');
+            }
+        });
+
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
