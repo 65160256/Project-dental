@@ -505,7 +505,7 @@ exports.addDentistForm = (req, res) => {
 
 exports.addDentist = async (req, res) => {
   const {
-    email, password, fname, lname, dob, idcard,
+    email, password, fname, lname, dob, id_card,
     specialty, education, address, phone
   } = req.body;
 
@@ -533,9 +533,9 @@ exports.addDentist = async (req, res) => {
     
     // สร้าง dentist record
     await db.execute(
-      `INSERT INTO dentist (user_id, fname, lname, dob, idcard, specialty, education, address, phone, photo)
+      `INSERT INTO dentist (user_id, fname, lname, dob, id_card, specialty, education, address, phone, photo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, fname, lname, dob, idcard, specialty, education, address, phone, photoFilename]
+      [userId, fname, lname, dob, id_card, specialty, education, address, phone, photoFilename]
     );
     
     console.log('✅ Dentist created successfully');
@@ -598,7 +598,7 @@ exports.editDentist = async (req, res) => {
     fname = '',
     lname = '',
     dob = '',
-    idcard = '',
+    id_card = '',
     specialty = '',
     education = '',
     address = '',
@@ -651,10 +651,10 @@ exports.editDentist = async (req, res) => {
     // อัปเดต dentist table ด้วยค่าที่ปรับแล้ว
     await db.execute(`
       UPDATE dentist SET
-        fname = ?, lname = ?, dob = ?, idcard = ?,
+        fname = ?, lname = ?, dob = ?, id_card = ?,
         specialty = ?, education = ?, address = ?, phone = ?, photo = ?
       WHERE dentist_id = ?
-    `, [fname, lname, dobValue, idcard, specialty, education, address, phone, photoFilename, id]);
+    `, [fname, lname, dobValue, id_card, specialty, education, address, phone, photoFilename, id]);
 
     console.log('✅ Dentist updated successfully');
     res.redirect('/admin/dentists');
@@ -718,7 +718,7 @@ exports.getPatientsAPI = async (req, res) => {
         p.phone,
         p.dob,
         p.address,
-        p.idcard,
+        p.id_card,
         u.email,
         u.last_login,
         MAX(q.time) as last_visit,
@@ -726,7 +726,7 @@ exports.getPatientsAPI = async (req, res) => {
       FROM patient p
       LEFT JOIN user u ON p.user_id = u.user_id
       LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
-      GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.idcard, u.email, u.last_login
+      GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.id_card, u.email, u.last_login
       ORDER BY p.fname, p.lname
     `);
 
@@ -738,7 +738,7 @@ exports.getPatientsAPI = async (req, res) => {
       phone: patient.phone,
       dob: patient.dob,
       address: patient.address,
-      idcard: patient.idcard,
+      id_card: patient.id_card,
       email: patient.email,
       last_login: patient.last_login,
       last_visit: patient.last_visit,
@@ -912,14 +912,14 @@ exports.listPatients = async (req, res) => {
 exports.addPatient = async (req, res) => {
   console.log('📥 Request body:', req.body); // Debug log
   
-  const { fname, lname, dob, idcard, email, password, phone, address } = req.body;
+  const { fname, lname, dob, id_card, email, password, phone, address } = req.body;
   
   // Validate required fields
-  if (!fname || !lname || !dob || !idcard || !email || !password || !phone) {
+  if (!fname || !lname || !dob || !id_card || !email || !password || !phone) {
     console.log('❌ Missing required fields');
     return res.status(400).json({
       success: false,
-      error: 'Missing required fields: fname, lname, dob, idcard, email, password, phone are required'
+      error: 'Missing required fields: fname, lname, dob, id_card, email, password, phone are required'
     });
   }
 
@@ -949,9 +949,9 @@ exports.addPatient = async (req, res) => {
       
       // Create patient record
       const [patientResult] = await db.execute(`
-        INSERT INTO patient (user_id, fname, lname, dob, idcard, phone, address)
+        INSERT INTO patient (user_id, fname, lname, dob, id_card, phone, address)
         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [userId, fname, lname, dob, idcard, phone, address || '']
+        [userId, fname, lname, dob, id_card, phone, address || '']
       );
       
       const patientId = patientResult.insertId;
@@ -1209,7 +1209,7 @@ exports.updatePatientAPI = async (req, res) => {
       }
 
       // อัปเดตตาราง patient
-      const patientFields = ['fname', 'lname', 'dob', 'idcard', 'phone', 'address'];
+      const patientFields = ['fname', 'lname', 'dob', 'id_card', 'phone', 'address'];
       let patientUpdateFields = [];
       let patientUpdateParams = [];
 
