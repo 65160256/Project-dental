@@ -1355,33 +1355,67 @@
         // Load dentist-treatment mapping
         async function loadDentistTreatmentMap() {
             try {
-                for (const treatment of treatmentsData) {
-                    try {
-                        const response = await fetch(`/admin/api/treatments/${treatment.treatment_id}/dentists`);
-                        const data = await response.json();
-                        
-                        if (data.success && data.dentists) {
-                            data.dentists.forEach(dentist => {
-                                if (!doctorTreatmentMap[dentist.dentist_id]) {
-                                    doctorTreatmentMap[dentist.dentist_id] = [];
-                                }
-                                doctorTreatmentMap[dentist.dentist_id].push({
-                                    treatment_id: treatment.treatment_id,
-                                    treatment_name: treatment.treatment_name,
-                                    duration: treatment.duration
-                                });
-                            });
-                        }
-                    } catch (error) {
-                        console.warn(`Could not load dentists for treatment ${treatment.treatment_id}`);
+                console.log('🔄 Loading dentist-treatment mappings...');
+                
+                // ใช้ API ใหม่ที่ดึงข้อมูลทั้งหมดครั้งเดียว
+                const response = await fetch('/admin/api/dentist-treatments/mappings');
+                const data = await response.json();
+                
+                if (data.success && data.mappings) {
+                    // เคลียร์ข้อมูลเก่า
+                    doctorTreatmentMap = {};
+                    
+                    // อัปเดตข้อมูลใหม่
+                    for (const [dentistId, mappingData] of Object.entries(data.mappings)) {
+                        doctorTreatmentMap[dentistId] = mappingData.treatments;
                     }
+                    
+                    console.log('✅ Doctor-Treatment mapping loaded:', doctorTreatmentMap);
+                    console.log(`📊 Loaded mappings for ${Object.keys(doctorTreatmentMap).length} dentists`);
+                } else {
+                    console.warn('⚠️ No dentist-treatment mappings found');
+                    // Fallback: ให้ทุกหมอทำทุก treatment
+                    await loadFallbackTreatmentMap();
                 }
-                console.log('Doctor-Treatment mapping loaded:', doctorTreatmentMap);
             } catch (error) {
-                console.error('Error loading dentist-treatment mapping:', error);
+                console.error('❌ Error loading dentist-treatment mapping:', error);
+                // Fallback: ให้ทุกหมอทำทุก treatment
+                await loadFallbackTreatmentMap();
             }
         }
 
+        async function loadFallbackTreatmentMap() {
+            console.log('🔄 Using fallback: assigning all treatments to all dentists');
+            doctorTreatmentMap = {};
+            
+            doctorsData.forEach(dentist => {
+                doctorTreatmentMap[dentist.dentist_id] = [...treatmentsData];
+            });
+            
+            console.log('✅ Fallback mapping loaded');
+        }
+
+        // ฟังก์ชันเสริม: ตรวจสอบว่าหมอคนไหนทำ treatment อะไรได้บ้าง
+        function getDentistsByTreatment(treatmentId) {
+            const availableDentists = [];
+            
+            for (const [dentistId, treatments] of Object.entries(doctorTreatmentMap)) {
+                if (treatments.some(t => t.treatment_id == treatmentId)) {
+                    const dentist = doctorsData.find(d => d.dentist_id == dentistId);
+                    if (dentist) {
+                        availableDentists.push(dentist);
+                    }
+                }
+            }
+            
+            return availableDentists;
+        }
+
+        // ฟังก์ชันเสริม: ตรวจสอบว่า treatment ไหนที่หมอคนนี้ทำได้บ้าง
+        function getTreatmentsByDentist(dentistId) {
+            return doctorTreatmentMap[dentistId] || [];
+        }
+        
         // Load treatments for filter
         async function loadTreatments() {
             try {

@@ -3264,7 +3264,12 @@ exports.getTreatmentDentistsAPI = async (req, res) => {
     const { id } = req.params;
     
     const [dentists] = await db.execute(`
-      SELECT d.dentist_id, d.fname, d.lname, d.specialty
+      SELECT 
+        d.dentist_id, 
+        d.fname, 
+        d.lname, 
+        d.specialty,
+        d.phone
       FROM dentist d
       JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id
       WHERE dt.treatment_id = ?
@@ -3273,7 +3278,8 @@ exports.getTreatmentDentistsAPI = async (req, res) => {
 
     res.json({
       success: true,
-      dentists: dentists
+      dentists: dentists,
+      treatment_id: id
     });
 
   } catch (error) {
@@ -4353,6 +4359,90 @@ exports.getDentistScheduleData = async (req, res) => {
       success: false,
       error: 'Failed to load dentist schedule',
       details: error.message
+    });
+  }
+};
+
+exports.getDentistTreatmentMappingAPI = async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT 
+        dt.dentist_id,
+        dt.treatment_id,
+        d.fname,
+        d.lname,
+        d.specialty,
+        t.treatment_name,
+        t.duration
+      FROM dentist_treatment dt
+      JOIN dentist d ON dt.dentist_id = d.dentist_id
+      JOIN treatment t ON dt.treatment_id = t.treatment_id
+      ORDER BY d.fname, d.lname, t.treatment_name
+    `);
+
+    // จัดกลุ่มข้อมูลตาม dentist_id
+    const mappings = {};
+    rows.forEach(row => {
+      if (!mappings[row.dentist_id]) {
+        mappings[row.dentist_id] = {
+          dentist_info: {
+            dentist_id: row.dentist_id,
+            fname: row.fname,
+            lname: row.lname,
+            specialty: row.specialty
+          },
+          treatments: []
+        };
+      }
+      
+      mappings[row.dentist_id].treatments.push({
+        treatment_id: row.treatment_id,
+        treatment_name: row.treatment_name,
+        duration: row.duration
+      });
+    });
+
+    res.json({
+      success: true,
+      mappings: mappings
+    });
+
+  } catch (error) {
+    console.error('Error fetching dentist-treatment mappings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentist-treatment mappings',
+      details: error.message
+    });
+  }
+};
+
+exports.getDentistTreatmentsAPI = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const [treatments] = await db.execute(`
+      SELECT 
+        t.treatment_id,
+        t.treatment_name,
+        t.duration
+      FROM treatment t
+      JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
+      WHERE dt.dentist_id = ?
+      ORDER BY t.treatment_name
+    `, [id]);
+
+    res.json({
+      success: true,
+      treatments: treatments,
+      dentist_id: id
+    });
+
+  } catch (error) {
+    console.error('Error loading dentist treatments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dentist treatments'
     });
   }
 };

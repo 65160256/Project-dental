@@ -210,6 +210,12 @@ router.delete('/api/treatments/:id', checkAdminApiAuth, (req, res, next) => {
   adminController.deleteTreatmentAPI(req, res, next);
 });
 
+// Get all dentist-treatment mappings
+router.get('/api/dentist-treatments/mappings', checkAdminApiAuth, adminController.getDentistTreatmentMappingAPI);
+
+// Get treatments for a specific dentist
+router.get('/api/dentists/:id/treatments', checkAdminApiAuth, adminController.getDentistTreatmentsAPI);
+
 // ==================== Notifications API Routes ====================
 router.get('/api/notifications', checkAdminApiAuth, adminController.getNotifications);
 router.get('/api/notifications/:id', checkAdminApiAuth, adminController.getNotificationById);
@@ -541,5 +547,6 @@ module.exports.passwordResetRoutes = {
     return stats;
   }
 };
+
 
 module.exports = router;
