@@ -444,9 +444,15 @@
             font-size: 14px;
             color: #333;
             font-weight: 500;
+            word-break: break-word;
         }
 
         .info-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .info-value.loading {
             color: #999;
             font-style: italic;
         }
@@ -654,6 +660,8 @@
             letter-spacing: 0.5px;
         }
 
+
+
         /* Responsive */
         @media (max-width: 1024px) {
             .content {
@@ -679,12 +687,6 @@
             .action-buttons {
                 flex-direction: column;
             }
-        }
-
-        /* Loading state */
-        .loading {
-            color: #999;
-            font-style: italic;
         }
     </style>
 </head>
@@ -881,6 +883,7 @@
         let patientData = null;
 
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page loaded, initializing...');
             extractPatientId();
             loadPatientData();
             loadUserInfo();
@@ -890,11 +893,16 @@
         // Extract patient ID from URL
         function extractPatientId() {
             const path = window.location.pathname;
-            const matches = path.match(/\/patients\/(\d+)$/);
+            console.log('🔍 Current path:', path);
+            
+            // Handle different URL patterns
+            const matches = path.match(/\/patients\/(\d+)(?:\/|$)/);
             if (matches) {
                 patientId = parseInt(matches[1]);
                 document.getElementById('patientIdBadge').textContent = `ID: ${String(patientId).padStart(3, '0')}`;
+                console.log('✅ Patient ID extracted:', patientId);
             } else {
+                console.error('❌ Could not extract patient ID from URL:', path);
                 showToast('Invalid patient ID', 'error');
                 setTimeout(() => window.location.href = '/admin/patients', 2000);
             }
@@ -902,38 +910,58 @@
 
         // Load patient data from database
         async function loadPatientData() {
-            if (!patientId) return;
+            if (!patientId) {
+                console.error('❌ No patient ID available');
+                return;
+            }
+
+            console.log('📡 Loading patient data for ID:', patientId);
 
             try {
                 const response = await fetch(`/admin/api/patients/${patientId}`);
                 
+                console.log('📡 API Response status:', response.status);
+                
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ API Error Response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('📦 API Response data:', data);
                 
-                if (data.success) {
+                if (data.success && data.patient) {
                     patientData = data.patient;
+                    console.log('✅ Patient data loaded successfully:', patientData);
                     populateData(patientData);
                 } else {
                     throw new Error(data.error || 'Failed to load patient data');
                 }
                 
             } catch (error) {
-                console.error('Error loading patient data:', error);
+                console.error('❌ Error loading patient data:', error);
                 showToast('Failed to load patient data: ' + error.message, 'error');
+                
+                // Show error in all loading fields
+                const loadingElements = document.querySelectorAll('.loading');
+                loadingElements.forEach(el => {
+                    el.textContent = 'Error loading data';
+                    el.classList.remove('loading');
+                    el.classList.add('empty');
+                });
+                
                 setTimeout(() => window.location.href = '/admin/patients', 3000);
             }
         }
 
-        // Populate data with patient information
+        // Enhanced populate data with comprehensive ID card handling
         function populateData(patient) {
-            console.log('Patient data received:', patient);
+            console.log('📝 Populating data with patient information:', patient);
             
             // Update full name and avatar
             const fullName = `${patient.fname || ''} ${patient.lname || ''}`.trim();
-            document.getElementById('fullName').textContent = fullName;
+            document.getElementById('fullName').textContent = fullName || 'No name specified';
             document.getElementById('fullName').classList.remove('loading');
             
             // Update avatar with initials
@@ -945,30 +973,77 @@
             // Date of birth
             const birthDateEl = document.getElementById('birthDate');
             if (patient.dob) {
-                const date = new Date(patient.dob);
-                birthDateEl.textContent = date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+                try {
+                    const date = new Date(patient.dob);
+                    if (!isNaN(date.getTime())) {
+                        birthDateEl.textContent = date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    } else {
+                        birthDateEl.innerHTML = '<span class="empty">Invalid date</span>';
+                    }
+                } catch (error) {
+                    console.error('Error formatting date:', error);
+                    birthDateEl.innerHTML = '<span class="empty">Invalid date</span>';
+                }
             } else {
                 birthDateEl.innerHTML = '<span class="empty">Not specified</span>';
             }
             birthDateEl.classList.remove('loading');
             
-            // ID Card
+            // Enhanced ID Card handling - check multiple possible field names
             const idCardEl = document.getElementById('idCard');
-            if (patient.idcard) {
-                idCardEl.textContent = patient.idcard;
+            let idCardValue = '';
+            
+            // Check all possible variations of ID card field names
+            const possibleIdFields = [
+                'idcard',     // Most common
+                'id_card',    // Alternative naming
+                'ID_CARD',    // Uppercase variation
+                'IdCard',     // CamelCase
+                'id_Card',    // Mixed case
+                'nationalId', // Alternative field name
+                'citizenId'   // Another alternative
+            ];
+            
+            for (const fieldName of possibleIdFields) {
+                if (patient[fieldName] && patient[fieldName].toString().trim() !== '') {
+                    idCardValue = patient[fieldName].toString().trim();
+                    console.log(`📋 Found ID Card in field '${fieldName}':`, idCardValue);
+                    break;
+                }
+            }
+            
+            console.log('🆔 ID Card processing:', {
+                possibleFields: possibleIdFields.map(field => ({
+                    field: field,
+                    value: patient[field],
+                    type: typeof patient[field]
+                })),
+                finalValue: idCardValue
+            });
+            
+            if (idCardValue) {
+                // Format ID card for better readability (Thailand ID format: X-XXXX-XXXXX-XX-X)
+                if (idCardValue.length === 13 && /^\d{13}$/.test(idCardValue)) {
+                    const formatted = `${idCardValue.slice(0,1)}-${idCardValue.slice(1,5)}-${idCardValue.slice(5,10)}-${idCardValue.slice(10,12)}-${idCardValue.slice(12,13)}`;
+                    idCardEl.textContent = formatted;
+                } else {
+                    idCardEl.textContent = idCardValue;
+                }
+                idCardEl.classList.remove('empty');
             } else {
                 idCardEl.innerHTML = '<span class="empty">Not specified</span>';
+                console.warn('⚠️ No ID Card found in any expected field');
             }
             idCardEl.classList.remove('loading');
             
             // Address
             const addressEl = document.getElementById('address');
-            if (patient.address) {
-                addressEl.textContent = patient.address;
+            if (patient.address && patient.address.trim() !== '') {
+                addressEl.textContent = patient.address.trim();
             } else {
                 addressEl.innerHTML = '<span class="empty">Not specified</span>';
             }
@@ -976,8 +1051,15 @@
             
             // Phone
             const phoneEl = document.getElementById('phone');
-            if (patient.phone) {
-                phoneEl.textContent = patient.phone;
+            if (patient.phone && patient.phone.trim() !== '') {
+                // Format phone number for better readability
+                let phone = patient.phone.trim();
+                if (/^\d{10}$/.test(phone)) {
+                    phone = `${phone.slice(0,3)}-${phone.slice(3,6)}-${phone.slice(6,10)}`;
+                } else if (/^\d{9}$/.test(phone)) {
+                    phone = `${phone.slice(0,2)}-${phone.slice(2,5)}-${phone.slice(5,9)}`;
+                }
+                phoneEl.textContent = phone;
             } else {
                 phoneEl.innerHTML = '<span class="empty">Not specified</span>';
             }
@@ -985,8 +1067,8 @@
             
             // Email
             const emailEl = document.getElementById('email');
-            if (patient.email) {
-                emailEl.textContent = patient.email;
+            if (patient.email && patient.email.trim() !== '') {
+                emailEl.textContent = patient.email.trim();
             } else {
                 emailEl.innerHTML = '<span class="empty">Not specified</span>';
             }
@@ -995,8 +1077,16 @@
             // Last visit
             const lastVisitEl = document.getElementById('lastVisit');
             if (patient.last_visit) {
-                const visitDate = new Date(patient.last_visit);
-                lastVisitEl.textContent = formatDateTime(visitDate);
+                try {
+                    const visitDate = new Date(patient.last_visit);
+                    if (!isNaN(visitDate.getTime())) {
+                        lastVisitEl.textContent = formatDateTime(visitDate);
+                    } else {
+                        lastVisitEl.innerHTML = '<span class="empty">Invalid date</span>';
+                    }
+                } catch (error) {
+                    lastVisitEl.innerHTML = '<span class="empty">Invalid date</span>';
+                }
             } else {
                 lastVisitEl.innerHTML = '<span class="empty">No visits yet</span>';
             }
@@ -1005,23 +1095,33 @@
             // Last login
             const lastLoginEl = document.getElementById('lastLogin');
             if (patient.last_login) {
-                const loginDate = new Date(patient.last_login);
-                lastLoginEl.textContent = formatDateTime(loginDate);
+                try {
+                    const loginDate = new Date(patient.last_login);
+                    if (!isNaN(loginDate.getTime())) {
+                        lastLoginEl.textContent = formatDateTime(loginDate);
+                    } else {
+                        lastLoginEl.innerHTML = '<span class="empty">Invalid date</span>';
+                    }
+                } catch (error) {
+                    lastLoginEl.innerHTML = '<span class="empty">Invalid date</span>';
+                }
             } else {
                 lastLoginEl.innerHTML = '<span class="empty">Never logged in</span>';
             }
             lastLoginEl.classList.remove('loading');
 
             // Update stats
-            document.getElementById('totalAppointments').textContent = patient.stats?.total_appointments || 0;
+            const totalAppointments = patient.stats?.total_appointments || patient.total_appointments || 0;
+            document.getElementById('totalAppointments').textContent = totalAppointments;
             
-            // Count treatments from last visit info
-            const totalTreatments = patient.stats?.total_appointments || 0; // Using appointments as proxy for treatments
-            document.getElementById('totalTreatments').textContent = totalTreatments;
+            // Count treatments (using appointments as proxy)
+            document.getElementById('totalTreatments').textContent = totalAppointments;
 
             // Update action button links
             document.getElementById('treatmentBtn').href = `/admin/patients/${patientId}/treatments`;
             document.getElementById('editBtn').href = `/admin/patients/${patientId}/edit`;
+            
+            console.log('✅ All data populated successfully');
         }
 
         // Load user information for avatar
@@ -1162,7 +1262,7 @@
             const message = document.querySelector('.modal-message');
             message.innerHTML = `
                 Are you sure you want to delete<br>
-                <strong>${patientData.fname} ${patientData.lname}</strong>?<br>
+                <strong>${patientData.fname || 'Unknown'} ${patientData.lname || 'Patient'}</strong>?<br>
                 This action cannot be undone.
             `;
             modal.style.display = 'flex';
@@ -1327,49 +1427,15 @@
         // Enhanced error handling
         window.addEventListener('online', function() {
             showToast('Connection restored', 'success');
+            // Retry loading data if it failed before
+            if (!patientData) {
+                loadPatientData();
+            }
         });
 
         window.addEventListener('offline', function() {
             showToast('Connection lost', 'warning');
         });
-
-        // Initialize accessibility
-        function initializeAccessibility() {
-            // Add tooltips to buttons
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(button => {
-                button.setAttribute('role', 'button');
-                button.setAttribute('tabindex', '0');
-            });
-
-            // Add keyboard navigation for custom dropdowns
-            const dropdownTriggers = document.querySelectorAll('[onclick*="toggle"]');
-            dropdownTriggers.forEach(trigger => {
-                trigger.setAttribute('tabindex', '0');
-                trigger.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        trigger.click();
-                    }
-                });
-            });
-        }
-
-        // Call initialization
-        setTimeout(() => {
-            initializeAccessibility();
-        }, 1000);
-
-        // Debug mode for development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            window.debugViewPatient = {
-                patientData,
-                patientId,
-                loadPatientData,
-                loadNotifications,
-                showToast
-            };
-        }
     </script>
 </body>
 </html>

@@ -823,8 +823,8 @@
                                 <div class="error-message">Please select a valid date of birth</div>
                             </div>
                             <div class="form-group">
-                                <label for="idcard">ID Card Number <span class="required">*</span></label>
-                                <input type="text" id="idcard" name="idcard" class="form-control" required maxlength="13" />
+                                <label for="id_card">ID Card Number <span class="required">*</span></label>
+                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
                                 <div class="field-help">13-digit Thai ID card number</div>
                                 <div class="error-message">Please enter a valid 13-digit ID card number</div>
                             </div>
@@ -1093,7 +1093,7 @@
             });
 
             // ID Card validation
-            const idcardInput = document.getElementById('idcard');
+            const idcardInput = document.getElementById('id_card');
             idcardInput.addEventListener('input', function() {
                 this.value = this.value.replace(/\D/g, '').substring(0, 13);
                 validateField(this);
@@ -1131,7 +1131,7 @@
                 return false;
             }
 
-            if (field.name === 'idcard' && value && value.length !== 13) {
+            if (field.name === 'id_card' && value && value.length !== 13) {
                 group.classList.add('error');
                 return false;
             }
@@ -1213,7 +1213,7 @@
             try {
                 // Collect form data as JSON
                 const formData = {};
-                const fields = ['fname', 'lname', 'dob', 'idcard', 'email', 'password', 'phone', 'address'];
+                const fields = ['fname', 'lname', 'dob', 'id_card', 'email', 'password', 'phone', 'address'];
                 fields.forEach(field => {
                     const input = document.getElementById(field);
                     if (input) {
@@ -1389,7 +1389,7 @@
         // Form progress tracking
         function updateFormProgress() {
             const steps = ['step1', 'step2', 'step3'];
-            const personalFields = ['fname', 'lname', 'dob', 'idcard'];
+            const personalFields = ['fname', 'lname', 'dob', 'id_card'];
             const accountFields = ['email', 'password', 'confirmPassword'];
             const contactFields = ['phone'];
 

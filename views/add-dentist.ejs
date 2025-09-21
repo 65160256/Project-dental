@@ -952,8 +952,8 @@
                                     <div class="error-message">Please select a valid date of birth</div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="idcard">ID Card Number <span class="required">*</span></label>
-                                    <input type="text" id="idcard" name="idcard" class="form-control" required maxlength="13" />
+                                    <label for="id_card">ID Card Number <span class="required">*</span></label>
+                                    <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
                                     <div class="field-help">13-digit Thai ID card number</div>
                                     <div class="error-message">Please enter a valid 13-digit ID card number</div>
                                 </div>
@@ -1253,84 +1253,160 @@
         }
 
         // Setup form validation
-        function setupFormValidation() {
-            const form = document.getElementById('addDentistForm');
-            const inputs = form.querySelectorAll('.form-control[required]');
+       function setupFormValidation() {
+    const form = document.getElementById('addDentistForm');
+    const inputs = form.querySelectorAll('.form-control[required]');
 
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateField(this);
-                });
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
 
-                input.addEventListener('input', function() {
-                    if (this.parentElement.classList.contains('error')) {
-                        validateField(this);
+        input.addEventListener('input', function() {
+            // Clear error state on input (ยกเว้นช่องอีเมลถ้ากำลัง submit)
+            if (!isSubmitting && this.parentElement.classList.contains('error')) {
+                this.parentElement.classList.remove('error');
+            }
+        });
+    });
+
+    // ID Card validation
+    const idcardInput = document.getElementById('id_card'); // แก้ไขให้ตรงกับ HTML
+    if (idcardInput) {
+        idcardInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').substring(0, 13);
+            if (!isSubmitting) {
+                validateField(this);
+            }
+        });
+    }
+
+    // Phone validation
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').substring(0, 10);
+            if (!isSubmitting) {
+                validateField(this);
+            }
+        });
+    }
+
+    // Email validation with debounced checking
+    const emailInput = document.getElementById('email');
+    let emailCheckTimeout;
+    
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            // Clear previous timeout
+            if (emailCheckTimeout) {
+                clearTimeout(emailCheckTimeout);
+            }
+            
+            // Don't check during submission
+            if (isSubmitting) return;
+            
+            // Remove error state immediately when typing
+            this.parentElement.classList.remove('error', 'success');
+            
+            // Check email availability after user stops typing
+            if (this.value && isValidEmail(this.value)) {
+                emailCheckTimeout = setTimeout(() => {
+                    if (!isSubmitting) {
+                        checkEmailAvailability(this.value);
                     }
-                });
-            });
-
-            // ID Card validation
-            const idcardInput = document.getElementById('idcard');
-            idcardInput.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '').substring(0, 13);
-                validateField(this);
-            });
-
-            // Phone validation
-            const phoneInput = document.getElementById('phone');
-            phoneInput.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '').substring(0, 10);
-                validateField(this);
-            });
-
-            // Email validation
-            const emailInput = document.getElementById('email');
-            emailInput.addEventListener('blur', function() {
+                }, 800); // เพิ่มเวลา debounce
+            }
+        });
+        
+        emailInput.addEventListener('blur', function() {
+            if (!isSubmitting && this.value && isValidEmail(this.value)) {
                 checkEmailAvailability(this.value);
-            });
-        }
+            }
+        });
+    }
+}
 
         // Validate individual field
-        function validateField(field) {
-            const group = field.parentElement;
-            const value = field.value.trim();
+       function validateField(field) {
+    const group = field.parentElement;
+    const value = field.value.trim();
+    const errorMsg = group.querySelector('.error-message');
 
-            group.classList.remove('error', 'success');
+    // Don't validate if user is still typing
+    if (field === document.activeElement && value.length > 0) {
+        return true;
+    }
 
-            if (field.hasAttribute('required') && !value) {
-                group.classList.add('error');
-                return false;
-            }
+    group.classList.remove('error', 'success');
 
-            // Specific validations
-            if (field.type === 'email' && value && !isValidEmail(value)) {
-                group.classList.add('error');
-                return false;
-            }
+    if (field.hasAttribute('required') && !value) {
+        group.classList.add('error');
+        errorMsg.textContent = `${field.labels[0]?.textContent.replace(' *', '') || 'Field'} is required`;
+        return false;
+    }
 
-            if (field.name === 'idcard' && value && value.length !== 13) {
-                group.classList.add('error');
-                return false;
-            }
+    // Specific validations
+    if (field.type === 'email' && value && !isValidEmail(value)) {
+        group.classList.add('error');
+        errorMsg.textContent = 'Please enter a valid email address';
+        return false;
+    }
 
-            if (field.name === 'phone' && value && (value.length < 9 || value.length > 10)) {
-                group.classList.add('error');
-                return false;
-            }
-
-            if (field.name === 'dob' && value) {
-                const birthDate = new Date(value);
-                const today = new Date();
-                const age = today.getFullYear() - birthDate.getFullYear();
-                if (age < 18 || age > 80) {
-                    group.classList.add('error');
-                    return false;
-                }
-            }
-
-            group.classList.add('success');
-            return true;
+    if (field.name === 'id_card' && value) {
+        if (value.length !== 13) {
+            group.classList.add('error');
+            errorMsg.textContent = 'ID card must be exactly 13 digits';
+            return false;
         }
+        if (!/^\d{13}$/.test(value)) {
+            group.classList.add('error');
+            errorMsg.textContent = 'ID card must contain only numbers';
+            return false;
+        }
+    }
+
+    if (field.name === 'phone' && value) {
+        if (value.length < 9 || value.length > 10) {
+            group.classList.add('error');
+            errorMsg.textContent = 'Phone number must be 9-10 digits';
+            return false;
+        }
+        if (!/^[0-9]+$/.test(value)) {
+            group.classList.add('error');
+            errorMsg.textContent = 'Phone number must contain only numbers';
+            return false;
+        }
+    }
+
+    if (field.name === 'dob' && value) {
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        
+        if (age < 18) {
+            group.classList.add('error');
+            errorMsg.textContent = 'Dentist must be at least 18 years old';
+            return false;
+        }
+        if (age > 80) {
+            group.classList.add('error');
+            errorMsg.textContent = 'Please enter a valid birth date';
+            return false;
+        }
+    }
+
+    if (field.name === 'password' && value) {
+        if (value.length < 6) {
+            group.classList.add('error');
+            errorMsg.textContent = 'Password must be at least 6 characters';
+            return false;
+        }
+    }
+
+    group.classList.add('success');
+    return true;
+}
 
         // Email validation
         function isValidEmail(email) {
@@ -1340,93 +1416,171 @@
 
         // Check email availability
         async function checkEmailAvailability(email) {
-            if (!email || !isValidEmail(email)) return;
+    if (!email || !isValidEmail(email) || isSubmitting) return;
 
-            try {
-                // Note: You'll need to implement this endpoint in your backend
-                const response = await fetch(`../api/check-email?email=${encodeURIComponent(email)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const emailGroup = document.getElementById('email').parentElement;
-                    
-                    if (data.exists) {
-                        emailGroup.classList.add('error');
-                        const errorMsg = emailGroup.querySelector('.error-message');
-                        errorMsg.textContent = 'Email address is already in use';
-                    }
+    try {
+        console.log('🔍 Checking email availability:', email);
+        
+        const response = await fetch(`../api/check-email?email=${encodeURIComponent(email)}`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            const emailGroup = document.getElementById('email').parentElement;
+            const errorMsg = emailGroup.querySelector('.error-message');
+            
+            console.log('📧 Email check result:', data);
+            
+            if (data.exists) {
+                emailGroup.classList.add('error');
+                emailGroup.classList.remove('success');
+                if (errorMsg) {
+                    errorMsg.textContent = 'Email address is already in use';
                 }
-            } catch (error) {
-                console.log('Could not check email availability');
+            } else {
+                emailGroup.classList.remove('error');
+                emailGroup.classList.add('success');
             }
+        } else {
+            console.log('⚠️ Email check failed:', response.status);
         }
-
+    } catch (error) {
+        console.log('⚠️ Email check network error:', error);
+    }
+}
         // Handle form submission
-        async function handleFormSubmission(e) {
-            e.preventDefault();
-            
-            if (isSubmitting) return;
+      async function handleFormSubmission(e) {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
 
-            const form = e.target;
-            const submitBtn = document.getElementById('submitBtn');
-            
-            // Validate all fields
-            if (!validateAllFields()) {
-                showToast('Please fix the errors in the form', 'error');
-                return;
-            }
+    const form = e.target;
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Validate all fields
+    if (!validateAllFields()) {
+        showToast('Please fix the errors in the form', 'error');
+        return;
+    }
 
-            // Check password match
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
+    // Check password match
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
 
-            isSubmitting = true;
-            submitBtn.classList.add('btn-loading');
-            submitBtn.disabled = true;
+    isSubmitting = true;
+    submitBtn.classList.add('btn-loading');
+    submitBtn.disabled = true;
 
+    try {
+        const formData = new FormData(form);
+        
+        console.log('🚀 Submitting form data...');
+        
+        const response = await fetch('/admin/dentists/add', {
+            method: 'POST',
+            body: formData
+        });
+
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers.get('content-type'));
+
+        // ตรวจสอบ content-type ของ response
+        const contentType = response.headers.get('content-type') || '';
+        
+        if (response.ok) {
+            // สำเร็จ
+            let result;
             try {
-                const formData = new FormData(form);
-                
-                const response = await fetch('/admin/dentists/add', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    // Check if it's a redirect response
-                    if (response.redirected || response.url.includes('/admin/dentists')) {
-                        showToast('Dentist added successfully!', 'success');
-                        setTimeout(() => {
-                            window.location.href = '../dentists';
-                        }, 1000);
-                    } else {
-                        const text = await response.text();
-                        if (text.includes('error') || text.includes('failed')) {
-                            throw new Error('Failed to add dentist');
-                        } else {
-                            showToast('Dentist added successfully!', 'success');
-                            setTimeout(() => {
-                                window.location.href = '../dentists';
-                            }, 1000);
-                        }
-                    }
+                if (contentType.includes('application/json')) {
+                    result = await response.json();
+                    console.log('✅ JSON response:', result);
                 } else {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Failed to add dentist');
+                    // หากไม่ใช่ JSON อาจเป็น redirect
+                    console.log('✅ Non-JSON response (likely redirect)');
+                    result = { success: true, message: 'Dentist added successfully' };
                 }
+            } catch (parseError) {
+                console.log('⚠️ Could not parse response as JSON, assuming success');
+                result = { success: true, message: 'Dentist added successfully' };
+            }
 
-            } catch (error) {
-                console.error('Error adding dentist:', error);
-                showToast('Error adding dentist: ' + error.message, 'error');
-            } finally {
-                isSubmitting = false;
-                submitBtn.classList.remove('btn-loading');
-                submitBtn.disabled = false;
+            if (result.success !== false) {
+                showToast('Dentist added successfully!', 'success');
+                clearDraft();
+                
+                setTimeout(() => {
+                    if (result.redirect) {
+                        window.location.href = result.redirect;
+                    } else {
+                        window.location.href = '../dentists';
+                    }
+                }, 1500);
+                return;
             }
         }
+
+        // จัดการ error responses
+        let errorData;
+        try {
+            if (contentType.includes('application/json')) {
+                errorData = await response.json();
+                console.log('❌ JSON error response:', errorData);
+            } else {
+                const errorText = await response.text();
+                console.log('❌ Text error response:', errorText);
+                errorData = { 
+                    error: errorText || `Server error (${response.status})`,
+                    field: null 
+                };
+            }
+        } catch (parseError) {
+            console.log('❌ Could not parse error response');
+            errorData = { 
+                error: `Server error (${response.status})`,
+                field: null 
+            };
+        }
+
+        // แสดงข้อผิดพลาดเฉพาะช่อง
+        if (errorData.field === 'email') {
+            const emailGroup = document.getElementById('email').parentElement;
+            emailGroup.classList.add('error');
+            emailGroup.classList.remove('success');
+            
+            const errorMsg = emailGroup.querySelector('.error-message');
+            if (errorMsg) {
+                errorMsg.textContent = errorData.error || 'Email address is already in use';
+            }
+            
+            // เลื่อนไปที่ email field และ focus
+            document.getElementById('email').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            setTimeout(() => {
+                document.getElementById('email').focus();
+            }, 500);
+        }
+
+        // แสดง toast notification
+        showToast(errorData.error || 'Failed to add dentist', 'error');
+
+    } catch (networkError) {
+        console.error('❌ Network error:', networkError);
+        showToast('Network error: Please check your connection and try again', 'error');
+    } finally {
+        isSubmitting = false;
+        submitBtn.classList.remove('btn-loading');
+        submitBtn.disabled = false;
+        
+        console.log('🏁 Form submission completed');
+    }
+}
+
 
         // Validate all form fields
         function validateAllFields() {
@@ -1520,34 +1674,97 @@
         }
 
         // Show toast notification
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            const icon = {
-                success: 'fas fa-check-circle',
-                error: 'fas fa-exclamation-triangle',
-                warning: 'fas fa-exclamation-circle',
-                info: 'fas fa-info-circle'
-            };
+       function showToast(message, type = 'info') {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast');
+    existingToasts.forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icon = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-triangle',
+        warning: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle'
+    };
 
-            toast.innerHTML = `
-                <i class="${icon[type]}"></i>
-                ${message}
-            `;
-            
-            document.body.appendChild(toast);
-            
+    toast.innerHTML = `
+        <i class="${icon[type]}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;margin-left:auto;cursor:pointer;font-size:18px;padding:0 5px;">&times;</button>
+    `;
+    
+    // Enhanced toast styling
+    const toastColors = {
+        success: '#10b981',
+        error: '#ef4444', 
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 5000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideInRight 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 320px;
+        max-width: 500px;
+        background: ${toastColors[type]};
+        border-left: 4px solid rgba(255,255,255,0.3);
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }, 4000);
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
         }
+    }, type === 'error' ? 7000 : 5000); // Error messages stay longer
+}
 
+// เพิ่ม CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
         // Get time ago text
         function getTimeAgo(date) {
             const now = new Date();
@@ -1564,7 +1781,7 @@
         // Form progress tracking
         function updateFormProgress() {
             const steps = ['step1', 'step2', 'step3'];
-            const personalFields = ['fname', 'lname', 'dob', 'idcard', 'specialty'];
+            const personalFields = ['fname', 'lname', 'dob', 'id_card', 'specialty'];
             const contactFields = ['phone', 'address'];
             const accountFields = ['email', 'password', 'confirmPassword'];
 

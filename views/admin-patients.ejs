@@ -953,10 +953,6 @@
                     <p>Manage patient profiles, appointments, and medical history</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-secondary" onclick="exportPatients()">
-                        <i class="fas fa-download"></i>
-                        Export
-                    </button>
                     <a href="/admin/patients/add" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Add New Patient
@@ -1428,51 +1424,6 @@
             
             applyFilters();
             showToast('Filters cleared', 'info');
-        }
-
-        // Export patients data
-        function exportPatients() {
-            try {
-                const csvContent = generateCSV(filteredPatients);
-                downloadCSV(csvContent, 'patients_export.csv');
-                showToast('Patients data exported successfully', 'success');
-            } catch (error) {
-                console.error('Error exporting patients:', error);
-                showToast('Failed to export patients data', 'error');
-            }
-        }
-
-        function generateCSV(data) {
-            const headers = ['ID', 'First Name', 'Last Name', 'Phone', 'Email', 'Date of Birth', 'Age', 'Address'];
-            const csvRows = [headers.join(',')];
-            
-            data.forEach(patient => {
-                const row = [
-                    patient.patient_id,
-                    `"${patient.fname || ''}"`,
-                    `"${patient.lname || ''}"`,
-                    `"${patient.phone || ''}"`,
-                    `"${patient.email || ''}"`,
-                    `"${patient.dob || ''}"`,
-                    `"${calculateAge(patient.dob)}"`,
-                    `"${patient.address || ''}"`
-                ];
-                csvRows.push(row.join(','));
-            });
-            
-            return csvRows.join('\n');
-        }
-
-        function downloadCSV(csvContent, filename) {
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         // Update user avatar

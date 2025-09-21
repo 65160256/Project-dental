@@ -1527,25 +1527,34 @@
 
         // Setup change tracking
         function setupChangeTracking() {
-            const form = document.getElementById('editDentistForm');
-            const inputs = form.querySelectorAll('.form-control');
-            
-            inputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const fieldName = this.name;
-                    const currentValue = this.value;
-                    const originalValue = originalData[fieldName] || '';
-                    
-                    if (currentValue !== originalValue) {
-                        trackChange(fieldName, currentValue);
-                        this.classList.add('field-changed');
-                    } else {
-                        untrackChange(fieldName);
-                        this.classList.remove('field-changed');
-                    }
-                });
-            });
+    const form = document.getElementById('editDentistForm');
+    const inputs = form.querySelectorAll('.form-control');
+    
+    // ✅ กรองเฉพาะฟิลด์ที่ต้องการ
+    const allowedFields = ['fname', 'lname', 'dob', 'idcard', 'specialty', 'education', 
+                          'address', 'phone', 'email', 'password', 'confirmPassword'];
+    
+    inputs.forEach(input => {
+        // ตรวจสอบว่าเป็นฟิลด์ที่อนุญาตหรือไม่
+        if (!allowedFields.includes(input.name)) {
+            return; // ข้ามฟิลด์ที่ไม่ต้องการ
         }
+        
+        input.addEventListener('input', function() {
+            const fieldName = this.name;
+            const currentValue = this.value;
+            const originalValue = originalData[fieldName] || '';
+            
+            if (currentValue !== originalValue) {
+                trackChange(fieldName, currentValue);
+                this.classList.add('field-changed');
+            } else {
+                untrackChange(fieldName);
+                this.classList.remove('field-changed');
+            }
+        });
+    });
+}
 
         // Track field changes
         function trackChange(fieldName, value) {

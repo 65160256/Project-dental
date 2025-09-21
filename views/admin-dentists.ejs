@@ -379,7 +379,7 @@
         .stats-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             color: #666;
             font-size: 14px;
         }
@@ -391,8 +391,25 @@
 
         .filter-section {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
 
         /* Table Section */
@@ -732,9 +749,9 @@
         </div>
         <ul>
             <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/admin/schedule"><i class="fas fa-hospital"></i> Schedule</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
             <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li class="active"><a href="/admin/dentists"><i class="fas fa-calendar-alt"></i> Dentists</a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
             <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
             <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
         </ul>
@@ -793,10 +810,6 @@
                     <p>Manage dentist profiles, schedules, and specialties</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-secondary">
-                        <i class="fas fa-download"></i>
-                        Export
-                    </button>
                     <a href="dentists/add" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Add New Dentist
@@ -809,21 +822,25 @@
                 <div class="stats-info">
                     <i class="fas fa-user-md"></i>
                     <span><strong id="totalDentists">0</strong> total dentists</span>
+                    <span id="filteredInfo" style="color: #4A90E2; margin-left: 10px;"></span>
                 </div>
                 <div class="filter-section">
-                    <select class="btn btn-secondary" id="specialtyFilter">
+                    <select class="filter-select" id="specialtyFilter">
                         <option value="">All Specialties</option>
                         <option value="General Dentistry">General Dentistry</option>
                         <option value="Orthodontics">Orthodontics</option>
                         <option value="Oral Surgery">Oral Surgery</option>
                         <option value="Endodontics">Endodontics</option>
                         <option value="Periodontics">Periodontics</option>
+                        <option value="Pediatric Dentistry">Pediatric Dentistry</option>
+                        <option value="Prosthodontics">Prosthodontics</option>
+                        <option value="Oral Pathology">Oral Pathology</option>
+                        <option value="Tooth Extraction">Tooth Extraction</option>
                     </select>
-                    <select class="btn btn-secondary" id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="refreshData()" title="Refresh data">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
                 </div>
             </div>
 
@@ -838,10 +855,7 @@
                 <div class="table-header">
                     <h3>All Dentists</h3>
                     <div class="filter-section">
-                        <button class="btn btn-secondary btn-sm" onclick="refreshData()">
-                            <i class="fas fa-refresh"></i>
-                            Refresh
-                        </button>
+                        <span id="tableInfo" style="font-size: 14px; color: #666;"></span>
                     </div>
                 </div>
                 
@@ -867,7 +881,7 @@
                     <i class="fas fa-user-md"></i>
                 </div>
                 <h3>No dentists found</h3>
-                <p>Start by adding your first dentist to the system</p>
+                <p id="emptyMessage">Start by adding your first dentist to the system</p>
                 <a href="dentists/add" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add First Dentist
@@ -896,11 +910,10 @@
     </div>
 
     <script>
-        // Real data from database
+        // Global variables
         let dentistsData = [];
-
         let currentDeleteId = null;
-        let filteredDentists = [...dentistsData];
+        let filteredDentists = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
@@ -931,7 +944,13 @@
                 
                 if (data.success) {
                     dentistsData = data.dentists;
-                    filteredDentists = [...dentistsData];
+                    console.log('Loaded dentists:', dentistsData);
+                    
+                    // Load available specialties for filter
+                    loadSpecialtyOptions();
+                    
+                    // Apply initial filters
+                    applyFilters();
                 } else {
                     throw new Error(data.error || 'Failed to load dentists');
                 }
@@ -943,16 +962,73 @@
                 filteredDentists = [];
             } finally {
                 loading.style.display = 'none';
-                
-                if (filteredDentists.length === 0) {
-                    emptyState.style.display = 'block';
-                } else {
-                    tableSection.style.display = 'block';
-                    renderDentistsTable();
-                }
-                
-                updateStats();
+                updateDisplay();
             }
+        }
+
+        // Load specialty options dynamically from data
+        function loadSpecialtyOptions() {
+            const specialtyFilter = document.getElementById('specialtyFilter');
+            const specialties = [...new Set(dentistsData.map(d => d.specialty).filter(s => s))];
+            
+            // Clear existing options except "All Specialties"
+            specialtyFilter.innerHTML = '<option value="">All Specialties</option>';
+            
+            // Add available specialties
+            specialties.sort().forEach(specialty => {
+                const option = document.createElement('option');
+                option.value = specialty;
+                option.textContent = specialty;
+                specialtyFilter.appendChild(option);
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const specialtyFilter = document.getElementById('specialtyFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            filteredDentists = dentistsData.filter(dentist => {
+                const matchesSpecialty = !specialtyFilter || dentist.specialty === specialtyFilter;
+                const matchesSearch = !searchTerm || 
+                    (dentist.fname && dentist.fname.toLowerCase().includes(searchTerm)) ||
+                    (dentist.lname && dentist.lname.toLowerCase().includes(searchTerm)) ||
+                    (dentist.email && dentist.email.toLowerCase().includes(searchTerm)) ||
+                    (dentist.specialty && dentist.specialty.toLowerCase().includes(searchTerm)) ||
+                    (dentist.phone && dentist.phone.includes(searchTerm));
+                
+                return matchesSpecialty && matchesSearch;
+            });
+            
+            updateDisplay();
+        }
+
+        // Update display
+        function updateDisplay() {
+            const tableSection = document.getElementById('tableSection');
+            const emptyState = document.getElementById('emptyState');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            if (filteredDentists.length === 0) {
+                tableSection.style.display = 'none';
+                emptyState.style.display = 'block';
+                
+                // Update empty message based on search/filter state
+                const hasSearch = document.getElementById('searchInput').value.trim();
+                const hasFilter = document.getElementById('specialtyFilter').value;
+                
+                if (hasSearch || hasFilter) {
+                    emptyMessage.textContent = 'No dentists match your search criteria. Try adjusting your filters.';
+                } else if (dentistsData.length === 0) {
+                    emptyMessage.textContent = 'Start by adding your first dentist to the system';
+                }
+            } else {
+                tableSection.style.display = 'block';
+                emptyState.style.display = 'none';
+                renderDentistsTable();
+            }
+            
+            updateStats();
         }
 
         // Render dentists table
@@ -960,7 +1036,7 @@
             const tbody = document.getElementById('dentistsTableBody');
             
             tbody.innerHTML = filteredDentists.map(dentist => {
-                const initials = (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase();
+                const initials = ((dentist.fname || 'D').charAt(0) + (dentist.lname || 'R').charAt(0)).toUpperCase();
                 
                 return `
                     <tr data-id="${dentist.dentist_id}">
@@ -968,8 +1044,8 @@
                             <div class="dentist-info">
                                 <div class="dentist-avatar">${initials}</div>
                                 <div class="dentist-details">
-                                    <h4>Dr. ${dentist.fname} ${dentist.lname}</h4>
-                                    <p>${dentist.email}</p>
+                                    <h4>Dr. ${dentist.fname || 'Unknown'} ${dentist.lname || 'Doctor'}</h4>
+                                    <p>${dentist.email || 'No email'}</p>
                                 </div>
                             </div>
                         </td>
@@ -980,16 +1056,16 @@
                         <td>${dentist.education || 'Not specified'}</td>
                         <td>
                             <div class="action-buttons">
-                                <a href="dentists/${dentist.dentist_id}" class="btn-sm btn-view">
+                                <a href="dentists/${dentist.dentist_id}" class="btn-sm btn-view" title="View Details">
                                     <i class="fas fa-eye"></i> View
                                 </a>
-                                <a href="dentists/${dentist.dentist_id}/edit" class="btn-sm btn-edit">
+                                <a href="dentists/${dentist.dentist_id}/edit" class="btn-sm btn-edit" title="Edit Information">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <a href="dentists/${dentist.dentist_id}/schedule" class="btn-sm btn-schedule">
+                                <a href="dentists/${dentist.dentist_id}/schedule" class="btn-sm btn-schedule" title="Manage Schedule">
                                     <i class="fas fa-calendar"></i> Schedule
                                 </a>
-                                <button class="btn-sm btn-delete" onclick="confirmDelete(${dentist.dentist_id}, '${dentist.fname}', '${dentist.lname}')">
+                                <button class="btn-sm btn-delete" onclick="confirmDelete(${dentist.dentist_id}, '${dentist.fname}', '${dentist.lname}')" title="Delete Dentist">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
@@ -1001,50 +1077,27 @@
 
         // Update statistics
         function updateStats() {
-            document.getElementById('totalDentists').textContent = filteredDentists.length;
+            const totalDentists = dentistsData.length;
+            const filteredCount = filteredDentists.length;
+            
+            document.getElementById('totalDentists').textContent = totalDentists;
+            
+            const filteredInfo = document.getElementById('filteredInfo');
+            const tableInfo = document.getElementById('tableInfo');
+            
+            if (filteredCount !== totalDentists) {
+                filteredInfo.textContent = `(${filteredCount} filtered)`;
+                tableInfo.textContent = `Showing ${filteredCount} of ${totalDentists} dentists`;
+            } else {
+                filteredInfo.textContent = '';
+                tableInfo.textContent = `Showing all ${totalDentists} dentists`;
+            }
         }
 
         // Setup filters
         function setupFilters() {
             const specialtyFilter = document.getElementById('specialtyFilter');
-            const statusFilter = document.getElementById('statusFilter');
-            
             specialtyFilter.addEventListener('change', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-        }
-
-        // Apply filters with database field names
-        function applyFilters() {
-            const specialtyFilter = document.getElementById('specialtyFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            filteredDentists = dentistsData.filter(dentist => {
-                const matchesSpecialty = !specialtyFilter || dentist.specialty === specialtyFilter;
-                const matchesStatus = !statusFilter; // No status field in DB, so ignore this filter for now
-                const matchesSearch = !searchTerm || 
-                    dentist.fname.toLowerCase().includes(searchTerm) ||
-                    dentist.lname.toLowerCase().includes(searchTerm) ||
-                    dentist.email.toLowerCase().includes(searchTerm) ||
-                    (dentist.specialty && dentist.specialty.toLowerCase().includes(searchTerm));
-                
-                return matchesSpecialty && matchesStatus && matchesSearch;
-            });
-            
-            renderDentistsTable();
-            updateStats();
-            
-            // Show/hide empty state
-            const tableSection = document.getElementById('tableSection');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (filteredDentists.length === 0) {
-                tableSection.style.display = 'none';
-                emptyState.style.display = 'block';
-            } else {
-                tableSection.style.display = 'block';
-                emptyState.style.display = 'none';
-            }
         }
 
         // Setup search
@@ -1053,17 +1106,15 @@
             searchInput.addEventListener('input', applyFilters);
         }
 
-        // Update user avatar with first letter of admin email/username
+        // Update user avatar
         async function updateUserAvatar() {
             try {
-                // Fetch current user info from session/profile
                 const response = await fetch('/admin/profile/api');
                 if (response.ok) {
                     const data = await response.json();
                     const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
                     document.getElementById('userAvatar').textContent = firstLetter;
                 } else {
-                    // Fallback to 'A' for admin
                     document.getElementById('userAvatar').textContent = 'A';
                 }
             } catch (error) {
@@ -1072,7 +1123,7 @@
             }
         }
 
-        // Refresh data from database
+        // Refresh data
         async function refreshData() {
             showToast('Refreshing dentists data...', 'info');
             await loadDentists();
@@ -1085,7 +1136,7 @@
             const modal = document.getElementById('deleteModal');
             const message = document.getElementById('deleteMessage');
             
-            message.textContent = `Are you sure you want to delete Dr. ${fname} ${lname}? This will also remove all associated schedules and appointments. This action cannot be undone.`;
+            message.textContent = `Are you sure you want to delete Dr. ${fname || 'Unknown'} ${lname || 'Doctor'}? This will also remove all associated schedules and appointments. This action cannot be undone.`;
             modal.style.display = 'flex';
         }
 
@@ -1096,7 +1147,7 @@
             currentDeleteId = null;
         }
 
-        // Delete dentist with API call
+        // Delete dentist
         document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
             if (currentDeleteId) {
                 try {
@@ -1110,7 +1161,7 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        // Remove from local data and refresh display
+                        // Remove from local data
                         const dentistIndex = dentistsData.findIndex(d => d.dentist_id === currentDeleteId);
                         if (dentistIndex > -1) {
                             const deletedDentist = dentistsData[dentistIndex];
@@ -1132,7 +1183,7 @@
             }
         });
 
-        // Toggle notifications dropdown
+        // Toggle notifications
         function toggleNotifications() {
             const dropdown = document.getElementById('notificationDropdown');
             const isVisible = dropdown.classList.contains('show');
@@ -1141,7 +1192,6 @@
                 dropdown.classList.remove('show');
             } else {
                 dropdown.classList.add('show');
-                // Load notifications from database
                 loadNotifications();
             }
         }
@@ -1149,7 +1199,6 @@
         // Load notifications
         async function loadNotifications() {
             try {
-                // In real implementation, fetch from API
                 const notificationContent = document.getElementById('notificationContent');
                 notificationContent.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: #666;">
@@ -1158,7 +1207,6 @@
                     </div>
                 `;
                 
-                // Update badge
                 const badge = document.getElementById('notificationBadge');
                 badge.classList.remove('show');
             } catch (error) {
@@ -1194,15 +1242,14 @@
             }, 3000);
         }
 
-        // Close dropdowns when clicking outside
+        // Event listeners
         document.addEventListener('click', function(event) {
-            // Close profile dropdown
+            // Close dropdowns when clicking outside
             const profileDropdown = document.querySelector('.profile-dropdown');
             if (!profileDropdown.contains(event.target)) {
                 document.getElementById('profileDropdown').style.display = 'none';
             }
             
-            // Close notification dropdown
             const notificationContainer = document.querySelector('.notification-container');
             if (!notificationContainer.contains(event.target)) {
                 document.getElementById('notificationDropdown').classList.remove('show');
@@ -1217,27 +1264,19 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(event) {
-            // ESC to close modal
             if (event.key === 'Escape') {
                 closeModal();
                 document.getElementById('notificationDropdown').classList.remove('show');
                 document.getElementById('profileDropdown').style.display = 'none';
             }
             
-            // Ctrl+F to focus search
             if (event.ctrlKey && event.key === 'f') {
                 event.preventDefault();
                 document.getElementById('searchInput').focus();
             }
         });
 
-        // Auto-refresh functionality
-        setInterval(() => {
-            // In real implementation, check for updates
-            console.log('Auto-checking for updates...');
-        }, 60000); // Check every minute
-
-        // Handle connection status
+        // Connection status handlers
         window.addEventListener('online', function() {
             showToast('Connection restored', 'success');
         });

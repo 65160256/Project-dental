@@ -504,23 +504,66 @@ exports.addDentistForm = (req, res) => {
 };
 
 exports.addDentist = async (req, res) => {
-  const {
-    email, password, fname, lname, dob, id_card,
-    specialty, education, address, phone
-  } = req.body;
-
   console.log('📋 Form data received:', req.body);
   console.log('📁 File uploaded:', req.file);
 
+  // ✅ รับข้อมูลและกำหนดค่า default
+  const email = req.body.email || '';
+  const password = req.body.password || '';
+  const fname = req.body.fname || '';
+  const lname = req.body.lname || '';
+  const dob = req.body.dob || null;
+  const id_card = req.body.id_card || ''; // รับจาก id_card ที่ frontend ส่งมา
+  const specialty = req.body.specialty || '';
+  const education = req.body.education || '';
+  const address = req.body.address || '';
+  const phone = req.body.phone || '';
+
+  console.log('📝 Processed data:', {
+    email, fname, lname, dob, id_card, specialty, education, address, phone
+  });
+
+  // ตรวจสอบข้อมูลที่จำเป็น
+  if (!email || !password || !fname || !lname || !id_card || !specialty || !phone) {
+    console.log('❌ Missing required fields');
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required fields'
+    });
+  }
+
   try {
+    // ตรวจสอบอีเมลซ้ำก่อน
+    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    if (existingUser[0].count > 0) {
+      console.log('❌ Email already exists:', email);
+      
+      // ลบไฟล์ที่อัพโหลดแล้ว
+      if (req.file) {
+        const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+        fs.unlink(filePath, (err) => {
+          if (err) console.error('Error deleting uploaded file:', err);
+          else console.log('🗑️ Deleted uploaded file due to email duplicate');
+        });
+      }
+      
+      return res.status(400).json({
+        success: false,
+        error: 'Email address is already in use',
+        field: 'email'
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // สร้าง user record
+    console.log('👤 Creating user record...');
     const [userResult] = await db.execute(
       `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
       [email, hashedPassword]
     );
     const userId = userResult.insertId;
+    console.log('✅ User created with ID:', userId);
     
     // กำหนด photo filename
     let photoFilename = null;
@@ -531,28 +574,64 @@ exports.addDentist = async (req, res) => {
       console.log('ℹ️ No photo uploaded, using default');
     }
     
+    // แปลง empty string เป็น null สำหรับฟิลด์ที่อาจเป็น null
+    const dobValue = dob && dob.trim() !== '' ? dob : null;
+    const educationValue = education && education.trim() !== '' ? education : null;
+    const addressValue = address && address.trim() !== '' ? address : null;
+    
+    console.log('🦷 Creating dentist record with values:', {
+      userId, fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename
+    });
+    
     // สร้าง dentist record
     await db.execute(
       `INSERT INTO dentist (user_id, fname, lname, dob, id_card, specialty, education, address, phone, photo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, fname, lname, dob, id_card, specialty, education, address, phone, photoFilename]
+      [userId, fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename]
     );
     
     console.log('✅ Dentist created successfully');
-    res.redirect('/admin/dentists');
+    
+    // ส่งกลับ JSON response
+    res.json({
+      success: true,
+      message: 'Dentist added successfully',
+      redirect: '/admin/dentists'
+    });
     
   } catch (error) {
     console.error('❌ Error creating dentist:', error);
+    console.error('❌ Error details:', {
+      code: error.code,
+      errno: error.errno,
+      sqlMessage: error.sqlMessage,
+      sql: error.sql
+    });
     
     // ลบไฟล์ที่อัพโหลดแล้วหากเกิดข้อผิดพลาด
     if (req.file) {
       const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
       fs.unlink(filePath, (err) => {
         if (err) console.error('Error deleting file:', err);
+        else console.log('🗑️ Deleted uploaded file due to error');
       });
     }
     
-    res.status(500).send('Error creating dentist: ' + error.message);
+    // จัดการ error แบบละเอียด
+    if (error.code === 'ER_DUP_ENTRY') {
+      if (error.sqlMessage && error.sqlMessage.includes('email')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email address is already in use',
+          field: 'email'
+        });
+      }
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create dentist: ' + error.message
+    });
   }
 };
 
@@ -589,44 +668,106 @@ exports.editDentistForm = async (req, res) => {
 exports.editDentist = async (req, res) => {
   const id = req.params.id;
 
-  // ป้องกัน req.body เป็น undefined
   if (!req.body) return res.status(400).send('No form data submitted.');
-
-  const {
-    email = '',
-    password = '',
-    fname = '',
-    lname = '',
-    dob = '',
-    id_card = '',
-    specialty = '',
-    education = '',
-    address = '',
-    phone = ''
-  } = req.body;
 
   console.log('📋 Edit form data received:', req.body);
   console.log('📁 New file uploaded:', req.file);
 
   try {
-    const [dentistRow] = await db.execute(`SELECT user_id, photo FROM dentist WHERE dentist_id = ?`, [id]);
-    if (dentistRow.length === 0) return res.status(404).send('Dentist not found');
+    const [dentistRow] = await db.execute(`
+      SELECT d.*, u.email as current_email 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.dentist_id = ?
+    `, [id]);
+    
+    if (dentistRow.length === 0) {
+      return res.status(404).send('Dentist not found');
+    }
 
-    const userId = dentistRow[0].user_id;
-    const oldPhoto = dentistRow[0].photo;
+    const currentDentist = dentistRow[0];
+    const userId = currentDentist.user_id;
+    const oldPhoto = currentDentist.photo;
 
-    // อัปเดต user table
-    if (password) {
-      const hashed = await bcrypt.hash(password, 10);
-      await db.execute(
-        `UPDATE user SET email = ?, password = ? WHERE user_id = ?`,
-        [email, hashed, userId]
-      );
-    } else {
-      await db.execute(
-        `UPDATE user SET email = ? WHERE user_id = ?`,
+    // ✅ ปรับปรุงการจัดการข้อมูล - รองรับทั้ง string และ Date object
+    const email = req.body.email || currentDentist.current_email;
+    const password = req.body.password || '';
+    const fname = req.body.fname || currentDentist.fname;
+    const lname = req.body.lname || currentDentist.lname;
+    const specialty = req.body.specialty || currentDentist.specialty;
+    const education = req.body.education || currentDentist.education;
+    const address = req.body.address || currentDentist.address;
+    const phone = req.body.phone || currentDentist.phone;
+    const id_card = req.body.id_card || currentDentist.id_card;
+    
+    // ✅ จัดการ dob อย่างปลอดภัย
+    let dob = req.body.dob || currentDentist.dob;
+    if (dob instanceof Date) {
+      // ถ้าเป็น Date object แปลงเป็น string
+      dob = dob.toISOString().split('T')[0]; // YYYY-MM-DD format
+    } else if (typeof dob === 'string') {
+      // ถ้าเป็น string ทำความสะอาด
+      dob = dob.trim();
+    }
+
+    console.log('📝 Processing update with data:', {
+      email, fname, lname, dob, id_card, specialty, education, address, phone,
+      hasPassword: !!password,
+      hasNewPhoto: !!req.file
+    });
+
+    // ตรวจสอบอีเมลซ้ำ (ถ้ามีการเปลี่ยนแปลง)
+    if (email && email !== currentDentist.current_email) {
+      const [existingUser] = await db.execute(
+        'SELECT COUNT(*) as count FROM user WHERE email = ? AND user_id != ?', 
         [email, userId]
       );
+      
+      if (existingUser[0].count > 0) {
+        console.log('❌ Email already exists:', email);
+        
+        // ลบไฟล์ที่อัพโหลด
+        if (req.file) {
+          const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+          fs.unlink(filePath, (err) => {
+            if (err) console.error('Error deleting file:', err);
+          });
+        }
+        
+        return res.status(400).json({
+          success: false,
+          error: 'Email address is already in use',
+          field: 'email'
+        });
+      }
+    }
+
+    // อัปเดต user table (เฉพาะเมื่อมีการเปลี่ยนแปลง)
+    let shouldUpdateUser = false;
+    let userUpdateQuery = 'UPDATE user SET ';
+    let userUpdateParams = [];
+    let userUpdateFields = [];
+
+    if (email && email !== currentDentist.current_email) {
+      userUpdateFields.push('email = ?');
+      userUpdateParams.push(email);
+      shouldUpdateUser = true;
+    }
+
+    if (password && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      userUpdateFields.push('password = ?');
+      userUpdateParams.push(hashedPassword);
+      shouldUpdateUser = true;
+    }
+
+    if (shouldUpdateUser) {
+      userUpdateQuery += userUpdateFields.join(', ') + ' WHERE user_id = ?';
+      userUpdateParams.push(userId);
+      
+      console.log('👤 Updating user table...');
+      await db.execute(userUpdateQuery, userUpdateParams);
+      console.log('✅ User table updated');
     }
 
     // จัดการรูปภาพ
@@ -636,6 +777,7 @@ exports.editDentist = async (req, res) => {
       photoFilename = req.file.filename;
       console.log('✅ New photo uploaded:', photoFilename);
       
+      // ลบรูปเก่า (ถ้าไม่ใช่ default)
       if (oldPhoto && oldPhoto !== 'default-avatar.png') {
         const oldPhotoPath = path.join(__dirname, '../public/uploads/', oldPhoto);
         fs.unlink(oldPhotoPath, (err) => {
@@ -645,31 +787,65 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // ⭐ จุดสำคัญ: แปลง empty string เป็น NULL สำหรับฟิลด์วันที่
-    const dobValue = dob && dob.trim() !== '' && dob !== 'null' ? dob : null;
+    // ✅ แปลงค่าให้เหมาะสมสำหรับฐานข้อมูล
+    const dobValue = dob && dob !== '' && dob !== 'null' ? dob : null;
+    const educationValue = education && education.trim() !== '' ? education : null;
+    const addressValue = address && address.trim() !== '' ? address : null;
 
-    // อัปเดต dentist table ด้วยค่าที่ปรับแล้ว
+    // อัปเดต dentist table
+    console.log('🦷 Updating dentist table...');
     await db.execute(`
       UPDATE dentist SET
         fname = ?, lname = ?, dob = ?, id_card = ?,
         specialty = ?, education = ?, address = ?, phone = ?, photo = ?
       WHERE dentist_id = ?
-    `, [fname, lname, dobValue, id_card, specialty, education, address, phone, photoFilename, id]);
+    `, [fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename, id]);
 
     console.log('✅ Dentist updated successfully');
-    res.redirect('/admin/dentists');
+    
+    // ส่ง JSON response หากเป็น API request
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      res.json({
+        success: true,
+        message: 'Dentist updated successfully'
+      });
+    } else {
+      res.redirect('/admin/dentists');
+    }
     
   } catch (err) {
     console.error('❌ Edit dentist error:', err);
     
+    // ลบไฟล์ใหม่หากเกิดข้อผิดพลาด
     if (req.file) {
       const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
-      fs.unlink(filePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
+      fs.unlink(filePath, (deleteErr) => {
+        if (deleteErr) console.error('Error deleting file:', deleteErr);
       });
     }
     
-    res.status(500).send('Server error during update: ' + err.message);
+    // จัดการ error responses
+    if (err.code === 'ER_DUP_ENTRY') {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email address is already in use',
+          field: 'email'
+        });
+      } else {
+        req.flash('error', 'Email address is already in use');
+        return res.redirect(`/admin/dentists/${id}/edit`);
+      }
+    }
+    
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update dentist: ' + err.message
+      });
+    } else {
+      res.status(500).send('Server error during update: ' + err.message);
+    }
   }
 };
 
@@ -2905,7 +3081,7 @@ exports.getDentistsAPI = async (req, res) => {
         d.education,
         d.address,
         d.dob,
-        d.idcard,
+        d.id_card,
         d.photo,
         u.email,
         u.last_login,
@@ -2915,7 +3091,7 @@ exports.getDentistsAPI = async (req, res) => {
       JOIN user u ON d.user_id = u.user_id
       LEFT JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id AND ds.schedule_date >= CURDATE()
       LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('pending', 'confirm')
-      GROUP BY d.dentist_id, d.fname, d.lname, d.phone, d.specialty, d.education, d.address, d.dob, d.idcard, d.photo, u.email, u.last_login
+      GROUP BY d.dentist_id, d.fname, d.lname, d.phone, d.specialty, d.education, d.address, d.dob, d.id_card, d.photo, u.email, u.last_login
       ORDER BY d.fname, d.lname
     `);
 
@@ -2930,7 +3106,7 @@ exports.getDentistsAPI = async (req, res) => {
       education: dentist.education,
       address: dentist.address,
       dob: dentist.dob,
-      idcard: dentist.idcard,
+      id_card: dentist.id_card,
       photo: dentist.photo,
       last_login: dentist.last_login,
       stats: {

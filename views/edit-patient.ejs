@@ -344,11 +344,48 @@
             padding: 30px;
         }
 
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .form-container {
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .form-container.loaded {
+            opacity: 1;
         }
 
         .form-header {
@@ -615,11 +652,6 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
         /* Toast notification */
         .toast {
             position: fixed;
@@ -782,6 +814,19 @@
             color: #e74c3c;
         }
 
+        /* Data loading indicator */
+        .data-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .data-loading i {
+            font-size: 32px;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -807,6 +852,12 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <span>กำลังโหลดข้อมูลผู้ป่วย...</span>
+    </div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
@@ -886,8 +937,14 @@
                         <span id="lastUpdatedText">Last updated: Never</span>
                     </div>
 
+                    <!-- Data Loading Indicator -->
+                    <div id="dataLoading" class="data-loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading patient data...</p>
+                    </div>
+
                     <!-- Personal Information -->
-                    <div class="form-section">
+                    <div class="form-section" id="personalSection" style="display: none;">
                         <h3 class="section-title">
                             <i class="fas fa-user"></i>
                             Personal Information
@@ -922,7 +979,7 @@
                     </div>
 
                     <!-- Account Information -->
-                    <div class="form-section">
+                    <div class="form-section" id="accountSection" style="display: none;">
                         <h3 class="section-title">
                             <i class="fas fa-key"></i>
                             Login Information
@@ -961,7 +1018,7 @@
                     </div>
 
                     <!-- Contact Information -->
-                    <div class="form-section">
+                    <div class="form-section" id="contactSection" style="display: none;">
                         <h3 class="section-title">
                             <i class="fas fa-address-book"></i>
                             Contact Information
@@ -985,7 +1042,7 @@
                     </div>
                 </div>
 
-                <div class="form-actions">
+                <div class="form-actions" id="formActions" style="display: none;">
                     <div class="changes-summary">
                         <span id="changesText">No changes made</span>
                     </div>
@@ -1038,17 +1095,74 @@
         let isSubmitting = false;
         let hasChanges = false;
         let emailCheckTimeout = null;
+        let isDataLoaded = false;
 
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page loaded, initializing...');
+            showLoadingOverlay();
+            
+            // Initialize in proper order
             extractPatientId();
-            loadPatientData();
-            loadUserInfo();
-            loadNotifications();
-            setupFormHandlers();
-            setupPasswordValidation();
-            setupChangeTracking();
-            setupEmailValidation();
+            if (patientId) {
+                initializePage();
+            } else {
+                hideLoadingOverlay();
+                showToast('Invalid patient ID', 'error');
+                setTimeout(() => window.location.href = '../../patients', 2000);
+            }
         });
+
+        async function initializePage() {
+            try {
+                console.log('📋 Initializing page for patient ID:', patientId);
+                
+                // Load data in parallel
+                await Promise.all([
+                    loadPatientData(),
+                    loadUserInfo(),
+                    loadNotifications()
+                ]);
+                
+                // Setup UI components only after data is loaded
+                if (isDataLoaded) {
+                    setupFormHandlers();
+                    setupPasswordValidation();
+                    setupChangeTracking();
+                    setupEmailValidation();
+                    showFormSections();
+                }
+                
+                hideLoadingOverlay();
+                
+            } catch (error) {
+                console.error('❌ Error initializing page:', error);
+                hideLoadingOverlay();
+                showToast('Failed to load page: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '../../patients', 3000);
+            }
+        }
+
+        function showLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.querySelector('.form-container').classList.add('loaded');
+        }
+
+        function showFormSections() {
+            console.log('👁️ Showing form sections...');
+            
+            // Hide loading indicator
+            document.getElementById('dataLoading').style.display = 'none';
+            
+            // Show all form sections
+            document.getElementById('personalSection').style.display = 'block';
+            document.getElementById('accountSection').style.display = 'block';
+            document.getElementById('contactSection').style.display = 'block';
+            document.getElementById('formActions').style.display = 'flex';
+        }
 
         // Extract patient ID from URL
         function extractPatientId() {
@@ -1057,71 +1171,146 @@
             if (matches) {
                 patientId = parseInt(matches[1]);
                 document.getElementById('patientIdBadge').textContent = `Patient ID: ${patientId}`;
+                console.log('✅ Patient ID extracted:', patientId);
             } else {
-                showToast('Invalid patient ID', 'error');
-                setTimeout(() => window.location.href = '../../patients', 2000);
+                console.error('❌ Could not extract patient ID from URL:', path);
             }
         }
 
-        // Load patient data from database
+        // Enhanced load patient data function
         async function loadPatientData() {
-            if (!patientId) return;
+            if (!patientId) {
+                throw new Error('Patient ID is required');
+            }
+
+            console.log('📡 Loading patient data for ID:', patientId);
 
             try {
                 const response = await fetch(`../../api/patients/${patientId}`);
                 
+                console.log('📡 API Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('❌ API Error Response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                 }
                 
                 const data = await response.json();
+                console.log('📦 API Response data:', data);
                 
-                if (data.success) {
-                    populateForm(data.patient);
+                if (data.success && data.patient) {
+                    console.log('✅ Patient data loaded successfully:', data.patient);
+                    
+                    // Store original data
                     originalData = { ...data.patient };
                     currentData = { ...data.patient };
+                    
+                    // Populate form immediately
+                    populateForm(data.patient);
+                    
+                    // Mark as loaded
+                    isDataLoaded = true;
+                    
+                    console.log('✅ Form populated with patient data');
                 } else {
-                    throw new Error(data.error || 'Failed to load patient data');
+                    throw new Error(data.error || 'Invalid response format');
                 }
                 
             } catch (error) {
-                console.error('Error loading patient data:', error);
-                showToast('Failed to load patient data: ' + error.message, 'error');
-                setTimeout(() => window.location.href = '../../patients', 3000);
+                console.error('❌ Error loading patient data:', error);
+                throw new Error('Failed to load patient data: ' + error.message);
             }
         }
 
-        // Populate form with patient data
+        // Enhanced populate form function
         function populateForm(patient) {
-            console.log('Patient data received:', patient);
+            console.log('📝 Populating form with patient data:', patient);
             
-            // Basic information
-            document.getElementById('fname').value = patient.fname || '';
-            document.getElementById('lname').value = patient.lname || '';
-            document.getElementById('phone').value = patient.phone || '';
-            document.getElementById('address').value = patient.address || '';
-            document.getElementById('email').value = patient.email || '';
-            document.getElementById('idcard').value = patient.idcard || '';
-            
-            // Date of birth handling
-            if (patient.dob) {
-                const date = new Date(patient.dob);
-                document.getElementById('dob').value = date.toISOString().split('T')[0];
-            }
-
-            // Last updated info
-            if (patient.updated_at || patient.created_at) {
-                const lastUpdatedElement = document.getElementById('lastUpdated');
-                const lastUpdatedText = document.getElementById('lastUpdatedText');
-                const updateDate = new Date(patient.updated_at || patient.created_at);
+            try {
+                // Basic information - with null checks
+                setFieldValue('fname', patient.fname || '');
+                setFieldValue('lname', patient.lname || '');
+                setFieldValue('phone', patient.phone || '');
+                setFieldValue('address', patient.address || '');
+                setFieldValue('email', patient.email || '');
                 
-                lastUpdatedText.textContent = `Last updated: ${formatDateTime(updateDate)}`;
-                lastUpdatedElement.style.display = 'block';
+                // ID Card - ensure it's populated correctly
+                const idCard = patient.id_card || patient.idcard || '';
+                setFieldValue('idcard', idCard);
+                console.log('📋 ID Card set to:', idCard);
+                
+                // Date of birth handling - more robust
+                if (patient.dob) {
+                    try {
+                        let dateValue;
+                        if (typeof patient.dob === 'string') {
+                            // Handle string dates
+                            if (patient.dob.includes('T')) {
+                                dateValue = patient.dob.split('T')[0];
+                            } else {
+                                dateValue = patient.dob;
+                            }
+                        } else if (patient.dob instanceof Date) {
+                            dateValue = patient.dob.toISOString().split('T')[0];
+                        } else {
+                            dateValue = new Date(patient.dob).toISOString().split('T')[0];
+                        }
+                        
+                        setFieldValue('dob', dateValue);
+                        console.log('📅 Date of birth set to:', dateValue);
+                    } catch (dateError) {
+                        console.warn('⚠️ Error setting date of birth:', dateError);
+                        setFieldValue('dob', '');
+                    }
+                } else {
+                    setFieldValue('dob', '');
+                }
+
+                // Last updated info
+                if (patient.updated_at || patient.created_at) {
+                    const lastUpdatedElement = document.getElementById('lastUpdated');
+                    const lastUpdatedText = document.getElementById('lastUpdatedText');
+                    const updateDate = new Date(patient.updated_at || patient.created_at);
+                    
+                    lastUpdatedText.textContent = `Last updated: ${formatDateTime(updateDate)}`;
+                    lastUpdatedElement.style.display = 'block';
+                }
+
+                // Clear any existing validation states
+                clearAllValidationStates();
+                
+                console.log('✅ All form fields populated successfully');
+                
+            } catch (error) {
+                console.error('❌ Error populating form:', error);
+                throw error;
             }
+        }
+
+        // Helper function to safely set field values
+        function setFieldValue(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = value || '';
+                console.log(`🏷️ Set field ${fieldId} to: "${value}"`);
+            } else {
+                console.warn(`⚠️ Field ${fieldId} not found`);
+            }
+        }
+
+        // Helper function to clear validation states
+        function clearAllValidationStates() {
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(group => {
+                group.classList.remove('error', 'success');
+            });
         }
 
         // Setup form handlers
         function setupFormHandlers() {
+            console.log('🎛️ Setting up form handlers...');
+            
             const form = document.getElementById('editPatientForm');
 
             // Form submission
@@ -1141,19 +1330,31 @@
                 });
             });
 
-            // ID Card validation
+            // ID Card validation - enhanced
             const idcardInput = document.getElementById('idcard');
-            idcardInput.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '').substring(0, 13);
-                validateField(this);
-            });
+            if (idcardInput) {
+                idcardInput.addEventListener('input', function() {
+                    // Only allow digits
+                    let value = this.value.replace(/\D/g, '');
+                    // Limit to 13 digits
+                    value = value.substring(0, 13);
+                    this.value = value;
+                    
+                    console.log('🆔 ID Card input changed to:', value);
+                    validateField(this);
+                });
+            }
 
             // Phone validation
             const phoneInput = document.getElementById('phone');
-            phoneInput.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '').substring(0, 10);
-                validateField(this);
-            });
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').substring(0, 10);
+                    validateField(this);
+                });
+            }
+
+            console.log('✅ Form handlers set up successfully');
         }
 
         // Setup password validation
@@ -1163,6 +1364,8 @@
             const strengthContainer = document.getElementById('passwordStrength');
             const strengthFill = document.getElementById('strengthFill');
             const strengthText = document.getElementById('strengthText');
+
+            if (!passwordInput || !confirmInput) return;
 
             passwordInput.addEventListener('input', function() {
                 const password = this.value;
@@ -1193,6 +1396,8 @@
         function setupEmailValidation() {
             const emailInput = document.getElementById('email');
             const emailStatus = document.getElementById('emailStatus');
+
+            if (!emailInput || !emailStatus) return;
 
             emailInput.addEventListener('input', function() {
                 const email = this.value.trim();
@@ -1263,7 +1468,13 @@
                 input.addEventListener('input', function() {
                     const fieldName = this.name;
                     const currentValue = this.value;
-                    const originalValue = originalData[fieldName] || '';
+                    const originalValue = originalData[fieldName] || originalData[fieldName === 'idcard' ? 'id_card' : fieldName] || '';
+                    
+                    console.log(`🔄 Field ${fieldName} changed:`, {
+                        current: currentValue,
+                        original: originalValue,
+                        different: currentValue !== originalValue
+                    });
                     
                     if (currentValue !== originalValue) {
                         trackChange(fieldName, currentValue);
@@ -1278,13 +1489,17 @@
 
         // Track field changes
         function trackChange(fieldName, value) {
-            currentData[fieldName] = value;
+            // Handle id_card vs idcard field name mapping
+            const dataKey = fieldName === 'idcard' ? 'id_card' : fieldName;
+            currentData[dataKey] = value;
             updateChangesDisplay();
         }
 
         // Untrack field changes
         function untrackChange(fieldName) {
-            currentData[fieldName] = originalData[fieldName] || '';
+            const dataKey = fieldName === 'idcard' ? 'id_card' : fieldName;
+            const originalKey = dataKey === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : dataKey;
+            currentData[dataKey] = originalData[originalKey] || '';
             updateChangesDisplay();
         }
 
@@ -1293,7 +1508,11 @@
             const changedFields = [];
             
             Object.keys(currentData).forEach(key => {
-                if (currentData[key] !== (originalData[key] || '')) {
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                const originalValue = originalData[originalKey] || '';
+                const currentValue = currentData[key] || '';
+                
+                if (currentValue !== originalValue) {
                     changedFields.push(key);
                 }
             });
@@ -1317,6 +1536,7 @@
 
         // Reset changes
         function resetChanges() {
+            console.log('🔄 Resetting changes...');
             populateForm(originalData);
             currentData = { ...originalData };
             
@@ -1451,9 +1671,10 @@
             const modal = document.getElementById('confirmModal');
             const message = document.getElementById('modalMessage');
             
-            const changedFields = Object.keys(currentData).filter(key => 
-                currentData[key] !== (originalData[key] || '')
-            );
+            const changedFields = Object.keys(currentData).filter(key => {
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                return currentData[key] !== (originalData[originalKey] || '');
+            });
             
             message.innerHTML = `
                 <p>You are about to save changes to the following fields:</p>
@@ -1474,6 +1695,7 @@
                 phone: 'Phone Number',
                 address: 'Address',
                 email: 'Email Address',
+                id_card: 'ID Card Number',
                 idcard: 'ID Card Number',
                 dob: 'Date of Birth',
                 password: 'Password'
@@ -1513,10 +1735,18 @@
                         value = null;
                     }
                     
-                    if (value !== (originalData[key] || '')) {
-                        updateData[key] = value || '';
+                    // Handle id_card field name mapping
+                    const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                    const originalValue = originalData[originalKey] || '';
+                    
+                    if (value !== originalValue) {
+                        // Map id_card back to idcard for API
+                        const apiKey = key === 'id_card' ? 'idcard' : key;
+                        updateData[apiKey] = value || '';
                     }
                 });
+
+                console.log('💾 Saving update data:', updateData);
 
                 const response = await fetch(`../../api/patients/${patientId}`, {
                     method: 'PUT',
@@ -1531,23 +1761,16 @@
                 if (response.ok && result.success) {
                     showToast('Patient information updated successfully!', 'success');
                     
-                    // Create notification
-                    try {
-                        await fetch('../../api/notifications', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                type: 'patient_update',
-                                title: 'Patient Information Updated',
-                                message: `${originalData.fname} ${originalData.lname}'s information has been updated`,
-                                patient_id: patientId
-                            })
-                        });
-                    } catch (notificationError) {
-                        console.warn('Could not create notification:', notificationError);
-                    }
+                    // Update original data to reflect saved state
+                    Object.assign(originalData, currentData);
+                    
+                    // Reset form state
+                    hasChanges = false;
+                    updateChangesDisplay();
+                    
+                    // Remove change indicators
+                    const changedFields = document.querySelectorAll('.field-changed');
+                    changedFields.forEach(field => field.classList.remove('field-changed'));
                     
                     setTimeout(() => {
                         window.location.href = '../../patients';
@@ -1557,12 +1780,12 @@
                 }
 
             } catch (error) {
-                console.error('Error updating patient:', error);
+                console.error('❌ Error updating patient:', error);
                 showToast('Failed to update patient: ' + error.message, 'error');
             } finally {
                 isSubmitting = false;
                 submitBtn.classList.remove('btn-loading');
-                submitBtn.disabled = false;
+                submitBtn.disabled = !hasChanges;
             }
         }
 

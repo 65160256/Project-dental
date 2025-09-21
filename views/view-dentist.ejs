@@ -926,102 +926,104 @@
 
         // Populate data with dentist information
         function populateData(dentist) {
-            console.log('Dentist data received:', dentist);
-            
-            // Update full name
-            const fullName = `Dr. ${dentist.fname || ''} ${dentist.lname || ''}`.trim();
-            document.getElementById('fullName').textContent = fullName;
-            document.getElementById('fullName').classList.remove('loading');
-            
-            // Update specialty
-            const specialtyEl = document.getElementById('specialty');
-            if (dentist.specialty) {
-                specialtyEl.textContent = dentist.specialty;
-            } else {
-                specialtyEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            specialtyEl.classList.remove('loading');
-            
-            // Date of birth
-            const birthDateEl = document.getElementById('birthDate');
-            if (dentist.dob) {
-                const date = new Date(dentist.dob);
-                birthDateEl.textContent = date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } else {
-                birthDateEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            birthDateEl.classList.remove('loading');
-            
-            // ID Card
-            const idCardEl = document.getElementById('idCard');
-            if (dentist.idcard) {
-                idCardEl.textContent = dentist.idcard;
-            } else {
-                idCardEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            idCardEl.classList.remove('loading');
-            
-            // Education
-            const educationEl = document.getElementById('education');
-            if (dentist.education) {
-                educationEl.textContent = dentist.education;
-            } else {
-                educationEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            educationEl.classList.remove('loading');
-            
-            // Address
-            const addressEl = document.getElementById('address');
-            if (dentist.address) {
-                addressEl.textContent = dentist.address;
-            } else {
-                addressEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            addressEl.classList.remove('loading');
-            
-            // Phone
-            const phoneEl = document.getElementById('phone');
-            if (dentist.phone) {
-                phoneEl.textContent = dentist.phone;
-            } else {
-                phoneEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            phoneEl.classList.remove('loading');
-            
-            // Email
-            const emailEl = document.getElementById('email');
-            if (dentist.email) {
-                emailEl.textContent = dentist.email;
-            } else {
-                emailEl.innerHTML = '<span class="empty">Not specified</span>';
-            }
-            emailEl.classList.remove('loading');
-            
-            // Last login
-            const lastLoginEl = document.getElementById('lastLogin');
-            if (dentist.last_login) {
-                const loginDate = new Date(dentist.last_login);
-                lastLoginEl.textContent = formatDateTime(loginDate);
-            } else {
-                lastLoginEl.innerHTML = '<span class="empty">Never logged in</span>';
-            }
-            lastLoginEl.classList.remove('loading');
+    console.log('Dentist data received:', dentist);
+    
+    // Update full name
+    const fullName = `Dr. ${dentist.fname || ''} ${dentist.lname || ''}`.trim();
+    document.getElementById('fullName').textContent = fullName;
+    document.getElementById('fullName').classList.remove('loading');
+    
+    // Update specialty
+    const specialtyEl = document.getElementById('specialty');
+    if (dentist.specialty) {
+        specialtyEl.textContent = dentist.specialty;
+    } else {
+        specialtyEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    specialtyEl.classList.remove('loading');
+    
+    // Date of birth
+    const birthDateEl = document.getElementById('birthDate');
+    if (dentist.dob) {
+        const date = new Date(dentist.dob);
+        birthDateEl.textContent = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } else {
+        birthDateEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    birthDateEl.classList.remove('loading');
+    
+    // ✅ แก้ไข ID Card - ใช้ id_card แทน idcard
+    const idCardEl = document.getElementById('idCard');
+    // ลองทั้งสองชื่อฟิลด์เพื่อความปลอดภัย
+    const idCardValue = dentist.id_card || dentist.idcard;
+    if (idCardValue) {
+        idCardEl.textContent = idCardValue;
+    } else {
+        idCardEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    idCardEl.classList.remove('loading');
+    
+    // Education
+    const educationEl = document.getElementById('education');
+    if (dentist.education) {
+        educationEl.textContent = dentist.education;
+    } else {
+        educationEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    educationEl.classList.remove('loading');
+    
+    // Address
+    const addressEl = document.getElementById('address');
+    if (dentist.address) {
+        addressEl.textContent = dentist.address;
+    } else {
+        addressEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    addressEl.classList.remove('loading');
+    
+    // Phone
+    const phoneEl = document.getElementById('phone');
+    if (dentist.phone) {
+        phoneEl.textContent = dentist.phone;
+    } else {
+        phoneEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    phoneEl.classList.remove('loading');
+    
+    // Email
+    const emailEl = document.getElementById('email');
+    if (dentist.email) {
+        emailEl.textContent = dentist.email;
+    } else {
+        emailEl.innerHTML = '<span class="empty">Not specified</span>';
+    }
+    emailEl.classList.remove('loading');
+    
+    // Last login
+    const lastLoginEl = document.getElementById('lastLogin');
+    if (dentist.last_login) {
+        const loginDate = new Date(dentist.last_login);
+        lastLoginEl.textContent = formatDateTime(loginDate);
+    } else {
+        lastLoginEl.innerHTML = '<span class="empty">Never logged in</span>';
+    }
+    lastLoginEl.classList.remove('loading');
 
-            // Display photo with fallback to avatar
-            displayDentistPhoto(dentist);
+    // Display photo with fallback to avatar
+    displayDentistPhoto(dentist);
 
-            // Update stats
-            document.getElementById('totalSchedules').textContent = dentist.total_schedules || 0;
-            document.getElementById('totalAppointments').textContent = dentist.total_appointments || 0;
+    // Update stats
+    document.getElementById('totalSchedules').textContent = dentist.total_schedules || 0;
+    document.getElementById('totalAppointments').textContent = dentist.total_appointments || 0;
 
-            // Update action button links
-            document.getElementById('scheduleBtn').href = `/admin/dentists/${dentistId}/schedule`;
-            document.getElementById('editBtn').href = `/admin/dentists/${dentistId}/edit`;
-        }
+    // Update action button links
+    document.getElementById('scheduleBtn').href = `/admin/dentists/${dentistId}/schedule`;
+    document.getElementById('editBtn').href = `/admin/dentists/${dentistId}/edit`;
+}
 
         // Display dentist photo with avatar fallback
         function displayDentistPhoto(dentist) {
