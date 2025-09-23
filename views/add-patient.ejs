@@ -1093,8 +1093,8 @@
             });
 
             // ID Card validation
-            const idcardInput = document.getElementById('id_card');
-            idcardInput.addEventListener('input', function() {
+            const id_cardInput = document.getElementById('id_card');
+            id_cardInput.addEventListener('input', function() {
                 this.value = this.value.replace(/\D/g, '').substring(0, 13);
                 validateField(this);
             });

@@ -779,7 +779,7 @@
                         </div>
                         <div class="info-item">
                             <div class="info-label">ID Card Number</div>
-                            <div class="info-value loading" id="idCard">Loading...</div>
+                            <div class="info-value loading" id="id_card">Loading...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Specialty</div>
@@ -956,16 +956,16 @@
     }
     birthDateEl.classList.remove('loading');
     
-    // ✅ แก้ไข ID Card - ใช้ id_card แทน idcard
-    const idCardEl = document.getElementById('idCard');
+    // ✅ แก้ไข ID Card - ใช้ id_card แทน id_card
+    const id_cardEl = document.getElementById('id_card');
     // ลองทั้งสองชื่อฟิลด์เพื่อความปลอดภัย
-    const idCardValue = dentist.id_card || dentist.idcard;
-    if (idCardValue) {
-        idCardEl.textContent = idCardValue;
+    const id_cardValue = dentist.id_card || dentist.id_card;
+    if (id_cardValue) {
+        id_cardEl.textContent = id_cardValue;
     } else {
-        idCardEl.innerHTML = '<span class="empty">Not specified</span>';
+        id_cardEl.innerHTML = '<span class="empty">Not specified</span>';
     }
-    idCardEl.classList.remove('loading');
+    id_cardEl.classList.remove('loading');
     
     // Education
     const educationEl = document.getElementById('education');

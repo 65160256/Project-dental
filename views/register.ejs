@@ -196,7 +196,7 @@
           <input type="date" name="dob" required>
 
           <label>ID Card Number: <span class="required">*</span></label>
-          <input type="number" name="idcard" id="idcard" required maxlength="13">
+          <input type="number" name="id_card" id="id_card" required maxlength="13">
 
           <h4>Login Information</h4>
 
@@ -242,7 +242,7 @@
 
     function validateForm() {
       const phone = document.getElementById("phone").value.trim();
-      const idcard = document.getElementById("idcard").value.trim();
+      const id_card = document.getElementById("id_card").value.trim();
       const pass = document.getElementById("password").value;
       const confirm = document.getElementById("confirmPassword").value;
 
@@ -251,7 +251,7 @@
         return false;
       }
 
-      if (idcard.length > 13) {
+      if (id_card.length > 13) {
         alert("ID card number must not exceed 13 digits.");
         return false;
       }

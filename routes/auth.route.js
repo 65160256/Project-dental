@@ -260,7 +260,7 @@ router.post('/api/auth/refresh', async (req, res) => {
 router.post('/api/auth/change-password', requireAuth, async (req, res) => {
     try {
         const bcrypt = require('bcryptjs');
-        const db = require('../models/db');
+        const db = require('../config/db');
         const { currentPassword, newPassword, confirmPassword } = req.body;
         
         if (!currentPassword || !newPassword || !confirmPassword) {

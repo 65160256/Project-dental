@@ -176,7 +176,7 @@ app.use('/uploads', (req, res, next) => {
 
 cron.schedule('0 * * * *', async () => {
   try {
-    const db = require('./models/db');
+    const db = require('../config/db');
     await db.execute('DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL');
     console.log('Cleaned up expired password reset tokens');
   } catch (error) {

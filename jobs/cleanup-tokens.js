@@ -50,7 +50,7 @@ const runCleanupNow = async () => {
 
 // Detailed cleanup with stats
 const runDetailedCleanup = async () => {
-  const db = require('../models/db');
+  const db = require('../config/db');
   
   try {
     console.log('📊 Password Reset Token Statistics:');

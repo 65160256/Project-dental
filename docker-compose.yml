@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
@@ -9,6 +11,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
 
   app:
     build: .
@@ -22,8 +25,11 @@ services:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: dentist_db
-    volumes:
-      - .:/app 
+      SESSION_SECRET: your-secret-key
+      NODE_ENV: development
+    restart: unless-stopped
+    # รอให้ MySQL พร้อมก่อน
+    command: sh -c "sleep 10 && npm start"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -37,5 +43,3 @@ services:
 
 volumes:
   mysql-data:
-
-

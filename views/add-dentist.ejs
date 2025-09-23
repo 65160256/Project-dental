@@ -1271,9 +1271,9 @@
     });
 
     // ID Card validation
-    const idcardInput = document.getElementById('id_card'); // แก้ไขให้ตรงกับ HTML
-    if (idcardInput) {
-        idcardInput.addEventListener('input', function() {
+    const id_cardInput = document.getElementById('id_card'); // แก้ไขให้ตรงกับ HTML
+    if (id_cardInput) {
+        id_cardInput.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 13);
             if (!isSubmitting) {
                 validateField(this);

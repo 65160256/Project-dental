@@ -1,4 +1,5 @@
-const db = require('../models/db');
+const db = require('../config/db');
+
 const bcrypt = require('bcryptjs');
 const loginController = require('./login.controller');
 

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const db = require('../models/db');
+const db = require('../config/db');
+
 const emailService = require('../services/email.service');
 
 // ==================== WEB CONTROLLERS ====================

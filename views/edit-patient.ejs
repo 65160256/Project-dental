@@ -970,8 +970,8 @@
                                 <div class="error-message">Please select a valid date of birth</div>
                             </div>
                             <div class="form-group">
-                                <label for="idcard">ID Card Number <span class="required">*</span></label>
-                                <input type="text" id="idcard" name="idcard" class="form-control" required maxlength="13" />
+                                <label for="id_card">ID Card Number <span class="required">*</span></label>
+                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
                                 <div class="field-help">13-digit Thai ID card number</div>
                                 <div class="error-message">Please enter a valid 13-digit ID card number</div>
                             </div>
@@ -1236,9 +1236,9 @@
                 setFieldValue('email', patient.email || '');
                 
                 // ID Card - ensure it's populated correctly
-                const idCard = patient.id_card || patient.idcard || '';
-                setFieldValue('idcard', idCard);
-                console.log('📋 ID Card set to:', idCard);
+                const id_card = patient.id_card || patient.id_card || '';
+                setFieldValue('id_card', id_card);
+                console.log('📋 ID Card set to:', id_card);
                 
                 // Date of birth handling - more robust
                 if (patient.dob) {
@@ -1331,9 +1331,9 @@
             });
 
             // ID Card validation - enhanced
-            const idcardInput = document.getElementById('idcard');
-            if (idcardInput) {
-                idcardInput.addEventListener('input', function() {
+            const id_cardInput = document.getElementById('id_card');
+            if (id_cardInput) {
+                id_cardInput.addEventListener('input', function() {
                     // Only allow digits
                     let value = this.value.replace(/\D/g, '');
                     // Limit to 13 digits
@@ -1468,7 +1468,7 @@
                 input.addEventListener('input', function() {
                     const fieldName = this.name;
                     const currentValue = this.value;
-                    const originalValue = originalData[fieldName] || originalData[fieldName === 'idcard' ? 'id_card' : fieldName] || '';
+                    const originalValue = originalData[fieldName] || originalData[fieldName === 'id_card' ? 'id_card' : fieldName] || '';
                     
                     console.log(`🔄 Field ${fieldName} changed:`, {
                         current: currentValue,
@@ -1489,16 +1489,16 @@
 
         // Track field changes
         function trackChange(fieldName, value) {
-            // Handle id_card vs idcard field name mapping
-            const dataKey = fieldName === 'idcard' ? 'id_card' : fieldName;
+            // Handle id_card vs id_card field name mapping
+            const dataKey = fieldName === 'id_card' ? 'id_card' : fieldName;
             currentData[dataKey] = value;
             updateChangesDisplay();
         }
 
         // Untrack field changes
         function untrackChange(fieldName) {
-            const dataKey = fieldName === 'idcard' ? 'id_card' : fieldName;
-            const originalKey = dataKey === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : dataKey;
+            const dataKey = fieldName === 'id_card' ? 'id_card' : fieldName;
+            const originalKey = dataKey === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : dataKey;
             currentData[dataKey] = originalData[originalKey] || '';
             updateChangesDisplay();
         }
@@ -1508,7 +1508,7 @@
             const changedFields = [];
             
             Object.keys(currentData).forEach(key => {
-                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
                 const originalValue = originalData[originalKey] || '';
                 const currentValue = currentData[key] || '';
                 
@@ -1604,7 +1604,7 @@
                 return false;
             }
 
-            if (field.name === 'idcard' && value && value.length !== 13) {
+            if (field.name === 'id_card' && value && value.length !== 13) {
                 group.classList.add('error');
                 return false;
             }
@@ -1672,7 +1672,7 @@
             const message = document.getElementById('modalMessage');
             
             const changedFields = Object.keys(currentData).filter(key => {
-                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
                 return currentData[key] !== (originalData[originalKey] || '');
             });
             
@@ -1696,7 +1696,7 @@
                 address: 'Address',
                 email: 'Email Address',
                 id_card: 'ID Card Number',
-                idcard: 'ID Card Number',
+                id_card: 'ID Card Number',
                 dob: 'Date of Birth',
                 password: 'Password'
             };
@@ -1736,12 +1736,12 @@
                     }
                     
                     // Handle id_card field name mapping
-                    const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'idcard') : key;
+                    const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
                     const originalValue = originalData[originalKey] || '';
                     
                     if (value !== originalValue) {
-                        // Map id_card back to idcard for API
-                        const apiKey = key === 'id_card' ? 'idcard' : key;
+                        // Map id_card back to id_card for API
+                        const apiKey = key === 'id_card' ? 'id_card' : key;
                         updateData[apiKey] = value || '';
                     }
                 });

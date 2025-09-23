@@ -788,7 +788,7 @@
                         </div>
                         <div class="info-item">
                             <div class="info-label">ID Card Number</div>
-                            <div class="info-value loading" id="idCard">Loading...</div>
+                            <div class="info-value loading" id="id_card">Loading...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Last Visit</div>
@@ -994,15 +994,15 @@
             birthDateEl.classList.remove('loading');
             
             // Enhanced ID Card handling - check multiple possible field names
-            const idCardEl = document.getElementById('idCard');
-            let idCardValue = '';
+            const id_cardEl = document.getElementById('id_card');
+            let id_cardValue = '';
             
             // Check all possible variations of ID card field names
             const possibleIdFields = [
-                'idcard',     // Most common
+                'id_card',     // Most common
                 'id_card',    // Alternative naming
                 'ID_CARD',    // Uppercase variation
-                'IdCard',     // CamelCase
+                'id_card',     // CamelCase
                 'id_Card',    // Mixed case
                 'nationalId', // Alternative field name
                 'citizenId'   // Another alternative
@@ -1010,8 +1010,8 @@
             
             for (const fieldName of possibleIdFields) {
                 if (patient[fieldName] && patient[fieldName].toString().trim() !== '') {
-                    idCardValue = patient[fieldName].toString().trim();
-                    console.log(`📋 Found ID Card in field '${fieldName}':`, idCardValue);
+                    id_cardValue = patient[fieldName].toString().trim();
+                    console.log(`📋 Found ID Card in field '${fieldName}':`, id_cardValue);
                     break;
                 }
             }
@@ -1022,23 +1022,23 @@
                     value: patient[field],
                     type: typeof patient[field]
                 })),
-                finalValue: idCardValue
+                finalValue: id_cardValue
             });
             
-            if (idCardValue) {
+            if (id_cardValue) {
                 // Format ID card for better readability (Thailand ID format: X-XXXX-XXXXX-XX-X)
-                if (idCardValue.length === 13 && /^\d{13}$/.test(idCardValue)) {
-                    const formatted = `${idCardValue.slice(0,1)}-${idCardValue.slice(1,5)}-${idCardValue.slice(5,10)}-${idCardValue.slice(10,12)}-${idCardValue.slice(12,13)}`;
-                    idCardEl.textContent = formatted;
+                if (id_cardValue.length === 13 && /^\d{13}$/.test(id_cardValue)) {
+                    const formatted = `${id_cardValue.slice(0,1)}-${id_cardValue.slice(1,5)}-${id_cardValue.slice(5,10)}-${id_cardValue.slice(10,12)}-${id_cardValue.slice(12,13)}`;
+                    id_cardEl.textContent = formatted;
                 } else {
-                    idCardEl.textContent = idCardValue;
+                    id_cardEl.textContent = id_cardValue;
                 }
-                idCardEl.classList.remove('empty');
+                id_cardEl.classList.remove('empty');
             } else {
-                idCardEl.innerHTML = '<span class="empty">Not specified</span>';
+                id_cardEl.innerHTML = '<span class="empty">Not specified</span>';
                 console.warn('⚠️ No ID Card found in any expected field');
             }
-            idCardEl.classList.remove('loading');
+            id_cardEl.classList.remove('loading');
             
             // Address
             const addressEl = document.getElementById('address');

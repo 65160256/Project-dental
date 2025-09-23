@@ -516,8 +516,8 @@
       }
       
       // ID Card validation (if provided)
-      const idCard = document.querySelector('input[name="id_card"]').value.trim();
-      if (idCard && idCard.length !== 13) {
+      const id_card = document.querySelector('input[name="id_card"]').value.trim();
+      if (id_card && id_card.length !== 13) {
         e.preventDefault();
         alert('ID Card number must be exactly 13 digits.');
         return false;

@@ -1,4 +1,5 @@
-const db = require('../models/db');
+const db = require('../config/db');
+
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 

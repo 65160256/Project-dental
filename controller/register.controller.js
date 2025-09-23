@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
-const db = require('../models/db');
+const db = require('../config/db');
+
 
 exports.registerPatient = async (req, res) => {
   const { email, password, confirmPassword, fname, lname, phone, dob, address, idcard } = req.body;

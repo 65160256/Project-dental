@@ -38,7 +38,7 @@ router.get('/api/dashboard/treatments', checkAdminApiAuth, adminController.getTr
 // Get dashboard summary data
 router.get('/api/dashboard/summary', checkAdminApiAuth, async (req, res) => {
   try {
-    const db = require('../models/db');
+    const db = require('../config/db');
     
     // Get counts for dashboard cards
     const [patientCount] = await db.execute('SELECT COUNT(*) as count FROM patient');
@@ -146,7 +146,7 @@ router.get('/patients/:id/edit-modern', checkAdminAuth, adminController.showEdit
 
 // อัปเดต route check-email เดิมให้รองรับการยกเว้น patient
 router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
-  const db = require('../models/db'); // ต้อง import db
+  const db = require('../config/db'); // ต้อง import db
   
   try {
     const { email, exclude_patient_id, exclude_user_id } = req.query;
@@ -373,7 +373,7 @@ const { runDetailedCleanup } = require('../jobs/cleanup-tokens');
 // หน้า Password Reset Dashboard
 router.get('/password-resets', async (req, res) => {
   try {
-    const db = require('../models/db');
+    const db = require('../config/db');
     
     // Get statistics
     const [stats] = await db.execute(`
@@ -450,7 +450,7 @@ router.get('/password-resets', async (req, res) => {
 // API: Get password reset statistics
 router.get('/api/password-resets/stats', async (req, res) => {
   try {
-    const db = require('../models/db');
+    const db = require('../config/db');
     
     const [stats] = await db.execute(`
       SELECT 
@@ -505,7 +505,7 @@ router.post('/api/password-resets/:id/revoke', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
     
-    const db = require('../models/db');
+    const db = require('../config/db');
     
     // Mark token as used to invalidate it
     const [result] = await db.execute(
