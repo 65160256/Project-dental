@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dentistry Register</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -19,6 +24,8 @@
 
     .left {
       flex: 1;
+      position: relative;
+      overflow: hidden;
     }
 
     .left img {
@@ -38,11 +45,13 @@
       padding-left: 20px;
       padding-right: 20px;
       height: 100vh;
+      overflow-y: auto;
     }
 
     .form-box {
       width: 400px;
       padding: 10px;
+      max-width: 100%;
     }
 
     .back {
@@ -50,10 +59,21 @@
       margin-bottom: 10px;
     }
 
+    .back a {
+      color: #666;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .back a:hover {
+      color: #0051ff;
+    }
+
     h2 {
       text-align: center;
       margin: 0;
       font-weight: bold;
+      color: #333;
     }
 
     .subtitle {
@@ -61,6 +81,22 @@
       margin: 0 0 25px 0;
       color: #555;
       font-size: 14px;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #f0f0f0;
+      border-radius: 2px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #0051ff;
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 2px;
     }
 
     form {
@@ -72,44 +108,144 @@
       margin: 20px 0 10px;
       font-size: 14px;
       color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
     }
 
     label {
       font-size: 13px;
       margin-bottom: 5px;
+      color: #333;
+      font-weight: 500;
     }
 
-    input {
-      padding: 10px;
+    .input-wrapper {
+      position: relative;
       margin-bottom: 15px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
       background-color: #eaeaea;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #0051ff;
+      background-color: #fff;
+      box-shadow: 0 0 5px rgba(0, 81, 255, 0.2);
+    }
+
+    .validation-message {
+      margin-top: 5px;
+      font-size: 12px;
+      display: none;
+      min-height: 16px;
+    }
+
+    .validation-message.error {
+      color: #e74c3c;
+      display: block;
+    }
+
+    .validation-message.success {
+      color: #27ae60;
+      display: block;
+    }
+
+    .validation-message.checking {
+      color: #f39c12;
+      display: block;
+    }
+
+    .input-wrapper.error input,
+    .input-wrapper.error textarea {
+      border-color: #e74c3c;
+      background-color: #fff5f5;
+    }
+
+    .input-wrapper.success input,
+    .input-wrapper.success textarea {
+      border-color: #27ae60;
+      background-color: #f8fff8;
+    }
+
+    .input-wrapper.error label {
+      color: #e74c3c;
     }
 
     .button-group {
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
+      gap: 10px;
     }
 
     .cancel-btn, .register-btn {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       font-weight: bold;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
     }
 
     .cancel-btn {
       background-color: red;
-      margin-right: 10px;
+    }
+
+    .cancel-btn:hover {
+      background-color: #cc0000;
+      transform: translateY(-1px);
     }
 
     .register-btn {
       background-color: #0051ff;
+    }
+
+    .register-btn:hover {
+      background-color: #0041cc;
+      transform: translateY(-1px);
+    }
+
+    .register-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading.show {
+      display: flex;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .required {
@@ -134,22 +270,98 @@
       color: #666;
       cursor: pointer;
       font-size: 16px;
+      transition: color 0.3s ease;
+    }
+
+    .toggle-password:hover {
+      color: #0051ff;
+    }
+
+    .strength-meter {
+      margin-top: 8px;
+      height: 3px;
+      background: #f0f0f0;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      width: 0%;
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+
+    .strength-weak { background: #e74c3c; }
+    .strength-medium { background: #f39c12; }
+    .strength-strong { background: #27ae60; }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    .form-row .input-wrapper {
+      flex: 1;
     }
 
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
+        height: auto;
+        min-height: 100vh;
       }
 
       .left {
-        display: none;
+        height: 200px;
+        flex: none;
+      }
+
+      .right {
+        height: auto;
+        min-height: calc(100vh - 200px);
+        padding-top: 20px;
       }
 
       .form-box {
-        width: 90%;
+        width: 100%;
+        padding: 15px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
       }
     }
 
+    @media (max-width: 480px) {
+      .left {
+        height: 150px;
+      }
+
+      .right {
+        padding: 15px 10px;
+      }
+
+      .form-box {
+        padding: 10px;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .cancel-btn, .register-btn {
+        width: 100%;
+      }
+    }
+
+    /* Remove number input spinner */
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -158,15 +370,6 @@
 
     input[type=number] {
       -moz-appearance: textfield;
-    }
-
-    input:invalid {
-      border-color: red;
-      background-color: #ffeaea;
-    }
-
-    input:valid {
-      border-color: #ccc;
     }
   </style>
 </head>
@@ -178,54 +381,99 @@
     <div class="right">
       <div class="form-box">
         <div class="back">
-          <a href="/login"><i class="fas fa-chevron-left"></i></a>
+          <a href="/login"><i class="fas fa-chevron-left"></i> Back to Login</a>
         </div>
         <h2>Dentistry</h2>
-        <p class="subtitle">Register</p>
+        <p class="subtitle">Patient Registration</p>
 
-        <form id="registerForm" action="/register" method="POST" onsubmit="return validateForm()">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <form id="registerForm" action="/register" method="POST" novalidate>
           <h4>Personal Information</h4>
 
-          <label>Firstname: <span class="required">*</span></label>
-          <input type="text" name="fname" required>
+          <div class="form-row">
+            <div class="input-wrapper">
+              <label>Firstname: <span class="required">*</span></label>
+              <input type="text" name="fname" id="fname" required autocomplete="given-name" value="">
+              <div class="validation-message"></div>
+            </div>
+            <div class="input-wrapper">
+              <label>Lastname: <span class="required">*</span></label>
+              <input type="text" name="lname" id="lname" required autocomplete="family-name" value="">
+              <div class="validation-message"></div>
+            </div>
+          </div>
 
-          <label>Lastname: <span class="required">*</span></label>
-          <input type="text" name="lname" required>
-
-          <label>Date of Birth: <span class="required">*</span></label>
-          <input type="date" name="dob" required>
-
-          <label>ID Card Number: <span class="required">*</span></label>
-          <input type="number" name="id_card" id="id_card" required maxlength="13">
+          <div class="form-row">
+            <div class="input-wrapper">
+              <label>Date of Birth: <span class="required">*</span></label>
+              <input type="date" name="dob" id="dob" required autocomplete="bday" value="">
+              <div class="validation-message"></div>
+            </div>
+            <div class="input-wrapper">
+              <label>ID Card Number: <span class="required">*</span></label>
+              <input type="text" name="id_card" id="id_card" required maxlength="13" pattern="[0-9]{13}" autocomplete="off" value="">
+              <div class="validation-message"></div>
+            </div>
+          </div>
 
           <h4>Login Information</h4>
 
-          <label>Email: <span class="required">*</span></label>
-          <input type="email" name="email" required>
-
-          <label>Password: <span class="required">*</span></label>
-          <div class="password-wrapper">
-            <input type="password" name="password" id="password" required>
-            <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+          <div class="input-wrapper">
+            <label>Email: <span class="required">*</span></label>
+            <input type="email" name="email" id="email" required autocomplete="email" value="">
+            <div class="validation-message"></div>
           </div>
 
-          <label>Confirm password: <span class="required">*</span></label>
-          <div class="password-wrapper">
-            <input type="password" name="confirmPassword" id="confirmPassword" required>
-            <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('confirmPassword', this)"></i>
+          <div class="form-row">
+            <div class="input-wrapper">
+              <label>Password: <span class="required">*</span></label>
+              <div class="password-wrapper">
+                <input type="password" name="password" id="password" required autocomplete="new-password" value="">
+                <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('password', this)"></i>
+              </div>
+              <div class="strength-meter">
+                <div class="strength-fill" id="strengthFill"></div>
+              </div>
+              <div class="validation-message"></div>
+            </div>
+            <div class="input-wrapper">
+              <label>Confirm password: <span class="required">*</span></label>
+              <div class="password-wrapper">
+                <input type="password" name="confirmPassword" id="confirmPassword" required autocomplete="new-password" value="">
+                <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('confirmPassword', this)"></i>
+              </div>
+              <div class="validation-message"></div>
+            </div>
           </div>
 
           <h4>Contact Information</h4>
 
-          <label>Address: <span class="required">*</span></label>
-          <input type="text" name="address" required>
+          <div class="input-wrapper">
+            <label>Address: <span class="required">*</span></label>
+            <textarea name="address" id="address" required rows="3" autocomplete="street-address"></textarea>
+            <div class="validation-message"></div>
+          </div>
 
-          <label>Phone: <span class="required">*</span></label>
-          <input type="number" name="phone" id="phone" required maxlength="10">
+          <div class="input-wrapper">
+            <label>Phone: <span class="required">*</span></label>
+            <input type="text" name="phone" id="phone" required maxlength="10" pattern="[0-9]{10}" autocomplete="tel" value="">
+            <div class="validation-message"></div>
+          </div>
 
           <div class="button-group">
-            <button type="button" class="cancel-btn" onclick="window.location='/login'">Cancel</button>
-            <button type="submit" class="register-btn">Register</button>
+            <button type="button" class="cancel-btn" onclick="window.location='/login'">
+              Cancel
+            </button>
+            <button type="submit" class="register-btn" id="registerBtn">
+              <span class="btn-text">Register</span>
+              <div class="loading">
+                <div class="spinner"></div>
+                Processing...
+              </div>
+            </button>
           </div>
         </form>
       </div>
@@ -233,48 +481,547 @@
   </div>
 
   <script>
-    function togglePassword(fieldId, iconEl) {
-      const input = document.getElementById(fieldId);
-      input.type = input.type === "password" ? "text" : "password";
-      iconEl.classList.toggle('fa-eye');
-      iconEl.classList.toggle('fa-eye-slash');
+    // ===== COMPLETE FIXED VALIDATION SYSTEM =====
+
+    // Helper functions
+    function safeGetElement(id) {
+      try {
+        return document.getElementById(id);
+      } catch (e) {
+        console.warn('Element not found:', id);
+        return null;
+      }
     }
 
-    function validateForm() {
-      const phone = document.getElementById("phone").value.trim();
-      const id_card = document.getElementById("id_card").value.trim();
-      const pass = document.getElementById("password").value;
-      const confirm = document.getElementById("confirmPassword").value;
-
-      if (phone.length > 10) {
-        alert("Phone number must not exceed 10 digits.");
-        return false;
+    function safeQuerySelector(parent, selector) {
+      try {
+        if (!parent || typeof parent.querySelector !== 'function') return null;
+        return parent.querySelector(selector);
+      } catch (e) {
+        console.warn('Query selector failed:', selector);
+        return null;
       }
-
-      if (id_card.length > 13) {
-        alert("ID card number must not exceed 13 digits.");
-        return false;
-      }
-
-      if (pass !== confirm) {
-        alert("Passwords do not match.");
-        return false;
-      }
-
-      return confirm("Are you sure you want to register?");
     }
 
-    // ตรวจสอบ error จาก query string เช่น ?error=duplicate_email
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('error') === 'duplicate_email') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Email already exists',
-        text: 'Please use a different email address.',
+    function safeAddClass(element, className) {
+      if (element && element.classList && typeof element.classList.add === 'function') {
+        element.classList.add(className);
+      }
+    }
+
+    function safeRemoveClass(element, className) {
+      if (element && element.classList && typeof element.classList.remove === 'function') {
+        element.classList.remove(className);
+      }
+    }
+
+    function safeSetText(element, text) {
+      if (element && typeof element.textContent !== 'undefined') {
+        element.textContent = text;
+      }
+    }
+
+    function safeGetValue(element) {
+      if (element && typeof element.value !== 'undefined') {
+        return element.value.toString().trim();
+      }
+      return '';
+    }
+
+    // Helper function to find the correct input wrapper
+    function findInputWrapper(input) {
+      let element = input;
+      while (element && element.parentElement) {
+        element = element.parentElement;
+        if (element.classList && element.classList.contains('input-wrapper')) {
+          return element;
+        }
+      }
+      return input.parentElement; // fallback
+    }
+
+    // Helper function to get field display names
+    function getFieldDisplayName(fieldId) {
+      const fieldNames = {
+        fname: 'First Name',
+        lname: 'Last Name', 
+        email: 'Email',
+        password: 'Password',
+        confirmPassword: 'Confirm Password',
+        dob: 'Date of Birth',
+        id_card: 'ID Card Number',
+        phone: 'Phone Number',
+        address: 'Address'
+      };
+      return fieldNames[fieldId] || fieldId;
+    }
+
+    // Validation functions
+    function isValidEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    function isValidName(name) {
+      return /^[a-zA-Z]+(\s[a-zA-Z]+)*$/.test(name) && name.length >= 2;
+    }
+
+    function isValidPhone(phone) {
+      return /^\d{10}$/.test(phone);
+    }
+
+    function isValidIdCard(idCard) {
+      return /^\d{13}$/.test(idCard);
+    }
+
+    function isValidPassword(password) {
+      return password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+    }
+
+    function isValidAge(dob) {
+      const today = new Date();
+      const birthDate = new Date(dob);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      let calculatedAge = age;
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+      
+      return calculatedAge >= 18 && calculatedAge <= 120;
+    }
+
+    // Set validation state
+    function setValidationState(input, isValid, message = '') {
+      const wrapper = findInputWrapper(input);
+      const messageEl = safeQuerySelector(wrapper, '.validation-message');
+      
+      // Clear previous states
+      safeRemoveClass(wrapper, 'error');
+      safeRemoveClass(wrapper, 'success');
+      
+      if (messageEl) {
+        messageEl.className = 'validation-message';
+        safeSetText(messageEl, '');
+      }
+      
+      if (!isValid) {
+        safeAddClass(wrapper, 'error');
+        if (messageEl && message) {
+          messageEl.className = 'validation-message error';
+          safeSetText(messageEl, message);
+        }
+      } else if (safeGetValue(input)) {
+        safeAddClass(wrapper, 'success');
+      }
+    }
+
+    // Main validation function
+    function validateField(input) {
+      if (!input) return true;
+
+      const inputId = input.id || '';
+      const value = safeGetValue(input);
+
+      let isValid = true;
+      let errorMessage = '';
+
+      // Required field check
+      const isRequired = input.hasAttribute && input.hasAttribute('required');
+      if (isRequired && !value) {
+        isValid = false;
+        errorMessage = 'This field is required';
+      }
+
+      // Specific validations
+      if (value && isValid) {
+        switch (inputId) {
+          case 'fname':
+          case 'lname':
+            if (!isValidName(value)) {
+              isValid = false;
+              errorMessage = 'Only letters and single spaces allowed, minimum 2 characters';
+            }
+            break;
+          case 'email':
+            if (!isValidEmail(value)) {
+              isValid = false;
+              errorMessage = 'Please enter a valid email address';
+            }
+            break;
+          case 'phone':
+            if (!isValidPhone(value)) {
+              isValid = false;
+              errorMessage = 'Phone number must be exactly 10 digits';
+            }
+            break;
+          case 'id_card':
+            if (!isValidIdCard(value)) {
+              isValid = false;
+              errorMessage = 'ID card must be exactly 13 digits';
+            }
+            break;
+          case 'password':
+            if (!isValidPassword(value)) {
+              isValid = false;
+              errorMessage = 'Password must be 8+ characters with uppercase, lowercase, and number';
+            }
+            break;
+          case 'confirmPassword':
+            const passwordValue = safeGetValue(safeGetElement('password'));
+            if (value !== passwordValue) {
+              isValid = false;
+              errorMessage = 'Passwords do not match';
+            }
+            break;
+          case 'dob':
+            if (!isValidAge(value)) {
+              isValid = false;
+              errorMessage = 'You must be at least 18 years old';
+            }
+            break;
+          case 'address':
+            if (value.length < 10) {
+              isValid = false;
+              errorMessage = 'Address must be at least 10 characters';
+            }
+            break;
+        }
+      }
+
+      // Update UI
+      setValidationState(input, isValid, errorMessage);
+      return isValid;
+    }
+
+    // Password strength meter
+    function updatePasswordStrength(password) {
+      const strengthFill = safeGetElement('strengthFill');
+      if (!strengthFill) return;
+
+      let strength = 0;
+      if (password.length >= 8) strength++;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+      if (/\d/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      strengthFill.className = 'strength-fill';
+      
+      if (strength === 0) {
+        strengthFill.style.width = '0%';
+      } else if (strength === 1) {
+        strengthFill.style.width = '33%';
+        safeAddClass(strengthFill, 'strength-weak');
+      } else if (strength === 2) {
+        strengthFill.style.width = '66%';
+        safeAddClass(strengthFill, 'strength-medium');
+      } else {
+        strengthFill.style.width = '100%';
+        safeAddClass(strengthFill, 'strength-strong');
+      }
+    }
+
+    // Progress bar
+    function updateProgress() {
+      const progressFill = safeGetElement('progressFill');
+      if (!progressFill) return;
+
+      const requiredInputs = ['fname', 'lname', 'email', 'password', 'confirmPassword', 'dob', 'id_card', 'address', 'phone'];
+      const filledCount = requiredInputs.filter(id => {
+        const input = safeGetElement(id);
+        return input && safeGetValue(input);
+      }).length;
+
+      const progress = (filledCount / requiredInputs.length) * 100;
+      progressFill.style.width = `${progress}%`;
+    }
+
+    // API calls
+    async function checkEmailAvailability(email) {
+      try {
+        const response = await fetch(`/api/check-email?email=${encodeURIComponent(email)}`);
+        const data = await response.json();
+        return data.success ? data.available : true;
+      } catch (e) {
+        console.warn('Email check failed:', e);
+        return true;
+      }
+    }
+
+    async function checkIdCardAvailability(idCard) {
+      try {
+        const response = await fetch(`/api/check-id-card?id_card=${encodeURIComponent(idCard)}`);
+        const data = await response.json();
+        return data.success ? data.available : true;
+      } catch (e) {
+        console.warn('ID card check failed:', e);
+        return true;
+      }
+    }
+
+    // Setup form submission
+    function setupFormSubmission() {
+      const form = safeGetElement('registerForm');
+      if (!form) return;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        console.log('Form submission started');
+        
+        // Validate all required fields and collect errors
+        const inputIds = ['fname', 'lname', 'email', 'password', 'confirmPassword', 'dob', 'id_card', 'address', 'phone'];
+        let isFormValid = true;
+        let errorMessages = [];
+        
+        // First pass: basic validation
+        inputIds.forEach(id => {
+          const input = safeGetElement(id);
+          if (input) {
+            const fieldValid = validateField(input);
+            if (!fieldValid) {
+              isFormValid = false;
+              
+              // Get error message from validation
+              const wrapper = findInputWrapper(input);
+              const messageEl = safeQuerySelector(wrapper, '.validation-message');
+              
+              const fieldName = getFieldDisplayName(id);
+              const errorText = (messageEl && messageEl.textContent) ? messageEl.textContent : 'Please check this field';
+              errorMessages.push(`<strong>${fieldName}:</strong> ${errorText}`);
+            }
+          }
+        });
+
+        // Second pass: async checks
+        const email = safeGetValue(safeGetElement('email'));
+        const idCard = safeGetValue(safeGetElement('id_card'));
+        
+        if (email && isValidEmail(email)) {
+          const emailAvailable = await checkEmailAvailability(email);
+          if (!emailAvailable) {
+            isFormValid = false;
+            const emailInput = safeGetElement('email');
+            setValidationState(emailInput, false, 'This email is already registered');
+            errorMessages.push('<strong>Email:</strong> This email is already registered');
+          }
+        }
+
+        if (idCard && isValidIdCard(idCard)) {
+          const idAvailable = await checkIdCardAvailability(idCard);
+          if (!idAvailable) {
+            isFormValid = false;
+            const idInput = safeGetElement('id_card');
+            setValidationState(idInput, false, 'This ID card number is already registered');
+            errorMessages.push('<strong>ID Card:</strong> This ID card number is already registered');
+          }
+        }
+
+        console.log('Form valid:', isFormValid);
+        console.log('Error count:', errorMessages.length);
+        console.log('Error messages:', errorMessages);
+
+        if (!isFormValid) {
+          const errorListHtml = errorMessages.length > 0 
+            ? `<div style="text-align: left; margin-top: 15px;"><ul style="margin: 0; padding-left: 20px;">${errorMessages.map(msg => `<li style="margin-bottom: 5px;">${msg}</li>`).join('')}</ul></div>`
+            : '<div style="text-align: center; margin-top: 15px;">Please check all fields and try again.</div>';
+            
+          Swal.fire({
+            icon: 'error',
+            title: 'Please Fix These Errors',
+            html: `Found <strong>${errorMessages.length}</strong> validation error(s). Please correct the following:${errorListHtml}`,
+            confirmButtonColor: '#0051ff',
+            width: '500px'
+          });
+          return;
+        }
+
+        // Confirmation dialog
+        const result = await Swal.fire({
+          title: 'Confirm Registration',
+          text: 'Are you sure you want to register with this information?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#0051ff',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, register me!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        // Show loading
+        const registerBtn = safeGetElement('registerBtn');
+        const btnText = safeQuerySelector(registerBtn, '.btn-text');
+        const loading = safeQuerySelector(registerBtn, '.loading');
+        
+        if (btnText) btnText.style.display = 'none';
+        if (loading) loading.classList.add('show');
+        if (registerBtn) registerBtn.disabled = true;
+
+        // Submit form
+        try {
+          console.log('Submitting form...');
+          this.submit();
+        } catch (error) {
+          console.error('Form submission error:', error);
+          
+          // Reset button state
+          if (btnText) btnText.style.display = 'block';
+          if (loading) loading.classList.remove('show');
+          if (registerBtn) registerBtn.disabled = false;
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission Error', 
+            text: 'There was an error submitting the form. Please try again.',
+            confirmButtonColor: '#0051ff'
+          });
+        }
       });
     }
 
-  </script>
+    // Setup event listeners
+    function setupEventListeners() {
+      // Input validation
+      const inputIds = ['fname', 'lname', 'email', 'password', 'confirmPassword', 'dob', 'id_card', 'address', 'phone'];
+      
+      inputIds.forEach(id => {
+        const input = safeGetElement(id);
+        if (!input) return;
 
+        // Validation on blur
+        input.addEventListener('blur', function() {
+          validateField(this);
+          updateProgress();
+        });
+
+        // Real-time input handling
+        input.addEventListener('input', function() {
+          if (id === 'password') {
+            updatePasswordStrength(this.value);
+            // Re-validate confirm password when password changes
+            const confirmInput = safeGetElement('confirmPassword');
+            if (confirmInput && safeGetValue(confirmInput)) {
+              validateField(confirmInput);
+            }
+          }
+          updateProgress();
+        });
+      });
+
+      // Name filtering
+      ['fname', 'lname'].forEach(id => {
+        const input = safeGetElement(id);
+        if (input) {
+          input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' ');
+          });
+        }
+      });
+
+      // Number formatting  
+      ['phone', 'id_card'].forEach(id => {
+        const input = safeGetElement(id);
+        if (input) {
+          input.addEventListener('input', function() {
+            const maxLength = id === 'phone' ? 10 : 13;
+            this.value = this.value.replace(/\D/g, '').slice(0, maxLength);
+          });
+        }
+      });
+
+      // Email availability check
+      const emailInput = safeGetElement('email');
+      if (emailInput) {
+        let emailTimeout;
+        emailInput.addEventListener('input', function() {
+          clearTimeout(emailTimeout);
+          emailTimeout = setTimeout(async () => {
+            const email = safeGetValue(this);
+            if (isValidEmail(email)) {
+              const isAvailable = await checkEmailAvailability(email);
+              if (!isAvailable) {
+                setValidationState(this, false, 'This email is already registered');
+              }
+            }
+          }, 1000);
+        });
+      }
+
+      // ID card availability check
+      const idCardInput = safeGetElement('id_card');
+      if (idCardInput) {
+        let idCardTimeout;
+        idCardInput.addEventListener('input', function() {
+          clearTimeout(idCardTimeout);
+          if (this.value.length === 13) {
+            idCardTimeout = setTimeout(async () => {
+              const isAvailable = await checkIdCardAvailability(this.value);
+              if (!isAvailable) {
+                setValidationState(this, false, 'This ID card number is already registered');
+              }
+            }, 1000);
+          }
+        });
+      }
+
+      // Set date limits
+      const dobInput = safeGetElement('dob');
+      if (dobInput) {
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - 18);
+        dobInput.max = maxDate.toISOString().split('T')[0];
+        
+        const minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - 120);
+        dobInput.min = minDate.toISOString().split('T')[0];
+      }
+
+      // Setup form submission
+      setupFormSubmission();
+    }
+
+    // Password toggle function
+    function togglePassword(fieldId, iconEl) {
+      const input = safeGetElement(fieldId);
+      if (!input || !iconEl) return;
+      
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      
+      safeRemoveClass(iconEl, 'fa-eye');
+      safeRemoveClass(iconEl, 'fa-eye-slash');
+      safeAddClass(iconEl, isPassword ? 'fa-eye-slash' : 'fa-eye');
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Initializing registration form...');
+      setupEventListeners();
+      updateProgress();
+      
+      // Handle URL parameters for error messages
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('error')) {
+        const errorMessages = {
+          'duplicate_email': 'This email address is already registered.',
+          'duplicate_id': 'This ID card number is already registered.',
+          'invalid_data': 'Please check your information and try again.',
+          'server_error': 'A server error occurred. Please try again later.'
+        };
+        
+        const errorType = urlParams.get('error');
+        const message = errorMessages[errorType] || 'An error occurred during registration.';
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Error',
+          text: message,
+          confirmButtonColor: '#0051ff'
+        });
+      }
+    });
+  </script>
 </body>
 </html>

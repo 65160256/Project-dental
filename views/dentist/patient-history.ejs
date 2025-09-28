@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient History - Smile Clinic</title>
+    <title><%= title || 'ประวัติผู้ป่วย' %> - คลินิกยิ้มสวย</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
@@ -172,6 +172,28 @@
             justify-content: center;
             color: white;
             font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: #4A90E2;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .avatar.no-photo {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
         }
 
         .user-details strong {
@@ -192,22 +214,36 @@
             top: 100%;
             background: white;
             border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             z-index: 1000;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .dropdown-menu a {
             display: block;
-            padding: 10px 15px;
+            padding: 12px 15px;
             text-decoration: none;
             color: #333;
             font-size: 13px;
+            transition: background 0.2s ease;
         }
 
         .dropdown-menu a:hover {
             background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            height: 1px;
+            background: #e1e5e9;
         }
 
         /* Content */
@@ -330,24 +366,6 @@
 
         .export-btn:hover {
             background: #218838;
-        }
-
-        .refresh-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background-color 0.3s;
-        }
-
-        .refresh-btn:hover {
-            background: #5a6268;
         }
 
         /* Patient History Table */
@@ -601,14 +619,14 @@
     <div class="sidebar">
         <div class="logo">
             <div class="logo-icon">🦷</div>
-            <h3>Smile Clinic</h3>
+            <h3>คลินิกยิ้มสวย</h3>
         </div>
         <ul>
-            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li>
         </ul>
     </div>
 
@@ -617,27 +635,34 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="search-section">
-                <label>Search:</label>
+                <label>ค้นหา:</label>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Patient name or treatment..." id="searchInput" />
+                    <input type="text" placeholder="ชื่อผู้ป่วยหรือการรักษา..." id="searchInput" />
                 </div>
             </div>
             <div class="user-section">
                 <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
                 <div class="profile-dropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">👨‍⚕️</div>
+                        <div class="avatar no-photo" id="userAvatar">
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                            <% } %>
+                        </div>
                         <div class="user-details">
-                            <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
-                            <small>dentist</small>
+                            <strong>สวัสดี ดร. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'หมอ' %></strong>
+                            <small>ทันตแพทย์</small>
                         </div>
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/dentist/profile">My Profile</a>
+                        <a href="/dentist/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> แก้ไขโปรไฟล์</a>
                         <hr />
-                        <a href="/logout">Log Out</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
                     </div>
                 </div>
             </div>
@@ -647,30 +672,30 @@
         <div class="content">
             <!-- Page Header -->
             <div class="page-header">
-                <h1><i class="fas fa-history"></i> Patient History</h1>
+                <h1><i class="fas fa-history"></i> ประวัติผู้ป่วย</h1>
             </div>
 
-            <!-- Stats Section -->
+            Stats Section
             <div class="stats-section">
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-users"></i></div>
                     <div class="number" id="totalPatients">0</div>
-                    <div class="label">Unique Patients</div>
+                    <div class="label">จำนวนผู้ป่วย</div>
                 </div>
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-clipboard-list"></i></div>
                     <div class="number" id="totalHistory">0</div>
-                    <div class="label">Total History</div>
+                    <div class="label">ประวัติทั้งหมด</div>
                 </div>
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-check-circle"></i></div>
                     <div class="number" id="completedTreatments">0</div>
-                    <div class="label">Completed</div>
+                    <div class="label">รักษาแล้ว</div>
                 </div>
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-clock"></i></div>
                     <div class="number" id="pendingTreatments">0</div>
-                    <div class="label">Pending</div>
+                    <div class="label">รอรักษา</div>
                 </div>
             </div>
 
@@ -678,19 +703,10 @@
             <div class="filters-section">
                 <div class="filter-controls">
                     <div class="filter-buttons">
-                        <button class="filter-btn active" data-status="all">All</button>
-                        <button class="filter-btn" data-status="completed">Completed</button>
-                        <button class="filter-btn" data-status="confirm">Completed</button>
-                        <button class="filter-btn" data-status="pending">Pending</button>
-                        <button class="filter-btn" data-status="cancel">Cancelled</button>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="refresh-btn" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                        <button class="export-btn" onclick="exportHistory()">
-                            <i class="fas fa-download"></i> Export
-                        </button>
+                        <button class="filter-btn active" data-status="all">ทั้งหมด</button>
+                        <button class="filter-btn" data-status="completed">รักษาแล้ว</button>
+                        <button class="filter-btn" data-status="pending">รอรักษา</button>
+                        <button class="filter-btn" data-status="cancel">ยกเลิก</button>
                     </div>
                 </div>
             </div>
@@ -698,7 +714,7 @@
             <!-- Loading -->
             <div class="loading" id="loading">
                 <div class="loading-spinner"></div>
-                <p>Loading patient history...</p>
+                <p>กำลังโหลดประวัติผู้ป่วย...</p>
             </div>
 
             <!-- Error Message -->
@@ -709,7 +725,7 @@
                 <div class="section-header">
                     <div class="section-title">
                         <i class="fas fa-history"></i>
-                        <span>Patient Treatment History</span>
+                        <span>ประวัติการรักษาผู้ป่วย</span>
                         <span class="count-badge" id="historyCount">0</span>
                     </div>
                 </div>
@@ -717,13 +733,13 @@
                 <table class="history-table" id="historyTable">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Patient Name</th>
-                            <th>Age</th>
-                            <th>Treatment</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>วันที่</th>
+                            <th>เวลา</th>
+                            <th>ชื่อผู้ป่วย</th>
+                            <th>อายุ</th>
+                            <th>การรักษา</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="historyBody">
@@ -733,8 +749,8 @@
 
                 <div class="no-data" id="noData" style="display: none;">
                     <i class="fas fa-history"></i>
-                    <h3>No Patient History</h3>
-                    <p>No treatment history records found.</p>
+                    <h3>ไม่มีประวัติผู้ป่วย</h3>
+                    <p>ไม่พบข้อมูลประวัติการรักษา</p>
                 </div>
             </div>
         </div>
@@ -747,7 +763,7 @@
 
         // โหลดข้อมูลเมื่อหน้าโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Patient History page loaded');
+            console.log('หน้าประวัติผู้ป่วยโหลดแล้ว');
             
             // เริ่มต้นด้วยการโหลดข้อมูล
             await loadInitialData();
@@ -770,18 +786,18 @@
                     allHistory = data.history || [];
                     filteredHistory = [...allHistory];
                     
-                    console.log('Data loaded:', allHistory.length, 'items');
+                    console.log('โหลดข้อมูลแล้ว:', allHistory.length, 'รายการ');
                     
                     renderHistory();
                     updateStats(data.stats || {});
                 } else {
-                    showError(data.error || 'Failed to load patient history');
+                    showError(data.error || 'ไม่สามารถโหลดประวัติผู้ป่วยได้');
                 }
                 
             } catch (error) {
                 hideLoading();
-                console.error('Error loading initial data:', error);
-                showError('Failed to load patient history. Please refresh the page.');
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
+                showError('ไม่สามารถโหลดประวัติผู้ป่วยได้ กรุณาโหลดหน้าใหม่');
             }
         }
 
@@ -908,10 +924,10 @@
                         });
                         
                         row.innerHTML = `
-                            <td>${new Date(history.time).toLocaleDateString('en-GB')}</td>
-                            <td>${new Date(history.time).toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit', hour12: false})}</td>
+                            <td>${new Date(history.time).toLocaleDateString('th-TH')}</td>
+                            <td>${new Date(history.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false})}</td>
                             <td class="patient-name">${history.fname} ${history.lname}</td>
-                            <td><span class="age-badge">${age} y</span></td>
+                            <td><span class="age-badge">${age} ปี</span></td>
                             <td>${history.treatment_name}</td>
                             <td>
                                 <span class="status-badge ${history.queue_status}">
@@ -919,12 +935,12 @@
                                 </span>
                             </td>
                             <td class="action-cell">
-                                <button onclick="viewTreatmentDetail(${history.queue_id})" class="action-btn view-btn" title="View Details">
-                                    <i class="fas fa-eye"></i> View
+                                <button onclick="viewTreatmentDetail(${history.queue_id})" class="action-btn view-btn" title="ดูรายละเอียด">
+                                    <i class="fas fa-eye"></i> ดู
                                 </button>
                                 ${history.queue_status === 'pending' ? 
-                                    `<button onclick="editTreatment(${history.queue_id})" class="action-btn edit" title="Edit Treatment">
-                                        <i class="fas fa-edit"></i> Edit
+                                    `<button onclick="editTreatment(${history.queue_id})" class="action-btn edit" title="แก้ไขการรักษา">
+                                        <i class="fas fa-edit"></i> แก้ไข
                                     </button>` : ''}
                             </td>
                         `;
@@ -958,7 +974,7 @@
 
         // ฟังก์ชันดูรายละเอียดประวัติการรักษา
         function viewTreatmentDetail(queueId) {
-            console.log('Redirecting to treatment detail:', queueId);
+            console.log('เปลี่ยนไปหน้ารายละเอียดการรักษา:', queueId);
             window.location.href = `/dentist/treatment-history/${queueId}`;
         }
 
@@ -967,49 +983,7 @@
             window.location.href = `/dentist/appointments/${queueId}`;
         }
 
-        // ฟังก์ชันส่งออกข้อมูล
-        function exportHistory() {
-            const exportUrl = `/dentist/api/patient-history/export?format=csv&status=${currentFilter}`;
-            window.open(exportUrl, '_blank');
-            showNotification('Export started. Download will begin shortly.', 'success');
-        }
-
-        // ฟังก์ชันรีเฟรชข้อมูล
-        async function refreshData() {
-            try {
-                showLoading();
-                
-                const response = await fetch('/dentist/api/patient-history');
-                const data = await response.json();
-                
-                hideLoading();
-                
-                if (data.success) {
-                    allHistory = data.history || [];
-                    currentFilter = 'all';
-                    
-                    // Reset filter buttons
-                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                    document.querySelector('[data-status="all"]').classList.add('active');
-                    
-                    // Clear search
-                    document.getElementById('searchInput').value = '';
-                    
-                    filteredHistory = [...allHistory];
-                    renderHistory();
-                    updateStats(data.stats || {});
-                    
-                    showNotification('Data refreshed successfully!', 'success');
-                } else {
-                    showError(data.error || 'Failed to refresh data');
-                }
-                
-            } catch (error) {
-                hideLoading();
-                console.error('Error refreshing data:', error);
-                showError('Failed to refresh data. Please try again.');
-            }
-        }
+        // ฟังก์ชันส่งออกข้อมูล - removed
 
         // อัปเดตสถิติ
         function updateStats(stats) {
@@ -1066,19 +1040,23 @@
             }, 3000);
         }
 
+        function showInitials() {
+            const avatar = document.getElementById('userAvatar');
+            const img = avatar.querySelector('img');
+            if (img) {
+                img.remove();
+                avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
+            }
+        }
+
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
         
         function toggleNotifications() {
-            showNotification('Notifications feature coming soon!');
+            showNotification('ฟีเจอร์การแจ้งเตือนจะเปิดใช้งานเร็วๆ นี้!');
         }
-
-        // Auto-refresh every 5 minutes
-        setInterval(() => {
-            refreshData();
-        }, 300000);
     </script>
 </body>
 </html>

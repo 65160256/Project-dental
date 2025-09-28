@@ -123,12 +123,15 @@ router.get('/api/calendar/:year/:month', requireAuth, requireDentist, dentistCon
 router.get('/api/stats/dashboard', requireAuth, requireDentist, dentistController.getDashboardStats);
 
 // Patient API
-router.get('/api/patients/search', requireAuth, requireDentist, dentistController.searchPatients);
+router.get('/api/patients/search', requireAuth, requireDentist, dentistController.searchPatientsAPI);
+router.get('/api/patients/:patientId/details', requireAuth, requireDentist, dentistController.getPatientDetailsAPI);
+router.get('/api/patients/export', requireAuth, requireDentist, dentistController.exportPatientsData);
+
+
 router.get('/api/patients/:patientId/latest-appointments', requireAuth, requireDentist, dentistController.getLatestPatientAppointment);
 router.post('/api/treatment-history/create', requireAuth, requireDentist, dentistController.createTreatmentHistory);
 // Treatment History API
 router.post('/api/treatment-history/add', requireAuth, requireDentist, dentistController.addTreatmentHistory);
-
 // =================
 // Treatment History Routes
 // =================
@@ -147,5 +150,16 @@ router.use((err, req, res, next) => {
         });
     }
 });
+
+
+// =================
+// Add History Routes - ใหม่
+// =================
+
+// หน้าเพิ่มประวัติการรักษา
+router.get('/add-history', requireAuth, requireDentist, dentistController.getAddHistoryPage);
+router.get('/add-history/:queueId', requireAuth, requireDentist, dentistController.getAddHistoryPage);
+// API สำหรับดึงข้อมูลการจองของผู้ป่วย
+router.get('/api/patients/:patientId/appointments-for-history', requireAuth, requireDentist, dentistController.getAppointmentForHistory);
 
 module.exports = router;

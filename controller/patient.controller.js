@@ -201,29 +201,79 @@ exports.getAvailableDentistsForBooking = async (req, res) => {
       });
     }
 
+    // Check 24-hour booking restriction
+    const appointmentDate = new Date(date);
+    const now = new Date();
+    const timeDiff = appointmentDate.getTime() - now.getTime();
+    const hoursDiff = timeDiff / (1000 * 3600);
+
+    if (hoursDiff < 24) {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถจองได้ ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง'
+      });
+    }
+
+    // Check if the selected date is not Sunday (clinic closed)
+    const dayOfWeek = appointmentDate.getDay();
+    if (dayOfWeek === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'คลินิกปิดทำการวันอาทิตย์'
+      });
+    }
+
     const [availableDentists] = await db.execute(`
       SELECT 
         d.dentist_id,
         d.fname,
         d.lname,
         d.specialty,
+        d.phone,
         CASE 
           WHEN d.photo IS NULL OR d.photo = '' OR d.photo = 'default-avatar.png' 
-          THEN 'default-doctor.png'  -- ใช้รูปที่มีอยู่แล้ว
+          THEN 'default-doctor.png'
           ELSE d.photo 
         END as photo,
-        (SELECT COUNT(*) FROM dentist_schedule ds WHERE ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working') as total_slots,
-        (SELECT COUNT(*) FROM dentist_schedule ds WHERE ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working' AND NOT EXISTS (SELECT 1 FROM queue q WHERE q.dentist_id = ds.dentist_id AND DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm'))) as available_slots
+        COUNT(DISTINCT ds.schedule_id) as total_slots,
+        COUNT(DISTINCT CASE 
+          WHEN NOT EXISTS (
+            SELECT 1 FROM queue q 
+            WHERE q.dentist_id = ds.dentist_id 
+            AND DATE(q.time) = ds.schedule_date 
+            AND HOUR(q.time) = ds.hour 
+            AND q.queue_status IN ('pending', 'confirm')
+          ) THEN ds.schedule_id 
+        END) as available_slots
       FROM dentist d
-      WHERE d.user_id IS NOT NULL
-      AND EXISTS (SELECT 1 FROM dentist_schedule ds WHERE ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working' AND NOT EXISTS (SELECT 1 FROM queue q WHERE q.dentist_id = ds.dentist_id AND DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')))
+      INNER JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
+      WHERE ds.schedule_date = ?
+      AND ds.status = 'working'
+      AND d.user_id IS NOT NULL
+      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.photo
+      HAVING available_slots > 0
       ORDER BY d.fname, d.lname
-    `, [date, date, date]);
+    `, [date]);
+
+    // Get treatment specialties for each dentist
+    for (let dentist of availableDentists) {
+      const [treatments] = await db.execute(`
+        SELECT t.treatment_name, t.duration
+        FROM dentist_treatment dt
+        JOIN treatment t ON dt.treatment_id = t.treatment_id
+        WHERE dt.dentist_id = ?
+        ORDER BY t.treatment_name
+        LIMIT 3
+      `, [dentist.dentist_id]);
+      
+      dentist.treatments = treatments;
+    }
 
     res.json({
       success: true,
       dentists: availableDentists,
-      date: date
+      date: date,
+      total_available: availableDentists.length
     });
 
   } catch (error) {
@@ -247,7 +297,19 @@ exports.getAvailableTimeSlots = async (req, res) => {
       });
     }
 
-    // ใช้ NOT EXISTS แทน LEFT JOIN และ GROUP BY
+    // Check 24-hour booking restriction
+    const appointmentDate = new Date(date);
+    const now = new Date();
+    const timeDiff = appointmentDate.getTime() - now.getTime();
+    const hoursDiff = timeDiff / (1000 * 3600);
+
+    if (hoursDiff < 24) {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถจองได้ ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง'
+      });
+    }
+
     const [availableSlots] = await db.execute(`
       SELECT 
         ds.hour,
@@ -274,11 +336,20 @@ exports.getAvailableTimeSlots = async (req, res) => {
       ORDER BY ds.hour
     `, [dentistId, date]);
 
+    // Additional check for each slot to ensure it's at least 24 hours away
+    const validSlots = availableSlots.filter(slot => {
+      const slotDateTime = new Date(`${date} ${slot.formatted_start_time}:00`);
+      const timeDiffSlot = slotDateTime.getTime() - now.getTime();
+      const hoursDiffSlot = timeDiffSlot / (1000 * 3600);
+      return hoursDiffSlot >= 24;
+    });
+
     res.json({
       success: true,
-      slots: availableSlots,
+      slots: validSlots,
       date: date,
-      dentistId: dentistId
+      dentistId: dentistId,
+      total_slots: validSlots.length
     });
 
   } catch (error) {
@@ -290,125 +361,17 @@ exports.getAvailableTimeSlots = async (req, res) => {
   }
 };
 
-// 3. แก้ไขฟังก์ชัน helper functions
-async function getAvailableAppointmentsByMonth(year, month) {
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN EXISTS (
-          SELECT 1 FROM queue q
-          WHERE q.dentist_id = ds.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
-          AND HOUR(q.time) = ds.hour
-          AND q.queue_status IN ('pending', 'confirm')
-        ) THEN 'booked'
-        ELSE 'available'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    WHERE YEAR(ds.schedule_date) = ? 
-    AND MONTH(ds.schedule_date) = ?
-    AND ds.status = 'working'
-    AND ds.schedule_date >= CURDATE()
-    ORDER BY ds.schedule_date, ds.hour
-  `, [year, month + 1]);
-  
-  return appointments;
-}
 
-async function getAvailableAppointmentsByWeek(startDate) {
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6);
-  
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN EXISTS (
-          SELECT 1 FROM queue q
-          WHERE q.dentist_id = ds.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
-          AND HOUR(q.time) = ds.hour
-          AND q.queue_status IN ('pending', 'confirm')
-        ) THEN 'booked'
-        ELSE 'available'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    WHERE ds.schedule_date BETWEEN ? AND ?
-    AND ds.status = 'working'
-    AND ds.schedule_date >= CURDATE()
-    ORDER BY ds.schedule_date, ds.hour
-  `, [
-    startDate.toISOString().split('T')[0],
-    endDate.toISOString().split('T')[0]
-  ]);
-  
-  return appointments;
-}
-
-async function getAvailableAppointmentsByDay(date) {
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN EXISTS (
-          SELECT 1 FROM queue q
-          WHERE q.dentist_id = ds.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
-          AND HOUR(q.time) = ds.hour
-          AND q.queue_status IN ('pending', 'confirm')
-        ) THEN 'booked'
-        ELSE 'available'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    WHERE ds.schedule_date = ?
-    AND ds.status = 'working'
-    ORDER BY ds.hour
-  `, [date.toISOString().split('T')[0]]);
-  
-  return appointments;
-}
-
-// API to book appointment with schedule
+// Enhanced bookAppointmentWithSchedule with stricter validation
 exports.bookAppointmentWithSchedule = async (req, res) => {
   let connection;
   
   try {
     const patientUserId = req.session.userId;
-    const { dentistId, treatmentId, date, hour, note } = req.body;
+    const { dentist_id, treatment_id, date, hour, note } = req.body;
 
     // Validation
-    if (!dentistId || !treatmentId || !date || !hour) {
+    if (!dentist_id || !treatment_id || !date || !hour) {
       return res.status(400).json({ 
         success: false, 
         error: 'ข้อมูลไม่ครบถ้วน' 
@@ -417,7 +380,7 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
 
     // Get patient_id
     const [patientResult] = await db.execute(`
-      SELECT patient_id FROM patient WHERE user_id = ?
+      SELECT patient_id, fname, lname FROM patient WHERE user_id = ?
     `, [patientUserId]);
 
     if (patientResult.length === 0) {
@@ -427,14 +390,37 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
       });
     }
 
-    const patientId = patientResult[0].patient_id;
+    const patient = patientResult[0];
+    const patientId = patient.patient_id;
+
+    // Final 24-hour booking restriction check
+    const appointmentDateTime = new Date(`${date} ${hour.toString().padStart(2, '0')}:00:00`);
+    const now = new Date();
+    const timeDiff = appointmentDateTime.getTime() - now.getTime();
+    const hoursDiff = timeDiff / (1000 * 3600);
+
+    if (hoursDiff < 24) {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถจองได้ ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง'
+      });
+    }
+
+    // Check if appointment is on Sunday
+    const dayOfWeek = appointmentDateTime.getDay();
+    if (dayOfWeek === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'คลินิกปิดทำการวันอาทิตย์'
+      });
+    }
 
     // Get connection for transaction
     connection = await db.getConnection();
     await connection.beginTransaction();
 
     try {
-      // ตรวจสอบว่าหมอฟันว่างในช่วงเวลานั้นหรือไม่
+      // Check if dentist is available at the exact time
       const [scheduleCheck] = await connection.execute(`
         SELECT ds.schedule_id
         FROM dentist_schedule ds
@@ -449,7 +435,7 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
           AND HOUR(q.time) = ds.hour
           AND q.queue_status IN ('pending', 'confirm')
         )
-      `, [dentistId, date, hour]);
+      `, [dentist_id, date, hour]);
 
       if (scheduleCheck.length === 0) {
         await connection.rollback();
@@ -459,24 +445,53 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
         });
       }
 
-      // สร้าง appointment datetime
-      const appointmentDateTime = `${date} ${hour.toString().padStart(2, '0')}:00:00`;
+      // Check for patient's existing appointments on the same day
+      const [existingAppointments] = await connection.execute(`
+        SELECT COUNT(*) as count
+        FROM queue q
+        WHERE q.patient_id = ?
+        AND DATE(q.time) = ?
+        AND q.queue_status IN ('pending', 'confirm')
+      `, [patientId, date]);
 
-      // สร้าง queuedetail
+      if (existingAppointments[0].count > 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          error: 'คุณมีนัดหมายในวันนี้แล้ว กรุณาเลือกวันอื่น'
+        });
+      }
+
+      // Create queuedetail
       const [queueDetailResult] = await connection.execute(`
         INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
         VALUES (?, ?, ?, ?, NOW())
-      `, [patientId, treatmentId, dentistId, date]);
+      `, [patientId, treatment_id, dentist_id, date]);
 
       const queueDetailId = queueDetailResult.insertId;
 
-      // สร้าง queue
+      // Create queue
       const [queueResult] = await connection.execute(`
         INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
         VALUES (?, ?, ?, ?, ?, 'pending', ?)
-      `, [queueDetailId, patientId, treatmentId, dentistId, appointmentDateTime, note || null]);
+      `, [queueDetailId, patientId, treatment_id, dentist_id, appointmentDateTime, note || null]);
 
       const queueId = queueResult.insertId;
+
+      // Get booking details for response
+      const [bookingDetails] = await connection.execute(`
+        SELECT 
+          q.queue_id,
+          q.time,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          t.treatment_name
+        FROM queue q
+        JOIN patient p ON q.patient_id = p.patient_id
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        WHERE q.queue_id = ?
+      `, [queueId]);
 
       // Commit transaction
       await connection.commit();
@@ -484,12 +499,17 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
       res.json({
         success: true,
         message: 'จองนัดหมายเรียบร้อยแล้ว',
-        queueId: queueId,
-        appointmentDateTime: appointmentDateTime
+        booking: {
+          queue_id: queueId,
+          appointment_time: appointmentDateTime,
+          patient_name: bookingDetails[0]?.patient_name,
+          dentist_name: bookingDetails[0]?.dentist_name,
+          treatment_name: bookingDetails[0]?.treatment_name,
+          status: 'pending'
+        }
       });
 
     } catch (error) {
-      // Rollback on error
       if (connection) await connection.rollback();
       throw error;
     }
@@ -498,14 +518,163 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
     console.error('Error in bookAppointmentWithSchedule:', error);
     res.status(500).json({ 
       success: false,
-      error: 'เกิดข้อผิดพลาดในการจองนัดหมาย'
+      error: 'เกิดข้อผิดพลาดในการจองนัดหมาย: ' + error.message
     });
   } finally {
-    // Release connection
     if (connection) connection.release();
   }
 };
 
+// Get patient's upcoming appointments with cancellation capability
+exports.getMyUpcomingAppointments = async (req, res) => {
+  try {
+    const patientUserId = req.session.userId;
+
+    const [patientResult] = await db.execute(`
+      SELECT patient_id FROM patient WHERE user_id = ?
+    `, [patientUserId]);
+
+    if (patientResult.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'ไม่พบข้อมูลผู้ป่วย' 
+      });
+    }
+
+    const patientId = patientResult[0].patient_id;
+
+    const [appointments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        q.diagnosis as notes,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name,
+        d.specialty as dentist_specialty,
+        t.treatment_name,
+        t.duration,
+        CASE 
+          WHEN q.time > DATE_ADD(NOW(), INTERVAL 24 HOUR) AND q.queue_status IN ('pending', 'confirm') THEN TRUE
+          ELSE FALSE
+        END as can_cancel
+      FROM queue q
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE q.patient_id = ?
+      AND q.time > NOW()
+      AND q.queue_status IN ('pending', 'confirm')
+      ORDER BY q.time ASC
+    `, [patientId]);
+
+    res.json({
+      success: true,
+      appointments: appointments,
+      total_count: appointments.length
+    });
+
+  } catch (error) {
+    console.error('Error in getMyUpcomingAppointments:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการดึงข้อมูลนัดหมาย'
+    });
+  }
+};
+
+// Enhanced cancelMyAppointment with 24-hour restriction
+exports.cancelMyAppointment = async (req, res) => {
+  try {
+    const patientUserId = req.session.userId;
+    const { queue_id } = req.body;
+
+    if (!queue_id) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'ไม่พบรหัสนัดหมาย' 
+      });
+    }
+
+    // Get patient info
+    const [patientResult] = await db.execute(`
+      SELECT patient_id FROM patient WHERE user_id = ?
+    `, [patientUserId]);
+
+    if (patientResult.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'ไม่พบข้อมูลผู้ป่วย' 
+      });
+    }
+
+    const patientId = patientResult[0].patient_id;
+
+    // Check appointment ownership and timing
+    const [appointmentCheck] = await db.execute(`
+      SELECT 
+        q.queue_id, 
+        q.time,
+        q.queue_status,
+        CONCAT(p.fname, ' ', p.lname) as patient_name,
+        CONCAT(d.fname, ' ', d.lname) as dentist_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.queue_id = ? AND q.patient_id = ?
+    `, [queue_id, patientId]);
+
+    if (appointmentCheck.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'ไม่พบนัดหมาย หรือไม่มีสิทธิ์ยกเลิก' 
+      });
+    }
+
+    const appointment = appointmentCheck[0];
+
+    // Check if appointment can be cancelled (24 hours before)
+    const appointmentTime = new Date(appointment.time);
+    const now = new Date();
+    const timeDiff = appointmentTime.getTime() - now.getTime();
+    const hoursDiff = timeDiff / (1000 * 3600);
+
+    if (hoursDiff < 24) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'ไม่สามารถยกเลิกได้ เนื่องจากใกล้เวลานัดหมายแล้ว (ต้องยกเลิกก่อน 24 ชั่วโมง)' 
+      });
+    }
+
+    if (appointment.queue_status !== 'pending' && appointment.queue_status !== 'confirm') {
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถยกเลิกนัดหมายนี้ได้'
+      });
+    }
+
+    // Cancel appointment
+    await db.execute(`
+      UPDATE queue 
+      SET queue_status = 'cancel', updated_at = NOW()
+      WHERE queue_id = ? AND patient_id = ?
+    `, [queue_id, patientId]);
+
+    res.json({
+      success: true,
+      message: 'ยกเลิกนัดหมายเรียบร้อยแล้ว',
+      cancelled_appointment: {
+        dentist_name: appointment.dentist_name,
+        appointment_time: appointment.time
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in cancelMyAppointment:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการยกเลิกนัดหมาย'
+    });
+  }
+};
 // Updated month view with real schedule data
 exports.appointmentMonth = async (req, res) => {
   try {
@@ -1099,77 +1268,6 @@ exports.cancelAppointment = async (req, res) => {
   }
 };
 
-// API to cancel appointment
-exports.cancelMyAppointment = async (req, res) => {
-  try {
-    const patientUserId = req.session.userId;
-    const { queueId } = req.body;
-
-    if (!queueId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่พบรหัสนัดหมาย' 
-      });
-    }
-
-    // Check permission - can only cancel own appointments
-    const [appointmentCheck] = await db.execute(`
-      SELECT q.queue_id, p.user_id
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.queue_id = ?
-    `, [queueId]);
-
-    if (appointmentCheck.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบนัดหมาย' 
-      });
-    }
-
-    if (appointmentCheck[0].user_id !== patientUserId) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'ไม่มีสิทธิ์ยกเลิกนัดหมายนี้' 
-      });
-    }
-
-    // Check if appointment can be cancelled (2 hours before)
-    const [timeCheck] = await db.execute(`
-      SELECT queue_id
-      FROM queue
-      WHERE queue_id = ?
-      AND time > DATE_ADD(NOW(), INTERVAL 2 HOUR)
-      AND queue_status IN ('pending', 'confirm')
-    `, [queueId]);
-
-    if (timeCheck.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่สามารถยกเลิกได้ เนื่องจากใกล้เวลานัดหมายแล้ว' 
-      });
-    }
-
-    // Cancel appointment
-    await db.execute(`
-      UPDATE queue 
-      SET queue_status = 'cancel' 
-      WHERE queue_id = ?
-    `, [queueId]);
-
-    res.json({
-      success: true,
-      message: 'ยกเลิกนัดหมายเรียบร้อยแล้ว'
-    });
-
-  } catch (error) {
-    console.error('Error in cancelMyAppointment:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'เกิดข้อผิดพลาดในการยกเลิกนัดหมาย'
-    });
-  }
-};
 
 // API to get patient appointments
 exports.getMyAppointments = async (req, res) => {
@@ -2010,5 +2108,31 @@ exports.changePassword = async (req, res) => {
   } catch (error) {
     console.error('Change password error:', error);
     res.redirect('/patient/profile/change-password?error=update_failed');
+  }
+};
+
+exports.getTreatmentsAPI = async (req, res) => {
+  try {
+    const [treatments] = await db.execute(`
+      SELECT 
+        treatment_id,
+        treatment_name,
+        duration
+      FROM treatment
+      ORDER BY treatment_name ASC
+    `);
+
+    res.json({
+      success: true,
+      treatments: treatments
+    });
+
+  } catch (error) {
+    console.error('Error fetching treatments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load treatments',
+      details: error.message
+    });
   }
 };

@@ -1,8 +1,9 @@
-version: '3.8'
-
 services:
   mysql:
-    image: mysql:8.0
+    # ใช้ registry อื่นแทน Docker Hub
+    image: public.ecr.aws/docker/library/mysql:8.0
+    # หรือ
+    # image: mcr.microsoft.com/mirror/docker/library/mysql:8.0
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -12,14 +13,21 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: dentist-app
     ports:
       - "3000:3000"
-    depends_on:
-      - mysql
     environment:
       DB_HOST: mysql
       DB_USER: root
@@ -27,19 +35,30 @@ services:
       DB_NAME: dentist_db
       SESSION_SECRET: your-secret-key
       NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
-    # รอให้ MySQL พร้อมก่อน
-    command: sh -c "sleep 10 && npm start"
+    command: ["npm", "start"]
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    # ใช้ registry อื่น
+    image: public.ecr.aws/docker/library/phpmyadmin:latest
+    # หรือ
+    # image: mcr.microsoft.com/mirror/docker/library/phpmyadmin:latest
+    container_name: phpmyadmin
     ports:
       - "8080:80"
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root
+      PMA_ARBITRARY: 1
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   mysql-data:

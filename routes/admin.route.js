@@ -537,6 +537,164 @@ router.post('/api/password-resets/:id/revoke', async (req, res) => {
   }
 });
 
+
+// ==================== Enhanced Validation API Routes ====================
+
+
+// Check ID card availability (for both dentist and patient)
+router.get('/api/check-id-card', checkAdminApiAuth, async (req, res) => {
+  try {
+    const { id_card, exclude_dentist_id, exclude_patient_id } = req.query;
+    
+    if (!id_card) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID Card parameter is required'
+      });
+    }
+
+    // Validate ID card format (13 digits)
+    if (!/^\d{13}$/.test(id_card)) {
+      return res.json({
+        success: true,
+        exists: false,
+        valid: false,
+        message: 'ID card must be exactly 13 digits'
+      });
+    }
+
+    let dentistExists = false;
+    let patientExists = false;
+
+    // Check in dentist table (เปลี่ยนจาก id_card เป็น idcard ให้ตรงกับ database)
+    let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE idcard = ?';
+    let dentistParams = [id_card];
+    
+    if (exclude_dentist_id) {
+      dentistQuery += ' AND dentist_id != ?';
+      dentistParams.push(exclude_dentist_id);
+    }
+    
+    const [dentistResult] = await db.execute(dentistQuery, dentistParams);
+    dentistExists = dentistResult[0].count > 0;
+
+    // Check in patient table
+    let patientQuery = 'SELECT COUNT(*) as count FROM patient WHERE id_card = ?';
+    let patientParams = [id_card];
+    
+    if (exclude_patient_id) {
+      patientQuery += ' AND patient_id != ?';
+      patientParams.push(exclude_patient_id);
+    }
+    
+    const [patientResult] = await db.execute(patientQuery, patientParams);
+    patientExists = patientResult[0].count > 0;
+
+    const exists = dentistExists || patientExists;
+    let foundIn = '';
+    
+    if (dentistExists && patientExists) {
+      foundIn = 'both dentist and patient records';
+    } else if (dentistExists) {
+      foundIn = 'dentist records';
+    } else if (patientExists) {
+      foundIn = 'patient records';
+    }
+
+    res.json({
+      success: true,
+      exists: exists,
+      valid: true,
+      foundIn: foundIn,
+      message: exists ? `ID card already exists in ${foundIn}` : 'ID card is available'
+    });
+
+  } catch (error) {
+    console.error('Error checking ID card:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check ID card availability'
+    });
+  }
+});
+
+// Enhanced email checking (replaces the existing check-email)
+router.get('/api/check-email-enhanced', checkAdminApiAuth, adminController.checkEmailAvailabilityEnhanced);
+
+// Specific routes for different entities
+router.get('/api/dentists/check-id-card', checkAdminApiAuth, async (req, res) => {
+  req.query.exclude_patient_id = null; // Only check against dentists
+  adminController.checkIdCardAvailability(req, res);
+});
+
+router.get('/api/patients/check-id-card', checkAdminApiAuth, async (req, res) => {
+  req.query.exclude_dentist_id = null; // Only check against patients  
+  adminController.checkIdCardAvailability(req, res);
+});
+
+// Existing check-email route with enhanced functionality
+router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
+  try {
+    const { email, exclude_user_id, exclude_dentist_id, exclude_patient_id } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({
+        success: true,
+        exists: false,
+        valid: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+    let params = [email];
+
+    // Exclude by user_id if provided
+    if (exclude_user_id) {
+      query += ' AND user_id != ?';
+      params.push(exclude_user_id);
+    }
+
+    // Exclude by dentist_id if provided
+    if (exclude_dentist_id) {
+      query += ' AND user_id != (SELECT user_id FROM dentist WHERE dentist_id = ? LIMIT 1)';
+      params.push(exclude_dentist_id);
+    }
+
+    // Exclude by patient_id if provided  
+    if (exclude_patient_id) {
+      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ? LIMIT 1)';
+      params.push(exclude_patient_id);
+    }
+
+    const [result] = await db.execute(query, params);
+    const exists = result[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists,
+      valid: true,
+      message: exists ? 'Email address is already in use' : 'Email is available'
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+});
+
 // Export these functions for use in main admin routes
 module.exports.passwordResetRoutes = {
   getDashboard: async (req, res) => {
@@ -547,6 +705,7 @@ module.exports.passwordResetRoutes = {
     return stats;
   }
 };
+
 
 
 module.exports = router;

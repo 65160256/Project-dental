@@ -1,7 +1,9 @@
+// แทนที่ใน routes/auth.route.js หรือไฟล์ routes หลักของคุณ
+
 const express = require('express');
 const router = express.Router();
 const authController = require('../controller/auth.controller');
-const registerController = require('../controller/register.controller');
+const registerController = require('../controller/register.controller'); // ใช้ controller เดิม
 const loginController = require('../controller/login.controller');
 const passwordResetController = require('../controller/password-reset.controller');
 
@@ -19,12 +21,24 @@ const loginLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Rate limiting สำหรับการ register
+// Rate limiting สำหรับการ register (เข้มงวดขึ้น)
 const registerLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 ชั่วโมง
     max: 3, // จำกัด 3 ครั้งต่อ IP
     message: {
         error: 'Too many registration attempts, please try again after 1 hour'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Rate limiting สำหรับ API calls
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 นาที
+    max: 20, // จำกัด 20 ครั้งต่อนาที
+    message: {
+        success: false,
+        error: 'Too many requests, please slow down'
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -78,7 +92,7 @@ router.post('/login', loginLimiter, authController.postLogin);
 
 // สำหรับผู้ป่วยลงทะเบียน (ต้องยังไม่ล็อกอิน)
 router.get('/register', requireGuest, authController.getRegister);
-router.post('/register', registerLimiter, registerController.registerPatient);
+router.post('/register', registerLimiter, registerController.registerPatient); // ใช้ controller เดิม
 
 // ออกจากระบบ (ต้องล็อกอินแล้ว)
 router.get('/logout', requireAuth, authController.logout);
@@ -98,7 +112,74 @@ router.get('/reset-password/:token', requireGuest, passwordResetController.getRe
 // ประมวลผล Reset Password
 router.post('/reset-password/:token', resetPasswordLimiter, passwordResetController.processResetPassword);
 
-// =========== API Routes ===========
+// =========== API Routes สำหรับการตรวจสอบข้อมูลซ้ำ ===========
+
+// ตรวจสอบอีเมลซ้ำแบบ Real-time
+router.get('/api/check-email', apiLimiter, async (req, res) => {
+    try {
+        const { email } = req.query;
+        const validator = require('validator');
+        const db = require('../config/db');
+        
+        if (!email || !validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid email format'
+            });
+        }
+        
+        const [existing] = await db.execute(
+            'SELECT user_id FROM user WHERE LOWER(email) = LOWER(?)',
+            [email]
+        );
+        
+        return res.json({
+            success: true,
+            available: existing.length === 0
+        });
+        
+    } catch (error) {
+        console.error('Email check error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Server error'
+        });
+    }
+});
+
+// ตรวจสอบบัตรประชาชนซ้ำแบบ Real-time
+router.get('/api/check-id-card', apiLimiter, async (req, res) => {
+    try {
+        const { id_card } = req.query;
+        const db = require('../config/db');
+        
+        if (!id_card || !/^\d{13}$/.test(id_card)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid ID card format'
+            });
+        }
+        
+        const [existing] = await db.execute(
+            'SELECT patient_id FROM patient WHERE id_card = ?',
+            [id_card]
+        );
+        
+        return res.json({
+            success: true,
+            available: existing.length === 0
+        });
+        
+    } catch (error) {
+        console.error('ID card check error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Server error'
+        });
+    }
+});
+
+// =========== Existing API Routes ===========
 
 // ตรวจสอบสถานะการล็อกอิน
 router.get('/api/auth/status', (req, res) => {
@@ -252,79 +333,6 @@ router.post('/api/auth/refresh', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to refresh session'
-        });
-    }
-});
-
-// API สำหรับเปลี่ยนรหัสผ่าน (ต้องล็อกอินแล้ว)
-router.post('/api/auth/change-password', requireAuth, async (req, res) => {
-    try {
-        const bcrypt = require('bcryptjs');
-        const db = require('../config/db');
-        const { currentPassword, newPassword, confirmPassword } = req.body;
-        
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                error: 'กรุณากรอกข้อมูลให้ครบถ้วน'
-            });
-        }
-        
-        if (newPassword !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                error: 'รหัสผ่านใหม่ไม่ตรงกัน'
-            });
-        }
-        
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
-            });
-        }
-        
-        const userId = req.session.user?.user_id || req.session.userId;
-        
-        // ตรวจสอบรหัสผ่านปัจจุบัน
-        const [users] = await db.execute(
-            'SELECT password FROM user WHERE user_id = ?',
-            [userId]
-        );
-        
-        if (users.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'ไม่พบผู้ใช้งาน'
-            });
-        }
-        
-        const isValidPassword = await bcrypt.compare(currentPassword, users[0].password);
-        if (!isValidPassword) {
-            return res.status(400).json({
-                success: false,
-                error: 'รหัสผ่านปัจจุบันไม่ถูกต้อง'
-            });
-        }
-        
-        // เข้ารหัสรหัสผ่านใหม่
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        
-        // อัปเดทรหัสผ่าน
-        await db.execute(
-            'UPDATE user SET password = ? WHERE user_id = ?',
-            [hashedPassword, userId]
-        );
-        
-        res.json({
-            success: true,
-            message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว'
-        });
-    } catch (error) {
-        console.error('Change password error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'เกิดข้อผิดพลาดในระบบ'
         });
     }
 });

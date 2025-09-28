@@ -503,6 +503,7 @@
         .form-group {
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .form-group label {
@@ -530,6 +531,7 @@
             outline: none;
             border-color: #4A90E2;
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+            background: white;
         }
 
         .form-control:invalid {
@@ -545,6 +547,102 @@
             font-size: 12px;
             color: #666;
             margin-top: 4px;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        /* Enhanced validation states with checking animation */
+        .form-group.checking .form-control {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            position: relative;
+        }
+
+        .form-group.checking::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3b82f6;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-control.invalid-input {
+            border-color: #e74c3c !important;
+            background: #fdf2f2 !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 20%, 40%, 60%, 80% {
+                transform: translateX(0);
+            }
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-3px);
+            }
+        }
+
+        /* Success state enhancements */
+        .form-group.success .form-control {
+            border-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        .form-group.success::after {
+            content: '✓';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        /* Error state enhancements */
+        .form-group.error .form-control {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .form-group.error::after {
+            content: '✕';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        /* Override checking state when there are other states */
+        .form-group.error::after,
+        .form-group.success::after {
+            animation: none !important;
+            border: none !important;
+            background: none !important;
         }
 
         /* Password Strength */
@@ -662,11 +760,6 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
         /* Toast notification */
         .toast {
             position: fixed;
@@ -702,6 +795,26 @@
             background: #f59e0b;
         }
 
+        /* Tooltip animations */
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            20%, 80% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+        }
+
+        .temp-tooltip {
+            animation: fadeInOut 3s ease-in-out forwards !important;
+        }
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -713,26 +826,15 @@
             }
         }
 
-        /* Validation States */
-        .form-group.error .form-control {
-            border-color: #e74c3c;
-            background: #fdf2f2;
-        }
-
-        .form-group.success .form-control {
-            border-color: #27ae60;
-            background: #f0fff4;
-        }
-
-        .error-message {
-            color: #e74c3c;
-            font-size: 12px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .form-group.error .error-message {
-            display: block;
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
 
         /* Progress Indicator */
@@ -821,11 +923,11 @@
             <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li><a href="../dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
-            <li><a href="../appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li class="active"><a href="../dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
-            <li><a href="../patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="../treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
         </ul>
     </div>
 
@@ -866,9 +968,9 @@
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="../profile">My Profile</a>
+                        <a href="/admin/profile">My Profile</a>
                         <hr />
-                        <a href="../../logout">Log Out</a>
+                        <a href="/logout">Log Out</a>
                     </div>
                 </div>
             </div>
@@ -1044,7 +1146,7 @@
 
                 <div class="form-actions">
                     <div>
-                        <a href="../dentists" class="btn btn-secondary">
+                        <a href="/admin/dentists" class="btn btn-secondary">
                             <i class="fas fa-times"></i>
                             Cancel
                         </a>
@@ -1109,7 +1211,7 @@
         // Load user information for avatar
         async function loadUserInfo() {
             try {
-                const response = await fetch('../profile/api');
+                const response = await fetch('/admin/profile/api');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -1132,7 +1234,7 @@
         // Load notifications
         async function loadNotifications() {
             try {
-                const response = await fetch('../api/notifications?limit=10');
+                const response = await fetch('/admin/api/notifications?limit=10');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
@@ -1253,160 +1355,351 @@
         }
 
         // Setup form validation
-       function setupFormValidation() {
-    const form = document.getElementById('addDentistForm');
-    const inputs = form.querySelectorAll('.form-control[required]');
+        function setupFormValidation() {
+            const form = document.getElementById('addDentistForm');
+            const inputs = form.querySelectorAll('.form-control[required]');
 
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            validateField(this);
-        });
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
 
-        input.addEventListener('input', function() {
-            // Clear error state on input (ยกเว้นช่องอีเมลถ้ากำลัง submit)
-            if (!isSubmitting && this.parentElement.classList.contains('error')) {
-                this.parentElement.classList.remove('error');
-            }
-        });
-    });
+                input.addEventListener('input', function() {
+                    // Clear error state on input (ยกเว้นช่องอีเมลและบัตรประชาชนถ้ากำลัง submit)
+                    if (!isSubmitting && this.parentElement.classList.contains('error')) {
+                        this.parentElement.classList.remove('error');
+                    }
+                });
+            });
 
-    // ID Card validation
-    const id_cardInput = document.getElementById('id_card'); // แก้ไขให้ตรงกับ HTML
-    if (id_cardInput) {
-        id_cardInput.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '').substring(0, 13);
-            if (!isSubmitting) {
-                validateField(this);
-            }
-        });
-    }
-
-    // Phone validation
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '').substring(0, 10);
-            if (!isSubmitting) {
-                validateField(this);
-            }
-        });
-    }
-
-    // Email validation with debounced checking
-    const emailInput = document.getElementById('email');
-    let emailCheckTimeout;
-    
-    if (emailInput) {
-        emailInput.addEventListener('input', function() {
-            // Clear previous timeout
-            if (emailCheckTimeout) {
-                clearTimeout(emailCheckTimeout);
-            }
+            // Name validation (First Name and Last Name) - only letters and Thai characters
+            const fnameInput = document.getElementById('fname');
+            const lnameInput = document.getElementById('lname');
             
-            // Don't check during submission
-            if (isSubmitting) return;
+            [fnameInput, lnameInput].forEach(input => {
+                if (input) {
+                    // Handle input event
+                    input.addEventListener('input', function(e) {
+                        let value = this.value;
+                        let cursorPos = this.selectionStart;
+                        
+                        // Remove all numbers and invalid characters, keep only letters, Thai, spaces, hyphens, apostrophes, dots
+                        let cleanValue = value.replace(/[^a-zA-Zก-๏\s\-'\.]/g, '');
+                        
+                        // Remove excessive spaces
+                        cleanValue = cleanValue.replace(/\s+/g, ' ');
+                        
+                        // Update value if it changed
+                        if (cleanValue !== value) {
+                            this.value = cleanValue;
+                            // Try to maintain cursor position
+                            let newCursorPos = cursorPos - (value.length - cleanValue.length);
+                            this.setSelectionRange(Math.max(0, newCursorPos), Math.max(0, newCursorPos));
+                            
+                            // Show temporary warning
+                            showTemporaryTooltip(this, 'Only letters are allowed in names');
+                        }
+                        
+                        if (!isSubmitting) {
+                            // Delay validation slightly to avoid flickering
+                            setTimeout(() => validateNameField(this), 100);
+                        }
+                    });
+
+                    // Handle keypress event (prevent typing invalid characters)
+                    input.addEventListener('keypress', function(e) {
+                        const char = e.key;
+                        
+                        // Allow control keys (backspace, delete, arrow keys, etc.)
+                        if (e.ctrlKey || e.metaKey || e.altKey || 
+                            ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(char)) {
+                            return true;
+                        }
+                        
+                        // Check if character is valid (letters, Thai characters, space, hyphen, apostrophe, dot)
+                        if (!/[a-zA-Zก-๏\s\-'\.]/.test(char)) {
+                            e.preventDefault();
+                            showTemporaryTooltip(this, `"${char}" is not allowed in names`);
+                            
+                            // Add shake effect
+                            this.classList.add('invalid-input');
+                            setTimeout(() => {
+                                this.classList.remove('invalid-input');
+                            }, 500);
+                            
+                            return false;
+                        }
+                        
+                        // Prevent multiple consecutive spaces
+                        if (char === ' ' && this.value.slice(-1) === ' ') {
+                            e.preventDefault();
+                            showTemporaryTooltip(this, 'Multiple spaces not allowed');
+                            return false;
+                        }
+                    });
+
+                    // Handle paste event
+                    input.addEventListener('paste', function(e) {
+                        e.preventDefault();
+                        
+                        // Get pasted text
+                        let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                        
+                        // Clean the pasted text
+                        let cleanText = pastedText.replace(/[^a-zA-Zก-๏\s\-'\.]/g, '').replace(/\s+/g, ' ');
+                        
+                        // Insert cleaned text at cursor position
+                        let start = this.selectionStart;
+                        let end = this.selectionEnd;
+                        let currentValue = this.value;
+                        
+                        this.value = currentValue.substring(0, start) + cleanText + currentValue.substring(end);
+                        
+                        // Set cursor position after inserted text
+                        let newCursorPos = start + cleanText.length;
+                        this.setSelectionRange(newCursorPos, newCursorPos);
+                        
+                        // Show message if text was cleaned
+                        if (cleanText !== pastedText) {
+                            showTemporaryTooltip(this, 'Invalid characters were removed from pasted text');
+                        }
+                        
+                        // Trigger validation
+                        if (!isSubmitting) {
+                            setTimeout(() => validateNameField(this), 100);
+                        }
+                    });
+                }
+            });
+
+            // ID Card validation with duplicate checking
+            const id_cardInput = document.getElementById('id_card');
+            let idCardCheckTimeout;
             
-            // Remove error state immediately when typing
-            this.parentElement.classList.remove('error', 'success');
-            
-            // Check email availability after user stops typing
-            if (this.value && isValidEmail(this.value)) {
-                emailCheckTimeout = setTimeout(() => {
+            if (id_cardInput) {
+                id_cardInput.addEventListener('input', function() {
+                    // Only allow numbers and limit to 13 digits
+                    this.value = this.value.replace(/\D/g, '').substring(0, 13);
+                    
+                    // Clear previous timeout
+                    if (idCardCheckTimeout) {
+                        clearTimeout(idCardCheckTimeout);
+                    }
+                    
+                    // Don't check during submission
+                    if (isSubmitting) return;
+                    
+                    // Remove error/success state immediately when typing
+                    this.parentElement.classList.remove('error', 'success');
+                    
+                    // Check ID card availability after user stops typing
+                    if (this.value && this.value.length === 13) {
+                        idCardCheckTimeout = setTimeout(() => {
+                            if (!isSubmitting) {
+                                checkIdCardAvailability(this.value);
+                            }
+                        }, 800);
+                    } else if (this.value.length > 0 && !isSubmitting) {
+                        // Show validation for incomplete ID card
+                        validateField(this);
+                    }
+                });
+                
+                id_cardInput.addEventListener('blur', function() {
+                    if (!isSubmitting && this.value) {
+                        if (this.value.length === 13) {
+                            checkIdCardAvailability(this.value);
+                        } else {
+                            validateField(this);
+                        }
+                    }
+                });
+            }
+
+            // Phone validation
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').substring(0, 10);
                     if (!isSubmitting) {
+                        validateField(this);
+                    }
+                });
+            }
+
+            // Email validation with debounced checking
+            const emailInput = document.getElementById('email');
+            let emailCheckTimeout;
+            
+            if (emailInput) {
+                emailInput.addEventListener('input', function() {
+                    // Clear previous timeout
+                    if (emailCheckTimeout) {
+                        clearTimeout(emailCheckTimeout);
+                    }
+                    
+                    // Don't check during submission
+                    if (isSubmitting) return;
+                    
+                    // Remove error state immediately when typing
+                    this.parentElement.classList.remove('error', 'success');
+                    
+                    // Check email availability after user stops typing
+                    if (this.value && isValidEmail(this.value)) {
+                        emailCheckTimeout = setTimeout(() => {
+                            if (!isSubmitting) {
+                                checkEmailAvailability(this.value);
+                            }
+                        }, 800);
+                    }
+                });
+                
+                emailInput.addEventListener('blur', function() {
+                    if (!isSubmitting && this.value && isValidEmail(this.value)) {
                         checkEmailAvailability(this.value);
                     }
-                }, 800); // เพิ่มเวลา debounce
+                });
             }
-        });
-        
-        emailInput.addEventListener('blur', function() {
-            if (!isSubmitting && this.value && isValidEmail(this.value)) {
-                checkEmailAvailability(this.value);
+        }
+
+        // Validate name fields (only letters allowed)
+        function validateNameField(field) {
+            const group = field.parentElement;
+            const value = field.value.trim();
+            const errorMsg = group.querySelector('.error-message');
+            const fieldName = field.labels[0]?.textContent.replace(' *', '') || 'Name';
+
+            group.classList.remove('error', 'success');
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} is required`;
+                return false;
             }
-        });
-    }
-}
+
+            if (value && value.length < 2) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} must be at least 2 characters`;
+                return false;
+            }
+
+            if (value && value.length > 50) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} must not exceed 50 characters`;
+                return false;
+            }
+
+            // Check for valid characters (letters, Thai characters, spaces, hyphens, apostrophes, dots)
+            if (value && !/^[a-zA-Zก-๏\s\-'\.]+$/.test(value)) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} can only contain letters`;
+                return false;
+            }
+
+            // Check for excessive spaces or special characters
+            if (value && /\s{2,}/.test(value)) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} cannot contain multiple consecutive spaces`;
+                return false;
+            }
+
+            if (value && /^[\s\-'\.]+$/.test(value)) {
+                group.classList.add('error');
+                errorMsg.textContent = `${fieldName} must contain actual letters`;
+                return false;
+            }
+
+            if (value) {
+                group.classList.add('success');
+            }
+            return true;
+        }
 
         // Validate individual field
-       function validateField(field) {
-    const group = field.parentElement;
-    const value = field.value.trim();
-    const errorMsg = group.querySelector('.error-message');
+        function validateField(field) {
+            const group = field.parentElement;
+            const value = field.value.trim();
+            const errorMsg = group.querySelector('.error-message');
 
-    // Don't validate if user is still typing
-    if (field === document.activeElement && value.length > 0) {
-        return true;
-    }
+            // Don't validate if user is still typing
+            if (field === document.activeElement && value.length > 0) {
+                return true;
+            }
 
-    group.classList.remove('error', 'success');
+            group.classList.remove('error', 'success');
 
-    if (field.hasAttribute('required') && !value) {
-        group.classList.add('error');
-        errorMsg.textContent = `${field.labels[0]?.textContent.replace(' *', '') || 'Field'} is required`;
-        return false;
-    }
+            // Handle name fields with special validation
+            if (field.name === 'fname' || field.name === 'lname') {
+                return validateNameField(field);
+            }
 
-    // Specific validations
-    if (field.type === 'email' && value && !isValidEmail(value)) {
-        group.classList.add('error');
-        errorMsg.textContent = 'Please enter a valid email address';
-        return false;
-    }
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                errorMsg.textContent = `${field.labels[0]?.textContent.replace(' *', '') || 'Field'} is required`;
+                return false;
+            }
 
-    if (field.name === 'id_card' && value) {
-        if (value.length !== 13) {
-            group.classList.add('error');
-            errorMsg.textContent = 'ID card must be exactly 13 digits';
-            return false;
+            // Specific validations
+            if (field.type === 'email' && value && !isValidEmail(value)) {
+                group.classList.add('error');
+                errorMsg.textContent = 'Please enter a valid email address';
+                return false;
+            }
+
+            if (field.name === 'id_card' && value) {
+                if (value.length !== 13) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'ID card must be exactly 13 digits';
+                    return false;
+                }
+                if (!/^\d{13}$/.test(value)) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'ID card must contain only numbers';
+                    return false;
+                }
+            }
+
+            if (field.name === 'phone' && value) {
+                if (value.length < 9 || value.length > 10) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'Phone number must be 9-10 digits';
+                    return false;
+                }
+                if (!/^[0-9]+$/.test(value)) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'Phone number must contain only numbers';
+                    return false;
+                }
+            }
+
+            if (field.name === 'dob' && value) {
+                const birthDate = new Date(value);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                
+                if (age < 18) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'Dentist must be at least 18 years old';
+                    return false;
+                }
+                if (age > 80) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'Please enter a valid birth date';
+                    return false;
+                }
+            }
+
+            if (field.name === 'password' && value) {
+                if (value.length < 6) {
+                    group.classList.add('error');
+                    errorMsg.textContent = 'Password must be at least 6 characters';
+                    return false;
+                }
+            }
+
+            group.classList.add('success');
+            return true;
         }
-        if (!/^\d{13}$/.test(value)) {
-            group.classList.add('error');
-            errorMsg.textContent = 'ID card must contain only numbers';
-            return false;
-        }
-    }
-
-    if (field.name === 'phone' && value) {
-        if (value.length < 9 || value.length > 10) {
-            group.classList.add('error');
-            errorMsg.textContent = 'Phone number must be 9-10 digits';
-            return false;
-        }
-        if (!/^[0-9]+$/.test(value)) {
-            group.classList.add('error');
-            errorMsg.textContent = 'Phone number must contain only numbers';
-            return false;
-        }
-    }
-
-    if (field.name === 'dob' && value) {
-        const birthDate = new Date(value);
-        const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
-        
-        if (age < 18) {
-            group.classList.add('error');
-            errorMsg.textContent = 'Dentist must be at least 18 years old';
-            return false;
-        }
-        if (age > 80) {
-            group.classList.add('error');
-            errorMsg.textContent = 'Please enter a valid birth date';
-            return false;
-        }
-    }
-
-    if (field.name === 'password' && value) {
-        if (value.length < 6) {
-            group.classList.add('error');
-            errorMsg.textContent = 'Password must be at least 6 characters';
-            return false;
-        }
-    }
-
-    group.classList.add('success');
-    return true;
-}
 
         // Email validation
         function isValidEmail(email) {
@@ -1414,173 +1707,376 @@
             return re.test(email);
         }
 
+        // Check ID card availability
+        async function checkIdCardAvailability(idCard) {
+            if (!idCard || idCard.length !== 13 || isSubmitting) return;
+
+            const idCardGroup = document.getElementById('id_card').parentElement;
+            const errorMsg = idCardGroup.querySelector('.error-message');
+            
+            // Show checking state
+            idCardGroup.classList.add('checking');
+            idCardGroup.classList.remove('error', 'success');
+
+            try {
+                console.log('🆔 Checking ID card availability:', idCard);
+                
+                const response = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(idCard)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🆔 ID card check result:', data);
+                    
+                    if (!data.success) {
+                        idCardGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.error || 'Failed to check ID card';
+                        }
+                    } else if (!data.valid) {
+                        idCardGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.message || 'Invalid ID card format';
+                        }
+                    } else if (data.exists) {
+                        idCardGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.message || 'ID card is already registered';
+                        }
+                        
+                        // Show additional info about where it was found
+                        if (data.foundIn) {
+                            showToast(`ID card already exists in ${data.foundIn}`, 'warning');
+                        }
+                    } else {
+                        idCardGroup.classList.add('success');
+                        console.log('✅ ID card is available');
+                    }
+                } else {
+                    console.log('⚠️ ID card check failed:', response.status);
+                    idCardGroup.classList.add('error');
+                    if (errorMsg) {
+                        errorMsg.textContent = 'Failed to verify ID card';
+                    }
+                }
+            } catch (error) {
+                console.error('⚠️ ID card check network error:', error);
+                idCardGroup.classList.add('error');
+                if (errorMsg) {
+                    errorMsg.textContent = 'Network error while checking ID card';
+                }
+            } finally {
+                idCardGroup.classList.remove('checking');
+            }
+        }
+
         // Check email availability
         async function checkEmailAvailability(email) {
-    if (!email || !isValidEmail(email) || isSubmitting) return;
+            if (!email || !isValidEmail(email) || isSubmitting) return;
 
-    try {
-        console.log('🔍 Checking email availability:', email);
-        
-        const response = await fetch(`../api/check-email?email=${encodeURIComponent(email)}`);
-        
-        if (response.ok) {
-            const data = await response.json();
             const emailGroup = document.getElementById('email').parentElement;
             const errorMsg = emailGroup.querySelector('.error-message');
             
-            console.log('📧 Email check result:', data);
-            
-            if (data.exists) {
-                emailGroup.classList.add('error');
-                emailGroup.classList.remove('success');
-                if (errorMsg) {
-                    errorMsg.textContent = 'Email address is already in use';
-                }
-            } else {
-                emailGroup.classList.remove('error');
-                emailGroup.classList.add('success');
-            }
-        } else {
-            console.log('⚠️ Email check failed:', response.status);
-        }
-    } catch (error) {
-        console.log('⚠️ Email check network error:', error);
-    }
-}
-        // Handle form submission
-      async function handleFormSubmission(e) {
-    e.preventDefault();
-    
-    if (isSubmitting) return;
+            // Show checking state
+            emailGroup.classList.add('checking');
+            emailGroup.classList.remove('error', 'success');
 
-    const form = e.target;
-    const submitBtn = document.getElementById('submitBtn');
-    
-    // Validate all fields
-    if (!validateAllFields()) {
-        showToast('Please fix the errors in the form', 'error');
-        return;
-    }
-
-    // Check password match
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    if (password !== confirmPassword) {
-        showToast('Passwords do not match', 'error');
-        return;
-    }
-
-    isSubmitting = true;
-    submitBtn.classList.add('btn-loading');
-    submitBtn.disabled = true;
-
-    try {
-        const formData = new FormData(form);
-        
-        console.log('🚀 Submitting form data...');
-        
-        const response = await fetch('/admin/dentists/add', {
-            method: 'POST',
-            body: formData
-        });
-
-        console.log('📡 Response status:', response.status);
-        console.log('📡 Response headers:', response.headers.get('content-type'));
-
-        // ตรวจสอบ content-type ของ response
-        const contentType = response.headers.get('content-type') || '';
-        
-        if (response.ok) {
-            // สำเร็จ
-            let result;
             try {
-                if (contentType.includes('application/json')) {
-                    result = await response.json();
-                    console.log('✅ JSON response:', result);
-                } else {
-                    // หากไม่ใช่ JSON อาจเป็น redirect
-                    console.log('✅ Non-JSON response (likely redirect)');
-                    result = { success: true, message: 'Dentist added successfully' };
-                }
-            } catch (parseError) {
-                console.log('⚠️ Could not parse response as JSON, assuming success');
-                result = { success: true, message: 'Dentist added successfully' };
-            }
-
-            if (result.success !== false) {
-                showToast('Dentist added successfully!', 'success');
-                clearDraft();
+                console.log('📧 Checking email availability:', email);
                 
-                setTimeout(() => {
-                    if (result.redirect) {
-                        window.location.href = result.redirect;
+                const response = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📧 Email check result:', data);
+                    
+                    if (!data.success) {
+                        emailGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.error || 'Failed to check email';
+                        }
+                    } else if (!data.valid) {
+                        emailGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.message || 'Invalid email format';
+                        }
+                    } else if (data.exists) {
+                        emailGroup.classList.add('error');
+                        if (errorMsg) {
+                            errorMsg.textContent = data.message || 'Email address is already in use';
+                        }
                     } else {
-                        window.location.href = '../dentists';
+                        emailGroup.classList.add('success');
+                        console.log('✅ Email is available');
                     }
-                }, 1500);
+                } else {
+                    console.log('⚠️ Email check failed:', response.status);
+                    emailGroup.classList.add('error');
+                    if (errorMsg) {
+                        errorMsg.textContent = 'Failed to verify email';
+                    }
+                }
+            } catch (error) {
+                console.error('⚠️ Email check network error:', error);
+                emailGroup.classList.add('error');
+                if (errorMsg) {
+                    errorMsg.textContent = 'Network error while checking email';
+                }
+            } finally {
+                emailGroup.classList.remove('checking');
+            }
+        }
+
+        // Show temporary tooltip for validation messages
+        function showTemporaryTooltip(element, message) {
+            // Remove existing tooltips
+            const existingTooltips = document.querySelectorAll('.temp-tooltip');
+            existingTooltips.forEach(tip => tip.remove());
+
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'temp-tooltip';
+            tooltip.textContent = message;
+            tooltip.style.cssText = `
+                position: absolute;
+                background: #ff4757;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 1000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                pointer-events: none;
+                animation: fadeInOut 3s ease-in-out forwards;
+            `;
+
+            // Position tooltip
+            const rect = element.getBoundingClientRect();
+            tooltip.style.top = (rect.top - 35 + window.scrollY) + 'px';
+            tooltip.style.left = rect.left + 'px';
+
+            document.body.appendChild(tooltip);
+
+            // Remove tooltip after 3 seconds
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.remove();
+                }
+            }, 3000);
+        }
+
+        // Handle form submission
+        async function handleFormSubmission(e) {
+            e.preventDefault();
+            
+            if (isSubmitting) return;
+
+            const form = e.target;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            console.log('🚀 Starting form submission...');
+
+            // Validate all fields including name fields
+            if (!validateAllFields()) {
+                showToast('Please fix the errors in the form', 'error');
+                highlightFirstError();
                 return;
             }
-        }
 
-        // จัดการ error responses
-        let errorData;
-        try {
-            if (contentType.includes('application/json')) {
-                errorData = await response.json();
-                console.log('❌ JSON error response:', errorData);
-            } else {
-                const errorText = await response.text();
-                console.log('❌ Text error response:', errorText);
-                errorData = { 
-                    error: errorText || `Server error (${response.status})`,
-                    field: null 
-                };
+            // Check for any pending validations (email/ID card duplicates)
+            const errorFields = form.querySelectorAll('.form-group.error');
+            if (errorFields.length > 0) {
+                showToast('Please resolve validation errors before submitting', 'error');
+                highlightFirstError();
+                return;
             }
-        } catch (parseError) {
-            console.log('❌ Could not parse error response');
-            errorData = { 
-                error: `Server error (${response.status})`,
-                field: null 
-            };
-        }
 
-        // แสดงข้อผิดพลาดเฉพาะช่อง
-        if (errorData.field === 'email') {
-            const emailGroup = document.getElementById('email').parentElement;
-            emailGroup.classList.add('error');
-            emailGroup.classList.remove('success');
-            
-            const errorMsg = emailGroup.querySelector('.error-message');
-            if (errorMsg) {
-                errorMsg.textContent = errorData.error || 'Email address is already in use';
+            // Check password match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                document.getElementById('confirmPassword').focus();
+                return;
             }
+
+            // Final validation checks for critical fields
+            const email = document.getElementById('email').value;
+            const idCard = document.getElementById('id_card').value;
+            const fname = document.getElementById('fname').value;
+            const lname = document.getElementById('lname').value;
+
+            // Validate names one more time
+            if (!/^[a-zA-Zก-๏\s\-'\.]+$/.test(fname) || fname.length < 2) {
+                showToast('First name contains invalid characters or is too short', 'error');
+                document.getElementById('fname').focus();
+                return;
+            }
+
+            if (!/^[a-zA-Zก-๏\s\-'\.]+$/.test(lname) || lname.length < 2) {
+                showToast('Last name contains invalid characters or is too short', 'error');
+                document.getElementById('lname').focus();
+                return;
+            }
+
+            // Final duplicate checks
+            console.log('🔍 Performing final duplicate checks...');
             
-            // เลื่อนไปที่ email field และ focus
-            document.getElementById('email').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-            
-            setTimeout(() => {
-                document.getElementById('email').focus();
-            }, 500);
+            try {
+                // Check email one more time
+                const emailResponse = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                if (emailResponse.ok) {
+                    const emailData = await emailResponse.json();
+                    if (emailData.exists) {
+                        showToast('Email address is already in use', 'error');
+                        document.getElementById('email').focus();
+                        return;
+                    }
+                }
+
+                // Check ID card one more time
+                const idResponse = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(idCard)}`);
+                if (idResponse.ok) {
+                    const idData = await idResponse.json();
+                    if (idData.exists) {
+                        showToast('ID card is already registered', 'error');
+                        document.getElementById('id_card').focus();
+                        return;
+                    }
+                }
+
+            } catch (error) {
+                console.log('⚠️ Could not perform final validation checks, proceeding...');
+            }
+
+            isSubmitting = true;
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                
+                console.log('📤 Submitting form data...');
+                
+                const response = await fetch('/admin/dentists/add', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log('📡 Response status:', response.status);
+
+                const contentType = response.headers.get('content-type') || '';
+                
+                if (response.ok) {
+                    let result;
+                    try {
+                        if (contentType.includes('application/json')) {
+                            result = await response.json();
+                            console.log('✅ JSON response:', result);
+                        } else {
+                            console.log('✅ Non-JSON response (likely redirect)');
+                            result = { success: true, message: 'Dentist added successfully' };
+                        }
+                    } catch (parseError) {
+                        console.log('⚠️ Could not parse response as JSON, assuming success');
+                        result = { success: true, message: 'Dentist added successfully' };
+                    }
+
+                    if (result.success !== false) {
+                        showToast('Dentist added successfully!', 'success');
+                        clearDraft();
+                        
+                        setTimeout(() => {
+                            if (result.redirect) {
+                                window.location.href = result.redirect;
+                            } else {
+                                window.location.href = '/admin/dentists';
+                            }
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                // Handle error responses
+                let errorData;
+                try {
+                    if (contentType.includes('application/json')) {
+                        errorData = await response.json();
+                        console.log('❌ JSON error response:', errorData);
+                    } else {
+                        const errorText = await response.text();
+                        console.log('❌ Text error response:', errorText);
+                        errorData = { 
+                            error: errorText || `Server error (${response.status})`,
+                            field: null 
+                        };
+                    }
+                } catch (parseError) {
+                    console.log('❌ Could not parse error response');
+                    errorData = { 
+                        error: `Server error (${response.status})`,
+                        field: null 
+                    };
+                }
+
+                // Handle specific field errors
+                if (errorData.field) {
+                    const fieldElement = document.getElementById(errorData.field);
+                    if (fieldElement) {
+                        const fieldGroup = fieldElement.parentElement;
+                        fieldGroup.classList.add('error');
+                        fieldGroup.classList.remove('success');
+                        
+                        const errorMsg = fieldGroup.querySelector('.error-message');
+                        if (errorMsg) {
+                            errorMsg.textContent = errorData.error;
+                        }
+                        
+                        fieldElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        
+                        setTimeout(() => {
+                            fieldElement.focus();
+                        }, 500);
+                    }
+                }
+
+                showToast(errorData.error || 'Failed to add dentist', 'error');
+
+            } catch (networkError) {
+                console.error('❌ Network error:', networkError);
+                showToast('Network error: Please check your connection and try again', 'error');
+            } finally {
+                isSubmitting = false;
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+                
+                console.log('🏁 Form submission completed');
+            }
         }
 
-        // แสดง toast notification
-        showToast(errorData.error || 'Failed to add dentist', 'error');
-
-    } catch (networkError) {
-        console.error('❌ Network error:', networkError);
-        showToast('Network error: Please check your connection and try again', 'error');
-    } finally {
-        isSubmitting = false;
-        submitBtn.classList.remove('btn-loading');
-        submitBtn.disabled = false;
-        
-        console.log('🏁 Form submission completed');
-    }
-}
-
+        // Highlight first error field
+        function highlightFirstError() {
+            const firstErrorField = document.querySelector('.form-group.error .form-control');
+            if (firstErrorField) {
+                firstErrorField.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                // Add shake animation
+                firstErrorField.classList.add('invalid-input');
+                setTimeout(() => {
+                    firstErrorField.classList.remove('invalid-input');
+                }, 500);
+                
+                setTimeout(() => {
+                    firstErrorField.focus();
+                }, 500);
+            }
+        }
 
         // Validate all form fields
         function validateAllFields() {
@@ -1638,7 +2134,7 @@
         // Mark notification as read
         async function markAsRead(notificationId) {
             try {
-                const response = await fetch(`../api/notifications/${notificationId}/read`, {
+                const response = await fetch(`/admin/api/notifications/${notificationId}/read`, {
                     method: 'POST'
                 });
                 
@@ -1653,7 +2149,7 @@
         // Mark all notifications as read
         async function markAllAsRead() {
             try {
-                const response = await fetch('../api/notifications/read-all', {
+                const response = await fetch('/admin/api/notifications/read-all', {
                     method: 'POST'
                 });
                 
@@ -1674,97 +2170,71 @@
         }
 
         // Show toast notification
-       function showToast(message, type = 'info') {
-    // Remove existing toasts
-    const existingToasts = document.querySelectorAll('.toast');
-    existingToasts.forEach(toast => toast.remove());
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    
-    const icon = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-triangle',
-        warning: 'fas fa-exclamation-circle',
-        info: 'fas fa-info-circle'
-    };
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            const existingToasts = document.querySelectorAll('.toast');
+            existingToasts.forEach(toast => toast.remove());
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
 
-    toast.innerHTML = `
-        <i class="${icon[type]}"></i>
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;margin-left:auto;cursor:pointer;font-size:18px;padding:0 5px;">&times;</button>
-    `;
-    
-    // Enhanced toast styling
-    const toastColors = {
-        success: '#10b981',
-        error: '#ef4444', 
-        warning: '#f59e0b',
-        info: '#3b82f6'
-    };
-    
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: white;
-        font-size: 14px;
-        font-weight: 500;
-        z-index: 5000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        animation: slideInRight 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 320px;
-        max-width: 500px;
-        background: ${toastColors[type]};
-        border-left: 4px solid rgba(255,255,255,0.3);
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // Auto remove
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.style.animation = 'slideOutRight 0.3s ease';
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;margin-left:auto;cursor:pointer;font-size:18px;padding:0 5px;">&times;</button>
+            `;
+            
+            // Enhanced toast styling
+            const toastColors = {
+                success: '#10b981',
+                error: '#ef4444', 
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 5000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideInRight 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                min-width: 320px;
+                max-width: 500px;
+                background: ${toastColors[type]};
+                border-left: 4px solid rgba(255,255,255,0.3);
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove
             setTimeout(() => {
                 if (toast.parentNode) {
-                    toast.remove();
+                    toast.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.remove();
+                        }
+                    }, 300);
                 }
-            }, 300);
+            }, type === 'error' ? 7000 : 5000); // Error messages stay longer
         }
-    }, type === 'error' ? 7000 : 5000); // Error messages stay longer
-}
 
-// เพิ่ม CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
         // Get time ago text
         function getTimeAgo(date) {
             const now = new Date();
@@ -1776,6 +2246,52 @@ document.head.appendChild(style);
             if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
             
             return date.toLocaleDateString();
+        }
+
+        // Auto-save draft functionality
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('addDentistForm'));
+            const draftData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (key !== 'photo' && key !== 'password' && key !== 'confirmPassword') {
+                    draftData[key] = value;
+                }
+            }
+            
+            try {
+                localStorage.setItem('dentist_draft', JSON.stringify(draftData));
+            } catch (error) {
+                console.log('Could not save draft');
+            }
+        }
+
+        // Load draft on page load
+        function loadDraft() {
+            try {
+                const draft = localStorage.getItem('dentist_draft');
+                if (draft) {
+                    const draftData = JSON.parse(draft);
+                    Object.keys(draftData).forEach(key => {
+                        const input = document.getElementById(key);
+                        if (input) {
+                            input.value = draftData[key];
+                        }
+                    });
+                    updateFormProgress();
+                }
+            } catch (error) {
+                console.log('Could not load draft');
+            }
+        }
+
+        // Clear draft
+        function clearDraft() {
+            try {
+                localStorage.removeItem('dentist_draft');
+            } catch (error) {
+                console.log('Could not clear draft');
+            }
         }
 
         // Form progress tracking
@@ -1823,52 +2339,6 @@ document.head.appendChild(style);
                 if (stepId === 'step1') icon.className = 'fas fa-user';
                 if (stepId === 'step2') icon.className = 'fas fa-phone';
                 if (stepId === 'step3') icon.className = 'fas fa-key';
-            }
-        }
-
-        // Auto-save draft functionality
-        function saveDraft() {
-            const formData = new FormData(document.getElementById('addDentistForm'));
-            const draftData = {};
-            
-            for (let [key, value] of formData.entries()) {
-                if (key !== 'photo' && key !== 'password' && key !== 'confirmPassword') {
-                    draftData[key] = value;
-                }
-            }
-            
-            try {
-                localStorage.setItem('dentist_draft', JSON.stringify(draftData));
-            } catch (error) {
-                console.log('Could not save draft');
-            }
-        }
-
-        // Load draft on page load
-        function loadDraft() {
-            try {
-                const draft = localStorage.getItem('dentist_draft');
-                if (draft) {
-                    const draftData = JSON.parse(draft);
-                    Object.keys(draftData).forEach(key => {
-                        const input = document.getElementById(key);
-                        if (input) {
-                            input.value = draftData[key];
-                        }
-                    });
-                    updateFormProgress();
-                }
-            } catch (error) {
-                console.log('Could not load draft');
-            }
-        }
-
-        // Clear draft
-        function clearDraft() {
-            try {
-                localStorage.removeItem('dentist_draft');
-            } catch (error) {
-                console.log('Could not clear draft');
             }
         }
 
@@ -1936,6 +2406,97 @@ document.head.appendChild(style);
         setInterval(() => {
             loadNotifications();
         }, 60000);
+
+        // Debug functions (เพิ่มเพื่อทดสอบ API)
+        window.debugDentistForm = {
+            testEmailAPI: async function(email) {
+                console.log('🔍 Testing email API...');
+                try {
+                    const response = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email || 'test@example.com')}`);
+                    const data = await response.json();
+                    console.log('Email API Response:', data);
+                    return data;
+                } catch (error) {
+                    console.error('Email API Error:', error);
+                    return { error: error.message };
+                }
+            },
+            
+            testIdCardAPI: async function(idCard) {
+                console.log('🆔 Testing ID card API...');
+                try {
+                    const response = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(idCard || '1234567890123')}`);
+                    const data = await response.json();
+                    console.log('ID Card API Response:', data);
+                    return data;
+                } catch (error) {
+                    console.error('ID Card API Error:', error);
+                    return { error: error.message };
+                }
+            },
+            
+            testNameValidation: function() {
+                console.log('📝 Testing name validation...');
+                const fname = document.getElementById('fname');
+                const lname = document.getElementById('lname');
+                
+                if (fname) {
+                    console.log('Testing fname with "Test123"');
+                    fname.value = 'Test123';
+                    fname.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                if (lname) {
+                    console.log('Testing lname with "User456"');
+                    lname.value = 'User456';
+                    lname.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            },
+            
+            runAllTests: async function() {
+                console.log('🚀 Running all debug tests...');
+                
+                // Test name validation
+                this.testNameValidation();
+                
+                // Wait a bit
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test APIs
+                await this.testEmailAPI('test@example.com');
+                await this.testIdCardAPI('1234567890123');
+                
+                console.log('✅ All tests completed. Check console for results.');
+                showToast('Debug tests completed. Check browser console for results.', 'info');
+            }
+        };
+
+        // เพิ่มปุ่มทดสอบใน development mode
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(() => {
+                    const debugBtn = document.createElement('button');
+                    debugBtn.textContent = '🐛 Debug Tests';
+                    debugBtn.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        left: 10px;
+                        z-index: 9999;
+                        background: #ff6b6b;
+                        color: white;
+                        border: none;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        cursor: pointer;
+                    `;
+                    debugBtn.onclick = () => window.debugDentistForm.runAllTests();
+                    document.body.appendChild(debugBtn);
+                    
+                    console.log('🐛 Debug mode enabled. Click the debug button or run window.debugDentistForm.runAllTests() in console.');
+                }, 2000);
+            });
+        }
     </script>
 </body>
 </html>

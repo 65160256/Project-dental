@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มประวัติการรักษา - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .user-info:hover {
+            opacity: 0.8;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: #4A90E2;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .avatar.no-photo {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            transition: background 0.2s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            height: 1px;
+            background: #e1e5e9;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-control:disabled,
+        .form-control.readonly {
+            background: #f8f9fa;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #e9ecef;
+        }
+
+        .form-control.readonly {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+
+        /* Textarea */
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .form-textarea.large {
+            min-height: 150px;
+        }
+
+        /* Date and Time inputs */
+        .datetime-row {
+            display: grid;
+            grid-template-columns: 1fr 120px;
+            gap: 15px;
+        }
+
+        /* Select styling */
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+            appearance: none;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Loading state */
+        .btn.loading {
+            pointer-events: none;
+            position: relative;
+        }
+
+        .btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box i {
+            color: #1976d2;
+            margin-top: 2px;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #1565c0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            max-width: 400px;
+            font-size: 14px;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.warning { border-left-color: #ffc107; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .top-bar {
+                padding: 10px 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .datetime-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Required field indicator */
+        .required::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Field descriptions */
+        .field-description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-title">
+                <i class="fas fa-file-medical"></i>
+                เพิ่มประวัติการรักษา
+            </div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar no-photo" id="userAvatar">
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                            <% } %>
+                        </div>
+                        <div class="user-details">
+                            <strong>สวัสดี ทพ.<%= dentist ? dentist.fname + ' ' + dentist.lname : 'คุณหมอ' %></strong>
+                            <small>ทันตแพทย์</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dentist/profile"><i class="fas fa-user"></i> ข้อมูลส่วนตัว</a>
+                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> แก้ไขข้อมูล</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Info Box -->
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <p>กรุณากรอกข้อมูลการวินิจฉัยและแผนการรักษาครั้งต่อไป ข้อมูลจะถูกบันทึกลงในประวัติการรักษาของผู้ป่วย</p>
+            </div>
+
+            <!-- Form Container -->
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>ข้อมูลการรักษา</h2>
+                </div>
+
+                <form id="historyForm">
+                    <!-- Basic Information -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">รหัสการจอง:</label>
+                            <input type="text" class="form-control readonly" id="bookingId" readonly 
+                                   value="<%= appointment ? '#' + appointment.queue_id.toString().padStart(6, '0') : '' %>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">รหัสผู้ป่วย:</label>
+                            <input type="text" class="form-control readonly" id="patientId" readonly 
+                                   value="<%= appointment ? 'P' + appointment.patient_id.toString().padStart(4, '0') : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">ชื่อผู้ป่วย:</label>
+                            <input type="text" class="form-control readonly" id="patientName" readonly 
+                                   value="<%= appointment ? appointment.fname + ' ' + appointment.lname : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">วันที่:</label>
+                            <input type="text" class="form-control readonly" id="appointmentDate" readonly 
+                                   value="<%= appointment ? new Date(appointment.time).toLocaleDateString('th-TH', {day: '2-digit', month: '2-digit', year: 'numeric'}) : '' %>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">เวลา:</label>
+                            <input type="text" class="form-control readonly" id="appointmentTime" readonly 
+                                   value="<%= appointment ? new Date(appointment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) : '' %>">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">การรักษา:</label>
+                            <input type="text" class="form-control readonly" id="treatmentName" readonly 
+                                   value="<%= appointment ? appointment.treatment_name : '' %>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">ทันตแพทย์:</label>
+                            <input type="text" class="form-control readonly" id="dentistName" readonly 
+                                   value="<%= dentist ? 'ทพ.' + dentist.fname + ' ' + dentist.lname : '' %>">
+                        </div>
+                    </div>
+
+                    <!-- Diagnosis Section -->
+                    <div class="form-group full-width">
+                        <label class="form-label required">การวินิจฉัย:</label>
+                        <textarea class="form-control form-textarea large" id="diagnosis" name="diagnosis" 
+                                  placeholder="กรุณากรอกการวินิจฉัยและรายละเอียดการรักษา เช่น ฟัน #38 - ฟันคุดที่มีการอักเสบของเหงือกโดยรอบ ได้ทำการถอนฟันและทำความสะอาดแผล..." 
+                                  required><%= appointment ? appointment.diagnosis || '' : '' %></textarea>
+                        <div class="field-description">
+                            ระบุการวินิจฉัย อาการที่พบ และการรักษาที่ได้ทำไปแล้ว
+                        </div>
+                    </div>
+
+                    <!-- Next Appointment -->
+                    <div class="form-group full-width">
+                        <label class="form-label">นัดหมายครั้งต่อไป:</label>
+                        <textarea class="form-control form-textarea" id="nextAppointment" name="nextAppointment" 
+                                  placeholder="ระบุแผนการรักษาครั้งต่อไป เช่น นัดติดตามแผลหลังการถอนฟันในอีก 1 สัปดาห์ ตรวจสอบการหายของแผลและทำความสะอาด หรือ นัดอุดฟันซี่ด้านข้างในอีก 2 สัปดาห์..."
+                                  ><%= appointment ? appointment.next_appointment || '' : '' %></textarea>
+                        <div class="field-description">
+                            ระบุสิ่งที่ต้องทำหรือตรวจติดตามในครั้งต่อไป (หากมี)
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="cancelForm()">
+                            <i class="fas fa-times"></i> ยกเลิก
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save"></i> บันทึก
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form submission
+        document.getElementById('historyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const diagnosis = document.getElementById('diagnosis').value.trim();
+            
+            if (!diagnosis) {
+                showToast('กรุณากรอกการวินิจฉัย', 'error');
+                return;
+            }
+            
+            // Set loading state
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+            
+            try {
+                const formData = {
+                    queueId: '<%= appointment ? appointment.queue_id : "" %>',
+                    patientId: '<%= appointment ? appointment.patient_id : "" %>',
+                    diagnosis: diagnosis,
+                    nextAppointment: document.getElementById('nextAppointment').value.trim()
+                };
+                
+                const response = await fetch('/dentist/api/treatment-history/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('บันทึกประวัติการรักษาเรียบร้อยแล้ว', 'success');
+                    
+                    // Redirect back to patients page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/dentist/patients';
+                    }, 2000);
+                } else {
+                    showToast('เกิดข้อผิดพลาด: ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> บันทึก';
+            }
+        });
+        
+        // Cancel form
+        function cancelForm() {
+            if (confirm('ต้องการยกเลิกการบันทึกหรือไม่? ข้อมูลที่กรอกจะไม่ถูกบันทึก')) {
+                window.history.back();
+            }
+        }
+        
+        // Show initials if image fails to load
+        function showInitials() {
+            const avatar = document.getElementById('userAvatar');
+            const img = avatar.querySelector('img');
+            if (img) {
+                img.remove();
+                avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
+            }
+        }
+
+        // Top bar functions
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function toggleNotifications() {
+            showToast('ฟีเจอร์การแจ้งเตือนจะเปิดใช้งานเร็วๆ นี้!', 'info');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (!prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            }[type] || 'fas fa-info-circle';
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="${icon}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                document.getElementById('historyForm').dispatchEvent(new Event('submit'));
+            }
+            
+            // Escape to cancel
+            if (e.key === 'Escape') {
+                cancelForm();
+            }
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+            });
+        });
+
+        // Form validation
+        document.getElementById('diagnosis').addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value.length > 0 && value.length < 10) {
+                showToast('การวินิจฉัยควรมีรายละเอียดมากกว่านี้', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -20,7 +20,7 @@
 
         /* Sidebar */
         .sidebar {
-            width: 180px;
+            width: 250px;
             background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             position: fixed;
             height: 100vh;
@@ -31,63 +31,70 @@
 
         .sidebar .logo {
             text-align: center;
-            padding: 20px;
+            padding: 25px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .sidebar .logo .logo-icon {
             width: 50px;
             height: 50px;
-            border-radius: 8px;
+            border-radius: 12px;
             background: white;
-            padding: 8px;
+            padding: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 10px;
             font-size: 24px;
             color: #4A90E2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .sidebar .logo h3 {
             margin: 0;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
         }
 
         .sidebar ul {
             list-style: none;
-            padding: 10px 0;
+            padding: 20px 0;
             margin: 0;
         }
 
         .sidebar ul li {
-            margin: 2px 0;
+            margin: 4px 0;
         }
 
         .sidebar ul li a {
             display: block;
-            padding: 12px 20px;
+            padding: 15px 25px;
             color: rgba(255,255,255,0.9);
             text-decoration: none;
             transition: all 0.3s ease;
-            font-size: 14px;
+            font-size: 15px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            border-radius: 0 25px 25px 0;
+            margin-right: 15px;
         }
 
         .sidebar ul li.active a,
         .sidebar ul li:hover a {
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,0.15);
             color: white;
-            border-radius: 8px;
-            margin: 0 10px;
+            transform: translateX(5px);
+        }
+
+        .sidebar ul li.active a {
+            background-color: rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         /* Main Content */
         .main {
-            margin-left: 180px;
+            margin-left: 250px;
             padding: 0;
             min-height: 100vh;
         }
@@ -99,34 +106,46 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .search-section {
             display: flex;
             align-items: center;
             gap: 15px;
+            flex: 1;
+            max-width: 500px;
         }
 
         .search-section label {
             font-weight: 500;
             color: #555;
             font-size: 14px;
+            min-width: 60px;
         }
 
         .search-box {
             background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 20px;
-            padding: 8px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            padding: 10px 20px;
             display: flex;
             align-items: center;
-            width: 250px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
 
         .search-box i {
             color: #666;
-            margin-right: 8px;
+            margin-right: 10px;
             font-size: 14px;
         }
 
@@ -135,20 +154,53 @@
             background: transparent;
             outline: none;
             width: 100%;
-            font-size: 13px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .search-box input::placeholder {
+            color: #999;
         }
 
         .user-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .notification-icon {
-            width: 20px;
-            height: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .notification-icon:hover {
+            background: #e9ecef;
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
 
         .profile-dropdown {
@@ -159,30 +211,67 @@
             display: flex;
             align-items: center;
             cursor: pointer;
-            gap: 10px;
+            gap: 12px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
         }
 
+        .user-info:hover {
+            background: #f8f9fa;
+        }
+
+        /* Gmail-style Avatar - เปลี่ยนเป็นสีฟ้า */
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #4A90E2;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: 2px solid #e1e5e9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .user-details strong {
-            display: block;
-            font-size: 13px;
+            font-size: 14px;
             color: #333;
+            font-weight: 600;
         }
 
         .user-details small {
             color: #666;
-            font-size: 11px;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+
+        .dropdown-arrow {
+            color: #666;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
         }
 
         .dropdown-menu {
@@ -192,22 +281,49 @@
             top: 100%;
             background: white;
             border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             z-index: 1000;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-menu a {
-            display: block;
-            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
             text-decoration: none;
             color: #333;
-            font-size: 13px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
         }
 
         .dropdown-menu a:hover {
             background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #e1e5e9;
         }
 
         /* Content */
@@ -220,202 +336,254 @@
         }
 
         .page-header h1 {
-            font-size: 24px;
+            font-size: 28px;
             color: #333;
             margin: 0;
-            font-weight: 600;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+        }
+
+        .page-header h1 i {
+            color: #4A90E2;
         }
 
         /* Calendar Header */
         .calendar-header {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 25px;
             margin-bottom: 30px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .calendar-nav-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .month-year {
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 700;
             color: #333;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .nav-btn {
             background-color: #4A90E2;
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 15px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .nav-btn:hover {
             background-color: #357abd;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.today {
+            background-color: #28a745;
+        }
+
+        .nav-btn.today:hover {
+            background-color: #218838;
         }
 
         /* Week View */
         .week-view {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
         .day-header {
-            background-color: #f8f9fa;
-            padding: 15px 10px;
-            text-align: center;
-            font-weight: bold;
-            color: #666;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .day-cell {
-            background: white;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             padding: 20px 15px;
             text-align: center;
-            border-radius: 6px;
+            font-weight: 600;
+            color: #495057;
+            border-radius: 10px;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             position: relative;
             min-height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            border: 1px solid #e1e5e9;
-            font-size: 16px;
-            font-weight: 500;
         }
 
-        .day-cell:hover {
-            background-color: #f0f9ff;
-            border-color: #4A90E2;
+        .day-header:hover {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .day-cell.today {
-            background-color: #4A90E2;
+        .day-header.today {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             color: white;
-            border-color: #4A90E2;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }
 
-        .day-cell.has-appointments {
-            background-color: #fff3cd;
-            border-color: #ffc107;
+        .day-header.has-appointments {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffc107;
         }
 
         .appointment-count {
             position: absolute;
             top: 8px;
             right: 8px;
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545, #c82333);
             color: white;
             border-radius: 50%;
             width: 24px;
             height: 24px;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 11px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
         }
 
         /* Appointments Section */
         .appointments-section {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .section-title {
-            font-size: 18px;
+            font-size: 20px;
             color: #333;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-weight: 600;
         }
 
         .appointment-count-badge {
-            background-color: #4A90E2;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             color: white;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .filters-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .filters-btn {
-            background-color: #f8f9fa;
-            color: #666;
-            border: 1px solid #e1e5e9;
-            padding: 10px 20px;
-            border-radius: 6px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #495057;
+            border: 1px solid #dee2e6;
+            padding: 10px 18px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
-            font-size: 13px;
+            transition: all 0.3s ease;
+            font-size: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
         }
 
         .filters-btn:hover {
-            background-color: #e9ecef;
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filters-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            border-color: #4A90E2;
+        }
+
+        /* Selected Date Info */
+        .selected-date-info {
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-radius: 10px;
+            border-left: 4px solid #4A90E2;
+            font-size: 14px;
+            color: #1565c0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         /* Appointments Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
+        }
+
         .appointments-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
+            margin: 0;
         }
 
         .appointments-table thead {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }
 
         .appointments-table th {
-            padding: 15px;
+            padding: 18px 15px;
             text-align: left;
             font-weight: 600;
-            color: #555;
-            font-size: 13px;
-            border-bottom: 2px solid #e1e5e9;
+            color: #495057;
+            font-size: 14px;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
         }
 
         .appointments-table td {
-            padding: 15px;
+            padding: 18px 15px;
             border-bottom: 1px solid #f1f3f4;
-            color: #555;
-            font-size: 13px;
+            color: #495057;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .appointments-table tbody tr {
+            transition: background-color 0.3s ease;
         }
 
         .appointments-table tbody tr:hover {
@@ -425,126 +593,248 @@
         .time-slot {
             font-weight: 600;
             color: #333;
+            font-family: 'Courier New', monospace;
         }
 
         .patient-name {
             color: #4A90E2;
-            font-weight: 500;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .patient-name:hover {
+            text-decoration: underline;
         }
 
         .treatment-type {
             color: #666;
+            font-weight: 500;
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 20px;
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .status-badge.pending {
-            background-color: #fff3cd;
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
             color: #856404;
+            border: 1px solid #ffc107;
         }
 
         .status-badge.completed {
-            background-color: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             color: #065f46;
+            border: 1px solid #10b981;
         }
 
         .status-badge.cancel {
-            background-color: #fecaca;
+            background: linear-gradient(135deg, #fecaca, #fca5a5);
             color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .action-btn {
-            background: #4A90E2;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            transition: background-color 0.3s;
-            margin-right: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .action-btn:hover {
-            background: #357abd;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
         .action-btn.confirm {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745, #20c997);
         }
 
         .action-btn.confirm:hover {
-            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .action-btn.danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .action-btn.danger:hover {
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
         .no-appointments {
             text-align: center;
             padding: 60px 20px;
             color: #666;
-            font-style: italic;
         }
 
         .no-appointments i {
-            font-size: 48px;
+            font-size: 64px;
             color: #ddd;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        /* Date Info */
-        .selected-date-info {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            background: #f0f9ff;
-            border-radius: 6px;
-            border-left: 4px solid #4A90E2;
+        .no-appointments h3 {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .no-appointments p {
+            color: #999;
             font-size: 14px;
-            color: #4A90E2;
-            font-weight: 500;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
             }
-            
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #fecaca, #fca5a5);
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 220px;
+            }
+            .main {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
             .main {
                 margin-left: 0;
             }
             
+            .sidebar {
+                display: none;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
             .week-view {
                 grid-template-columns: repeat(7, 1fr);
-                gap: 5px;
+                gap: 8px;
             }
             
-            .day-cell {
-                padding: 10px 5px;
+            .day-header {
+                padding: 15px 8px;
                 min-height: 60px;
-                font-size: 14px;
-            }
-            
-            .appointments-table {
                 font-size: 12px;
             }
             
             .appointments-table th,
             .appointments-table td {
-                padding: 10px 8px;
+                padding: 12px 8px;
+                font-size: 12px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filters-controls {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .user-section {
+                justify-content: space-between;
             }
         }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="logo">
             <div class="logo-icon">🦷</div>
             <h3>Smile Clinic</h3>
@@ -554,8 +844,8 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
-        </ul>
+            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
+           
     </div>
 
     <!-- Main Content -->
@@ -566,24 +856,38 @@
                 <label>Search:</label>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Firstname or Lastname..." id="searchInput" />
+                    <input type="text" placeholder="Search by patient name, treatment, or phone..." id="searchInput" />
                 </div>
             </div>
+            
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
-                <div class="profile-dropdown">
+                <div class="notification-icon" onclick="toggleNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">3</span>
+                </div>
+                
+                <div class="profile-dropdown" id="profileDropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">👨‍⚕️</div>
-                        <div class="user-details">
-                            <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
-                            <small>dentist</small>
+                        <div class="avatar" id="userAvatar">
+                            <!-- Avatar will be generated by JavaScript -->
                         </div>
-                        <i class="fas fa-caret-down"></i>
+                        <div class="user-details">
+                            <strong id="userName">Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
+                            <small>Dentist</small>
+                        </div>
+                        <i class="fas fa-caret-down dropdown-arrow"></i>
                     </div>
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/dentist/profile">My Profile</a>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="/dentist/profile">
+                            <i class="fas fa-user"></i> My Profile
+                        </a>
+                        <a href="/dentist/profile/change-password">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
                         <hr />
-                        <a href="/logout">Log Out</a>
+                        <a href="/logout">
+                            <i class="fas fa-sign-out-alt"></i> Log Out
+                        </a>
                     </div>
                 </div>
             </div>
@@ -593,7 +897,7 @@
         <div class="content">
             <!-- Page Header -->
             <div class="page-header">
-                <h1><i class="fas fa-hospital"></i> Appointments</h1>
+                <h1><i class="fas fa-hospital"></i> Appointments Management</h1>
             </div>
 
             <!-- Calendar Section -->
@@ -609,8 +913,8 @@
                         <button class="nav-btn" onclick="changeMonth(-1)" title="Previous Month">
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button class="nav-btn" onclick="goToToday()" title="Today">
-                            <i class="fas fa-home"></i>
+                        <button class="nav-btn today" onclick="goToToday()" title="Today">
+                            <i class="fas fa-home"></i> Today
                         </button>
                         <button class="nav-btn" onclick="changeMonth(1)" title="Next Month">
                             <i class="fas fa-chevron-right"></i>
@@ -630,82 +934,142 @@
             <div class="appointments-section">
                 <div class="section-header">
                     <div class="section-title">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-list-alt"></i>
                         <span id="sectionTitle">All Appointments</span>
-                        <span class="appointment-count-badge" id="appointmentCount"><%= appointments ? appointments.length : 0 %></span>
+                        <span class="appointment-count-badge" id="appointmentCount">
+                            <%= stats ? stats.total : (appointments ? appointments.length : 0) %>
+                        </span>
                     </div>
-                    <button class="filters-btn" onclick="showTodayAppointments()">
-                        <i class="fas fa-calendar-day"></i> Today's Appointments
-                    </button>
+                    <div class="filters-controls">
+                        <button class="filters-btn" onclick="showTodayAppointments()" id="todayBtn">
+                            <i class="fas fa-calendar-day"></i> Today
+                        </button>
+                        <button class="filters-btn" onclick="showUpcomingAppointments()" id="upcomingBtn">
+                            <i class="fas fa-arrow-right"></i> Upcoming
+                        </button>
+                        <button class="filters-btn active" onclick="showAllAppointments()" id="allBtn">
+                            <i class="fas fa-list"></i> All
+                        </button>
+                    </div>
                 </div>
 
                 <div class="selected-date-info" id="selectedDateInfo">
-                    Showing all appointments (Total: <%= appointments ? appointments.length : 0 %>)
+                    <i class="fas fa-info-circle"></i>
+                    Showing all appointments (Total: <%= stats ? stats.total : (appointments ? appointments.length : 0) %>)
                 </div>
 
-                <% if (appointments && appointments.length > 0) { %>
-                <table class="appointments-table" id="appointmentsTable">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Patient Name</th>
-                            <th>Treatment</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appointmentsBody">
-                        <% appointments.forEach(function(appointment) { %>
-                        <tr>
-                            <td><%= new Date(appointment.time).toLocaleDateString('th-TH') %></td>
-                            <td class="time-slot"><%= new Date(appointment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %></td>
-                            <td class="patient-name"><%= appointment.fname %> <%= appointment.lname %></td>
-                            <td class="treatment-type"><%= appointment.treatment_name %></td>
-                            <td>
-                                <span class="status-badge <%= appointment.queue_status %>">
-                                    <%= appointment.queue_status === 'completed' ? 'รักษาแล้ว' : 
-                                        appointment.queue_status === 'pending' ? 'ยังไม่ได้รักษา' : 
-                                        appointment.queue_status === 'cancel' ? 'ยกเลิก' : appointment.queue_status %>
-                                </span>
-                            </td>
-                            <td>
-                                <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                <% if (appointment.queue_status === 'pending') { %>
-                                <button onclick="completeAppointment(<%= appointment.queue_id %>)" class="action-btn confirm">
-                                    <i class="fas fa-check"></i> รักษาเสร็จ
-                                </button>
-                                <% } %>
-                            </td>
-                        </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-                <% } else { %>
-                <div class="no-appointments" id="noAppointments">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>No appointments scheduled</h3>
-                    <p>There are no appointments at this time.</p>
+                <div class="table-container">
+                    <% if (appointments && appointments.length > 0) { %>
+                    <table class="appointments-table" id="appointmentsTable">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Date</th>
+                                <th><i class="fas fa-clock"></i> Time</th>
+                                <th><i class="fas fa-user"></i> Patient</th>
+                                <th><i class="fas fa-tooth"></i> Treatment</th>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-cogs"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentsBody">
+                            <% appointments.forEach(function(appointment) { %>
+                            <tr data-appointment-id="<%= appointment.queue_id %>" data-status="<%= appointment.queue_status %>">
+                                <td><%= new Date(appointment.time).toLocaleDateString('en-GB') %></td>
+                                <td class="time-slot"><%= new Date(appointment.time).toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit', hour12: false}) %></td>
+                                <td class="patient-name" onclick="viewPatient(<%= appointment.patient_id || 'null' %>)">
+                                    <%= appointment.fname %> <%= appointment.lname %>
+                                    <% if (appointment.phone) { %>
+                                        <br><small style="color: #666; font-weight: normal;"><%= appointment.phone %></small>
+                                    <% } %>
+                                </td>
+                                <td class="treatment-type">
+                                    <%= appointment.treatment_name %>
+                                    <% if (appointment.duration) { %>
+                                        <br><small style="color: #666;">(<%= appointment.duration %> min)</small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="status-badge <%= appointment.queue_status %>">
+                                        <% if (appointment.queue_status === 'completed' || appointment.queue_status === 'confirm') { %>
+                                            <i class="fas fa-check"></i> รักษาแล้ว
+                                        <% } else if (appointment.queue_status === 'pending') { %>
+                                            <i class="fas fa-clock"></i> รอรักษา
+                                        <% } else if (appointment.queue_status === 'cancel') { %>
+                                            <i class="fas fa-times"></i> ยกเลิก
+                                        <% } else { %>
+                                            <%= appointment.queue_status %>
+                                        <% } %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="actions-cell">
+                                        <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn" title="View Details">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <% if (appointment.queue_status === 'pending') { %>
+                                        <button onclick="completeAppointment(<%= appointment.queue_id %>)" class="action-btn confirm" title="Mark as Complete">
+                                            <i class="fas fa-check"></i> Complete
+                                        </button>
+                                        <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="Cancel Appointment">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                    <div class="no-appointments" id="noAppointments">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No appointments scheduled</h3>
+                        <p>There are no appointments at this time. New appointments will appear here.</p>
+                    </div>
+                    <% } %>
                 </div>
-                <% } %>
             </div>
         </div>
     </div>
 
     <script>
+        // Global variables
         let currentDate = new Date();
-        let appointmentsData = [];
+        let allAppointments = <%- JSON.stringify(appointments || []) %>;
+        let stats = <%- JSON.stringify(stats || {total: 0, today: 0, pending: 0, completed: 0, cancelled: 0}) %>;
 
-        // Load appointments data from server
-        const allAppointments = <%- JSON.stringify(appointments || []) %>;
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAvatar();
+            generateWeekView();
+            loadTodaysAppointments();
+        });
 
+        // Gmail-style Avatar Generation - ใช้สีฟ้าเป็นหลัก
+        function initializeAvatar() {
+            const avatarEl = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName').textContent;
+            
+            // Extract first letter of first name and last name
+            const nameParts = userName.replace('Dr. ', '').split(' ');
+            const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
+            
+            // ใช้สีฟ้าเป็นหลัก
+            const blueColors = [
+                '#4A90E2', '#2196F3', '#03A9F4', '#00BCD4',
+                '#5DADE2', '#3498DB', '#2980B9', '#1976D2'
+            ];
+            const colorIndex = userName.length % blueColors.length;
+            
+            avatarEl.style.background = blueColors[colorIndex];
+            avatarEl.textContent = initials;
+        }
+
+        // Generate week view calendar
         function generateWeekView() {
             const weekView = document.getElementById('weekView');
             const today = new Date();
             
-            // ใช้ currentDate แทน today เพื่อให้เคลื่อนไหวได้
             const startOfWeek = new Date(currentDate);
             const day = startOfWeek.getDay();
             startOfWeek.setDate(startOfWeek.getDate() - day);
@@ -713,30 +1077,30 @@
             weekView.innerHTML = '';
             
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             
             for (let i = 0; i < 7; i++) {
                 const date = new Date(startOfWeek);
                 date.setDate(startOfWeek.getDate() + i);
                 
-                // Count appointments for this day
                 const dateStr = date.toISOString().split('T')[0];
                 const dayAppointments = countAppointmentsForDate(dateStr);
                 
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'day-header';
-                dayHeader.innerHTML = `${dayNames[i]}<br><small>${date.getDate()}</small>`;
-                dayHeader.style.cursor = 'pointer';
+                dayHeader.innerHTML = `
+                    <div style="font-weight: 700;">${dayNames[i]}</div>
+                    <div style="font-size: 18px; margin-top: 5px;">${date.getDate()}</div>
+                `;
+                dayHeader.title = `${fullDayNames[i]}, ${date.toLocaleDateString('en-GB')}`;
                 dayHeader.onclick = () => filterByDate(dateStr);
                 
-                // เปรียบเทียบกับวันนี้จริง
                 if (date.toDateString() === today.toDateString()) {
-                    dayHeader.style.background = '#4A90E2';
-                    dayHeader.style.color = 'white';
                     dayHeader.classList.add('today');
                 }
                 
                 if (dayAppointments > 0) {
-                    dayHeader.style.position = 'relative';
+                    dayHeader.classList.add('has-appointments');
                     const badge = document.createElement('div');
                     badge.className = 'appointment-count';
                     badge.textContent = dayAppointments;
@@ -747,6 +1111,7 @@
             }
         }
 
+        // Count appointments for a specific date
         function countAppointmentsForDate(dateStr) {
             return allAppointments.filter(apt => {
                 const aptDate = new Date(apt.time).toISOString().split('T')[0];
@@ -754,25 +1119,24 @@
             }).length;
         }
 
+        // Filter appointments by date
         function filterByDate(date) {
             const rows = document.querySelectorAll('#appointmentsBody tr');
             const dateInfo = document.getElementById('selectedDateInfo');
             let visibleCount = 0;
             
             const targetDate = new Date(date);
-            const formattedDate = targetDate.toLocaleDateString('th-TH', {
+            const formattedDate = targetDate.toLocaleDateString('en-GB', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
             
-            dateInfo.textContent = `Showing appointments for ${formattedDate}`;
-            
             rows.forEach(row => {
                 const appointmentDateStr = row.cells[0].textContent;
-                const appointmentDate = parseThaiDate(appointmentDateStr);
-                const targetDateStr = targetDate.toLocaleDateString('th-TH');
+                const appointmentDate = convertToComparableDate(appointmentDateStr);
+                const targetDateStr = targetDate.toLocaleDateString('en-GB');
                 
                 if (appointmentDate === targetDateStr) {
                     row.style.display = '';
@@ -782,56 +1146,113 @@
                 }
             });
             
-            document.getElementById('appointmentCount').textContent = visibleCount;
-            document.getElementById('sectionTitle').textContent = 'Appointments for Selected Date';
-            
-            if (visibleCount === 0) {
-                document.getElementById('noAppointments').style.display = 'block';
-                document.getElementById('appointmentsTable').style.display = 'none';
-            } else {
-                document.getElementById('noAppointments').style.display = 'none';
-                document.getElementById('appointmentsTable').style.display = 'table';
-            }
+            updateFilterResults(visibleCount, `Appointments for ${formattedDate}`, 'Selected Date');
+            setActiveFilter(null);
         }
 
-        function parseThaiDate(dateStr) {
-            // Convert Thai date format to comparable format
+        // Convert date string to comparable format
+        function convertToComparableDate(dateStr) {
             return dateStr;
         }
 
+        // Show today's appointments
         function showTodayAppointments() {
             const today = new Date().toISOString().split('T')[0];
             filterByDate(today);
+            setActiveFilter('todayBtn');
         }
 
+        // Show upcoming appointments
+        function showUpcomingAppointments() {
+            const rows = document.querySelectorAll('#appointmentsBody tr');
+            const now = new Date();
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const appointmentDateStr = row.cells[0].textContent;
+                const appointmentTimeStr = row.cells[1].textContent;
+                const appointmentDateTime = parseAppointmentDateTime(appointmentDateStr, appointmentTimeStr);
+                
+                if (appointmentDateTime > now) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            updateFilterResults(visibleCount, 'Showing upcoming appointments', 'Upcoming Appointments');
+            setActiveFilter('upcomingBtn');
+        }
+
+        // Show all appointments
         function showAllAppointments() {
             const rows = document.querySelectorAll('#appointmentsBody tr');
-            const dateInfo = document.getElementById('selectedDateInfo');
             
             rows.forEach(row => {
                 row.style.display = '';
             });
             
-            document.getElementById('appointmentCount').textContent = allAppointments.length;
-            document.getElementById('sectionTitle').textContent = 'All Appointments';
-            dateInfo.textContent = `Showing all appointments (Total: ${allAppointments.length})`;
+            updateFilterResults(allAppointments.length, `Showing all appointments (Total: ${allAppointments.length})`, 'All Appointments');
+            setActiveFilter('allBtn');
             
-            if (allAppointments.length === 0) {
-                document.getElementById('noAppointments').style.display = 'block';
-                document.getElementById('appointmentsTable').style.display = 'none';
-            } else {
-                document.getElementById('noAppointments').style.display = 'none';
-                document.getElementById('appointmentsTable').style.display = 'table';
-            }
+            toggleTableVisibility(allAppointments.length > 0);
         }
 
+        // Parse appointment date and time
+        function parseAppointmentDateTime(dateStr, timeStr) {
+            const [day, month, year] = dateStr.split('/');
+            const [hours, minutes] = timeStr.split(':');
+            return new Date(year, month - 1, day, hours, minutes);
+        }
+
+        // Update filter results display
+        function updateFilterResults(count, message, title) {
+            document.getElementById('appointmentCount').textContent = count;
+            document.getElementById('sectionTitle').textContent = title;
+            document.getElementById('selectedDateInfo').innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            
+            toggleTableVisibility(count > 0);
+        }
+
+        // Set active filter button
+        function setActiveFilter(activeId) {
+            ['todayBtn', 'upcomingBtn', 'allBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.classList.toggle('active', btn.id === activeId);
+                }
+            });
+        }
+
+        // Toggle table visibility
+        function toggleTableVisibility(show) {
+            const table = document.getElementById('appointmentsTable');
+            const noAppointments = document.getElementById('noAppointments');
+            
+            if (table) table.style.display = show ? 'table' : 'none';
+            if (noAppointments) noAppointments.style.display = show ? 'none' : 'block';
+        }
+
+        // Navigation functions
         function changeMonth(direction) {
             currentDate.setMonth(currentDate.getMonth() + direction);
             updateMonthDisplay();
-            generateWeekView(); // Regenerate week view for new month
-            
-            // เคลียร์การกรองเมื่อเปลี่ยนเดือน
+            generateWeekView();
             showAllAppointments();
+        }
+
+        function changeWeek(direction) {
+            currentDate.setDate(currentDate.getDate() + (direction * 7));
+            updateMonthDisplay();
+            generateWeekView();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            updateMonthDisplay();
+            generateWeekView();
+            setTimeout(() => showTodayAppointments(), 100);
         }
 
         function updateMonthDisplay() {
@@ -842,30 +1263,30 @@
                 `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
         }
 
-        // เพิ่มฟังก์ชันสำหรับเลื่อนสัปดาห์
-        function changeWeek(direction) {
-            currentDate.setDate(currentDate.getDate() + (direction * 7));
-            updateMonthDisplay();
-            generateWeekView();
-        }
-
-        // ฟังก์ชันกลับสู่วันปัจจุบัน
-        function goToToday() {
-            currentDate = new Date();
-            updateMonthDisplay();
-            generateWeekView();
-            // แสดงนัดหมายวันนี้
+        // Load today's appointments on page load
+        function loadTodaysAppointments() {
             setTimeout(() => {
                 showTodayAppointments();
             }, 100);
         }
 
+        // Action functions
         function viewAppointment(queueId) {
+            showLoading();
             window.location.href = `/dentist/appointments/${queueId}`;
         }
 
+        function viewPatient(patientId) {
+            if (patientId && patientId !== 'null') {
+                showLoading();
+                window.location.href = `/dentist/patients/${patientId}`;
+            }
+        }
+
         function completeAppointment(queueId) {
-            if (confirm('ทำเครื่องหมายการรักษาเสร็จสิ้นหรือไม่?')) {
+            if (confirm('Mark this appointment as completed?')) {
+                showLoading();
+                
                 fetch('/dentist/api/appointment/complete', {
                     method: 'POST',
                     headers: {
@@ -875,52 +1296,77 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    hideLoading();
                     if (data.success) {
-                        showNotification('ทำเครื่องหมายการรักษาเสร็จสิ้นแล้ว', 'success');
-                        setTimeout(() => location.reload(), 1000);
+                        showNotification('Appointment marked as completed successfully!', 'success');
+                        updateAppointmentRow(queueId, 'completed');
                     } else {
-                        showNotification('เกิดข้อผิดพลาด: ' + data.error, 'error');
+                        showNotification('Error: ' + data.error, 'error');
                     }
                 })
                 .catch(error => {
+                    hideLoading();
                     console.error('Error:', error);
-                    showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                    showNotification('Connection error occurred', 'error');
                 });
             }
         }
 
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fecaca' : '#f3f4f6'};
-                color: ${type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#374151'};
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                z-index: 1000;
-                border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#6b7280'};
-                max-width: 400px;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+        function cancelAppointment(queueId) {
+            if (confirm('Are you sure you want to cancel this appointment?')) {
+                showLoading();
+                
+                fetch('/dentist/api/appointment/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ queueId: queueId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showNotification('Appointment cancelled successfully!', 'success');
+                        updateAppointmentRow(queueId, 'cancel');
+                    } else {
+                        showNotification('Error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error:', error);
+                    showNotification('Connection error occurred', 'error');
+                });
+            }
         }
 
-        function toggleDropdown() {
-            const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        // Update appointment row after action
+        function updateAppointmentRow(queueId, newStatus) {
+            const row = document.querySelector(`tr[data-appointment-id="${queueId}"]`);
+            if (row) {
+                row.dataset.status = newStatus;
+                
+                // Update status badge
+                const statusCell = row.querySelector('.status-badge');
+                if (statusCell) {
+                    statusCell.className = `status-badge ${newStatus}`;
+                    if (newStatus === 'completed') {
+                        statusCell.innerHTML = '<i class="fas fa-check"></i> รักษาแล้ว';
+                    } else if (newStatus === 'cancel') {
+                        statusCell.innerHTML = '<i class="fas fa-times"></i> ยกเลิก';
+                    }
+                }
+                
+                // Update actions
+                const actionsCell = row.querySelector('.actions-cell');
+                if (actionsCell && newStatus !== 'pending') {
+                    const actionBtns = actionsCell.querySelectorAll('.action-btn:not([onclick*="viewAppointment"])');
+                    actionBtns.forEach(btn => btn.remove());
+                }
+            }
         }
-        
-        function toggleNotifications() {
-            showNotification('Notifications feature coming soon!');
-        }
-        
+
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
@@ -937,42 +1383,103 @@
                 }
             });
             
-            document.getElementById('appointmentCount').textContent = visibleCount;
-            
             if (searchTerm) {
-                document.getElementById('selectedDateInfo').textContent = `Search results for "${e.target.value}" (${visibleCount} found)`;
-                document.getElementById('sectionTitle').textContent = 'Search Results';
+                updateFilterResults(visibleCount, `Search results for "${e.target.value}" (${visibleCount} found)`, 'Search Results');
+                setActiveFilter(null);
             } else {
                 showAllAppointments();
             }
         });
 
+        // UI Helper functions
+        function toggleDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            const menu = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('open');
+            menu.classList.toggle('show');
+        }
+
+        function toggleNotifications() {
+            showNotification('Notifications feature coming soon!', 'info');
+        }
+
+        function showLoading() {
+            const loadingEl = document.createElement('div');
+            loadingEl.id = 'globalLoading';
+            loadingEl.innerHTML = '<div class="loading"></div>';
+            loadingEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255,255,255,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            document.body.appendChild(loadingEl);
+        }
+
+        function hideLoading() {
+            const loadingEl = document.getElementById('globalLoading');
+            if (loadingEl) {
+                loadingEl.remove();
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            notification.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
         // Close dropdown when clicking outside
-        document.addEventListener('click', function (e) {
-            const prof = document.querySelector('.profile-dropdown');
-            if (!prof.contains(e.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
+        document.addEventListener('click', function(e) {
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (!profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('open');
+                document.getElementById('dropdownMenu').classList.remove('show');
             }
         });
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            generateWeekView();
-            
-            // Show today's appointments by default
-            setTimeout(() => {
-                showTodayAppointments();
-            }, 100);
-        });
-
-        // Add button to show all appointments
-        document.addEventListener('DOMContentLoaded', function() {
-            const filtersBtn = document.querySelector('.filters-btn');
-            filtersBtn.insertAdjacentHTML('afterend', `
-                <button class="filters-btn" onclick="showAllAppointments()" style="margin-left: 10px;">
-                    <i class="fas fa-list"></i> All Appointments
-                </button>
-            `);
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        showTodayAppointments();
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        showUpcomingAppointments();
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        showAllAppointments();
+                        break;
+                }
+            }
         });
     </script>
 </body>

@@ -1006,7 +1006,7 @@ exports.deletePatientAPI = async (req, res) => {
     const patient = patientData[0];
     
     // Start transaction to ensure data integrity
-    await db.execute('START TRANSACTION');
+    await db.query('START TRANSACTION');
     
     try {
       // Update any existing appointments to cancelled status instead of deleting
@@ -1035,7 +1035,7 @@ exports.deletePatientAPI = async (req, res) => {
       }
       
       // Commit transaction
-      await db.execute('COMMIT');
+      await db.query('COMMIT');
       
       // Create notification for deletion
       await db.execute(`
@@ -1054,7 +1054,7 @@ exports.deletePatientAPI = async (req, res) => {
 
     } catch (error) {
       // Rollback transaction on error
-      await db.execute('ROLLBACK');
+      await db.query('ROLLBACK');
       throw error;
     }
 
@@ -3215,7 +3215,7 @@ exports.deleteDentistAPI = async (req, res) => {
     const dentist = dentistData[0];
     
     // Start transaction to ensure data integrity
-    await db.execute('START TRANSACTION');
+    await db.query('START TRANSACTION');
     
     try {
       // Delete related schedules first (due to foreign key constraints)
@@ -3238,7 +3238,7 @@ exports.deleteDentistAPI = async (req, res) => {
       await db.execute('DELETE FROM user WHERE user_id = ?', [dentist.user_id]);
       
       // Commit transaction
-      await db.execute('COMMIT');
+      await db.query('COMMIT');
       
       // Create notification for deletion
       await db.execute(`
@@ -3257,7 +3257,7 @@ exports.deleteDentistAPI = async (req, res) => {
 
     } catch (error) {
       // Rollback transaction on error
-      await db.execute('ROLLBACK');
+      await db.query('ROLLBACK');
       throw error;
     }
 
@@ -4620,6 +4620,147 @@ exports.getDentistTreatmentsAPI = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to load dentist treatments'
+    });
+  }
+};
+
+
+// Check ID Card availability function
+exports.checkIdCardAvailability = async (req, res) => {
+  try {
+    const { id_card, exclude_dentist_id, exclude_patient_id } = req.query;
+    
+    if (!id_card) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID Card parameter is required'
+      });
+    }
+
+    // Validate ID card format (13 digits)
+    if (!/^\d{13}$/.test(id_card)) {
+      return res.json({
+        success: true,
+        exists: false,
+        valid: false,
+        message: 'ID card must be exactly 13 digits'
+      });
+    }
+
+    let dentistExists = false;
+    let patientExists = false;
+
+    // Check in dentist table
+    let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE id_card = ?';
+    let dentistParams = [id_card];
+    
+    if (exclude_dentist_id) {
+      dentistQuery += ' AND dentist_id != ?';
+      dentistParams.push(exclude_dentist_id);
+    }
+    
+    const [dentistResult] = await db.execute(dentistQuery, dentistParams);
+    dentistExists = dentistResult[0].count > 0;
+
+    // Check in patient table  
+    let patientQuery = 'SELECT COUNT(*) as count FROM patient WHERE id_card = ?';
+    let patientParams = [id_card];
+    
+    if (exclude_patient_id) {
+      patientQuery += ' AND patient_id != ?';
+      patientParams.push(exclude_patient_id);
+    }
+    
+    const [patientResult] = await db.execute(patientQuery, patientParams);
+    patientExists = patientResult[0].count > 0;
+
+    const exists = dentistExists || patientExists;
+    let foundIn = '';
+    
+    if (dentistExists && patientExists) {
+      foundIn = 'both dentist and patient records';
+    } else if (dentistExists) {
+      foundIn = 'dentist records';
+    } else if (patientExists) {
+      foundIn = 'patient records';
+    }
+
+    res.json({
+      success: true,
+      exists: exists,
+      valid: true,
+      foundIn: foundIn,
+      message: exists ? `ID card already exists in ${foundIn}` : 'ID card is available'
+    });
+
+  } catch (error) {
+    console.error('Error checking ID card:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check ID card availability'
+    });
+  }
+};
+
+// Enhanced email check to avoid duplicates across all tables
+exports.checkEmailAvailabilityEnhanced = async (req, res) => {
+  try {
+    const { email, exclude_user_id, exclude_dentist_id, exclude_patient_id } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({
+        success: true,
+        exists: false,
+        valid: false,
+        message: 'Invalid email format'
+      });
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+    let params = [email];
+
+    // Exclude by user_id if provided
+    if (exclude_user_id) {
+      query += ' AND user_id != ?';
+      params.push(exclude_user_id);
+    }
+
+    // Exclude by dentist_id if provided
+    if (exclude_dentist_id) {
+      query += ' AND user_id != (SELECT user_id FROM dentist WHERE dentist_id = ?)';
+      params.push(exclude_dentist_id);
+    }
+
+    // Exclude by patient_id if provided  
+    if (exclude_patient_id) {
+      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
+      params.push(exclude_patient_id);
+    }
+
+    const [result] = await db.execute(query, params);
+    const exists = result[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists,
+      valid: true,
+      message: exists ? 'Email address is already in use' : 'Email is available'
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
     });
   }
 };

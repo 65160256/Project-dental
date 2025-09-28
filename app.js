@@ -50,18 +50,37 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // ===============================
-// Favicon Handler (แก้ปัญหา 404)
+// Browser-specific requests handler
 // ===============================
-app.get('/favicon.ico', (req, res) => {
-  const faviconPath = path.join(__dirname, 'public', 'favicon.ico');
+app.use((req, res, next) => {
+  // Ignore browser-specific requests and common files
+  const ignorePaths = [
+    '/.well-known/',
+    '/favicon.ico',
+    '/apple-touch-icon',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/manifest.json'
+  ];
   
-  // ตรวจสอบว่ามีไฟล์ favicon หรือไม่
-  if (fs.existsSync(faviconPath)) {
-    res.sendFile(faviconPath);
-  } else {
-    // ส่ง 204 No Content ถ้าไม่มีไฟล์
-    res.status(204).send();
+  const ignoreExtensions = /\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i;
+  
+  if (ignorePaths.some(path => req.path.startsWith(path)) || ignoreExtensions.test(req.path)) {
+    // For .well-known requests, return 204 No Content
+    if (req.path.startsWith('/.well-known/')) {
+      return res.status(204).end();
+    }
+    
+    // For other ignored paths, check if file exists
+    const filePath = path.join(__dirname, 'public', req.path);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    } else {
+      return res.status(404).end();
+    }
   }
+  
+  next();
 });
 
 // ===============================
@@ -131,7 +150,7 @@ app.use((req, res, next) => {
   const userAgent = req.get('User-Agent') || 'Unknown';
   
   // ไม่ log static files requests เพื่อลด noise
-  if (!req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+  if (!req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/)) {
     console.log(`📝 ${timestamp} ${method} ${url} - ${userAgent.substring(0, 50)}`);
   }
   
@@ -173,16 +192,19 @@ app.use('/uploads', (req, res, next) => {
   });
 });
 
-
+// ===============================
+// Password Reset Token Cleanup Job
+// ===============================
 cron.schedule('0 * * * *', async () => {
   try {
-    const db = require('../config/db');
+    const db = require('./config/db'); // ✅ แก้ไข path ให้ถูกต้อง
     await db.execute('DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL');
-    console.log('Cleaned up expired password reset tokens');
+    console.log('🧹 Cleaned up expired password reset tokens');
   } catch (error) {
-    console.error('Cleanup error:', error);
+    console.error('❌ Token cleanup error:', error);
   }
 });
+
 // ===============================
 // Current User Middleware
 // ===============================
@@ -243,7 +265,9 @@ const requireAuth = (requiredRole = null) => {
   return (req, res, next) => {
     // ตรวจสอบ login
     if (!req.session.user && !req.session.userId) {
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
+      
+      if (isAjax) {
         return res.status(401).json({
           success: false,
           message: 'Authentication required'
@@ -257,8 +281,9 @@ const requireAuth = (requiredRole = null) => {
       const userRole = req.session.user?.role_id || req.session.role;
       if (userRole !== requiredRole) {
         const roleNames = { 1: 'Admin', 2: 'Dentist', 3: 'Patient' };
+        const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
         
-        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        if (isAjax) {
           return res.status(403).json({
             success: false,
             message: `Access denied. Required role: ${roleNames[requiredRole]}`
@@ -287,13 +312,26 @@ app.use('/patient', requireAuth(3), patientRoutes);
 // API Health Check
 // ===============================
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    version: require('./package.json').version || '1.0.0'
-  });
+  try {
+    const packageJson = require('./package.json');
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      version: packageJson.version || '1.0.0',
+      node_version: process.version
+    });
+  } catch (error) {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0',
+      node_version: process.version
+    });
+  }
 });
 
 // ===============================
@@ -365,7 +403,9 @@ app.use((err, req, res, next) => {
         message = err.message;
     }
     
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
+    
+    if (isAjax) {
       return res.status(400).json({
         success: false,
         error: message
@@ -378,15 +418,27 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// General error handler
+// ✅ Fixed General Error Handler
 app.use((err, req, res, next) => {
-  console.error('❌ Application Error:', err.stack);
+  console.error('❌ Application Error:', err);
   
+  // ป้องกัน undefined properties
+  const requestPath = req.path || req.url || req.originalUrl || 'unknown';
+  const method = req.method || 'UNKNOWN';
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  
+  console.error(`Error on ${method} ${requestPath}:`, {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    userAgent: userAgent.substring(0, 100)
+  });
+
   // Database errors
   if (err.code === 'ER_DUP_ENTRY') {
     const message = 'Duplicate entry found. This record already exists.';
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
     
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    if (isAjax) {
       return res.status(400).json({
         success: false,
         error: message
@@ -400,8 +452,9 @@ app.use((err, req, res, next) => {
   // Validation errors
   if (err.name === 'ValidationError') {
     const message = 'Validation failed: ' + Object.values(err.errors).map(e => e.message).join(', ');
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
     
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    if (isAjax) {
       return res.status(400).json({
         success: false,
         error: message
@@ -412,11 +465,15 @@ app.use((err, req, res, next) => {
     return res.redirect('back');
   }
   
+  // ตรวจสอบว่าเป็น API request หรือไม่
+  const isApiRequest = requestPath.indexOf('/api/') === 0;
+  const isAjaxRequest = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
+  
   // Default error response
   const isDevelopment = process.env.NODE_ENV === 'development';
   const statusCode = err.status || err.statusCode || 500;
   
-  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+  if (isApiRequest || isAjaxRequest) {
     return res.status(statusCode).json({
       success: false,
       message: 'Internal Server Error',
@@ -425,50 +482,63 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // ถ้า response ถูกส่งไปแล้ว
+  if (res.headersSent) {
+    console.error('❌ Headers already sent, delegating to default Express error handler');
+    return next(err);
+  }
+  
   try {
     res.status(statusCode).render('error', {
-      message: 'เกิดข้อผิดพลาดในระบบ',
+      title: 'Server Error',
+      message: isDevelopment ? err.message : 'เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่อีกครั้ง',
       error: isDevelopment ? err : { status: statusCode }
     });
   } catch (renderError) {
     console.error('❌ Error rendering error page:', renderError.message);
-    res.status(statusCode).json({
-      message: 'Internal Server Error',
-      error: isDevelopment ? err.message : 'Something went wrong'
-    });
+    res.status(statusCode).type('text/plain').send(
+      isDevelopment 
+        ? `Error: ${err.message}\n\nRender Error: ${renderError.message}` 
+        : 'Internal Server Error'
+    );
   }
 });
 
 // ===============================
-// 404 Handler
+// 404 Handler (ต้องอยู่หลัง error handler)
 // ===============================
 app.use((req, res) => {
-  console.log(`❓ 404 - Route not found: ${req.method} ${req.path}`);
+  const requestPath = req.path || req.url || 'unknown';
+  const method = req.method || 'GET';
   
-  // Ignore common browser requests
-  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/)) {
-    return res.status(404).send();
+  console.log(`❓ 404 - Route not found: ${method} ${requestPath}`);
+  
+  // Ignore common browser requests that already handled above
+  const ignoreExtensions = /\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i;
+  if (ignoreExtensions.test(requestPath)) {
+    return res.status(404).end();
   }
   
-  if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+  const isApiRequest = requestPath.indexOf('/api/') === 0;
+  const isAjaxRequest = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
+  
+  if (isApiRequest || isAjaxRequest) {
     return res.status(404).json({
       success: false,
       message: '404 Not Found',
-      path: req.path
+      path: requestPath
     });
   }
   
   try {
     res.status(404).render('error', {
+      title: 'Page Not Found',
       message: 'หน้าที่คุณต้องการไม่พบ',
       error: { status: 404 }
     });
   } catch (renderError) {
     console.error('❌ Error rendering 404 page:', renderError.message);
-    res.status(404).json({
-      message: '404 Not Found',
-      path: req.path
-    });
+    res.status(404).type('text/plain').send('404 Not Found');
   }
 });
 
@@ -496,16 +566,15 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // ===============================
-// Initialize Cron Jobs
+// Initialize Cleanup Jobs (Optional)
 // ===============================
-const { scheduleTokenCleanup } = require('./jobs/cleanup-tokens');
-
-// Start token cleanup job
 try {
+  // ลองโหลด cleanup jobs ถ้ามี
+  const { scheduleTokenCleanup } = require('./jobs/cleanup-tokens');
   scheduleTokenCleanup();
   console.log('✅ Password reset token cleanup job initialized');
 } catch (error) {
-  console.error('❌ Failed to initialize cleanup job:', error);
+  console.log('ℹ️ Cleanup job not available, using cron schedule instead');
 }
 
 // ===============================

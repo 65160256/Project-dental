@@ -27,6 +27,7 @@
             padding: 0;
             color: #fff;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
         }
 
         .sidebar .logo {
@@ -100,6 +101,9 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
         .search-section {
@@ -122,6 +126,13 @@
             display: flex;
             align-items: center;
             width: 250px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .search-box:focus-within {
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
         }
 
         .search-box i {
@@ -149,6 +160,12 @@
             height: 20px;
             cursor: pointer;
             color: #666;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
         }
 
         .profile-dropdown {
@@ -160,6 +177,11 @@
             align-items: center;
             cursor: pointer;
             gap: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .user-info:hover {
+            opacity: 0.8;
         }
 
         .avatar {
@@ -172,6 +194,28 @@
             justify-content: center;
             color: white;
             font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: #4A90E2;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .avatar.no-photo {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
         }
 
         .user-details strong {
@@ -192,22 +236,36 @@
             top: 100%;
             background: white;
             border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             z-index: 1000;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .dropdown-menu a {
             display: block;
-            padding: 10px 15px;
+            padding: 12px 15px;
             text-decoration: none;
             color: #333;
             font-size: 13px;
+            transition: background 0.2s ease;
         }
 
         .dropdown-menu a:hover {
             background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            height: 1px;
+            background: #e1e5e9;
         }
 
         /* Content */
@@ -215,113 +273,214 @@
             padding: 30px;
         }
 
-        .page-header {
+        .welcome-section {
             margin-bottom: 30px;
         }
 
-        .page-header h1 {
-            font-size: 24px;
+        .welcome-section h1 {
+            font-size: 28px;
             color: #333;
-            margin: 0;
+            margin: 0 0 8px 0;
             font-weight: 600;
+        }
+
+        .welcome-section p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
         }
 
         /* Patients Section */
         .patients-section {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f1f3f4;
         }
 
         .section-title {
-            font-size: 18px;
+            font-size: 20px;
             color: #333;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-weight: 600;
         }
 
         .patient-count-badge {
-            background-color: #4A90E2;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 500;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
         }
 
-        .filters-btn {
-            background-color: #f8f9fa;
+        .filters-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn, .action-btn-header {
+            background: #f8f9fa;
             color: #666;
             border: 1px solid #e1e5e9;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
             font-size: 13px;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
         }
 
-        .filters-btn:hover {
-            background-color: #e9ecef;
+        .filter-btn:hover, .action-btn-header:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
         }
 
-        /* Patients Table */
+        .filter-btn.active {
+            background: #4A90E2;
+            color: white;
+            border-color: #4A90E2;
+        }
+
+        /* Advanced Search */
+        .advanced-search {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #4A90E2;
+        }
+
+/* Patients Table */
+        .table-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: white;
+        }
+
         .patients-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
         }
 
         .patients-table thead {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }
 
         .patients-table th {
-            padding: 15px;
+            padding: 15px 20px;
             text-align: left;
             font-weight: 600;
             color: #555;
             font-size: 13px;
             border-bottom: 2px solid #e1e5e9;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .patients-table td {
-            padding: 15px;
+            padding: 15px 20px;
             border-bottom: 1px solid #f1f3f4;
             color: #555;
             font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .patients-table tbody tr {
+            transition: all 0.3s ease;
         }
 
         .patients-table tbody tr:hover {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .patient-id {
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             color: #666;
+            font-size: 12px;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
         .patient-name {
             color: #4A90E2;
             font-weight: 500;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .patient-name:hover {
+            color: #357abd;
+            text-decoration: underline;
         }
 
         .patient-phone {
             color: #666;
+            font-family: monospace;
+        }
+
+        .patient-age {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
         }
 
         .last-visit {
@@ -330,60 +489,128 @@
         }
 
         .visit-count {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .status-badge {
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 500;
+            text-align: center;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Action Buttons */
+        .actions-cell {
+            text-align: center;
         }
 
         .action-btn {
             background: #4A90E2;
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.3s;
-            margin-right: 5px;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .action-btn:hover {
-            background: #357abd;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .action-btn.view {
-            background: #6c757d;
-        }
+        .action-btn.view { background: linear-gradient(135deg, #6c757d, #495057); }
+        .action-btn.history { background: linear-gradient(135deg, #28a745, #20c997); }
+        .action-btn.appointment { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+        .action-btn.edit { background: linear-gradient(135deg, #17a2b8, #138496); }
 
-        .action-btn.view:hover {
-            background: #5a6268;
-        }
-
-        .action-btn.history {
-            background: #28a745;
-        }
-
-        .action-btn.history:hover {
-            background: #218838;
-        }
-
+        /* Empty State */
         .no-patients {
             text-align: center;
             padding: 60px 20px;
             color: #666;
-            font-style: italic;
+            background: white;
+            border-radius: 12px;
         }
 
         .no-patients i {
-            font-size: 48px;
+            font-size: 64px;
             color: #ddd;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: block;
         }
 
-        /* Modal Styles */
+        .no-patients h3 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .no-patients p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .pagination button {
+            background: white;
+            border: 1px solid #e1e5e9;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .pagination button.active {
+            background: #4A90E2;
+            color: white;
+            border-color: #4A90E2;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -393,25 +620,32 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
+            background-color: white;
+            margin: 3% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
             max-width: 600px;
-            max-height: 80vh;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+            max-height: 90vh;
             overflow-y: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-50px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .modal-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #e1e5e9;
         }
 
@@ -419,6 +653,10 @@
             font-size: 18px;
             font-weight: 600;
             color: #333;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .close {
@@ -426,70 +664,87 @@
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
         }
 
         .close:hover {
-            color: #000;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
             color: #333;
+            transform: scale(1.1);
         }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e1e5e9;
-            border-radius: 4px;
+        /* Patient Details */
+        .patient-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
             font-size: 14px;
+            color: #333;
+            font-weight: 500;
         }
 
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            max-width: 400px;
             font-size: 14px;
-            transition: background-color 0.3s;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid #4A90E2;
         }
 
-        .btn-primary {
-            background: #4A90E2;
-            color: white;
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+        .toast.warning { border-left-color: #ffc107; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        .btn-primary:hover {
-            background: #357abd;
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
         }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Responsive */
@@ -504,13 +759,45 @@
                 margin-left: 0;
             }
             
+            .top-bar {
+                padding: 10px 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-box {
+                width: 200px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .welcome-section h1 {
+                font-size: 24px;
+            }
+            
             .patients-table {
-                font-size: 12px;
+                font-size: 11px;
             }
             
             .patients-table th,
             .patients-table td {
-                padding: 10px 8px;
+                padding: 8px 10px;
+            }
+            
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px;
+                width: 95%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -527,7 +814,7 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li class="active"><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
         </ul>
     </div>
 
@@ -539,24 +826,31 @@
                 <label>Search:</label>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Name or Patient ID..." id="searchInput" />
+                    <input type="text" placeholder="Search patients by name, phone, or ID..." id="searchInput" autocomplete="off" />
                 </div>
             </div>
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="Notifications"></i>
                 <div class="profile-dropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">👨‍⚕️</div>
+                        <div class="avatar no-photo" id="userAvatar">
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                            <% } %>
+                        </div>
                         <div class="user-details">
-                            <strong>Hello Dr. Somsri</strong>
+                            <strong>Hello Dr. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'Doctor' %></strong>
                             <small>dentist</small>
                         </div>
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/dentist/profile">My Profile</a>
+                        <a href="/dentist/profile"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> Edit Profile</a>
                         <hr />
-                        <a href="/logout">Log Out</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                     </div>
                 </div>
             </div>
@@ -564,137 +858,203 @@
 
         <!-- Content -->
         <div class="content">
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1>Patients</h1>
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1>My Patients</h1>
+                <p>Manage and track your patient records and treatment history</p>
             </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading patients...</p>
+            </div>
+
+
 
             <!-- Patients Section -->
             <div class="patients-section">
                 <div class="section-header">
                     <div class="section-title">
                         <i class="fas fa-users"></i>
-                        <span>My Patients</span>
+                        <span>Patient Records</span>
                         <span class="patient-count-badge" id="patientCount"><%= patients ? patients.length : 0 %></span>
-                        <small style="margin-left: 10px; color: #666;">total patients</small>
                     </div>
-                    <button class="filters-btn">
-                        <i class="fas fa-filter"></i> Filters
-                    </button>
+                    <div class="filters-actions">
+                        <button class="filter-btn" onclick="toggleAdvancedSearch()">
+                            <i class="fas fa-filter"></i> Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Advanced Search -->
+                <div class="advanced-search" id="advancedSearch">
+                    <div class="search-filters">
+                        <div class="filter-group">
+                            <label>Age Range</label>
+                            <select id="ageFilter">
+                                <option value="">All Ages</option>
+                                <option value="child">Child (0-12)</option>
+                                <option value="teen">Teen (13-17)</option>
+                                <option value="adult">Adult (18-59)</option>
+                                <option value="senior">Senior (60+)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Visit Count</label>
+                            <select id="visitFilter">
+                                <option value="">All Patients</option>
+                                <option value="new">New (1-2 visits)</option>
+                                <option value="regular">Regular (3-10 visits)</option>
+                                <option value="frequent">Frequent (10+ visits)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Last Visit</label>
+                            <select id="lastVisitFilter">
+                                <option value="">Any Time</option>
+                                <option value="week">Last Week</option>
+                                <option value="month">Last Month</option>
+                                <option value="quarter">Last 3 Months</option>
+                                <option value="year">Last Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Sort By</label>
+                            <select id="sortFilter">
+                                <option value="recent">Recent Visit</option>
+                                <option value="name">Name A-Z</option>
+                                <option value="visits">Most Visits</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="filter-btn" onclick="applyFilters()">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <button class="filter-btn" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                    </div>
                 </div>
 
                 <% if (patients && patients.length > 0) { %>
-                <table class="patients-table" id="patientsTable">
-                    <thead>
-                        <tr>
-                            <th>Patient ID</th>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Last Visit</th>
-                            <th>Total Visits</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="patientsBody">
-                        <% patients.forEach(function(patient) { %>
-                        <tr>
-                            <td class="patient-id">****</td>
-                            <td class="patient-name">Mr. <%= patient.fname %> <%= patient.lname %></td>
-                            <td class="patient-phone"><%= patient.phone || 'N/A' %></td>
-                            <td class="last-visit">
-                                <%= patient.last_visit ? new Date(patient.last_visit).toLocaleDateString('th-TH') : 'Never' %>
-                            </td>
-                            <td>
-                                <span class="visit-count"><%= patient.total_visits || 0 %></span>
-                            </td>
-                            <td>
-                                <button onclick="viewPatient(<%= patient.patient_id %>)" class="action-btn view">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                <button onclick="addTreatmentHistory(<%= patient.patient_id %>)" class="action-btn history">
-                                    <i class="fas fa-plus"></i> History
-                                </button>
-                            </td>
-                        </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table class="patients-table" id="patientsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Last Visit</th>
+                                <th>Total Visits</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsBody">
+                            <% patients.forEach(function(patient) { 
+                                const age = patient.dob ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : null;
+                                const lastVisitDate = patient.last_visit ? new Date(patient.last_visit) : null;
+                                const isRecent = lastVisitDate && (Date.now() - lastVisitDate.getTime()) < (90 * 24 * 60 * 60 * 1000);
+                            %>
+                            <tr data-patient-id="<%= patient.patient_id %>" 
+                                data-name="<%= patient.fname %> <%= patient.lname %>" 
+                                data-phone="<%= patient.phone || '' %>"
+                                data-visits="<%= patient.total_visits || 0 %>"
+                                data-last-visit="<%= patient.last_visit || '' %>">
+                                <td>
+                                    <span class="patient-id">P<%= patient.patient_id.toString().padStart(4, '0') %></span>
+                                </td>
+                                <td>
+                                    <span class="patient-name" onclick="viewPatientDetails(<%= patient.patient_id %>)">
+                                        <%= patient.fname %> <%= patient.lname %>
+                                    </span>
+                                </td>
+                                <td class="patient-phone"><%= patient.phone || 'N/A' %></td>
+                                <td class="last-visit">
+                                    <%= lastVisitDate ? lastVisitDate.toLocaleDateString('en-GB') : 'Never' %>
+                                </td>
+                                <td>
+                                    <span class="visit-count"><%= patient.total_visits || 0 %></span>
+                                </td>
+                                <td>
+                                    <button onclick="viewPatient(<%= patient.patient_id %>)" class="action-btn view" title="View Details">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button onclick="addTreatmentHistory(<%= patient.patient_id %>)" class="action-btn history" title="Add History">
+                                        <i class="fas fa-plus"></i> History
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <button id="prevBtn" onclick="changePage(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <span id="pageNumbers"></span>
+                    <button id="nextBtn" onclick="changePage(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
                 <% } else { %>
                 <div class="no-patients" id="noPatients">
                     <i class="fas fa-user-friends"></i>
                     <h3>No patients found</h3>
-                    <p>No patients have appointments with you yet.</p>
+                    <p>You haven't treated any patients yet. New patients will appear here after their first appointment.</p>
                 </div>
                 <% } %>
             </div>
         </div>
     </div>
 
-    <!-- Add Treatment History Modal -->
-    <div id="treatmentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add Treatment History</h2>
-                <span class="close">&times;</span>
-            </div>
-            
-            <form id="treatmentForm">
-                <div class="form-group">
-                    <label>Patient:</label>
-                    <input type="text" id="patientNameDisplay" readonly>
-                    <input type="hidden" id="selectedPatientId">
-                </div>
-                
-                <div class="form-group">
-                    <label>Latest Appointment:</label>
-                    <select id="latestAppointment">
-                        <option value="">Loading...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Treatment:</label>
-                    <input type="text" id="treatmentName" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Appointment Date & Time:</label>
-                    <input type="text" id="appointmentDateTime" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Diagnosis:</label>
-                    <textarea id="diagnosis" placeholder="Enter diagnosis and treatment details..." required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Follow-up Notes:</label>
-                    <textarea id="followUpdate" placeholder="Enter follow-up instructions or notes..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Next Appointment (Optional):</label>
-                    <input type="date" id="nextAppointment">
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeTreatmentModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Treatment History</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<script>
+        let allPatients = [];
+        let filteredPatients = [];
 
-    <script>
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPatientsData();
+            setupEventListeners();
+        });
+
+        // Load patients data from server
+        function loadPatientsData() {
+            const rows = document.querySelectorAll('#patientsBody tr');
+            allPatients = [];
+            
+            rows.forEach(row => {
+                allPatients.push({
+                    id: parseInt(row.dataset.patientId),
+                    name: row.dataset.name,
+                    phone: row.dataset.phone,
+                    visits: parseInt(row.dataset.visits),
+                    lastVisit: row.dataset.lastVisit,
+                    element: row
+                });
+            });
+            
+            filteredPatients = [...allPatients];
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                filterPatients(searchTerm);
+            });
+        }
+
+        // Filter patients based on search term
+        function filterPatients(searchTerm) {
             const rows = document.querySelectorAll('#patientsBody tr');
             let visibleCount = 0;
             
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
+                if (!searchTerm || text.includes(searchTerm)) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -703,158 +1063,35 @@
             });
             
             document.getElementById('patientCount').textContent = visibleCount;
-        });
+        }
+
+        // Toggle advanced search
+        function toggleAdvancedSearch() {
+            const advancedSearch = document.getElementById('advancedSearch');
+            const isVisible = advancedSearch.style.display === 'block';
+            advancedSearch.style.display = isVisible ? 'none' : 'block';
+            
+            const btn = event.target.closest('.filter-btn');
+            btn.classList.toggle('active', !isVisible);
+        }
 
         function viewPatient(patientId) {
             window.location.href = `/dentist/patients/${patientId}`;
         }
 
-        function addTreatmentHistory(patientId) {
-            document.getElementById('selectedPatientId').value = patientId;
-            
-            // Get patient name from table
-            const row = event.target.closest('tr');
-            const patientName = row.querySelector('.patient-name').textContent;
-            document.getElementById('patientNameDisplay').value = patientName;
-            
-            // Load latest appointments for this patient
-            loadLatestAppointments(patientId);
-            
-            // Show modal
-            document.getElementById('treatmentModal').style.display = 'block';
-        }
+       function addTreatmentHistory(patientId) {
+    // ไปยังหน้าเพิ่มประวัติการรักษา
+    window.location.href = `/dentist/add-history?patientId=${patientId}`;
+}
 
-        function loadLatestAppointments(patientId) {
-            const select = document.getElementById('latestAppointment');
-            select.innerHTML = '<option value="">Loading...</option>';
-            
-            fetch(`/dentist/api/patients/${patientId}/latest-appointments`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.appointments.length > 0) {
-                        select.innerHTML = '';
-                        data.appointments.forEach(apt => {
-                            const option = document.createElement('option');
-                            option.value = apt.queue_id;
-                            option.textContent = `${new Date(apt.time).toLocaleDateString('th-TH')} ${new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit'})} - ${apt.treatment_name} (${apt.queue_status})`;
-                            option.dataset.treatment = apt.treatment_name;
-                            option.dataset.datetime = new Date(apt.time).toLocaleString('th-TH');
-                            option.dataset.diagnosis = apt.diagnosis || '';
-                            select.appendChild(option);
-                        });
-                        
-                        // Auto-select first appointment and load details
-                        if (data.appointments.length > 0) {
-                            select.selectedIndex = 0;
-                            updateAppointmentDetails();
-                        }
-                    } else {
-                        select.innerHTML = '<option value="">No recent appointments found</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading appointments:', error);
-                    select.innerHTML = '<option value="">Error loading appointments</option>';
-                });
-        }
-
-        function updateAppointmentDetails() {
-            const select = document.getElementById('latestAppointment');
-            const selectedOption = select.options[select.selectedIndex];
-            
-            if (selectedOption && selectedOption.value) {
-                document.getElementById('treatmentName').value = selectedOption.dataset.treatment || '';
-                document.getElementById('appointmentDateTime').value = selectedOption.dataset.datetime || '';
-                document.getElementById('diagnosis').value = selectedOption.dataset.diagnosis || '';
+        // Top bar functions
+        function showInitials() {
+            const avatar = document.getElementById('userAvatar');
+            const img = avatar.querySelector('img');
+            if (img) {
+                img.remove();
+                avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
             }
-        }
-
-        function closeTreatmentModal() {
-            document.getElementById('treatmentModal').style.display = 'none';
-            document.getElementById('treatmentForm').reset();
-        }
-
-        // Form submission
-        document.getElementById('treatmentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                patientId: document.getElementById('selectedPatientId').value,
-                queueId: document.getElementById('latestAppointment').value,
-                diagnosis: document.getElementById('diagnosis').value,
-                followUpdate: document.getElementById('followUpdate').value,
-                nextAppointment: document.getElementById('nextAppointment').value
-            };
-            
-            if (!formData.queueId) {
-                showNotification('Please select an appointment', 'error');
-                return;
-            }
-            
-            if (!formData.diagnosis.trim()) {
-                showNotification('Please enter diagnosis', 'error');
-                return;
-            }
-            
-            // Save treatment history
-            fetch('/dentist/api/treatment-history/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('Treatment history added successfully', 'success');
-                    closeTreatmentModal();
-                    // Optionally reload the page or update the table
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showNotification('Error: ' + data.error, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Connection error', 'error');
-            });
-        });
-
-        // Event listeners
-        document.getElementById('latestAppointment').addEventListener('change', updateAppointmentDetails);
-
-        // Modal close events
-        document.querySelector('.close').addEventListener('click', closeTreatmentModal);
-        
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('treatmentModal');
-            if (event.target === modal) {
-                closeTreatmentModal();
-            }
-        });
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fecaca' : '#f3f4f6'};
-                color: ${type === 'success' ? '#065f46' : type === 'error' ? '#991b1b' : '#374151'};
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                z-index: 1001;
-                border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#6b7280'};
-                max-width: 400px;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
         }
 
         function toggleDropdown() {
@@ -863,7 +1100,7 @@
         }
         
         function toggleNotifications() {
-            showNotification('Notifications feature coming soon!');
+            showToast('Notifications feature coming soon!', 'info');
         }
 
         // Close dropdown when clicking outside
@@ -873,6 +1110,67 @@
                 document.getElementById('profileDropdown').style.display = 'none';
             }
         });
+
+        // Modal close events
+        window.onclick = function(event) {
+            const modal = document.getElementById('patientModal');
+            if (event.target === modal) {
+                closePatientModal();
+            }
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            }[type] || 'fas fa-info-circle';
+            
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="${icon}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('patientModal');
+                if (modal.style.display === 'block') {
+                    closePatientModal();
+                }
+            }
+            
+            // Search shortcut
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+
+        // Add CSS animation for slideOutRight
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

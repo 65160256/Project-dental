@@ -3,113 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Edit Appointment History</title>
+  <title>Edit Appointment History - Smile Clinic</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f5f7fa;
+      color: #333;
     }
 
     .sidebar {
-      width: 180px;
+      width: 220px;
       background: linear-gradient(135deg, #4A90E2, #2DA8FF);
       position: fixed;
       height: 100vh;
       padding: 0;
       color: #fff;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+      z-index: 1000;
     }
 
     .sidebar .logo {
       text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
     }
 
     .sidebar .logo img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
+      width: 55px;
+      height: 55px;
+      border-radius: 10px;
       background: white;
       padding: 8px;
+      margin-bottom: 10px;
     }
 
     .sidebar .logo h3 {
-      margin: 10px 0 0 0;
-      font-size: 16px;
+      margin: 0;
+      font-size: 18px;
       font-weight: 600;
     }
 
     .sidebar ul {
       list-style: none;
-      padding: 10px 0;
+      padding: 15px 0;
       margin: 0;
     }
 
     .sidebar ul li {
-      margin: 2px 0;
+      margin: 3px 0;
     }
 
     .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
       color: rgba(255,255,255,0.9);
       text-decoration: none;
       transition: all 0.3s ease;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 500;
     }
 
     .sidebar ul li.active a,
     .sidebar ul li:hover a {
       background-color: rgba(255,255,255,0.2);
       color: white;
-      border-radius: 8px;
-      margin: 0 10px;
+      border-radius: 10px;
+      margin: 0 15px;
+      transform: translateX(5px);
+    }
+
+    .sidebar ul li a i {
+      margin-right: 12px;
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
     }
 
     .main {
-      margin-left: 180px;
-      padding: 0;
+      margin-left: 220px;
       min-height: 100vh;
     }
 
     .top-bar {
       background: white;
-      padding: 15px 30px;
+      padding: 20px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 999;
     }
 
     .search-section {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 20px;
     }
 
     .search-section label {
-      font-weight: 500;
+      font-weight: 600;
       color: #555;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .search-box {
       background: #f8f9fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 20px;
-      padding: 8px 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 30px;
+      padding: 12px 25px;
       display: flex;
       align-items: center;
-      width: 250px;
+      width: 320px;
+      transition: all 0.3s ease;
+    }
+
+    .search-box:focus-within {
+      border-color: #4A90E2;
+      box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+      background: white;
     }
 
     .search-box i {
       color: #666;
-      margin-right: 8px;
-      font-size: 14px;
+      margin-right: 12px;
+      font-size: 15px;
     }
 
     .search-box input {
@@ -117,19 +143,34 @@
       background: transparent;
       outline: none;
       width: 100%;
-      font-size: 13px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .search-box input::placeholder {
+      color: #999;
     }
 
     .user-section {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 25px;
+    }
+
+    .notification-wrapper {
+      position: relative;
     }
 
     .notification-icon {
-      width: 20px;
-      height: 20px;
+      font-size: 20px;
       cursor: pointer;
+      color: #666;
+      transition: color 0.3s ease;
+      padding: 8px;
+    }
+
+    .notification-icon:hover {
+      color: #4A90E2;
     }
 
     .profile-dropdown {
@@ -140,78 +181,115 @@
       display: flex;
       align-items: center;
       cursor: pointer;
-      gap: 10px;
+      gap: 15px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .user-info:hover {
+      background-color: #f8f9fa;
     }
 
     .avatar {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+      color: white;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .user-details strong {
       display: block;
-      font-size: 13px;
+      font-size: 15px;
       color: #333;
+      font-weight: 600;
     }
 
     .user-details small {
       color: #666;
-      font-size: 11px;
+      font-size: 13px;
+      text-transform: capitalize;
     }
 
     .dropdown-menu {
       display: none;
       position: absolute;
       right: 0;
-      top: 100%;
+      top: 110%;
       background: white;
       border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      min-width: 200px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       z-index: 1000;
+      overflow: hidden;
     }
 
     .dropdown-menu a {
-      display: block;
-      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
       text-decoration: none;
       color: #333;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+    }
+
+    .dropdown-menu a i {
+      margin-right: 12px;
+      width: 18px;
+      color: #666;
     }
 
     .dropdown-menu a:hover {
       background-color: #f8f9fa;
     }
 
+    .dropdown-menu hr {
+      margin: 0;
+      border: none;
+      border-top: 1px solid #e1e5e9;
+    }
+
     .content {
       padding: 30px;
-      max-width: 700px;
-      margin: 0 auto;
+      background: #f5f7fa;
+      min-height: calc(100vh - 80px);
     }
 
     .page-header {
       margin-bottom: 30px;
+      text-align: center;
     }
 
     .page-header h1 {
       font-size: 24px;
       color: #333;
-      margin: 0 0 5px 0;
+      margin: 0;
       font-weight: 600;
     }
 
-    .edit-form {
+    .main-content {
+      max-width: 500px;
+      margin: 0 auto;
       background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 40px;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     .form-group {
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .form-label {
@@ -222,13 +300,18 @@
       font-size: 14px;
     }
 
+    .form-label .optional {
+      color: #dc3545;
+      font-weight: 500;
+    }
+
     .form-control {
       width: 100%;
       padding: 12px 15px;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
       font-size: 14px;
-      transition: border-color 0.3s ease;
+      transition: all 0.3s ease;
       background: #fff;
       font-family: inherit;
     }
@@ -236,22 +319,36 @@
     .form-control:focus {
       outline: none;
       border-color: #4A90E2;
-      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     }
 
     .form-control:disabled {
       background: #f8f9fa;
       color: #6c757d;
       cursor: not-allowed;
+      border-color: #e9ecef;
+    }
+
+    .form-control.readonly {
+      background: #f8f9fa;
+      color: #6c757d;
+      border-color: #e9ecef;
     }
 
     select.form-control {
       cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      padding-right: 40px;
     }
 
     textarea.form-control {
       resize: vertical;
-      min-height: 100px;
+      min-height: 80px;
+      font-family: inherit;
     }
 
     .form-row {
@@ -262,24 +359,24 @@
 
     .time-display {
       background: #f8f9fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
       padding: 12px 15px;
       font-size: 14px;
-      color: #555;
+      color: #495057;
       font-weight: 500;
     }
 
-    .warning-box {
+    .warning-message {
       background: #fff3cd;
       border: 1px solid #ffeaa7;
-      border-radius: 6px;
+      border-radius: 4px;
       padding: 15px;
-      margin-bottom: 25px;
-      color: #856404;
-      font-size: 13px;
-      font-weight: 500;
+      margin: 20px 0;
       text-align: center;
+      font-size: 13px;
+      color: #856404;
+      line-height: 1.4;
     }
 
     .action-buttons {
@@ -290,9 +387,9 @@
     }
 
     .btn {
-      padding: 12px 25px;
+      padding: 12px 30px;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -305,44 +402,54 @@
       justify-content: center;
     }
 
-    .btn-primary {
+    .btn-confirm {
       background: #28a745;
       color: white;
-      box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+      border: 1px solid #28a745;
     }
 
-    .btn-primary:hover {
+    .btn-confirm:hover:not(:disabled) {
       background: #218838;
+      border-color: #218838;
       transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
     }
 
-    .btn-secondary {
+    .btn-cancel {
       background: #dc3545;
       color: white;
-      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+      border: 1px solid #dc3545;
     }
 
-    .btn-secondary:hover {
+    .btn-cancel:hover:not(:disabled) {
       background: #c82333;
+      border-color: #c82333;
       transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
     }
 
     .btn:disabled {
-      background: #e9ecef;
-      color: #6c757d;
+      background: #e9ecef !important;
+      color: #6c757d !important;
+      border-color: #e9ecef !important;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+      transform: none !important;
+      box-shadow: none !important;
+      opacity: 0.6;
     }
 
     .alert {
       padding: 15px 20px;
-      border-radius: 6px;
-      margin-bottom: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
       font-weight: 500;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .alert-error {
@@ -351,13 +458,22 @@
       color: #721c24;
     }
 
+    .alert-warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+    }
+
     .time-limit-warning {
       background: #f8d7da;
       border: 1px solid #f5c6cb;
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 20px;
       margin-bottom: 25px;
       text-align: center;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .time-limit-warning h3 {
@@ -370,6 +486,16 @@
       color: #721c24;
       margin: 5px 0;
       font-size: 14px;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 200px;
+      }
+      
+      .main {
+        margin-left: 200px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -387,8 +513,8 @@
         padding: 20px;
       }
 
-      .edit-form {
-        padding: 20px;
+      .main-content {
+        padding: 30px 20px;
       }
 
       .form-row {
@@ -404,6 +530,21 @@
         width: 100%;
         max-width: 300px;
       }
+
+      .search-box {
+        width: 250px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .search-section {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .search-box {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -414,11 +555,11 @@
       <h3>Smile Clinic</h3>
     </div>
     <ul>
-      <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li><a href="/patient/appointments">Appointment</a></li>
-      <li class="active"><a href="/patient/history">History</a></li>
-      <li><a href="/patient/my-treatments">My Treatments</a></li>
-      <li><a href="/patient/dentists">Dentists</a></li>
+      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i>Appointments</a></li>
+      <li class="active"><a href="/patient/history"><i class="fas fa-history"></i>History</a></li>
+      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i>My Treatments</a></li>
+      <li><a href="/patient/dentists"><i class="fas fa-user-md"></i>Dentists</a></li>
     </ul>
   </div>
 
@@ -428,24 +569,29 @@
         <label>Search:</label>
         <div class="search-box">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="Firstname or Lastname..." />
+          <input type="text" placeholder="Search appointments..." />
         </div>
       </div>
       <div class="user-section">
-        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="notification-wrapper">
+          <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+        </div>
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="avatar">
+              <%= patient.fname.charAt(0) + patient.lname.charAt(0) %>
+            </div>
             <div class="user-details">
-              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
-              <small>patient</small>
+              <strong><%= patient.fname %> <%= patient.lname %></strong>
+              <small>Patient</small>
             </div>
             <i class="fas fa-caret-down"></i>
           </div>
           <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile">My Profile</a>
+            <a href="/patient/profile"><i class="fas fa-user"></i>My Profile</a>
+            <a href="/patient/profile/change-password"><i class="fas fa-key"></i>Change Password</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i>Log Out</a>
           </div>
         </div>
       </div>
@@ -456,139 +602,148 @@
         <h1>Edit Appointment History</h1>
       </div>
 
+      <!-- Error Messages -->
       <% if (typeof error !== 'undefined' && error === 'time_limit') { %>
       <div class="alert alert-error">
-        <i class="fas fa-exclamation-circle"></i> Unable to edit. Appointment is within 24 hours.
+        <i class="fas fa-exclamation-circle"></i> 
+        Unable to edit. Appointment is within 24 hours.
+      </div>
+      <% } %>
+
+      <% if (typeof error !== 'undefined' && error === 'time_unavailable') { %>
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i> 
+        Selected time slot is no longer available.
       </div>
       <% } %>
 
       <% if (typeof error !== 'undefined' && error === 'update_failed') { %>
       <div class="alert alert-error">
-        <i class="fas fa-exclamation-circle"></i> Failed to update appointment. Please try again.
+        <i class="fas fa-exclamation-circle"></i> 
+        Failed to update appointment. Please try again.
       </div>
       <% } %>
 
+      <!-- Time Limit Warning for appointments within 24 hours -->
       <% if (!canEdit) { %>
       <div class="time-limit-warning">
-        <h3><i class="fas fa-clock"></i> Time Limit Exceeded</h3>
-        <p><strong>คำ <%= Math.abs(hoursDiff) %> ชม.ขจันนัดก่อนหน้า ก่อนนัด = Unable to proceed. Please contact the clinic directly.</strong></p>
-        <p>You can reschedule your appointment up to 24 hours in advance.<br>
-        After that, please contact the clinic directly for assistance.</p>
+        <h3><i class="fas fa-clock"></i> Unable to Edit</h3>
+        <p><strong>This appointment is within 24 hours and cannot be modified.</strong></p>
+        <p>Please contact the clinic directly for assistance.</p>
       </div>
       <% } %>
 
-      <form class="edit-form" method="POST" action="/patient/history/edit/<%= appointment.queue_id %>">
-        <div class="form-group">
-          <label class="form-label" for="name">Name:</label>
-          <input type="text" id="name" name="name" class="form-control" 
-                 value="<%= appointment.patient_name %>" readonly disabled>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="treatment_id">Treatment needed:</label>
-          <select id="treatment_id" name="treatment_id" class="form-control" disabled>
-            <% treatments.forEach(function(treatment) { %>
-            <option value="<%= treatment.treatment_id %>" 
-                    <%= appointment.treatment_id == treatment.treatment_id ? 'selected' : '' %>>
-              <%= treatment.treatment_name %>
-            </option>
-            <% }); %>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="symptom_details">Symptom Details:</label>
-          <textarea id="symptom_details" name="symptom_details" class="form-control" 
-                    placeholder="No symptom details provided" readonly disabled></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="dentist_id">Select preferred dentist: <span style="color: #e74c3c;">(optional)</span></label>
-          <select id="dentist_id" name="dentist_id" class="form-control" disabled>
-            <% dentists.forEach(function(dentist) { %>
-            <option value="<%= dentist.dentist_id %>" 
-                    <%= appointment.dentist_id == dentist.dentist_id ? 'selected' : '' %>>
-              Dr. <%= dentist.full_name %> - <%= dentist.specialty %>
-            </option>
-            <% }); %>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="phone">Phone:</label>
-          <input type="tel" id="phone" name="phone" class="form-control" 
-                 placeholder="Enter your phone number" disabled>
-        </div>
-
-        <% if (canEdit) { %>
-        <div class="warning-box">
-          <i class="fas fa-info-circle"></i>
-          ***You can reschedule your appointment up to 24 hours in advance.<br>
-          After that, please contact the clinic directly for assistance.***
-        </div>
-        <% } %>
-
-        <div class="form-row">
+      <div class="main-content">
+        <form method="POST" action="/patient/history/edit/<%= appointment.queue_id %>">
           <div class="form-group">
-            <label class="form-label" for="date">Booking Date:</label>
-            <input type="date" id="date" name="date" class="form-control" 
-                   value="<%= new Date(appointment.date).toISOString().split('T')[0] %>" 
-                   <%= !canEdit ? 'disabled' : 'required' %>>
+            <label class="form-label" for="name">Name:</label>
+            <input type="text" id="name" name="name" class="form-control readonly" 
+                   value="<%= appointment.patient_name %>" readonly tabindex="-1">
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="time">Selected time:</label>
-            <select id="time" name="time" class="form-control" <%= !canEdit ? 'disabled' : 'required' %>>
-              <% 
-              const timeSlots = [];
-              for (let hour = 10; hour <= 20; hour++) {
-                for (let min of ['00', '30']) {
-                  const time24 = `${hour.toString().padStart(2, '0')}:${min}`;
-                  const hour12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-                  const ampm = hour >= 12 ? 'PM' : 'AM';
-                  const time12 = `${hour12}:${min} ${ampm}`;
-                  timeSlots.push({time24, time12});
-                }
-              }
-              
-              const appointmentTime = new Date(appointment.time);
-              const currentTime = `${appointmentTime.getHours().toString().padStart(2, '0')}:${appointmentTime.getMinutes().toString().padStart(2, '0')}`;
-              %>
-              <% timeSlots.forEach(function(slot) { %>
-              <option value="<%= slot.time24 %>" 
-                      <%= currentTime == slot.time24 ? 'selected' : '' %>>
-                <%= slot.time12 %>
+            <label class="form-label" for="treatment_id">Treatment needed:</label>
+            <select id="treatment_id" name="treatment_id" class="form-control" <%= !canEdit ? 'disabled' : '' %>>
+              <% treatments.forEach(function(treatment) { %>
+              <option value="<%= treatment.treatment_id %>" 
+                      <%= appointment.treatment_id == treatment.treatment_id ? 'selected' : '' %>>
+                <%= treatment.treatment_name %>
               </option>
               <% }); %>
             </select>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label">End time:</label>
-          <div class="time-display" id="endTime">
-            <%= new Date(new Date(appointment.time).getTime() + appointment.duration * 60000).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true}) %>
+          <div class="form-group">
+            <label class="form-label" for="symptom_details">Symptom Details:</label>
+            <textarea id="symptom_details" name="symptom_details" class="form-control" 
+                      placeholder="No symptom details provided" <%= !canEdit ? 'disabled' : '' %>><%= appointment.diagnosis || '' %></textarea>
           </div>
-        </div>
 
-        <div class="action-buttons">
-          <% if (canEdit) { %>
-            <button type="submit" class="btn btn-primary">
-              <i class="fas fa-check"></i> Confirm
-            </button>
-            <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-secondary">
-              <i class="fas fa-times"></i> Cancel
-            </a>
-          <% } else { %>
-            <button type="button" class="btn btn-primary" disabled>
-              <i class="fas fa-check"></i> Confirm
-            </button>
-            <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> Back
-            </a>
-          <% } %>
-        </div>
-      </form>
+          <div class="form-group">
+            <label class="form-label" for="dentist_id">Select preferred dentist: <span class="optional">(optional)</span></label>
+            <select id="dentist_id" name="dentist_id" class="form-control" <%= !canEdit ? 'disabled' : '' %>>
+              <% dentists.forEach(function(dentist) { %>
+              <option value="<%= dentist.dentist_id %>" 
+                      <%= appointment.dentist_id == dentist.dentist_id ? 'selected' : '' %>>
+                Dr. <%= dentist.full_name || (dentist.fname + ' ' + dentist.lname) %> - <%= dentist.specialty %>
+              </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone:</label>
+            <input type="tel" id="phone" name="phone" class="form-control" 
+                   placeholder="Enter your phone number" <%= !canEdit ? 'disabled' : '' %>>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="date">Booking Date:</label>
+              <input type="date" id="date" name="date" class="form-control" 
+                     value="<%= new Date(appointment.time).toISOString().split('T')[0] %>" 
+                     <%= !canEdit ? 'disabled' : 'required' %>
+                     min="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="time">Selected time:</label>
+              <select id="time" name="time" class="form-control" <%= !canEdit ? 'disabled' : 'required' %>>
+                <% 
+                const timeSlots = [];
+                for (let hour = 9; hour <= 17; hour++) {
+                  for (let min of ['00', '30']) {
+                    const time24 = `${hour.toString().padStart(2, '0')}:${min}`;
+                    const hour12 = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    const time12 = `${hour12}:${min} ${ampm}`;
+                    timeSlots.push({time24, time12});
+                  }
+                }
+                
+                const appointmentTime = new Date(appointment.time);
+                const currentTime = `${appointmentTime.getHours().toString().padStart(2, '0')}:${appointmentTime.getMinutes().toString().padStart(2, '0')}`;
+                %>
+                <% timeSlots.forEach(function(slot) { %>
+                <option value="<%= slot.time24 %>" 
+                        <%= currentTime == slot.time24 ? 'selected' : '' %>>
+                  <%= slot.time12 %>
+                </option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">End time:</label>
+            <div class="time-display" id="endTime">11:00</div>
+          </div>
+
+          <!-- Warning Message -->
+          <div class="warning-message">
+            ***You can reschedule your appointment up to 24 hours in advance.<br>
+            After that, please contact the clinic directly for assistance.***
+          </div>
+
+          <div class="action-buttons">
+            <% if (canEdit) { %>
+              <button type="submit" class="btn btn-confirm">
+                Confirm
+              </button>
+              <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-cancel">
+                Cancel
+              </a>
+            <% } else { %>
+              <button type="button" class="btn btn-confirm" disabled>
+                Confirm
+              </button>
+              <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-cancel">
+                Cancel
+              </a>
+            <% } %>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -599,7 +754,7 @@
     }
     
     function toggleNotifications() {
-      console.log('Notifications clicked');
+      console.log('Notifications clicked - functionality disabled');
     }
     
     document.addEventListener('click', function (e) {
@@ -609,21 +764,16 @@
       }
     });
 
-    // Calculate end time based on treatment duration and selected time
     function updateEndTime() {
-      const treatmentSelect = document.getElementById('treatment_id');
       const timeSelect = document.getElementById('time');
       const endTimeDisplay = document.getElementById('endTime');
 
-      const selectedTreatment = treatmentSelect.value;
-      const selectedTime = timeSelect.value;
-
-      if (selectedTime) {
-        // Get duration from current treatment
-        const duration = <%= appointment.duration %>;
-
-        // Calculate end time
+      if (timeSelect && timeSelect.value) {
+        const selectedTime = timeSelect.value;
         const [hours, minutes] = selectedTime.split(':').map(Number);
+        
+        const duration = 60;
+        
         const startTime = new Date();
         startTime.setHours(hours, minutes, 0, 0);
         
@@ -638,14 +788,13 @@
       }
     }
 
-    // Add event listener for time change
     const timeSelect = document.getElementById('time');
     if (timeSelect && !timeSelect.disabled) {
       timeSelect.addEventListener('change', updateEndTime);
+      updateEndTime();
     }
 
-    // Form validation
-    const form = document.querySelector('.edit-form');
+    const form = document.querySelector('form');
     if (form) {
       form.addEventListener('submit', function(e) {
         const canEdit = <%= canEdit ? 'true' : 'false' %>;
@@ -664,9 +813,24 @@
           return false;
         }
 
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate < today) {
+          e.preventDefault();
+          alert('Please select a future date.');
+          return false;
+        }
+
         return confirm('Are you sure you want to update this appointment?');
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Edit Appointment page loaded');
+      updateEndTime();
+    });
   </script>
 </body>
 </html>

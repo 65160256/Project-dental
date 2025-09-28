@@ -20,7 +20,6 @@ exports.sendResetEmail = async (req, res) => {
   try {
     const { email } = req.body;
     
-    // Validation
     if (!email) {
       return res.render('auth/forgot-password', { 
         error: 'กรุณากรอกอีเมลของคุณ',
@@ -29,14 +28,11 @@ exports.sendResetEmail = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าอีเมลมีอยู่ในระบบหรือไม่
     const [users] = await db.execute(
       'SELECT user_id, email FROM user WHERE email = ?', 
       [email]
     );
 
-    // แม้ไม่พบอีเมล ก็แสดงข้อความเดียวกัน (เพื่อความปลอดภัย)
-    // แต่ไม่ส่งอีเมลจริง
     if (users.length === 0) {
       console.log(`Password reset requested for non-existent email: ${email}`);
       return res.render('auth/forgot-password', { 
@@ -48,23 +44,19 @@ exports.sendResetEmail = async (req, res) => {
 
     const user = users[0];
 
-    // ลบ token เก่าที่หมดอายุหรือใช้แล้ว
-    await db.execute(
-      'DELETE FROM password_resets WHERE email = ? AND (expires_at < NOW() OR used_at IS NOT NULL)',
-      [email]
-    );
+    // ลบ token เดิมทั้งหมดของอีเมลนี้
+    await db.execute('DELETE FROM password_resets WHERE email = ?', [email]);
 
     // สร้าง token ใหม่
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // หมดอายุใน 1 ชั่วโมง
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // บันทึก token ลง database
+    // บันทึก token พร้อม user_id
     await db.execute(
-      'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)',
-      [email, token, expiresAt]
+      'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)',
+      [user.user_id, email, token, expiresAt]
     );
 
-    // ส่ง email
     const emailResult = await emailService.sendResetPasswordEmail(email, token);
 
     if (emailResult.success) {
@@ -101,11 +93,10 @@ exports.getResetPassword = async (req, res) => {
       });
     }
 
-    // ตรวจสอบ token ในฐานข้อมูล
     const [tokens] = await db.execute(
       `SELECT pr.*, u.email as user_email 
        FROM password_resets pr 
-       JOIN user u ON pr.email = u.email 
+       JOIN user u ON pr.user_id = u.user_id 
        WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
       [token]
     );
@@ -117,10 +108,9 @@ exports.getResetPassword = async (req, res) => {
       });
     }
 
-    // แสดงหน้า reset password
     res.render('auth/reset-password', {
       token: token,
-      email: tokens[0].email,
+      email: tokens[0].user_email,
       error: null,
       success: false
     });
@@ -141,7 +131,6 @@ exports.processResetPassword = async (req, res) => {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
-    // Validation
     if (!password || !confirmPassword) {
       return res.render('auth/reset-password', {
         token: token,
@@ -169,11 +158,10 @@ exports.processResetPassword = async (req, res) => {
       });
     }
 
-    // ตรวจสอบ token
     const [tokens] = await db.execute(
       `SELECT pr.*, u.user_id, u.email as user_email 
        FROM password_resets pr 
-       JOIN user u ON pr.email = u.email 
+       JOIN user u ON pr.user_id = u.user_id 
        WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
       [token]
     );
@@ -186,41 +174,30 @@ exports.processResetPassword = async (req, res) => {
     }
 
     const resetData = tokens[0];
-
-    // เข้ารหัสรหัสผ่านใหม่
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // แก้ไข: ใช้ db.query() สำหรับ transaction control
     await db.query('START TRANSACTION');
-
     try {
-      // อัปเดตรหัสผ่าน
       await db.execute(
         'UPDATE user SET password = ? WHERE user_id = ?',
         [hashedPassword, resetData.user_id]
       );
 
-      // ทำเครื่องหมายว่า token ถูกใช้แล้ว
       await db.execute(
         'UPDATE password_resets SET used_at = NOW() WHERE id = ?',
         [resetData.id]
       );
 
-      // Commit transaction
       await db.query('COMMIT');
 
       console.log(`Password reset successful for user: ${resetData.user_email}`);
-
-      // ส่ง email แจ้งเตือนการเปลี่ยนรหัสผ่าน
       await emailService.sendPasswordChangedEmail(resetData.user_email);
 
-      // แสดงหน้าความสำเร็จ
       res.render('auth/reset-password-success', {
         message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว สามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว'
       });
 
     } catch (dbError) {
-      // Rollback transaction
       await db.query('ROLLBACK');
       throw dbError;
     }
@@ -238,7 +215,6 @@ exports.processResetPassword = async (req, res) => {
 
 // ==================== API CONTROLLERS ====================
 
-// API: Forgot Password
 exports.apiForgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -250,13 +226,11 @@ exports.apiForgotPassword = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าอีเมลมีอยู่ในระบบหรือไม่
     const [users] = await db.execute(
       'SELECT user_id, email FROM user WHERE email = ?', 
       [email]
     );
 
-    // แม้ไม่พบอีเมล ก็ส่ง response เดียวกัน (เพื่อความปลอดภัย)
     if (users.length === 0) {
       return res.json({
         success: true,
@@ -266,23 +240,16 @@ exports.apiForgotPassword = async (req, res) => {
 
     const user = users[0];
 
-    // ลบ token เก่า
-    await db.execute(
-      'DELETE FROM password_resets WHERE email = ? AND (expires_at < NOW() OR used_at IS NOT NULL)',
-      [email]
-    );
+    await db.execute('DELETE FROM password_resets WHERE email = ?', [email]);
 
-    // สร้าง token ใหม่
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // บันทึก token
     await db.execute(
-      'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)',
-      [email, token, expiresAt]
+      'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)',
+      [user.user_id, email, token, expiresAt]
     );
 
-    // ส่ง email
     const emailResult = await emailService.sendResetPasswordEmail(email, token);
 
     if (emailResult.success) {
@@ -303,7 +270,6 @@ exports.apiForgotPassword = async (req, res) => {
   }
 };
 
-// API: ตรวจสอบความถูกต้องของ token
 exports.apiValidateToken = async (req, res) => {
   try {
     const { token } = req.params;
@@ -345,13 +311,11 @@ exports.apiValidateToken = async (req, res) => {
   }
 };
 
-// API: Reset Password
 exports.apiResetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
-    // Validation
     if (!password || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -373,11 +337,10 @@ exports.apiResetPassword = async (req, res) => {
       });
     }
 
-    // ตรวจสอบ token
     const [tokens] = await db.execute(
       `SELECT pr.id, pr.email, u.user_id 
        FROM password_resets pr 
-       JOIN user u ON pr.email = u.email 
+       JOIN user u ON pr.user_id = u.user_id 
        WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
       [token]
     );
@@ -390,30 +353,22 @@ exports.apiResetPassword = async (req, res) => {
     }
 
     const resetData = tokens[0];
-
-    // เข้ารหัสรหัสผ่านใหม่
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // แก้ไข: ใช้ db.query() สำหรับ transaction control
     await db.query('START TRANSACTION');
-
     try {
-      // อัปเดตรหัสผ่าน
       await db.execute(
         'UPDATE user SET password = ? WHERE user_id = ?',
         [hashedPassword, resetData.user_id]
       );
 
-      // ทำเครื่องหมายว่า token ถูกใช้แล้ว
       await db.execute(
         'UPDATE password_resets SET used_at = NOW() WHERE id = ?',
         [resetData.id]
       );
 
-      // Commit transaction
       await db.query('COMMIT');
 
-      // ส่ง email แจ้งเตือน
       await emailService.sendPasswordChangedEmail(resetData.email);
 
       res.json({
@@ -437,7 +392,6 @@ exports.apiResetPassword = async (req, res) => {
 
 // ==================== UTILITY FUNCTIONS ====================
 
-// ฟังก์ชันสำหรับทำความสะอาด token ที่หมดอายุ (ใช้กับ cron job)
 exports.cleanupExpiredTokens = async () => {
   try {
     const [result] = await db.execute(
@@ -452,7 +406,6 @@ exports.cleanupExpiredTokens = async () => {
   }
 };
 
-// ฟังก์ชันตรวจสอบจำนวน token ที่ยังใช้งานได้
 exports.getActiveTokensCount = async () => {
   try {
     const [result] = await db.execute(
@@ -466,7 +419,6 @@ exports.getActiveTokensCount = async () => {
   }
 };
 
-// ฟังก์ชันสำหรับดูสถิติการใช้งาน password reset (สำหรับ admin)
 exports.getPasswordResetStats = async () => {
   try {
     const [results] = await db.execute(`
