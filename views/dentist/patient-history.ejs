@@ -265,45 +265,6 @@
             gap: 10px;
         }
 
-        /* Stats Cards */
-        .stats-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-card .icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #4A90E2;
-        }
-
-        .stat-card .number {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .stat-card .label {
-            color: #666;
-            font-size: 14px;
-        }
-
         /* Filter Section */
         .filters-section {
             background: white;
@@ -675,7 +636,7 @@
                 <h1><i class="fas fa-history"></i> ประวัติผู้ป่วย</h1>
             </div>
 
-            Stats Section
+            <!-- Stats Section
             <div class="stats-section">
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-users"></i></div>
@@ -697,7 +658,7 @@
                     <div class="number" id="pendingTreatments">0</div>
                     <div class="label">รอรักษา</div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Filters Section -->
             <div class="filters-section">
@@ -789,7 +750,6 @@
                     console.log('โหลดข้อมูลแล้ว:', allHistory.length, 'รายการ');
                     
                     renderHistory();
-                    updateStats(data.stats || {});
                 } else {
                     showError(data.error || 'ไม่สามารถโหลดประวัติผู้ป่วยได้');
                 }
@@ -984,19 +944,6 @@
         }
 
         // ฟังก์ชันส่งออกข้อมูล - removed
-
-        // อัปเดตสถิติ
-        function updateStats(stats) {
-            const totalPatients = stats.totalPatients || 0;
-            const totalHistory = stats.totalRecords || allHistory.length;
-            const completed = stats.completed || 0;
-            const pending = stats.pending || 0;
-            
-            document.getElementById('totalPatients').textContent = totalPatients;
-            document.getElementById('totalHistory').textContent = totalHistory;
-            document.getElementById('completedTreatments').textContent = completed;
-            document.getElementById('pendingTreatments').textContent = pending;
-        }
 
         // Utility functions
         function showLoading() {

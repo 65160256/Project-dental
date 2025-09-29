@@ -361,7 +361,7 @@ const dentistController = {
   },
 
   // หน้าผู้ป่วย
-  getPatients: async (req, res) => {
+ getPatients: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
 
@@ -374,7 +374,7 @@ const dentistController = {
     const dentist = dentistResult[0];
     const dentistId = dentist.dentist_id;
 
-    // ดึงข้อมูลผู้ป่วยพร้อมข้อมูลเพิ่มเติม
+    // ดึงข้อมูลผู้ป่วยพื้นฐาน (ลดการคำนวณสถิติออก)
     const [patients] = await db.execute(`
       SELECT DISTINCT
         p.patient_id,
@@ -386,15 +386,7 @@ const dentistController = {
         p.id_card,
         p.created_at as patient_since,
         COUNT(q.queue_id) as total_visits,
-        MAX(q.time) as last_visit,
-        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as completed_visits,
-        COUNT(CASE WHEN q.queue_status = 'cancel' THEN 1 END) as cancelled_visits,
-        COUNT(CASE WHEN DATE(q.time) >= CURDATE() - INTERVAL 30 DAY THEN 1 END) as recent_visits_30d,
-        AVG(CASE 
-          WHEN q.queue_status = 'confirm' AND q.time < NOW() 
-          THEN TIMESTAMPDIFF(MINUTE, q.time, q.time) 
-          ELSE NULL 
-        END) as avg_visit_duration
+        MAX(q.time) as last_visit
       FROM patient p
       JOIN queue q ON p.patient_id = q.patient_id
       WHERE q.dentist_id = ?
@@ -402,18 +394,7 @@ const dentistController = {
       ORDER BY last_visit DESC, p.fname ASC
     `, [dentistId]);
 
-    // คำนวณสถิติเพิ่มเติม
-    const totalPatients = patients.length;
-    const totalVisits = patients.reduce((sum, p) => sum + (p.total_visits || 0), 0);
-    const activePatients = patients.filter(p => {
-      if (!p.last_visit) return false;
-      const lastVisit = new Date(p.last_visit);
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      return lastVisit > threeMonthsAgo;
-    }).length;
-
-    // เพิ่มข้อมูลการคำนวณอายุให้กับแต่ละผู้ป่วย
+    // เพิ่มข้อมูลอายุให้กับแต่ละผู้ป่วย
     const patientsWithAge = patients.map(patient => {
       let age = null;
       if (patient.dob) {
@@ -433,43 +414,9 @@ const dentistController = {
       };
     });
 
-    // ดึงข้อมูลการรักษาล่าสุด
-    const [recentTreatments] = await db.execute(`
-      SELECT 
-        q.patient_id,
-        t.treatment_name,
-        q.time as treatment_date,
-        q.diagnosis
-      FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ? 
-        AND q.queue_status = 'confirm'
-        AND q.time >= CURDATE() - INTERVAL 30 DAY
-      ORDER BY q.time DESC
-      LIMIT 10
-    `, [dentistId]);
-
-    // สถิติสำหรับ dashboard
-    const stats = {
-      totalPatients: totalPatients,
-      activePatients: activePatients,
-      totalVisits: totalVisits,
-      averageVisitsPerPatient: totalPatients > 0 ? (totalVisits / totalPatients).toFixed(1) : '0.0',
-      newPatientsThisMonth: patients.filter(p => {
-        if (!p.patient_since) return false;
-        const created = new Date(p.patient_since);
-        const thisMonth = new Date();
-        thisMonth.setMonth(thisMonth.getMonth());
-        thisMonth.setDate(1);
-        return created >= thisMonth;
-      }).length,
-      recentTreatments: recentTreatments
-    };
-
     res.render('dentist/patients', { 
       patients: patientsWithAge || [],
       dentist,
-      stats,
       currentDate: new Date().toISOString().split('T')[0],
       title: 'My Patients'
     });
