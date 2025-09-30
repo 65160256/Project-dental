@@ -124,9 +124,9 @@ router.get('/api/stats/dashboard', requireAuth, requireDentist, dentistControlle
 
 // Patient API
 router.get('/api/patients/search', requireAuth, requireDentist, dentistController.searchPatientsAPI);
-router.get('/api/patients/:patientId/details', requireAuth, requireDentist, dentistController.getPatientDetailsAPI);
+router.get('/api/patients/:patientId/detail', requireAuth, requireDentist, dentistController.getPatientDetailAPI);
 router.get('/api/patients/export', requireAuth, requireDentist, dentistController.exportPatientsData);
-
+router.get('/api/patients/:patientId/treatments/search', requireAuth, requireDentist, dentistController.searchPatientTreatments);
 
 router.get('/api/patients/:patientId/latest-appointments', requireAuth, requireDentist, dentistController.getLatestPatientAppointment);
 router.post('/api/treatment-history/create', requireAuth, requireDentist, dentistController.createTreatmentHistory);

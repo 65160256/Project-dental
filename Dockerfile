@@ -1,28 +1,37 @@
-# ใช้ alpine เพื่อลดขนาด และเป็นทางเลือกถ้าดึง node:18 ไม่ผ่าน
-FROM mcr.microsoft.com/mirror/docker/library/node:18-alpine
+# ใช้ official Node.js image
+FROM node:18-alpine
 
-# ส่วนอื่นๆ เหมือนเดิม
+# ติดตั้ง dependencies ที่จำเป็น
+RUN apk add --no-cache tzdata
+
+# ตั้งค่า timezone (optional)
+ENV TZ=Asia/Bangkok
 
 WORKDIR /usr/src/app
 
-# ตั้งค่า TZ เป็น Asia/Bangkok (เลือกได้)
-# RUN apk add --no-cache tzdata && cp /usr/share/zoneinfo/Asia/Bangkok /etc/localtime && echo "Asia/Bangkok" > /etc/timezone
-
-# ติดตั้ง deps จาก lockfile เพื่อ build เร็วและ deterministic
+# Copy package files และติดตั้ง dependencies
 COPY package*.json ./
-# ถ้ามี package-lock.json ใช้ npm ci เร็วและสะอาดกว่า
-RUN npm ci || npm install
+RUN npm ci --only=production || npm install --only=production
 
-# คัดลอกซอร์สโค้ดส่วนที่เหลือ
+# Copy source code
 COPY . .
 
-# ตรวจสอบมีโฟลเดอร์ config (ตามที่คุณเช็คไว้)
-RUN ls -la config/ || (echo "Missing config/ directory" && exit 1)
+# ✅ สร้างโฟลเดอร์ uploads และให้สิทธิ์
+RUN mkdir -p public/uploads && \
+    chmod -R 777 public/uploads && \
+    ls -la public/
+
+# ✅ ตรวจสอบว่ามีโฟลเดอร์ config
+RUN ls -la config/ || (echo "❌ Missing config/ directory" && exit 1)
+
+# ✅ ตรวจสอบว่าสร้าง uploads สำเร็จ
+RUN ls -la public/uploads/ && echo "✅ Uploads directory created"
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
+ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
-
+# ✅ รัน app ด้วย node แทน npm start (เร็วกว่า)
+CMD ["node", "app.js"]

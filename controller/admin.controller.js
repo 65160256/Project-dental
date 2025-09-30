@@ -505,28 +505,33 @@ exports.addDentistForm = (req, res) => {
 };
 
 exports.addDentist = async (req, res) => {
-  console.log('📋 Form data received:', req.body);
-  console.log('📁 File uploaded:', req.file);
+  console.log('='.repeat(60));
+  console.log('ADD DENTIST - START');
+  console.log('='.repeat(60));
+  console.log('Form data received:', req.body);
+  console.log('File uploaded:', req.file);
 
-  // ✅ รับข้อมูลและกำหนดค่า default
+  // รับข้อมูลและกำหนดค่า default
   const email = req.body.email || '';
   const password = req.body.password || '';
   const fname = req.body.fname || '';
   const lname = req.body.lname || '';
   const dob = req.body.dob || null;
-  const id_card = req.body.id_card || ''; // รับจาก id_card ที่ frontend ส่งมา
+  const id_card = req.body.id_card || '';
   const specialty = req.body.specialty || '';
   const education = req.body.education || '';
   const address = req.body.address || '';
   const phone = req.body.phone || '';
 
-  console.log('📝 Processed data:', {
-    email, fname, lname, dob, id_card, specialty, education, address, phone
+  console.log('Processed data:', {
+    email, fname, lname, dob, id_card, specialty, education, address, phone,
+    hasPassword: !!password,
+    hasFile: !!req.file
   });
 
   // ตรวจสอบข้อมูลที่จำเป็น
   if (!email || !password || !fname || !lname || !id_card || !specialty || !phone) {
-    console.log('❌ Missing required fields');
+    console.log('Missing required fields');
     return res.status(400).json({
       success: false,
       error: 'Missing required fields'
@@ -535,16 +540,19 @@ exports.addDentist = async (req, res) => {
 
   try {
     // ตรวจสอบอีเมลซ้ำก่อน
+    console.log('Checking for duplicate email:', email);
     const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    
     if (existingUser[0].count > 0) {
-      console.log('❌ Email already exists:', email);
+      console.log('Email already exists:', email);
       
       // ลบไฟล์ที่อัพโหลดแล้ว
       if (req.file) {
         const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+        console.log('Deleting uploaded file:', filePath);
         fs.unlink(filePath, (err) => {
           if (err) console.error('Error deleting uploaded file:', err);
-          else console.log('🗑️ Deleted uploaded file due to email duplicate');
+          else console.log('Deleted uploaded file due to email duplicate');
         });
       }
       
@@ -558,21 +566,42 @@ exports.addDentist = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // สร้าง user record
-    console.log('👤 Creating user record...');
+    console.log('Creating user record...');
     const [userResult] = await db.execute(
       `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
       [email, hashedPassword]
     );
     const userId = userResult.insertId;
-    console.log('✅ User created with ID:', userId);
+    console.log('User created with ID:', userId);
     
     // กำหนด photo filename
     let photoFilename = null;
     if (req.file) {
       photoFilename = req.file.filename;
-      console.log('✅ Photo saved as:', photoFilename);
+      
+      const uploadPath = path.join(__dirname, '../public/uploads', photoFilename);
+      console.log('='.repeat(60));
+      console.log('FILE UPLOAD DETAILS:');
+      console.log('='.repeat(60));
+      console.log('  Original name:', req.file.originalname);
+      console.log('  Saved name:', photoFilename);
+      console.log('  Size:', (req.file.size / 1024).toFixed(2), 'KB');
+      console.log('  MIME type:', req.file.mimetype);
+      console.log('  Full path:', uploadPath);
+      
+      // ตรวจสอบว่าไฟล์ถูกบันทึกจริงหรือไม่
+      if (fs.existsSync(uploadPath)) {
+        const stats = fs.statSync(uploadPath);
+        console.log('  File saved: YES');
+        console.log('  File size on disk:', stats.size, 'bytes');
+        console.log('  Permissions:', stats.mode.toString(8));
+      } else {
+        console.error('  File saved: NO - File was not written to disk!');
+        photoFilename = null; // Reset to null if file doesn't exist
+      }
+      console.log('='.repeat(60));
     } else {
-      console.log('ℹ️ No photo uploaded, using default');
+      console.log('No photo uploaded, using default');
     }
     
     // แปลง empty string เป็น null สำหรับฟิลด์ที่อาจเป็น null
@@ -580,8 +609,9 @@ exports.addDentist = async (req, res) => {
     const educationValue = education && education.trim() !== '' ? education : null;
     const addressValue = address && address.trim() !== '' ? address : null;
     
-    console.log('🦷 Creating dentist record with values:', {
-      userId, fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename
+    console.log('Creating dentist record with values:', {
+      userId, fname, lname, dobValue, id_card, specialty, 
+      educationValue, addressValue, phone, photoFilename
     });
     
     // สร้าง dentist record
@@ -591,30 +621,42 @@ exports.addDentist = async (req, res) => {
       [userId, fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename]
     );
     
-    console.log('✅ Dentist created successfully');
+    console.log('='.repeat(60));
+    console.log('Dentist created successfully');
+    console.log('='.repeat(60));
     
     // ส่งกลับ JSON response
     res.json({
       success: true,
       message: 'Dentist added successfully',
-      redirect: '/admin/dentists'
+      redirect: '/admin/dentists',
+      dentist: {
+        userId,
+        fname,
+        lname,
+        email,
+        photo: photoFilename
+      }
     });
     
   } catch (error) {
-    console.error('❌ Error creating dentist:', error);
-    console.error('❌ Error details:', {
+    console.log('='.repeat(60));
+    console.error('ERROR creating dentist:', error);
+    console.error('Error details:', {
       code: error.code,
       errno: error.errno,
       sqlMessage: error.sqlMessage,
       sql: error.sql
     });
+    console.log('='.repeat(60));
     
     // ลบไฟล์ที่อัพโหลดแล้วหากเกิดข้อผิดพลาด
     if (req.file) {
       const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+      console.log('Attempting to delete uploaded file due to error:', filePath);
       fs.unlink(filePath, (err) => {
         if (err) console.error('Error deleting file:', err);
-        else console.log('🗑️ Deleted uploaded file due to error');
+        else console.log('Deleted uploaded file due to error');
       });
     }
     

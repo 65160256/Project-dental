@@ -33,12 +33,50 @@ const createDirectories = () => {
     path.join(__dirname, 'views/partials')
   ];
 
+  console.log('='.repeat(60));
+  console.log('Creating and verifying directories...');
+  console.log('='.repeat(60));
+
   directories.forEach(dir => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-      console.log(`📁 Created directory: ${dir}`);
+      console.log(`Created directory: ${dir}`);
+    } else {
+      console.log(`Directory exists: ${dir}`);
+    }
+    
+    // ตรวจสอบสิทธิ์การเขียนไฟล์
+    try {
+      fs.accessSync(dir, fs.constants.W_OK);
+      console.log(`  Writable: YES`);
+    } catch (err) {
+      console.error(`  Writable: NO - ${err.message}`);
     }
   });
+  
+  // แสดงข้อมูล uploads directory โดยละเอียด
+  const uploadsDir = path.join(__dirname, 'public/uploads');
+  console.log('\n' + '='.repeat(60));
+  console.log('Uploads Directory Info:');
+  console.log('='.repeat(60));
+  console.log(`Path: ${uploadsDir}`);
+  console.log(`Absolute: ${path.resolve(uploadsDir)}`);
+  
+  try {
+    const stats = fs.statSync(uploadsDir);
+    console.log(`Permissions: ${stats.mode.toString(8)}`);
+    
+    const files = fs.readdirSync(uploadsDir);
+    console.log(`Files count: ${files.length}`);
+    if (files.length > 0) {
+      console.log(`Recent files: ${files.slice(0, 5).join(', ')}${files.length > 5 ? '...' : ''}`);
+    } else {
+      console.log('No files in uploads directory yet');
+    }
+  } catch (err) {
+    console.error(`Error reading directory: ${err.message}`);
+  }
+  console.log('='.repeat(60) + '\n');
 };
 
 createDirectories();
@@ -53,7 +91,6 @@ app.set('views', path.join(__dirname, 'views'));
 // Browser-specific requests handler
 // ===============================
 app.use((req, res, next) => {
-  // Ignore browser-specific requests and common files
   const ignorePaths = [
     '/.well-known/',
     '/favicon.ico',
@@ -66,12 +103,10 @@ app.use((req, res, next) => {
   const ignoreExtensions = /\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i;
   
   if (ignorePaths.some(path => req.path.startsWith(path)) || ignoreExtensions.test(req.path)) {
-    // For .well-known requests, return 204 No Content
     if (req.path.startsWith('/.well-known/')) {
       return res.status(204).end();
     }
     
-    // For other ignored paths, check if file exists
     const filePath = path.join(__dirname, 'public', req.path);
     if (fs.existsSync(filePath)) {
       return res.sendFile(filePath);
@@ -87,13 +122,12 @@ app.use((req, res, next) => {
 // Static Files Configuration
 // ===============================
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1d', // Cache static files for 1 day
+  maxAge: '1d',
   etag: true
 }));
 
-// เสิร์ฟไฟล์ uploads แยกต่างหาก
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
-  maxAge: '7d', // Cache uploads for 7 days
+  maxAge: '7d',
   etag: true
 }));
 
@@ -111,11 +145,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'devsecret',
   resave: false,
   saveUninitialized: false,
-  name: 'smile_clinic_session', // Custom session name
+  name: 'smile_clinic_session',
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // HTTPS in production
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    httpOnly: true // Prevent XSS
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true
   }
 }));
 
@@ -129,14 +163,10 @@ app.use(flash());
 // Security Headers
 // ===============================
 app.use((req, res, next) => {
-  // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
-  // Remove powered by header
   res.removeHeader('X-Powered-By');
-  
   next();
 });
 
@@ -149,9 +179,14 @@ app.use((req, res, next) => {
   const url = req.url;
   const userAgent = req.get('User-Agent') || 'Unknown';
   
-  // ไม่ log static files requests เพื่อลด noise
+  // Log upload-related requests
+  if (url.includes('/uploads/') || url.includes('photo') || method === 'POST' && url.includes('dentist')) {
+    console.log(`[${timestamp}] ${method} ${url} - ${userAgent.substring(0, 50)}`);
+  }
+  
+  // Don't log static files
   if (!req.url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/)) {
-    console.log(`📝 ${timestamp} ${method} ${url} - ${userAgent.substring(0, 50)}`);
+    console.log(`[${timestamp}] ${method} ${url}`);
   }
   
   next();
@@ -165,9 +200,8 @@ app.use('/uploads', (req, res, next) => {
   
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
-      console.log(`🔍 File not found: ${req.path}, serving default image`);
+      console.log(`File not found: ${req.path}, serving default image`);
       
-      // ส่งรูป default ตาม type ของไฟล์
       let defaultImage = 'default-avatar.png';
       
       if (req.path.includes('doctor') || req.path.includes('dentist')) {
@@ -181,7 +215,6 @@ app.use('/uploads', (req, res, next) => {
       if (fs.existsSync(defaultPath)) {
         return res.sendFile(defaultPath);
       } else {
-        // ถ้าไม่มีรูป default ให้ส่ง 404
         return res.status(404).json({
           error: 'Image not found',
           requested: req.path
@@ -197,11 +230,11 @@ app.use('/uploads', (req, res, next) => {
 // ===============================
 cron.schedule('0 * * * *', async () => {
   try {
-    const db = require('./config/db'); // ✅ แก้ไข path ให้ถูกต้อง
+    const db = require('./config/db');
     await db.execute('DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL');
-    console.log('🧹 Cleaned up expired password reset tokens');
+    console.log('Cleaned up expired password reset tokens');
   } catch (error) {
-    console.error('❌ Token cleanup error:', error);
+    console.error('Token cleanup error:', error);
   }
 });
 
@@ -231,10 +264,8 @@ app.use((req, res, next) => {
 // Routes Configuration
 // ===============================
 
-// Auth routes (public)
 app.use(authRoute);
 
-// Root route redirect
 app.get('/', (req, res) => {
   if (!req.session.user && !req.session.userId) {
     return res.redirect('/login');
@@ -253,7 +284,7 @@ app.get('/', (req, res) => {
       res.redirect('/patient/dashboard');
       break;
     default:
-      console.log(`⚠️ Unknown role: ${roleId}, redirecting to login`);
+      console.log(`Unknown role: ${roleId}, redirecting to login`);
       res.redirect('/login');
   }
 });
@@ -263,7 +294,6 @@ app.get('/', (req, res) => {
 // ===============================
 const requireAuth = (requiredRole = null) => {
   return (req, res, next) => {
-    // ตรวจสอบ login
     if (!req.session.user && !req.session.userId) {
       const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
       
@@ -276,7 +306,6 @@ const requireAuth = (requiredRole = null) => {
       return res.redirect('/login?message=' + encodeURIComponent('กรุณาเข้าสู่ระบบก่อน'));
     }
     
-    // ตรวจสอบ role ถ้าระบุมา
     if (requiredRole) {
       const userRole = req.session.user?.role_id || req.session.role;
       if (userRole !== requiredRole) {
@@ -383,10 +412,9 @@ if (process.env.NODE_ENV !== 'production') {
 // Error Handling Middleware
 // ===============================
 
-// Multer error handler
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    console.error('📤 Multer Error:', err.message);
+    console.error('Multer Error:', err.message);
     
     let message = 'File upload error';
     switch (err.code) {
@@ -418,11 +446,9 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// ✅ Fixed General Error Handler
 app.use((err, req, res, next) => {
-  console.error('❌ Application Error:', err);
+  console.error('Application Error:', err);
   
-  // ป้องกัน undefined properties
   const requestPath = req.path || req.url || req.originalUrl || 'unknown';
   const method = req.method || 'UNKNOWN';
   const userAgent = req.get('User-Agent') || 'Unknown';
@@ -433,7 +459,6 @@ app.use((err, req, res, next) => {
     userAgent: userAgent.substring(0, 100)
   });
 
-  // Database errors
   if (err.code === 'ER_DUP_ENTRY') {
     const message = 'Duplicate entry found. This record already exists.';
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
@@ -449,7 +474,6 @@ app.use((err, req, res, next) => {
     return res.redirect('back');
   }
   
-  // Validation errors
   if (err.name === 'ValidationError') {
     const message = 'Validation failed: ' + Object.values(err.errors).map(e => e.message).join(', ');
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
@@ -465,11 +489,9 @@ app.use((err, req, res, next) => {
     return res.redirect('back');
   }
   
-  // ตรวจสอบว่าเป็น API request หรือไม่
   const isApiRequest = requestPath.indexOf('/api/') === 0;
   const isAjaxRequest = req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1);
   
-  // Default error response
   const isDevelopment = process.env.NODE_ENV === 'development';
   const statusCode = err.status || err.statusCode || 500;
   
@@ -482,9 +504,8 @@ app.use((err, req, res, next) => {
     });
   }
   
-  // ถ้า response ถูกส่งไปแล้ว
   if (res.headersSent) {
-    console.error('❌ Headers already sent, delegating to default Express error handler');
+    console.error('Headers already sent, delegating to default Express error handler');
     return next(err);
   }
   
@@ -495,7 +516,7 @@ app.use((err, req, res, next) => {
       error: isDevelopment ? err : { status: statusCode }
     });
   } catch (renderError) {
-    console.error('❌ Error rendering error page:', renderError.message);
+    console.error('Error rendering error page:', renderError.message);
     res.status(statusCode).type('text/plain').send(
       isDevelopment 
         ? `Error: ${err.message}\n\nRender Error: ${renderError.message}` 
@@ -505,15 +526,14 @@ app.use((err, req, res, next) => {
 });
 
 // ===============================
-// 404 Handler (ต้องอยู่หลัง error handler)
+// 404 Handler
 // ===============================
 app.use((req, res) => {
   const requestPath = req.path || req.url || 'unknown';
   const method = req.method || 'GET';
   
-  console.log(`❓ 404 - Route not found: ${method} ${requestPath}`);
+  console.log(`404 - Route not found: ${method} ${requestPath}`);
   
-  // Ignore common browser requests that already handled above
   const ignoreExtensions = /\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/i;
   if (ignoreExtensions.test(requestPath)) {
     return res.status(404).end();
@@ -537,7 +557,7 @@ app.use((req, res) => {
       error: { status: 404 }
     });
   } catch (renderError) {
-    console.error('❌ Error rendering 404 page:', renderError.message);
+    console.error('Error rendering 404 page:', renderError.message);
     res.status(404).type('text/plain').send('404 Not Found');
   }
 });
@@ -546,35 +566,34 @@ app.use((req, res) => {
 // Graceful Shutdown
 // ===============================
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  console.log('SIGTERM received, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
+  console.log('SIGINT received, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('💥 Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 
 // ===============================
-// Initialize Cleanup Jobs (Optional)
+// Initialize Cleanup Jobs
 // ===============================
 try {
-  // ลองโหลด cleanup jobs ถ้ามี
   const { scheduleTokenCleanup } = require('./jobs/cleanup-tokens');
   scheduleTokenCleanup();
-  console.log('✅ Password reset token cleanup job initialized');
+  console.log('Password reset token cleanup job initialized');
 } catch (error) {
-  console.log('ℹ️ Cleanup job not available, using cron schedule instead');
+  console.log('Cleanup job not available, using cron schedule instead');
 }
 
 // ===============================
@@ -585,14 +604,14 @@ const HOST = process.env.HOST || 'localhost';
 
 app.listen(PORT, () => {
   console.log('='.repeat(60));
-  console.log('🦷 SMILE CLINIC DENTAL MANAGEMENT SYSTEM');
+  console.log('SMILE CLINIC DENTAL MANAGEMENT SYSTEM');
   console.log('='.repeat(60));
-  console.log(`✅ Server running at http://${HOST}:${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📂 Static files: ${path.join(__dirname, 'public')}`);
-  console.log(`🖼️ Uploads: ${path.join(__dirname, 'public/uploads')}`);
+  console.log(`Server running at http://${HOST}:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Static files: ${path.join(__dirname, 'public')}`);
+  console.log(`Uploads: ${path.join(__dirname, 'public/uploads')}`);
   console.log('='.repeat(60));
-  console.log('📋 Available Routes:');
+  console.log('Available Routes:');
   console.log('   AUTH ROUTES:');
   console.log(`   - GET  /login`);
   console.log(`   - POST /login`);
@@ -607,24 +626,7 @@ app.listen(PORT, () => {
   console.log(`   - GET  /admin/patients`);
   console.log(`   - GET  /admin/appointments`);
   console.log(`   - GET  /admin/treatments`);
-  console.log('   ');
-  console.log('   DENTIST ROUTES (Role: 2):');
-  console.log(`   - GET  /dentist/dashboard`);
-  console.log(`   - GET  /dentist/profile`);
-  console.log(`   - GET  /dentist/schedule`);
-  console.log('   ');
-  console.log('   PATIENT ROUTES (Role: 3):');
-  console.log(`   - GET  /patient/dashboard`);
-  console.log(`   - GET  /patient/profile`);
-  console.log(`   - GET  /patient/appointments`);
-  console.log('   ');
-  console.log('   API ROUTES:');
-  console.log(`   - GET  /api/health`);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`   - GET  /test-uploads`);
-    console.log(`   - GET  /test-session`);
-  }
   console.log('='.repeat(60));
-  console.log('🚀 System ready for requests!');
+  console.log('System ready for requests!');
   console.log('='.repeat(60));
 });

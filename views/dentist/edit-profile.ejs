@@ -1,772 +1,455 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit My Profile - Smile Clinic</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit My Profile - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{background:#f5f7fa}
 
-        body {
-            background-color: #f5f7fa;
-            margin: 0;
-        }
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1)}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.2s}
+    .sidebar ul li:hover a{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
 
-        /* Sidebar */
-        .sidebar {
-            width: 180px;
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            position: fixed;
-            height: 100vh;
-            padding: 0;
-            color: #fff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
+    /* Main */
+    .main{margin-left:180px;min-height:100vh}
+    .top-bar{position:sticky;top:0;z-index:2;background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.08)}
+    .page-title{font-size:22px;font-weight:700;color:#333}
+    .user-section{display:flex;align-items:center;gap:15px}
+    .notification-icon{width:20px;height:20px;cursor:pointer;color:#666}
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;align-items:center;gap:10px;cursor:pointer}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px;text-transform:capitalize}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:10}
+    .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+    .dropdown-menu a:hover{background:#f8f9fa}
 
-        .sidebar .logo {
-            text-align: center;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+    /* Profile Content */
+    .profile-content{padding:20px 30px}
+    .profile-header{display:flex;align-items:center;margin-bottom:24px;gap:15px}
+    .back-button{background:#f8f9fa;border:1px solid #e1e5e9;padding:8px 12px;border-radius:6px;color:#666;text-decoration:none;display:flex;align-items:center;gap:8px;font-size:14px}
+    .back-button:hover{background:#e9ecef}
+    .profile-title{font-size:24px;font-weight:700;color:#333}
 
-        .sidebar .logo .logo-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background: white;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 24px;
-            color: #4A90E2;
-        }
+    .profile-container{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);max-width:980px;display:flex}
+    .profile-left{padding:28px;display:flex;flex-direction:column;align-items:center;border-right:1px solid #f0f0f0;min-width:270px}
+    .profile-avatar{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;font-weight:700;margin-bottom:16px;cursor:pointer;transition:.2s;overflow:hidden}
+    .profile-avatar:hover{transform:scale(1.03)}
+    .profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .dentist-name{font-size:20px;font-weight:700;color:#333;margin-bottom:6px;text-align:center}
+    .last-login{color:#666;font-size:12px;text-align:center}
 
-        .sidebar .logo h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
+    .profile-right{flex:1;padding:28px}
+    .edit-form{width:100%}
+    .form-section{margin-bottom:22px}
+    .section-title{font-size:16px;font-weight:700;color:#333;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 
-        .sidebar ul {
-            list-style: none;
-            padding: 10px 0;
-            margin: 0;
-        }
+    .form-row{margin-bottom:14px}
+    .form-label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:600}
+    .form-input,.form-textarea,.form-select{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:6px;font-size:14px;background:#f8f9fa;transition:.2s}
+    .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.12)}
+    .form-input[readonly],.form-input[disabled]{background:#f0f2f5;color:#6c757d;cursor:not-allowed}
+    .form-textarea{min-height:90px;resize:vertical}
+    .readonly-warning{background:#fff3cd;border:1px solid #ffeaa7;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px}
+    .field-help{font-size:11px;color:#6c757d;margin-top:4px;display:block}
 
-        .sidebar ul li {
-            margin: 2px 0;
-        }
+    .action-buttons{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none}
+    .btn-save{background:#4CAF50;color:#fff}
+    .btn-save:hover{background:#3f9443}
+    .btn-password{background:#E0E0E0;color:#555}
+    .btn-password:hover{background:#cfcfcf}
+    .btn-email{background:#17a2b8;color:#fff}
+    .btn-email:hover{background:#138496}
+    .btn-cancel{background:#666;color:#fff}
+    .btn-cancel:hover{background:#555}
 
-        .sidebar ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .security-section{background:#e7f3ff;border:1px solid #b3d9ff;border-radius:6px;padding:12px;margin-bottom:16px}
+    .security-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .security-description{margin:0;font-size:13px;color:#555;line-height:1.4}
 
-        .sidebar ul li:hover a {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 8px;
-            margin: 0 10px;
-        }
+    .alert{padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:14px}
+    .alert-success{background:#d4edda;border:1px solid #c3e6cb;color:#155724}
+    .alert-danger{background:#f8d7da;border:1px solid #f5c6cb;color:#721c24}
 
-        /* Main Content */
-        .main {
-            margin-left: 180px;
-            min-height: 100vh;
-        }
+    .char-counter{font-size:11px;color:#6c757d;margin-top:4px;text-align:right}
 
-        /* Top Bar */
-        .top-bar {
-            background: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification-icon {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            gap: 10px;
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #4A90E2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-        }
-
-        .user-details strong {
-            display: block;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .user-details small {
-            color: #666;
-            font-size: 11px;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 6px;
-            min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #333;
-            font-size: 13px;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Profile Content */
-        .profile-content {
-            padding: 20px 30px;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            gap: 15px;
-        }
-
-        .back-button {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #666;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .back-button:hover {
-            background: #e9ecef;
-        }
-
-        .profile-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .profile-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            max-width: 900px;
-            display: flex;
-        }
-
-        .profile-left {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-right: 1px solid #f0f0f0;
-            min-width: 250px;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: white;
-            font-weight: 600;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .profile-avatar:hover {
-            transform: scale(1.05);
-        }
-
-        .dentist-name {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .last-login {
-            color: #666;
-            font-size: 12px;
-            text-align: center;
-        }
-
-        .profile-right {
-            flex: 1;
-            padding: 30px;
-        }
-
-        .edit-form {
-            width: 100%;
-        }
-
-        .form-section {
-            margin-bottom: 25px;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-row {
-            margin-bottom: 15px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .form-input, .form-textarea, .form-select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            font-size: 14px;
-            background: #f8f9fa;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
-            outline: none;
-            border-color: #4A90E2;
-            background: white;
-        }
-
-        .form-input[readonly], .form-input[disabled] {
-            background: #f8f9fa;
-            color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        .form-textarea {
-            height: 80px;
-            resize: vertical;
-        }
-
-        .readonly-warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 15px;
-            font-size: 12px;
-            color: #856404;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .field-help {
-            font-size: 11px;
-            color: #6c757d;
-            margin-top: 4px;
-            display: block;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-
-        .btn-save {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-save:hover {
-            background: #45a049;
-        }
-
-        .btn-password {
-            background: #E0E0E0;
-            color: #666;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-password:hover {
-            background: #BDBDBD;
-        }
-
-        .btn-email {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-email:hover {
-            background: #138496;
-        }
-
-        .btn-cancel {
-            background: #666;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-cancel:hover {
-            background: #555;
-        }
-
-        .security-section {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .security-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .security-description {
-            margin: 0;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.4;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            
-            .main {
-                margin-left: 0;
-            }
-            
-            .profile-container {
-                flex-direction: column;
-                max-width: 100%;
-            }
-
-            .profile-left {
-                border-right: none;
-                border-bottom: 1px solid #f0f0f0;
-                min-width: auto;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-    </style>
+    @media (max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative}
+      .main{margin-left:0}
+      .profile-container{flex-direction:column;max-width:100%}
+      .profile-left{border-right:none;border-bottom:1px solid #f0f0f0;min-width:auto}
+      .action-buttons{flex-direction:column}
+    }
+  </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">🦷</div>
-            <h3>Smile Clinic</h3>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+      <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+      <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
+      <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+      <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="top-bar" role="navigation" aria-label="Top bar">
+      <h1 class="page-title">Edit My Profile</h1>
+      <div class="user-section">
+        <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" aria-label="Notifications"></i>
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()" aria-haspopup="true" aria-expanded="false">
+            <div class="avatar" id="navAvatar">
+              <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+                     onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+              <% } else { %>
+                <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+              <% } %>
+            </div>
+            <div class="user-details">
+              <strong>Hello Dr. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></strong>
+              <small>dentist</small>
+            </div>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/dentist/profile">My Profile</a>
+            <hr />
+            <a href="/logout">Log Out</a>
+          </div>
         </div>
-        <ul>
-            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li>
-        </ul>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div></div>
-            <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
-                <div class="profile-dropdown">
-                    <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">
-                            <%= (dentist.fname && dentist.lname) ? 
-                                (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 
-                                'DR' %>
-                        </div>
-                        <div class="user-details">
-                            <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
-                            <small>dentist</small>
-                        </div>
-                        <i class="fas fa-caret-down"></i>
-                    </div>
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/dentist/profile">My Profile</a>
-                        <hr />
-                        <a href="/logout">Log Out</a>
-                    </div>
-                </div>
-            </div>
+    <!-- Profile Content -->
+    <div class="profile-content">
+      <div class="profile-header">
+        <a href="/dentist/profile" class="back-button"><i class="fas fa-arrow-left"></i> Back</a>
+        <h1 class="profile-title">Edit My Profile</h1>
+      </div>
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-<%= messageType || 'success' %>"><%= message %></div>
+      <% } %>
+
+      <div id="alertContainer"></div>
+
+      <div class="profile-container">
+        <div class="profile-left">
+          <div class="profile-avatar" id="profileAvatar" title="Click to change photo">
+            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+              <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+                   onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+            <% } else { %>
+              <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+            <% } %>
+          </div>
+
+          <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none">
+
+          <h2 class="dentist-name">Dr. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></h2>
+          <p class="last-login">
+            Last Login:
+            <% if (dentist && dentist.last_login) { %>
+              <%= new Date(dentist.last_login).toLocaleString('en-GB', {
+                    day:'2-digit', month:'short', year:'numeric',
+                    hour:'2-digit', minute:'2-digit', hour12:true
+                  }) %>
+            <% } else { %> Never <% } %>
+          </p>
         </div>
 
-        <!-- Profile Content -->
-        <div class="profile-content">
-            <div class="profile-header">
-                <a href="/dentist/profile" class="back-button">
-                    <i class="fas fa-arrow-left"></i>
-                    Back
-                </a>
-                <h1 class="profile-title">Edit My Profile</h1>
-            </div>
-
-            <% if (typeof message !== 'undefined' && message) { %>
-                <div class="alert alert-<%= messageType || 'success' %>">
-                    <%= message %>
-                </div>
+        <div class="profile-right">
+          <form class="edit-form" id="editProfileForm" novalidate>
+            <!-- CSRF (ถ้ามีให้ server ใส่มา) -->
+            <% if (typeof csrfToken !== 'undefined') { %>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <% } %>
 
-            <div class="profile-container">
-                <div class="profile-left">
-                    <div class="profile-avatar" onclick="changeProfilePicture()">
-                        <%= (dentist.fname && dentist.lname) ? 
-                            (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 
-                            'DR' %>
-                    </div>
-                    
-                    <h2 class="dentist-name">Dr. <%= dentist.fname %> <%= dentist.lname %></h2>
-                    <p class="last-login">
-                        Last Login: <%= dentist.last_login ? 
-                            new Date(dentist.last_login).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                            }) + ' - ' + 
-                            new Date(dentist.last_login).toLocaleTimeString('en-GB', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : 'Never' %>
-                    </p>
-                </div>
-                
-                <div class="profile-right">
-                    <form class="edit-form" id="editProfileForm" method="POST" action="/dentist/profile/update">
-                        
-                        <!-- System Information (Read-Only) -->
-                        <div class="form-section">
-                            <h3 class="section-title">
-                                <i class="fas fa-lock" style="color: #dc3545;"></i>
-                                System Information
-                            </h3>
-                            <div class="readonly-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                ข้อมูลในส่วนนี้ไม่สามารถแก้ไขได้ กรุณาติดต่อแอดมินหากต้องการเปลี่ยนแปลง
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Doctor ID:</label>
-                                <input type="text" class="form-input" value="<%= dentist.dentist_id || 'N/A' %>" readonly>
-                                <small class="field-help">รหัสประจำตัวในระบบ</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Full Name (Official):</label>
-                                <input type="text" class="form-input" value="Dr. <%= dentist.fname || '' %> <%= dentist.lname || '' %>" readonly>
-                                <small class="field-help">ชื่อ-นามสกุลทางการ ใช้ในเวชระเบียนและเอกสารราชการ</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Login Email:</label>
-                                <input type="email" class="form-input" value="<%= dentist.email || '' %>" readonly>
-                                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบ - ติดต่อแอดมินเพื่อเปลี่ยนแปลง</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">ID Card Number:</label>
-                                <input type="text" class="form-input" value="<%= dentist.id_card || 'Not provided' %>" readonly>
-                                <small class="field-help">เลขบัตรประชาชน ใช้เป็นตัวระบุตัวตนทางการ</small>
-                            </div>
-                        </div>
+            <!-- System Information (Read-Only) -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-lock" style="color:#dc3545"></i> System Information</h3>
+              <div class="readonly-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                ข้อมูลในส่วนนี้ไม่สามารถแก้ไขได้ กรุณาติดต่อแอดมินหากต้องการเปลี่ยนแปลง
+              </div>
 
-                        <!-- Editable Personal Information -->
-                        <div class="form-section">
-                            <h3 class="section-title">
-                                <i class="fas fa-edit" style="color: #28a745;"></i>
-                                Editable Information
-                            </h3>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Date of Birth:</label>
-                                <input type="date" name="dob" class="form-input" value="<%= dentist.dob ? dentist.dob.toISOString().split('T')[0] : '' %>">
-                                <small class="field-help">ใช้สำหรับคำนวณอายุและรายงานสถิติ</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Primary Specialty:</label>
-                                <select name="specialty" class="form-select">
-                                    <option value="">Select Primary Specialty</option>
-                                    <option value="General Dentistry" <%= dentist.specialty === 'General Dentistry' ? 'selected' : '' %>>General Dentistry</option>
-                                    <option value="Tooth Extraction" <%= dentist.specialty === 'Tooth Extraction' ? 'selected' : '' %>>Tooth Extraction</option>
-                                    <option value="Orthodontics" <%= dentist.specialty === 'Orthodontics' ? 'selected' : '' %>>Orthodontics</option>
-                                    <option value="Endodontics" <%= dentist.specialty === 'Endodontics' ? 'selected' : '' %>>Endodontics</option>
-                                    <option value="Periodontics" <%= dentist.specialty === 'Periodontics' ? 'selected' : '' %>>Periodontics</option>
-                                    <option value="Oral Surgery" <%= dentist.specialty === 'Oral Surgery' ? 'selected' : '' %>>Oral Surgery</option>
-                                </select>
-                                <small class="field-help">ความเชี่ยวชาญหลัก แสดงให้ผู้ป่วยเห็นในการจองนัด</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Additional Qualifications:</label>
-                                <textarea name="education" class="form-textarea" placeholder="Enter additional qualifications, certifications, or training..."><%= dentist.education || '' %></textarea>
-                                <small class="field-help">ใบรับรองเพิ่มเติม, หลักสูตรอบรม, หรือความเชี่ยวชาญพิเศษ</small>
-                            </div>
-                        </div>
+              <div class="form-row">
+                <label class="form-label">Doctor ID:</label>
+                <input type="text" class="form-input" value="<%= dentist?.dentist_id || 'N/A' %>" readonly>
+                <small class="field-help">รหัสประจำตัวในระบบ</small>
+              </div>
 
-                        <!-- Contact Information -->
-                        <div class="form-section">
-                            <h3 class="section-title">
-                                <i class="fas fa-phone" style="color: #17a2b8;"></i>
-                                Contact Information
-                            </h3>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Address:</label>
-                                <textarea name="address" class="form-textarea" placeholder="Enter your current address..."><%= dentist.address || '' %></textarea>
-                                <small class="field-help">ที่อยู่ปัจจุบันหรือที่อยู่คลินิก</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <label class="form-label">Phone Number:</label>
-                                <input type="tel" name="phone" class="form-input" value="<%= dentist.phone || '' %>" placeholder="08xxxxxxxx">
-                                <small class="field-help">เบอร์โทรศัพท์หลักสำหรับติดต่อผู้ป่วยและนัดหมาย</small>
-                            </div>
-                        </div>
+              <div class="form-row">
+                <label class="form-label">Full Name (Official):</label>
+                <input type="text" class="form-input" value="Dr. <%= dentist?.fname || '' %> <%= dentist?.lname || '' %>" readonly>
+                <small class="field-help">ชื่อ-นามสกุลทางการ ใช้ในเวชระเบียนและเอกสารราชการ</small>
+              </div>
 
-                        <!-- Security Settings -->
-                        <div class="form-section">
-                            <h3 class="section-title">
-                                <i class="fas fa-shield-alt" style="color: #6f42c1;"></i>
-                                Security Settings
-                            </h3>
-                            
-                            
-                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                                <a href="/dentist/profile/change-password" class="btn-password">
-                                    <i class="fas fa-key"></i> Change Password
-                                </a>
-                                <a href="/dentist/profile/change-email" class="btn-email">
-                                    <i class="fas fa-envelope"></i> Change Email
-                                </a>
-                            </div>
-                        </div>
+              <div class="form-row">
+                <label class="form-label">Login Email:</label>
+                <input type="email" class="form-input" value="<%= dentist?.email || '' %>" readonly>
+                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบ - ติดต่อแอดมินเพื่อเปลี่ยนแปลง</small>
+              </div>
 
-                        <!-- Action Buttons -->
-                        <div class="action-buttons">
-                            <button type="submit" class="btn-save">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                            <a href="/dentist/profile" class="btn-cancel">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
+              <div class="form-row">
+                <label class="form-label">ID Card Number:</label>
+                <input type="text" class="form-input" value="<%= dentist?.id_card || 'Not provided' %>" readonly>
+                <small class="field-help">เลขบัตรประชาชน ใช้เป็นตัวระบุตัวตนทางการ</small>
+              </div>
             </div>
+
+            <!-- Editable Personal Information -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-edit" style="color:#28a745"></i> Editable Information</h3>
+
+              <div class="form-row">
+                <label class="form-label">Date of Birth:</label>
+                <input type="date" name="dob" class="form-input"
+                       value="<%= (dentist && dentist.dob) ? new Date(dentist.dob).toISOString().split('T')[0] : '' %>">
+                <small class="field-help">ใช้สำหรับคำนวณอายุและรายงานสถิติ</small>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Primary Specialty:</label>
+                <select name="specialty" class="form-select">
+                  <option value="">Select Primary Specialty</option>
+                  <option value="General Dentistry" <%= dentist?.specialty === 'General Dentistry' ? 'selected' : '' %>>General Dentistry</option>
+                  <option value="Tooth Extraction" <%= dentist?.specialty === 'Tooth Extraction' ? 'selected' : '' %>>Tooth Extraction</option>
+                  <option value="Orthodontics" <%= dentist?.specialty === 'Orthodontics' ? 'selected' : '' %>>Orthodontics</option>
+                  <option value="Endodontics" <%= dentist?.specialty === 'Endodontics' ? 'selected' : '' %>>Endodontics</option>
+                  <option value="Periodontics" <%= dentist?.specialty === 'Periodontics' ? 'selected' : '' %>>Periodontics</option>
+                  <option value="Oral Surgery" <%= dentist?.specialty === 'Oral Surgery' ? 'selected' : '' %>>Oral Surgery</option>
+                </select>
+                <small class="field-help">ความเชี่ยวชาญหลัก แสดงให้ผู้ป่วยเห็นในการจองนัด</small>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Additional Qualifications:</label>
+                <textarea name="education" id="education" maxlength="800" class="form-textarea"
+                          placeholder="Enter additional qualifications, certifications, or training..."><%= dentist?.education || '' %></textarea>
+                <div class="char-counter"><span id="eduCount">0</span>/800</div>
+                <small class="field-help">ใบรับรองเพิ่มเติม, หลักสูตรอบรม, หรือความเชี่ยวชาญพิเศษ</small>
+              </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-phone" style="color:#17a2b8"></i> Contact Information</h3>
+
+              <div class="form-row">
+                <label class="form-label">Address:</label>
+                <textarea name="address" class="form-textarea" placeholder="Enter your current address..."><%= dentist?.address || '' %></textarea>
+                <small class="field-help">ที่อยู่ปัจจุบันหรือที่อยู่คลินิก</small>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Phone Number:</label>
+                <input type="tel" name="phone" id="phone" class="form-input"
+                       value="<%= dentist?.phone || '' %>"
+                       placeholder="08xxxxxxxx" inputmode="numeric"
+                       pattern="^0\\d{8,9}$">
+                <small class="field-help">กรอกเฉพาะตัวเลข 9–10 หลัก เริ่มด้วย 0</small>
+              </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-shield-alt" style="color:#6f42c1"></i> Security Settings</h3>
+              <div class="security-section">
+                <div class="security-header">
+                  <i class="fas fa-info-circle" style="color:#0d6efd"></i>
+                  <strong>Manage your security</strong>
+                </div>
+                <p class="security-description">คุณสามารถเปลี่ยนรหัสผ่านหรืออีเมลเข้าสู่ระบบได้จากปุ่มด้านล่าง</p>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <a href="/dentist/profile/change-password" class="btn btn-password"><i class="fas fa-key"></i> Change Password</a>
+                <a href="/dentist/profile/change-email" class="btn btn-email"><i class="fas fa-envelope"></i> Change Email</a>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              <button type="submit" class="btn btn-save" id="saveBtn">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+              <a href="/dentist/profile" class="btn btn-cancel"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        function toggleDropdown() {
-            const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-        
-        function toggleNotifications() {
-            alert('Notifications feature coming soon!');
-        }
-        
-        document.addEventListener('click', function (e) {
-            const prof = document.querySelector('.profile-dropdown');
-            if (!prof.contains(e.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
-            }
+  <script>
+    // ===== Top bar interactions =====
+    function toggleDropdown(){
+      const menu=document.getElementById('profileDropdown');
+      const expanded = menu.style.display==='block';
+      menu.style.display= expanded ? 'none':'block';
+      const ui=document.querySelector('.user-info');
+      if(ui) ui.setAttribute('aria-expanded',(!expanded).toString());
+    }
+    function toggleNotifications(){ alert('Notifications feature coming soon!'); }
+    document.addEventListener('click',function(e){
+      const prof=document.querySelector('.profile-dropdown');
+      if(prof && !prof.contains(e.target)){
+        const dd=document.getElementById('profileDropdown');
+        if(dd) dd.style.display='none';
+        const ui=document.querySelector('.user-info');
+        if(ui) ui.setAttribute('aria-expanded','false');
+      }
+    });
+
+    // ===== Helpers =====
+    const alertContainer = document.getElementById('alertContainer');
+    function showAlert(msg,type='success'){
+      alertContainer.innerHTML = '<div class="alert alert-'+type+'" role="alert">'+msg+'</div>';
+      if(type==='success'){ setTimeout(()=>{ alertContainer.innerHTML=''; }, 5000); }
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function setDirty(v){ window.__dirty = v; }
+    window.addEventListener('beforeunload', function (e) {
+      if(window.__dirty){
+        e.preventDefault(); e.returnValue='';
+      }
+    });
+
+    // Count characters for education
+    const edu = document.getElementById('education');
+    if(edu){
+      const count = document.getElementById('eduCount');
+      const updateCount = ()=>{ count.textContent = edu.value.length; };
+      edu.addEventListener('input', ()=>{ updateCount(); setDirty(true); });
+      updateCount();
+    }
+
+    // Force numeric only phone & mark dirty
+    const phone = document.getElementById('phone');
+    if(phone){
+      phone.addEventListener('input', ()=>{
+        const caret = phone.selectionStart;
+        phone.value = phone.value.replace(/[^0-9]/g,'');
+        phone.setSelectionRange(caret, caret);
+        setDirty(true);
+      });
+    }
+
+    // Avatar: click to open file chooser
+    const avatar = document.getElementById('profileAvatar');
+    const photoInput = document.getElementById('photoInput');
+    if(avatar && photoInput){
+      avatar.addEventListener('click', ()=> photoInput.click());
+      photoInput.addEventListener('change', ()=>{
+        const file = photoInput.files && photoInput.files[0];
+        if(!file) return;
+        const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+        if(!allowed.includes(file.type)){ showAlert('รูปต้องเป็น JPG/PNG/WEBP/GIF เท่านั้น','danger'); photoInput.value=''; return; }
+        if(file.size > 3*1024*1024){ showAlert('ขนาดไฟล์ต้องไม่เกิน 3MB','danger'); photoInput.value=''; return; }
+        // Preview
+        const reader = new FileReader();
+        reader.onload = e=>{
+          // clear fallback text then show preview
+          avatar.textContent='';
+          const img = new Image();
+          img.alt='Profile Preview';
+          img.onload = ()=>{ avatar.innerHTML=''; avatar.appendChild(img); };
+          img.src = e.target.result;
+          img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+        };
+        reader.readAsDataURL(file);
+        setDirty(true);
+      });
+    }
+
+    // Mark dirty on all editable inputs
+    document.querySelectorAll('input[name],textarea[name],select[name]').forEach(el=>{
+      if(el.name === '_csrf') return;
+      el.addEventListener('change', ()=>setDirty(true));
+      el.addEventListener('input', ()=>setDirty(true));
+    });
+
+    // ===== Form submission (multipart; รองรับอัปโหลดรูป) =====
+    document.getElementById('editProfileForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+
+      // Basic client validation
+      // DOB cannot be in the future
+      const dobInput = this.querySelector('input[name="dob"]');
+      if(dobInput && dobInput.value){
+        const d = new Date(dobInput.value);
+        const today = new Date(); today.setHours(0,0,0,0);
+        if(d > today){ showAlert('วันเดือนปีเกิดต้องไม่เป็นอนาคต', 'danger'); return; }
+      }
+      // Phone pattern
+      if(phone && phone.value && !/^0\d{8,9}$/.test(phone.value)){
+        showAlert('รูปแบบเบอร์โทรไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และยาว 9–10 หลัก)', 'danger'); return;
+      }
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      try{
+        const fd = new FormData();
+        // append fields
+        ['dob','specialty','education','address','phone','_csrf'].forEach(name=>{
+          const el = this.querySelector('[name="'+name+'"]');
+          if(el && el.value !== undefined){ fd.append(name, el.value); }
+        });
+        // append photo if selected
+        if(photoInput && photoInput.files && photoInput.files[0]){ fd.append('photo', photoInput.files[0]); }
+
+        const headers = {};
+        <% if (typeof csrfToken !== 'undefined') { %>
+          headers['CSRF-Token'] = '<%= csrfToken %>';
+        <% } %>
+        headers['X-Requested-With'] = 'XMLHttpRequest';
+
+        const res = await fetch('/dentist/profile/update', {
+          method:'POST',
+          headers,            // อย่าตั้ง Content-Type เอง ให้ browser จัดการ boundary ของ multipart
+          body: fd
         });
 
-        function changeProfilePicture() {
-            alert('Profile picture upload feature will be available soon!');
+        const payload = await res.json().catch(()=>({success:false,error:'Invalid server response'}));
+
+        if(res.ok && payload.success){
+          showAlert('Profile updated successfully!','success');
+          window.__dirty = false;
+          setTimeout(()=>{ window.location.href='/dentist/profile'; }, 1500);
+        }else{
+          const msg = payload && payload.error ? payload.error : 'Update failed.';
+          showAlert('Error: ' + msg,'danger');
         }
-
-        // Form submission handling
-        document.getElementById('editProfileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-
-            fetch('/dentist/profile/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // แสดงข้อความสำเร็จและ redirect
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success';
-                    alertDiv.textContent = 'Profile updated successfully!';
-                    
-                    const container = document.querySelector('.profile-content');
-                    container.insertBefore(alertDiv, container.firstChild.nextSibling);
-                    
-                    // Scroll to top และ redirect หลัง 2 วินาที
-                    window.scrollTo(0, 0);
-                    setTimeout(() => {
-                        window.location.href = '/dentist/profile';
-                    }, 2000);
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while updating profile');
-            });
-        });
-    </script>
+      }catch(err){
+        console.error(err);
+        showAlert('An error occurred while updating profile','danger');
+      }finally{
+        saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      }
+    });
+  </script>
 </body>
 </html>

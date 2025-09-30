@@ -206,8 +206,8 @@ const dentistController = {
     try {
       const userId = req.session.user?.user_id || req.session.userId;
       const [dentistResult] = await db.execute(`
-        SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
-      `, [userId]);
+  SELECT dentist_id, fname, lname, photo FROM dentist WHERE user_id = ?
+`, [userId]);
 
       if (dentistResult.length === 0) return res.redirect('/login');
       const dentist = dentistResult[0];
@@ -366,8 +366,8 @@ const dentistController = {
     const userId = req.session.user?.user_id || req.session.userId;
 
     const [dentistResult] = await db.execute(`
-      SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
-    `, [userId]);
+  SELECT dentist_id, fname, lname, photo FROM dentist WHERE user_id = ?
+`, [userId]);
     
     if (dentistResult.length === 0) return res.redirect('/login');
 
@@ -431,7 +431,8 @@ const dentistController = {
 },
 
 // ฟังก์ชันสำหรับดึงรายละเอียดผู้ป่วย API
-getPatientDetailsAPI: async (req, res) => {
+// API: ดึงข้อมูลผู้ป่วยพร้อมประวัติการรักษา
+getPatientDetailAPI: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
     const patientId = req.params.patientId;
@@ -449,32 +450,28 @@ getPatientDetailsAPI: async (req, res) => {
 
     // ดึงข้อมูลผู้ป่วย
     const [patientResult] = await db.execute(`
-      SELECT 
-        p.*,
-        COUNT(q.queue_id) as total_appointments,
-        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as completed_appointments,
-        COUNT(CASE WHEN q.queue_status = 'cancel' THEN 1 END) as cancelled_appointments,
-        MAX(q.time) as last_visit,
-        MIN(q.time) as first_visit
-      FROM patient p
-      LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.dentist_id = ?
-      WHERE p.patient_id = ?
-      GROUP BY p.patient_id
-    `, [dentistId, patientId]);
+      SELECT * FROM patient WHERE patient_id = ?
+    `, [patientId]);
 
     if (patientResult.length === 0) {
       return res.status(404).json({ success: false, error: 'Patient not found' });
     }
 
-    const patient = patientResult[0];
-
     // ตรวจสอบว่าผู้ป่วยเคยมีนัดกับหมอคนนี้หรือไม่
-    if (patient.total_appointments === 0) {
+    const [accessCheck] = await db.execute(`
+      SELECT COUNT(*) as count 
+      FROM queue q 
+      WHERE q.patient_id = ? AND q.dentist_id = ?
+    `, [patientId, dentistId]);
+
+    if (accessCheck[0].count === 0) {
       return res.status(403).json({ 
         success: false, 
         error: 'ไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้' 
       });
     }
+
+    const patient = patientResult[0];
 
     // คำนวณอายุ
     let age = null;
@@ -488,76 +485,162 @@ getPatientDetailsAPI: async (req, res) => {
       }
     }
 
-    // ดึงประวัติการรักษา 5 ครั้งล่าสุด
-    const [recentTreatments] = await db.execute(`
+    // ดึงประวัติการรักษาทั้งหมด
+    const [treatmentHistory] = await db.execute(`
       SELECT 
         q.queue_id,
         q.time,
         q.queue_status,
         q.diagnosis,
+        q.next_appointment,
         t.treatment_name,
-        t.duration
+        t.duration,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.patient_id = ? AND q.dentist_id = ?
       ORDER BY q.time DESC
-      LIMIT 5
     `, [patientId, dentistId]);
 
-    // ดึงข้อมูลการรักษาที่กำลังจะมา
-    const [upcomingAppointments] = await db.execute(`
-      SELECT 
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        t.treatment_name
-      FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.patient_id = ? 
-        AND q.dentist_id = ?
-        AND q.time > NOW()
-        AND q.queue_status IN ('pending', 'confirm')
-      ORDER BY q.time ASC
-      LIMIT 3
-    `, [patientId, dentistId]);
+    // นับสถิติ
+    const totalTreatments = treatmentHistory.length;
+    const completedTreatments = treatmentHistory.filter(t => 
+      t.queue_status === 'completed' || t.queue_status === 'confirm'
+    ).length;
+    const pendingTreatments = treatmentHistory.filter(t => 
+      t.queue_status === 'pending'
+    ).length;
+    const cancelledTreatments = treatmentHistory.filter(t => 
+      t.queue_status === 'cancel'
+    ).length;
+
+    // จัดกลุ่มตามปี
+    const treatmentsByYear = {};
+    treatmentHistory.forEach(treatment => {
+      const year = new Date(treatment.time).getFullYear();
+      if (!treatmentsByYear[year]) {
+        treatmentsByYear[year] = [];
+      }
+      treatmentsByYear[year].push({
+        ...treatment,
+        formattedDate: new Date(treatment.time).toLocaleDateString('th-TH', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        formattedTime: new Date(treatment.time).toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }),
+        statusText: treatment.queue_status === 'completed' || treatment.queue_status === 'confirm' ? 
+          'รักษาแล้ว' : 
+          treatment.queue_status === 'pending' ? 'รอการรักษา' : 'ยกเลิก'
+      });
+    });
 
     res.json({
       success: true,
       patient: {
         ...patient,
         age: age,
-        formattedDob: patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB') : null,
-        formattedLastVisit: patient.last_visit ? new Date(patient.last_visit).toLocaleDateString('en-GB') : 'Never',
-        formattedFirstVisit: patient.first_visit ? new Date(patient.first_visit).toLocaleDateString('en-GB') : 'Never',
-        patientSince: patient.created_at ? new Date(patient.created_at).toLocaleDateString('en-GB') : 'Unknown'
+        formattedDob: patient.dob ? 
+          new Date(patient.dob).toLocaleDateString('th-TH', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) : 'ไม่ระบุ',
+        formattedCreatedAt: patient.created_at ?
+          new Date(patient.created_at).toLocaleDateString('th-TH', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) : 'ไม่ทราบ'
       },
-      recentTreatments: recentTreatments.map(treatment => ({
-        ...treatment,
-        formattedDate: new Date(treatment.time).toLocaleDateString('en-GB'),
-        formattedTime: new Date(treatment.time).toLocaleTimeString('en-GB', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
+      treatmentsByYear,
+      stats: {
+        total: totalTreatments,
+        completed: completedTreatments,
+        pending: pendingTreatments,
+        cancelled: cancelledTreatments
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in getPatientDetailAPI:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ป่วย' 
+    });
+  }
+},
+
+// API: ค้นหาประวัติการรักษาของผู้ป่วย
+searchPatientTreatments: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const patientId = req.params.patientId;
+    const { date } = req.query;
+
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'Dentist not found' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    let query = `
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        q.diagnosis,
+        q.next_appointment,
+        t.treatment_name,
+        t.duration
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      WHERE q.patient_id = ? AND q.dentist_id = ?
+    `;
+
+    const params = [patientId, dentistId];
+
+    if (date) {
+      query += ` AND DATE(q.time) = ?`;
+      params.push(date);
+    }
+
+    query += ` ORDER BY q.time DESC`;
+
+    const [treatments] = await db.execute(query, params);
+
+    res.json({
+      success: true,
+      treatments: treatments.map(t => ({
+        ...t,
+        formattedDate: new Date(t.time).toLocaleDateString('th-TH', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
         }),
-        statusText: treatment.queue_status === 'confirm' ? 'Completed' : 
-                   treatment.queue_status === 'pending' ? 'Scheduled' : 'Cancelled'
-      })),
-      upcomingAppointments: upcomingAppointments.map(apt => ({
-        ...apt,
-        formattedDate: new Date(apt.time).toLocaleDateString('en-GB'),
-        formattedTime: new Date(apt.time).toLocaleTimeString('en-GB', { 
-          hour: '2-digit', 
+        formattedTime: new Date(t.time).toLocaleTimeString('th-TH', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
         })
       }))
     });
 
   } catch (error) {
-    console.error('Error in getPatientDetailsAPI:', error);
+    console.error('Error in searchPatientTreatments:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ป่วย' 
+      error: 'เกิดข้อผิดพลาดในการค้นหา' 
     });
   }
 },
@@ -748,8 +831,8 @@ exportPatientsData: async (req, res) => {
     const { format = 'csv' } = req.query;
 
     const [dentistResult] = await db.execute(`
-      SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
-    `, [userId]);
+  SELECT dentist_id, fname, lname, photo FROM dentist WHERE user_id = ?
+`, [userId]);
 
     if (dentistResult.length === 0) {
       return res.status(404).json({ success: false, error: 'Dentist not found' });
@@ -844,75 +927,81 @@ exportPatientsData: async (req, res) => {
 },
   // รายละเอียดผู้ป่วย
   getPatientDetail: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-      const patientId = req.params.id;
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const patientId = req.params.id;
 
-      // ตรวจสอบสิทธิ์หมอ
-      const [dentistResult] = await db.execute(`
-        SELECT dentist_id FROM dentist WHERE user_id = ?
-      `, [userId]);
+    // ดึงข้อมูลหมอพร้อมข้อมูล user
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
 
-      if (dentistResult.length === 0) return res.redirect('/login');
-      const dentistId = dentistResult[0].dentist_id;
+    if (dentistResult.length === 0) return res.redirect('/login');
+    
+    const dentist = dentistResult[0];
+    const dentistId = dentist.dentist_id;
 
-      // ดึงข้อมูลผู้ป่วย
-      const [patientResult] = await db.execute(`
-        SELECT * FROM patient WHERE patient_id = ?
-      `, [patientId]);
+    // ดึงข้อมูลผู้ป่วย
+    const [patientResult] = await db.execute(`
+      SELECT * FROM patient WHERE patient_id = ?
+    `, [patientId]);
 
-      if (patientResult.length === 0) {
-        return res.status(404).render('error', { 
-          message: 'ไม่พบข้อมูลผู้ป่วย',
-          error: { status: 404 }
-        });
-      }
-
-      // ตรวจสอบว่าผู้ป่วยเคยมีนัดกับหมอคนนี้หรือไม่
-      const [accessCheck] = await db.execute(`
-        SELECT COUNT(*) as count 
-        FROM queue q 
-        WHERE q.patient_id = ? AND q.dentist_id = ?
-      `, [patientId, dentistId]);
-
-      if (accessCheck[0].count === 0) {
-        return res.status(403).render('error', { 
-          message: 'ไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้',
-          error: { status: 403 }
-        });
-      }
-
-      // ดึงประวัติการรักษาทั้งหมดของผู้ป่วยกับหมอคนนี้
-      const [treatmentHistory] = await db.execute(`
-        SELECT 
-          q.queue_id,
-          q.time,
-          q.queue_status,
-          q.diagnosis,
-          q.next_appointment,
-          t.treatment_name,
-          t.duration,
-          d.fname as dentist_fname,
-          d.lname as dentist_lname
-        FROM queue q
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        WHERE q.patient_id = ? AND q.dentist_id = ?
-        ORDER BY q.time DESC
-      `, [patientId, dentistId]);
-
-      res.render('dentist/patient-detail', { 
-        patient: patientResult[0],
-        treatmentHistory: treatmentHistory || []
-      });
-    } catch (error) {
-      console.error('Error in getPatientDetail:', error);
-      res.status(500).render('error', { 
-        message: 'เกิดข้อผิดพลาดในการโหลดรายละเอียดผู้ป่วย',
-        error 
+    if (patientResult.length === 0) {
+      return res.status(404).render('error', { 
+        message: 'ไม่พบข้อมูลผู้ป่วย',
+        error: { status: 404 }
       });
     }
-  },
+
+    // ตรวจสอบว่าผู้ป่วยเคยมีนัดกับหมอคนนี้หรือไม่
+    const [accessCheck] = await db.execute(`
+      SELECT COUNT(*) as count 
+      FROM queue q 
+      WHERE q.patient_id = ? AND q.dentist_id = ?
+    `, [patientId, dentistId]);
+
+    if (accessCheck[0].count === 0) {
+      return res.status(403).render('error', { 
+        message: 'ไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้',
+        error: { status: 403 }
+      });
+    }
+
+    // ดึงประวัติการรักษาทั้งหมดของผู้ป่วยกับหมอคนนี้
+    const [treatmentHistory] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        q.diagnosis,
+        q.next_appointment,
+        t.treatment_name,
+        t.duration,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname
+      FROM queue q
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.patient_id = ? AND q.dentist_id = ?
+      ORDER BY q.time DESC
+    `, [patientId, dentistId]);
+
+    res.render('dentist/patient-detail', { 
+      dentist: dentist,  // เพิ่มบรรทัดนี้
+      patient: patientResult[0],
+      treatmentHistory: treatmentHistory || []
+    });
+  } catch (error) {
+    console.error('Error in getPatientDetail:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดรายละเอียดผู้ป่วย',
+      error 
+    });
+  }
+},
 
   // หน้าตารางเวลา
   getSchedule: async (req, res) => {
@@ -1732,8 +1821,8 @@ createTreatmentHistory: async (req, res) => {
 
     // ตรวจสอบสิทธิ์หมอ
     const [dentistResult] = await db.execute(`
-      SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
-    `, [userId]);
+  SELECT dentist_id, fname, lname, photo FROM dentist WHERE user_id = ?
+`, [userId]);
 
     if (dentistResult.length === 0) {
       return res.status(404).json({ success: false, error: 'Dentist not found' });
@@ -2346,8 +2435,8 @@ getTreatmentHistoryDetail: async (req, res) => {
     const queueId = req.params.queueId;
 
     const [dentistResult] = await db.execute(`
-      SELECT dentist_id, fname, lname FROM dentist WHERE user_id = ?
-    `, [userId]);
+  SELECT dentist_id, fname, lname, photo FROM dentist WHERE user_id = ?
+`, [userId]);
 
     if (dentistResult.length === 0) {
       return res.status(404).json({ 
@@ -2900,5 +2989,7 @@ deleteSchedule: async (req, res) => {
     res.json({ success: true, data: [] });
   }
 };
+
+
 
 module.exports = dentistController;

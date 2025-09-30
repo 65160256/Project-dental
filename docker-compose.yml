@@ -1,9 +1,6 @@
 services:
   mysql:
-    # ใช้ registry อื่นแทน Docker Hub
-    image: public.ecr.aws/docker/library/mysql:8.0
-    # หรือ
-    # image: mcr.microsoft.com/mirror/docker/library/mysql:8.0
+    image: mysql:8.0
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -12,6 +9,8 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      # ✅ เพิ่ม init script ถ้ามี
+      - ./dentist_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot || exit 1"]
@@ -33,21 +32,23 @@ services:
       DB_USER: root
       DB_PASSWORD: root
       DB_NAME: dentist_db
-      SESSION_SECRET: your-secret-key
+      SESSION_SECRET: your-secret-key-change-this
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: 3000
+    # ✅ เพิ่ม volumes สำหรับ uploads เพื่อให้ persist data
+    volumes:
+      - ./public/uploads:/usr/src/app/public/uploads
+      # ✅ Optional: mount source code สำหรับ development
+      # - .:/usr/src/app
+      # - /usr/src/app/node_modules
     depends_on:
       mysql:
         condition: service_healthy
     restart: unless-stopped
-    command: ["npm", "start"]
 
   phpmyadmin:
-    # ใช้ registry อื่น
-    image: public.ecr.aws/docker/library/phpmyadmin:latest
-    # หรือ
-    # image: mcr.microsoft.com/mirror/docker/library/phpmyadmin:latest
+    image: phpmyadmin:latest
     container_name: phpmyadmin
     ports:
       - "8080:80"

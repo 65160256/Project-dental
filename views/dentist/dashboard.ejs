@@ -205,24 +205,27 @@
 
         /* Gmail-style Avatar */
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            background: #4A90E2;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 16px;
+            font-weight: 600;
             text-transform: uppercase;
-            border: 2px solid rgba(74, 144, 226, 0.2);
+            letter-spacing: -0.5px;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
         }
 
         .avatar:hover {
-            transform: scale(1.05);
-            border-color: #4A90E2;
+            transform: scale(1.08);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
         }
 
         .avatar img {
@@ -232,9 +235,17 @@
             border-radius: 50%;
         }
 
-        .avatar.no-photo {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-        }
+        /* สีพื้นหลังแบบ Gmail - ใช้ hash ของชื่อเพื่อเลือกสี */
+        .avatar[data-color="0"] { background: linear-gradient(135deg, #F44336, #E91E63); } /* Red-Pink */
+        .avatar[data-color="1"] { background: linear-gradient(135deg, #9C27B0, #673AB7); } /* Purple */
+        .avatar[data-color="2"] { background: linear-gradient(135deg, #3F51B5, #2196F3); } /* Indigo-Blue */
+        .avatar[data-color="3"] { background: linear-gradient(135deg, #00BCD4, #009688); } /* Cyan-Teal */
+        .avatar[data-color="4"] { background: linear-gradient(135deg, #4CAF50, #8BC34A); } /* Green */
+        .avatar[data-color="5"] { background: linear-gradient(135deg, #FF9800, #FF5722); } /* Orange */
+        .avatar[data-color="6"] { background: linear-gradient(135deg, #795548, #607D8B); } /* Brown-Grey */
+        .avatar[data-color="7"] { background: linear-gradient(135deg, #E91E63, #F44336); } /* Pink-Red */
+        .avatar[data-color="8"] { background: linear-gradient(135deg, #2196F3, #03A9F4); } /* Blue-Cyan */
+        .avatar[data-color="9"] { background: linear-gradient(135deg, #FF5722, #FF9800); } /* Deep Orange */
 
         .user-details strong {
             display: block;
@@ -1015,14 +1026,24 @@
             
             <div class="user-section">
                 <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="Notifications">
+                    <% if (typeof notificationCount !== 'undefined' && notificationCount > 0) { %>
+                    <span class="notification-badge" id="notificationBadge"><%= notificationCount %></span>
+                    <% } else { %>
                     <span class="notification-badge" id="notificationBadge">3</span>
+                    <% } %>
                 </i>
                 
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar no-photo" id="userAvatar">DR</div>
+                        <div class="avatar no-photo" id="userAvatar">
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="this.style.display='none'; this.parentElement.innerHTML=generateInitials('<%= dentist.fname %>', '<%= dentist.lname %>')">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'DR' %>
+                            <% } %>
+                        </div>
                         <div class="user-details">
-                            <strong>Dr. John Smith</strong>
+                            <strong>Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
                             <small>Dentist</small>
                         </div>
                         <i class="fas fa-caret-down dropdown-arrow"></i>
@@ -1048,8 +1069,8 @@
             <!-- Welcome Section -->
             <div class="welcome-section">
                 <div class="welcome-text">
-                    <h1>Good morning, Dr. John</h1>
-                    <p>Today is September 29, 2025 - Ready to help your patients smile?</p>
+                    <h1>Good morning, Dr. <%= dentist.fname %></h1>
+                    <p>Today is <%= currentDate %> - Ready to help your patients smile?</p>
                 </div>
                 <div class="quick-actions">
                     <a href="/dentist/appointments" class="quick-action-btn btn-primary">
@@ -1075,7 +1096,7 @@
                             +12%
                         </div>
                     </div>
-                    <div class="stat-number">8</div>
+                    <div class="stat-number"><%= stats.todayPatients %></div>
                     <div class="stat-label">Patients Today</div>
                 </div>
                 <div class="stat-card total-patients">
@@ -1088,7 +1109,7 @@
                             +8%
                         </div>
                     </div>
-                    <div class="stat-number">245</div>
+                    <div class="stat-number"><%= stats.totalPatients %></div>
                     <div class="stat-label">Total Patients</div>
                 </div>
                 <div class="stat-card appointments">
@@ -1101,7 +1122,7 @@
                             -5%
                         </div>
                     </div>
-                    <div class="stat-number">12</div>
+                    <div class="stat-number"><%= stats.cancelledAppointments %></div>
                     <div class="stat-label">Cancelled</div>
                 </div>
                 <div class="stat-card completed">
@@ -1114,12 +1135,13 @@
                             +15%
                         </div>
                     </div>
-                    <div class="stat-number">186</div>
+                    <div class="stat-number"><%= stats.completedAppointments %></div>
                     <div class="stat-label">Completed</div>
                 </div>
             </div>
 
             <!-- Next Appointment Alert -->
+            <% if (todaySchedule) { %>
             <div class="next-appointment">
                 <h2>
                     <i class="fas fa-clock"></i>
@@ -1128,21 +1150,22 @@
                 <div class="appointment-details">
                     <div class="appointment-detail">
                         <i class="fas fa-stethoscope"></i>
-                        <span><strong>Treatment:</strong> Teeth Cleaning</span>
+                        <span><strong>Treatment:</strong> <%= todaySchedule.treatment_name %></span>
                     </div>
                     <div class="appointment-detail">
                         <i class="fas fa-clock"></i>
-                        <span><strong>Time:</strong> 10:30 AM</span>
+                        <span><strong>Time:</strong> <%= new Date(todaySchedule.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %></span>
                     </div>
                     <div class="appointment-detail">
                         <i class="fas fa-user"></i>
-                        <span><strong>Patient:</strong> Sarah Johnson</span>
+                        <span><strong>Patient:</strong> <%= todaySchedule.fname %> <%= todaySchedule.lname %></span>
                     </div>
                 </div>
-                <a href="/dentist/appointments/1" class="view-details">
+                <a href="/dentist/appointments/<%= todaySchedule.queue_id %>" class="view-details">
                     View Details
                 </a>
             </div>
+            <% } %>
 
             <!-- Content Grid -->
             <div class="content-grid">
@@ -1171,86 +1194,55 @@
                                 </tr>
                             </thead>
                             <tbody id="appointmentsTableBody">
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 600; margin-bottom: 2px;">29/09/2025</div>
-                                        <div style="font-size: 12px; color: #666;">10:30</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;">Sarah Johnson</div>
-                                    </td>
-                                    <td>Teeth Cleaning</td>
-                                    <td>
-                                        <span class="status-badge status-confirm">
-                                            <i class="fas fa-check"></i> Confirmed
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="action-btn" onclick="viewAppointment(1)">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 600; margin-bottom: 2px;">29/09/2025</div>
-                                        <div style="font-size: 12px; color: #666;">14:00</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;">Michael Brown</div>
-                                    </td>
-                                    <td>Root Canal</td>
-                                    <td>
-                                        <span class="status-badge status-pending">
-                                            <i class="fas fa-clock"></i> Pending
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="action-btn" onclick="confirmAppointment(2)">
-                                            <i class="fas fa-check"></i> Confirm
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 600; margin-bottom: 2px;">30/09/2025</div>
-                                        <div style="font-size: 12px; color: #666;">09:00</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;">Emma Wilson</div>
-                                    </td>
-                                    <td>Dental Filling</td>
-                                    <td>
-                                        <span class="status-badge status-confirm">
-                                            <i class="fas fa-check"></i> Confirmed
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="action-btn" onclick="viewAppointment(3)">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 600; margin-bottom: 2px;">30/09/2025</div>
-                                        <div style="font-size: 12px; color: #666;">15:30</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;">James Taylor</div>
-                                    </td>
-                                    <td>Teeth Whitening</td>
-                                    <td>
-                                        <span class="status-badge status-completed">
-                                            <i class="fas fa-check-circle"></i> Completed
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="action-btn" onclick="viewAppointment(4)">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
+                                <% if (latestAppointments && latestAppointments.length > 0) { %>
+                                    <% latestAppointments.forEach(function(apt) { %>
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 600; margin-bottom: 2px;">
+                                                <%= new Date(apt.time).toLocaleDateString('en-GB') %>
+                                            </div>
+                                            <div style="font-size: 12px; color: #666;">
+                                                <%= new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;">
+                                                <%= apt.fname %> <%= apt.lname %>
+                                            </div>
+                                        </td>
+                                        <td><%= apt.treatment_name %></td>
+                                        <td>
+                                            <span class="status-badge status-<%= apt.queue_status %>">
+                                                <% if (apt.queue_status === 'confirm') { %>
+                                                    <i class="fas fa-check"></i> Confirmed
+                                                <% } else if (apt.queue_status === 'pending') { %>
+                                                    <i class="fas fa-clock"></i> Pending
+                                                <% } else if (apt.queue_status === 'cancel') { %>
+                                                    <i class="fas fa-times"></i> Cancelled
+                                                <% } %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% if (apt.queue_status === 'pending') { %>
+                                                <button class="action-btn" onclick="confirmAppointment('<%= apt.queue_id %>')">
+                                                    <i class="fas fa-check"></i> Confirm
+                                                </button>
+                                            <% } else { %>
+                                                <button class="action-btn" onclick="viewAppointment('<%= apt.queue_id %>')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
+                                            <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                                            No appointments yet
+                                        </td>
+                                    </tr>
+                                <% } %>
                             </tbody>
                         </table>
                     </div>
@@ -1266,7 +1258,7 @@
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             <div class="calendar-month" id="currentMonthYear">
-                                September 2025
+                                <%= new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', {month: 'long', year: 'numeric'}) %>
                             </div>
                             <button class="calendar-nav" onclick="changeMonth(1)">
                                 <i class="fas fa-chevron-right"></i>
@@ -1287,21 +1279,24 @@
                             <h3 style="font-size: 15px; margin-bottom: 15px; color: #333; font-weight: 600;">
                                 <i class="fas fa-arrow-right" style="color: #4A90E2;"></i> Upcoming Appointments
                             </h3>
-                            <div class="appointment-item">
-                                <div class="time">29/09/2025</div>
-                                <div class="patient">10:30 - Sarah Johnson</div>
-                                <div class="treatment">Teeth Cleaning</div>
+                            <% if (upcomingAppointments && upcomingAppointments.length > 0) { %>
+                                <% upcomingAppointments.slice(0, 3).forEach(function(apt) { %>
+                                <div class="appointment-item">
+                                    <div class="time">
+                                        <%= new Date(apt.time).toLocaleDateString('en-GB') %>
+                                    </div>
+                                    <div class="patient">
+                                        <%= new Date(apt.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %> - 
+                                        <%= apt.fname %> <%= apt.lname %>
+                                    </div>
+                                    <div class="treatment"><%= apt.treatment_name %></div>
+                                </div>
+                                <% }); %>
+                            <% } else { %>
+                            <div style="text-align: center; color: #666; padding: 20px; font-size: 14px;">
+                                No upcoming appointments
                             </div>
-                            <div class="appointment-item">
-                                <div class="time">29/09/2025</div>
-                                <div class="patient">14:00 - Michael Brown</div>
-                                <div class="treatment">Root Canal</div>
-                            </div>
-                            <div class="appointment-item">
-                                <div class="time">30/09/2025</div>
-                                <div class="patient">09:00 - Emma Wilson</div>
-                                <div class="treatment">Dental Filling</div>
-                            </div>
+                            <% } %>
                         </div>
                     </div>
 
@@ -1311,10 +1306,13 @@
                             <h4><i class="fas fa-clock"></i> Today's Working Hours</h4>
                             <div class="time">
                                 <i class="fas fa-business-time"></i>
-                                <span>08:00 - 16:00</span>
+                                <span>
+                                    <%= dentist.work_start ? dentist.work_start.substring(0,5) : '08:00' %> - 
+                                    <%= dentist.work_end ? dentist.work_end.substring(0,5) : '16:00' %>
+                                </span>
                             </div>
                             <div class="specialty">
-                                <i class="fas fa-tooth"></i> Specialty: General Dentistry
+                                <i class="fas fa-tooth"></i> Specialty: <%= dentist.specialty || 'General Dentistry' %>
                             </div>
                         </div>
                     </div>
@@ -1324,7 +1322,15 @@
     </div>
 
     <script>
-        let currentDate = new Date();
+        // ข้อมูลทันตแพทย์จาก server
+        const dentist = {
+            fname: '<%= dentist.fname %>',
+            lname: '<%= dentist.lname %>',
+            photo: '<%= dentist.photo || "" %>'
+        };
+
+        let currentDate = new Date(<%= currentYear %>, <%= currentMonth - 1 %>, 1);
+        const monthlyAppointments = <%- JSON.stringify(monthlyAppointments) %>;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -1332,15 +1338,78 @@
             generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
         });
 
-        // Avatar initialization
+        // ฟังก์ชันสร้างอักษรย่อจากชื่อ
+        function generateInitials(fname, lname) {
+            let initials = '';
+            
+            if (fname && fname.trim()) {
+                initials += fname.trim().charAt(0);
+            }
+            
+            if (lname && lname.trim()) {
+                initials += lname.trim().charAt(0);
+            } else if (fname && fname.trim().length > 1) {
+                initials = fname.trim().substring(0, 2);
+            }
+            
+            return initials.toUpperCase() || 'DR';
+        }
+
+        // ฟังก์ชันคำนวณสีจากชื่อ (แบบ Gmail)
+        function getColorFromName(name) {
+            // สร้าง hash จากชื่อ
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            // คืนค่าเป็นเลข 0-9
+            return Math.abs(hash % 10);
+        }
+
+        // ฟังก์ชันสร้าง Avatar แบบ Gmail
+        function createGmailAvatar(containerElement, fname, lname, photoUrl) {
+            const initials = generateInitials(fname, lname);
+            const fullName = `${fname} ${lname}`.trim();
+            const colorIndex = getColorFromName(fullName);
+            
+            // ตรวจสอบว่ามีรูปภาพหรือไม่
+            const hasPhoto = photoUrl && 
+                            photoUrl !== '' && 
+                            photoUrl !== 'default-avatar.png' && 
+                            photoUrl !== null;
+            
+            // ตั้งค่าสี
+            containerElement.setAttribute('data-color', colorIndex);
+            
+            if (hasPhoto) {
+                const img = document.createElement('img');
+                img.src = `/uploads/${photoUrl}`;
+                img.alt = `Dr. ${fullName}`;
+                img.onerror = function() {
+                    // ถ้าโหลดรูปไม่สำเร็จ แสดงอักษรย่อแทน
+                    this.remove();
+                    containerElement.textContent = initials;
+                };
+                containerElement.innerHTML = '';
+                containerElement.appendChild(img);
+            } else {
+                // แสดงอักษรย่อ
+                containerElement.textContent = initials;
+            }
+        }
+
+        // ฟังก์ชันสร้าง Avatar
         function initializeAvatar() {
             const avatarEl = document.getElementById('userAvatar');
-            const userName = 'John Smith';
-            const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
-            avatarEl.textContent = initials;
+            const fullName = avatarEl.getAttribute('data-name') || 'Doctor';
             
-            const blueColors = ['#4A90E2', '#2196F3', '#03A9F4', '#00BCD4', '#5DADE2'];
-            avatarEl.style.background = blueColors[initials.length % blueColors.length];
+            createGmailAvatar(
+                avatarEl,
+                dentist.fname,
+                dentist.lname,
+                dentist.photo
+            );
         }
 
         // Dropdown functions
@@ -1410,7 +1479,13 @@
             calendarGrid.innerHTML = '';
             headers.forEach(header => calendarGrid.appendChild(header));
 
-            const appointmentDays = [29, 30];
+            // สร้างแผนที่วันที่มีนัดหมาย
+            const appointmentDaysMap = {};
+            if (monthlyAppointments && monthlyAppointments.length > 0) {
+                monthlyAppointments.forEach(apt => {
+                    appointmentDaysMap[apt.day] = apt.count;
+                });
+            }
             
             for (let i = 0; i < 42; i++) {
                 const currentDate = new Date(startDate);
@@ -1428,7 +1503,9 @@
                     dayElement.classList.add('today');
                 }
                 
-                if (appointmentDays.includes(currentDate.getDate()) && currentDate.getMonth() === month) {
+                // ตรวจสอบว่าวันนี้มีนัดหมายหรือไม่
+                const dayNum = currentDate.getDate();
+                if (currentDate.getMonth() === month && appointmentDaysMap[dayNum]) {
                     dayElement.classList.add('has-appointment');
                 }
                 
