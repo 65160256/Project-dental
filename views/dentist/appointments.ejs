@@ -221,7 +221,6 @@
             background: #f8f9fa;
         }
 
-        /* Gmail-style Avatar - เปลี่ยนเป็นสีฟ้า */
         .avatar {
             width: 40px;
             height: 40px;
@@ -629,7 +628,8 @@
             border: 1px solid #ffc107;
         }
 
-        .status-badge.completed {
+        .status-badge.completed,
+        .status-badge.confirm {
             background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             color: #065f46;
             border: 1px solid #10b981;
@@ -844,8 +844,7 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
-           
+        </ul>
     </div>
 
     <!-- Main Content -->
@@ -869,12 +868,12 @@
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="user-info" onclick="toggleDropdown()">
                         <div class="avatar" id="userAvatar">
-    <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-        <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
-    <% } else { %>
-        <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
-    <% } %>
-</div>
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                            <% } %>
+                        </div>
                         <div class="user-details">
                             <strong id="userName">Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
                             <small>Dentist</small>
@@ -1007,16 +1006,24 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn" title="View Details">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
                                         <% if (appointment.queue_status === 'pending') { %>
-                                        <button onclick="completeAppointment(<%= appointment.queue_id %>)" class="action-btn confirm" title="Mark as Complete">
-                                            <i class="fas fa-check"></i> Complete
-                                        </button>
-                                        <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="Cancel Appointment">
-                                            <i class="fas fa-times"></i> Cancel
-                                        </button>
+                                            <!-- นัดที่ยังไม่ได้รักษา -->
+                                            <button onclick="addHistory(<%= appointment.queue_id %>)" class="action-btn confirm" title="เพิ่มประวัติการรักษา">
+                                                <i class="fas fa-plus"></i> เพิ่มประวัติ
+                                            </button>
+                                            <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="Cancel Appointment">
+                                                <i class="fas fa-times"></i> ยกเลิก
+                                            </button>
+                                        <% } else if (appointment.queue_status === 'completed' || appointment.queue_status === 'confirm') { %>
+                                            <!-- นัดที่รักษาเสร็จแล้ว -->
+                                            <button onclick="viewTreatmentHistory(<%= appointment.queue_id %>)" class="action-btn" title="ดูประวัติการรักษา">
+                                                <i class="fas fa-file-medical"></i> ดูประวัติ
+                                            </button>
+                                        <% } else if (appointment.queue_status === 'cancel') { %>
+                                            <!-- นัดที่ยกเลิก -->
+                                            <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn" title="View Details" style="opacity: 0.6;">
+                                                <i class="fas fa-eye"></i> รายละเอียด
+                                            </button>
                                         <% } %>
                                     </div>
                                 </td>
@@ -1049,47 +1056,44 @@
             loadTodaysAppointments();
         });
 
-        // Gmail-style Avatar Generation - ใช้สีฟ้าเป็นหลัก
+        // Avatar initialization
         function initializeAvatar() {
-    const avatarEl = document.getElementById('userAvatar');
-    
-    // ถ้ามีรูปอยู่แล้ว (จาก server-side rendering) ไม่ต้องทำอะไร
-    if (avatarEl.querySelector('img')) {
-        return;
-    }
-    
-    // ถ้าไม่มีรูป ใช้ตัวอักษรย่อที่ render มาจาก server แล้ว
-    // หรือจะสร้างใหม่ก็ได้
-    if (!avatarEl.textContent.trim()) {
-        const userName = document.getElementById('userName').textContent;
-        const nameParts = userName.replace('Dr. ', '').split(' ');
-        const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
-        
-        const blueColors = [
-            '#4A90E2', '#2196F3', '#03A9F4', '#00BCD4',
-            '#5DADE2', '#3498DB', '#2980B9', '#1976D2'
-        ];
-        const colorIndex = userName.length % blueColors.length;
-        
-        avatarEl.style.background = blueColors[colorIndex];
-        avatarEl.textContent = initials;
-    }
-}
+            const avatarEl = document.getElementById('userAvatar');
+            
+            if (avatarEl.querySelector('img')) {
+                return;
+            }
+            
+            if (!avatarEl.textContent.trim()) {
+                const userName = document.getElementById('userName').textContent;
+                const nameParts = userName.replace('Dr. ', '').split(' ');
+                const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
+                
+                const blueColors = [
+                    '#4A90E2', '#2196F3', '#03A9F4', '#00BCD4',
+                    '#5DADE2', '#3498DB', '#2980B9', '#1976D2'
+                ];
+                const colorIndex = userName.length % blueColors.length;
+                
+                avatarEl.style.background = blueColors[colorIndex];
+                avatarEl.textContent = initials;
+            }
+        }
 
-// เพิ่ม function สำหรับ onerror
-function showInitials() {
-    const avatar = document.getElementById('userAvatar');
-    const img = avatar.querySelector('img');
-    if (img) {
-        img.remove();
-        const userName = document.getElementById('userName').textContent;
-        const nameParts = userName.replace('Dr. ', '').split(' ');
-        const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
-        
-        avatar.style.background = '#4A90E2';
-        avatar.textContent = initials;
-    }
-}
+        function showInitials() {
+            const avatar = document.getElementById('userAvatar');
+            const img = avatar.querySelector('img');
+            if (img) {
+                img.remove();
+                const userName = document.getElementById('userName').textContent;
+                const nameParts = userName.replace('Dr. ', '').split(' ');
+                const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
+                
+                avatar.style.background = '#4A90E2';
+                avatar.textContent = initials;
+            }
+        }
+
         // Generate week view calendar
         function generateWeekView() {
             const weekView = document.getElementById('weekView');
@@ -1136,7 +1140,6 @@ function showInitials() {
             }
         }
 
-        // Count appointments for a specific date
         function countAppointmentsForDate(dateStr) {
             return allAppointments.filter(apt => {
                 const aptDate = new Date(apt.time).toISOString().split('T')[0];
@@ -1144,7 +1147,6 @@ function showInitials() {
             }).length;
         }
 
-        // Filter appointments by date
         function filterByDate(date) {
             const rows = document.querySelectorAll('#appointmentsBody tr');
             const dateInfo = document.getElementById('selectedDateInfo');
@@ -1175,19 +1177,16 @@ function showInitials() {
             setActiveFilter(null);
         }
 
-        // Convert date string to comparable format
         function convertToComparableDate(dateStr) {
             return dateStr;
         }
 
-        // Show today's appointments
         function showTodayAppointments() {
             const today = new Date().toISOString().split('T')[0];
             filterByDate(today);
             setActiveFilter('todayBtn');
         }
 
-        // Show upcoming appointments
         function showUpcomingAppointments() {
             const rows = document.querySelectorAll('#appointmentsBody tr');
             const now = new Date();
@@ -1210,7 +1209,6 @@ function showInitials() {
             setActiveFilter('upcomingBtn');
         }
 
-        // Show all appointments
         function showAllAppointments() {
             const rows = document.querySelectorAll('#appointmentsBody tr');
             
@@ -1224,14 +1222,12 @@ function showInitials() {
             toggleTableVisibility(allAppointments.length > 0);
         }
 
-        // Parse appointment date and time
         function parseAppointmentDateTime(dateStr, timeStr) {
             const [day, month, year] = dateStr.split('/');
             const [hours, minutes] = timeStr.split(':');
             return new Date(year, month - 1, day, hours, minutes);
         }
 
-        // Update filter results display
         function updateFilterResults(count, message, title) {
             document.getElementById('appointmentCount').textContent = count;
             document.getElementById('sectionTitle').textContent = title;
@@ -1240,7 +1236,6 @@ function showInitials() {
             toggleTableVisibility(count > 0);
         }
 
-        // Set active filter button
         function setActiveFilter(activeId) {
             ['todayBtn', 'upcomingBtn', 'allBtn'].forEach(id => {
                 const btn = document.getElementById(id);
@@ -1250,7 +1245,6 @@ function showInitials() {
             });
         }
 
-        // Toggle table visibility
         function toggleTableVisibility(show) {
             const table = document.getElementById('appointmentsTable');
             const noAppointments = document.getElementById('noAppointments');
@@ -1259,7 +1253,6 @@ function showInitials() {
             if (noAppointments) noAppointments.style.display = show ? 'none' : 'block';
         }
 
-        // Navigation functions
         function changeMonth(direction) {
             currentDate.setMonth(currentDate.getMonth() + direction);
             updateMonthDisplay();
@@ -1288,7 +1281,6 @@ function showInitials() {
                 `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
         }
 
-        // Load today's appointments on page load
         function loadTodaysAppointments() {
             setTimeout(() => {
                 showTodayAppointments();
@@ -1308,33 +1300,16 @@ function showInitials() {
             }
         }
 
-        function completeAppointment(queueId) {
-            if (confirm('Mark this appointment as completed?')) {
-                showLoading();
-                
-                fetch('/dentist/api/appointment/complete', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ queueId: queueId, status: 'completed' })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    hideLoading();
-                    if (data.success) {
-                        showNotification('Appointment marked as completed successfully!', 'success');
-                        updateAppointmentRow(queueId, 'completed');
-                    } else {
-                        showNotification('Error: ' + data.error, 'error');
-                    }
-                })
-                .catch(error => {
-                    hideLoading();
-                    console.error('Error:', error);
-                    showNotification('Connection error occurred', 'error');
-                });
-            }
+        // ฟังก์ชันเพิ่มประวัติการรักษา
+        function addHistory(queueId) {
+            showLoading();
+            window.location.href = `/dentist/add-history?queueId=${queueId}`;
+        }
+
+        // ฟังก์ชันดูประวัติการรักษา
+        function viewTreatmentHistory(queueId) {
+            showLoading();
+            window.location.href = `/dentist/treatment-history/${queueId}`;
         }
 
         function cancelAppointment(queueId) {
@@ -1366,28 +1341,36 @@ function showInitials() {
             }
         }
 
-        // Update appointment row after action
         function updateAppointmentRow(queueId, newStatus) {
             const row = document.querySelector(`tr[data-appointment-id="${queueId}"]`);
             if (row) {
                 row.dataset.status = newStatus;
                 
-                // Update status badge
                 const statusCell = row.querySelector('.status-badge');
                 if (statusCell) {
                     statusCell.className = `status-badge ${newStatus}`;
-                    if (newStatus === 'completed') {
+                    if (newStatus === 'completed' || newStatus === 'confirm') {
                         statusCell.innerHTML = '<i class="fas fa-check"></i> รักษาแล้ว';
                     } else if (newStatus === 'cancel') {
                         statusCell.innerHTML = '<i class="fas fa-times"></i> ยกเลิก';
                     }
                 }
                 
-                // Update actions
                 const actionsCell = row.querySelector('.actions-cell');
-                if (actionsCell && newStatus !== 'pending') {
-                    const actionBtns = actionsCell.querySelectorAll('.action-btn:not([onclick*="viewAppointment"])');
-                    actionBtns.forEach(btn => btn.remove());
+                if (actionsCell) {
+                    if (newStatus === 'completed' || newStatus === 'confirm') {
+                        actionsCell.innerHTML = `
+                            <button onclick="viewTreatmentHistory(${queueId})" class="action-btn" title="ดูประวัติการรักษา">
+                                <i class="fas fa-file-medical"></i> ดูประวัติ
+                            </button>
+                        `;
+                    } else if (newStatus === 'cancel') {
+                        actionsCell.innerHTML = `
+                            <button onclick="viewAppointment(${queueId})" class="action-btn" title="View Details" style="opacity: 0.6;">
+                                <i class="fas fa-eye"></i> รายละเอียด
+                            </button>
+                        `;
+                    }
                 }
             }
         }

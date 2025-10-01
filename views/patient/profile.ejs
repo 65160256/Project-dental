@@ -1,454 +1,289 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><%= title %></title>
+  <title><%= title || 'โปรไฟล์ของฉัน - คลินิกยิ้มสดใส' %></title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
+    *{ box-sizing: border-box; }
+    :root{
+      --primary:#4A90E2; --primary-2:#2DA8FF; --bg:#f5f7fa; --text:#333; --muted:#666; --border:#e1e5e9;
+      --accent:#ffc107;
+    }
+    body{ margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg); color:var(--text); }
+    .hidden{ display:none !important; }
+
+    /* Sidebar */
+    .sidebar{
+      width: 220px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      position: fixed; inset: 0 auto 0 0;
+      height: 100vh; padding: 0; color: #fff;
+      box-shadow: 2px 0 15px rgba(0,0,0,.1); z-index: 1000;
+    }
+    .sidebar .logo{ text-align:center; padding:25px 20px; border-bottom:1px solid rgba(255,255,255,.15) }
+    .sidebar .logo img{
+      width:55px;height:55px;border-radius:10px;background:#fff;padding:8px;margin-bottom:10px;object-fit:contain;
+    }
+    .sidebar .logo h3{ margin:0; font-size:18px; font-weight:700 }
+    .sidebar ul{ list-style:none; padding:15px 0; margin:0 }
+    .sidebar ul li{ margin:3px 0 }
+    .sidebar ul li a{
+      display:flex; align-items:center; gap:12px;
+      padding:15px 25px; color:rgba(255,255,255,.9); text-decoration:none; transition:.3s; font-size:15px; font-weight:600;
+    }
+    .sidebar ul li a i{ width:20px; text-align:center }
+    .sidebar ul li a:hover,
+    .sidebar ul li.active a{
+      background:rgba(255,255,255,.2); color:#fff; border-radius:10px; margin:0 15px; transform: translateX(5px);
     }
 
-    .sidebar {
-      width: 180px;
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      position: fixed;
-      height: 100vh;
-      padding: 0;
-      color: #fff;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    /* Main & Top bar */
+    .main{ margin-left:220px; min-height:100vh }
+    .top-bar{
+      background:#fff; padding:20px 30px; display:flex; justify-content:space-between; align-items:center;
+      box-shadow:0 2px 10px rgba(0,0,0,.08); position:sticky; top:0; z-index:999;
     }
+    .top-bar h1{ margin:0; font-size:24px; font-weight:800; color:#333; display:flex; align-items:center; gap:10px }
+    .user-section{ display:flex; align-items:center; gap:25px }
+    .notification-icon{ font-size:20px; cursor:pointer; color:#666; padding:8px; transition:.2s }
+    .notification-icon:hover{ color:var(--primary) }
 
-    .sidebar .logo {
-      text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+    .profile-dropdown{ position:relative }
+    .user-info{
+      display:flex; align-items:center; gap:12px; padding:10px 15px; border-radius:10px; cursor:pointer; transition:.2s
     }
-
-    .sidebar .logo img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
-      background: white;
-      padding: 8px;
+    .user-info:hover{ background:#f8f9fa }
+    .avatar{
+      width:40px; height:40px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;
+      font-weight:800; color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-2)); border:2px solid #fff;
     }
-
-    .sidebar .logo h3 {
-      margin: 10px 0 0 0;
-      font-size: 16px;
-      font-weight: 600;
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block }
+    .user-details strong{ display:block; font-size:15px; color:#333; font-weight:700 }
+    .user-details small{ color:#666; font-size:12px }
+    .dropdown-menu{
+      display:none; position:absolute; right:0; top:110%; background:#fff; border:1px solid var(--border); border-radius:10px;
+      min-width:200px; box-shadow:0 10px 30px rgba(0,0,0,.15); overflow:hidden; z-index:1000;
     }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 10px 0;
-      margin: 0;
+    .dropdown-menu a{
+      display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none; color:#333; font-size:14px; font-weight:600;
     }
+    .dropdown-menu a:hover{ background:#f8f9fa }
+    .dropdown-menu hr{ margin:0; border:none; border-top:1px solid var(--border) }
 
-    .sidebar ul li {
-      margin: 2px 0;
+    /* Content */
+    .content{ padding:30px }
+    .back-button{
+      background:none; border:none; cursor:pointer; font-size:18px; color:var(--primary); margin-bottom:20px; padding:6px 8px; border-radius:8px;
+      display:inline-flex; align-items:center; gap:8px; transition:.2s
     }
+    .back-button:hover{ color:#357abd; background:#e9f2ff }
 
-    .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.9);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      font-size: 14px;
+    .profile-container{
+      max-width:900px; margin:0 auto; background:#fff; border-radius:15px; box-shadow:0 2px 15px rgba(0,0,0,.08); overflow:hidden;
     }
-
-    .sidebar ul li:hover a {
-      background-color: rgba(255,255,255,0.2);
-      color: white;
-      border-radius: 8px;
-      margin: 0 10px;
+    .profile-header{
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color:#fff; padding:40px 30px; text-align:center; position:relative;
     }
-
-    .main {
-      margin-left: 180px;
-      padding: 0;
-      min-height: 100vh;
+    .profile-avatar{
+      width:110px; height:110px; border-radius:50%; margin:0 auto 18px; display:flex; align-items:center; justify-content:center;
+      background: rgba(255,255,255,.18); font-size:44px; color:#fff; font-weight:800; letter-spacing:.5px; overflow:hidden;
+      box-shadow:0 8px 24px rgba(0,0,0,.15);
     }
-
-    .top-bar {
-      background: white;
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .profile-header h2{ margin:0 0 8px 0; font-size:28px; font-weight:800 }
+    .profile-header p{ margin:0; font-size:14px; opacity:.95 }
+    .profile-body{ padding:28px 30px }
+    .info-section{ margin-bottom:28px }
+    .info-section h3{
+      margin:0 0 16px 0; color:#333; font-size:18px; font-weight:800; padding-bottom:10px; border-bottom:2px solid #f1f3f4;
+      display:flex; align-items:center; gap:10px;
     }
+    .info-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:20px }
+    .full-width{ grid-column:1 / -1 }
+    .info-item{}
+    .info-label{ font-size:14px; font-weight:700; color:#555; margin-bottom:6px }
+    .info-value{ font-size:14px; color:#333; padding:10px 12px; background:#f8f9fa; border-radius:8px; border:1px solid #f1f3f4 }
 
-    .top-bar h1 {
-      margin: 0;
-      font-size: 24px;
-      color: #333;
-      font-weight: 600;
+    .action-buttons{
+      display:flex; gap:12px; justify-content:center; padding-top:18px; border-top:1px solid #f1f3f4; flex-wrap:wrap;
     }
-
-    .user-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+    .btn{
+      padding:12px 20px; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px; text-decoration:none; transition:.2s
     }
-
-    .notification-icon {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
+    .btn-secondary{ background:#6c757d; color:#fff }
+    .btn-secondary:hover{ background:#545b62; transform: translateY(-1px) }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--accent), #ffcf3f); color:#212529; box-shadow:0 4px 12px rgba(255,193,7,.35)
     }
+    .btn-primary:hover{ transform: translateY(-1px); filter:saturate(1.05) }
 
-    .profile-dropdown {
-      position: relative;
+    @media (max-width:1024px){
+      .sidebar{ width:200px }
+      .main{ margin-left:200px }
     }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      gap: 10px;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #666;
-    }
-
-    .user-details strong {
-      display: block;
-      font-size: 13px;
-      color: #333;
-    }
-
-    .user-details small {
-      color: #666;
-      font-size: 11px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      background: white;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 1000;
-    }
-
-    .dropdown-menu a {
-      display: block;
-      padding: 10px 15px;
-      text-decoration: none;
-      color: #333;
-      font-size: 13px;
-    }
-
-    .dropdown-menu a:hover {
-      background-color: #f8f9fa;
-    }
-
-    .content {
-      padding: 30px;
-    }
-
-    .back-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 20px;
-      color: #4A90E2;
-      margin-bottom: 30px;
-      padding: 5px;
-    }
-
-    .back-button:hover {
-      color: #357abd;
-    }
-
-    .profile-container {
-      max-width: 800px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-
-    .profile-header {
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      color: white;
-      padding: 40px 30px;
-      text-align: center;
-    }
-
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      margin: 0 auto 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      color: rgba(255,255,255,0.8);
-    }
-
-    .profile-header h2 {
-      margin: 0 0 10px 0;
-      font-size: 28px;
-      font-weight: 600;
-    }
-
-    .profile-header p {
-      margin: 0;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .profile-body {
-      padding: 30px;
-    }
-
-    .info-section {
-      margin-bottom: 30px;
-    }
-
-    .info-section h3 {
-      color: #333;
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0 0 20px 0;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #f1f3f4;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .info-item {
-      margin-bottom: 15px;
-    }
-
-    .info-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 5px;
-    }
-
-    .info-value {
-      font-size: 14px;
-      color: #333;
-      padding: 8px 0;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      padding-top: 20px;
-      border-top: 1px solid #f1f3f4;
-    }
-
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-
-    .btn-secondary:hover {
-      background: #545b62;
-    }
-
-    .btn-primary {
-      background: #ffc107;
-      color: #212529;
-    }
-
-    .btn-primary:hover {
-      background: #e0a800;
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      
-      .main {
-        margin-left: 0;
-      }
-      
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .action-buttons {
-        flex-direction: column;
-      }
+    @media (max-width:768px){
+      .sidebar{ width:100%; height:auto; position:relative }
+      .main{ margin-left:0 }
+      .content{ padding:20px }
+      .info-grid{ grid-template-columns:1fr }
+      .action-buttons{ flex-direction:column }
     }
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
-      <img src="/img/logo.png" alt="Smile Clinic" />
-      <h3>Smile Clinic</h3>
+      <img src="/img/logo.png" alt="คลินิกยิ้มสดใส" />
+      <h3>คลินิกยิ้มสดใส</h3>
     </div>
     <ul>
-      <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li><a href="/patient/appointments">Appointment</a></li>
-      <li><a href="/patient/history">History</a></li>
-      <li><a href="/patient/my-treatments">My Treatments</a></li>
-      <li><a href="/patient/dentists">Dentists</a></li>
+      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i> หน้าหลัก</a></li>
+      <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i> จองนัดหมาย</a></li>
+      <li><a href="/patient/history"><i class="fas fa-history"></i> ประวัตินัดหมาย</a></li>
+      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i> ประวัติการรักษา</a></li>
+      <li class="active"><a href="/patient/profile"><i class="fas fa-user"></i> โปรไฟล์</a></li>
     </ul>
   </div>
 
+  <!-- Main -->
   <div class="main">
-    <div class="top-bar">
-      <h1>My Profile</h1>
+    <div class="top-bar" role="banner">
+      <h1><i class="fas fa-id-badge" aria-hidden="true"></i> โปรไฟล์ของฉัน</h1>
       <div class="user-section">
-        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <i class="fas fa-bell notification-icon" role="button" tabindex="0" aria-label="การแจ้งเตือน" onclick="toggleNotifications()"></i>
         <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar"/>
-            <div class="user-details">
-              <strong>Hello <%= patient.fname %></strong>
-              <small>patient</small>
+          <div class="user-info" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false"
+               onclick="toggleDropdown()"
+               onkeydown="if(event.key==='Enter'||event.key===' '){toggleDropdown();event.preventDefault();}">
+            <div class="avatar" aria-hidden="true">
+              <% if (patient && patient.avatar) { %>
+                <img src="/uploads/<%= patient.avatar %>" alt="">
+              <% } else { %>
+                <%= (patient?.fname?.[0] || 'ผ')[0] %><%= (patient?.lname?.[0] || 'ป')[0] %>
+              <% } %>
             </div>
-            <i class="fas fa-caret-down"></i>
+            <div class="user-details">
+              <strong><%= patient.fname %> <%= patient.lname %></strong>
+              <small>ผู้ป่วย</small>
+            </div>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
           </div>
-          <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile">My Profile</a>
+          <div class="dropdown-menu" id="profileDropdown" role="menu" aria-label="โปรไฟล์">
+            <a href="/patient/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+            <a href="/patient/profile/change-password"><i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Content -->
     <div class="content">
-      <button class="back-button" onclick="history.back()">
-        <i class="fas fa-arrow-left"></i>
+      <button class="back-button" type="button" onclick="history.back()" aria-label="ย้อนกลับ">
+        <i class="fas fa-arrow-left"></i> กลับ
       </button>
 
       <div class="profile-container">
         <div class="profile-header">
-          <div class="profile-avatar">
-            <i class="fas fa-user"></i>
+          <div class="profile-avatar" aria-hidden="true">
+            <% if (patient && patient.avatar) { %>
+              <img src="/uploads/<%= patient.avatar %>" alt="" style="width:100%;height:100%;object-fit:cover;">
+            <% } else { 
+                 const initials = ((patient.full_name || (patient.fname+' '+patient.lname)) || '')
+                                  .split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase(); %>
+              <span><%= initials || 'ME' %></span>
+            <% } %>
           </div>
           <h2><%= patient.full_name %></h2>
-          <p>Last Login: <%= patient.last_login_formatted %></p>
+          <p>เข้าสู่ระบบล่าสุด: <%= patient.last_login_formatted || '—' %></p>
         </div>
 
         <div class="profile-body">
+          <!-- Login Info -->
           <div class="info-section">
-            <h3>Login Information</h3>
+            <h3><i class="fas fa-shield-alt"></i> ข้อมูลการเข้าสู่ระบบ</h3>
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">Email:</div>
+                <div class="info-label">อีเมล</div>
                 <div class="info-value"><%= patient.email %></div>
               </div>
               <div class="info-item">
-                <div class="info-label">Password:</div>
-                <div class="info-value"><%= patient.masked_password %></div>
+                <div class="info-label">รหัสผ่าน</div>
+                <div class="info-value"><%= patient.masked_password || '••••••••' %></div>
               </div>
             </div>
           </div>
 
+          <!-- Personal Info -->
           <div class="info-section">
-            <h3>Personal Information</h3>
+            <h3><i class="fas fa-user-circle"></i> ข้อมูลส่วนบุคคล</h3>
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">Name:</div>
+                <div class="info-label">ชื่อ–นามสกุล</div>
                 <div class="info-value"><%= patient.full_name %></div>
               </div>
               <div class="info-item">
-                <div class="info-label">Date of Birth:</div>
+                <div class="info-label">วันเดือนปีเกิด</div>
                 <div class="info-value">
                   <% if (patient.dob) { %>
                     <%= patient.dob_formatted %>
                   <% } else { %>
-                    Not specified
+                    ยังไม่ระบุ
                   <% } %>
                 </div>
               </div>
               <div class="info-item full-width">
-                <div class="info-label">ID Card Number:</div>
+                <div class="info-label">เลขบัตรประชาชน</div>
                 <div class="info-value">
                   <% if (patient.id_card) { %>
                     <%= patient.id_card %>
                   <% } else { %>
-                    Not specified
+                    ยังไม่ระบุ
                   <% } %>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Contact Info -->
           <div class="info-section">
-            <h3>Contact Information</h3>
+            <h3><i class="fas fa-address-book"></i> ข้อมูลการติดต่อ</h3>
             <div class="info-grid">
               <div class="info-item full-width">
-                <div class="info-label">Address:</div>
+                <div class="info-label">ที่อยู่</div>
                 <div class="info-value">
                   <% if (patient.address) { %>
                     <%= patient.address %>
                   <% } else { %>
-                    Not specified
+                    ยังไม่ระบุ
                   <% } %>
                 </div>
               </div>
               <div class="info-item">
-                <div class="info-label">Phone:</div>
+                <div class="info-label">เบอร์โทรศัพท์</div>
                 <div class="info-value">
                   <% if (patient.phone) { %>
                     <%= patient.phone %>
                   <% } else { %>
-                    Not specified
+                    ยังไม่ระบุ
                   <% } %>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Actions -->
           <div class="action-buttons">
             <a href="/patient/profile/change-password" class="btn btn-secondary">
-              Change Password
+              <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
             </a>
             <a href="/patient/profile/edit" class="btn btn-primary">
-              <i class="fas fa-edit"></i>
-              Edit
+              <i class="fas fa-edit"></i> แก้ไขข้อมูล
             </a>
           </div>
         </div>
@@ -459,17 +294,23 @@
   <script>
     function toggleDropdown() {
       const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      const trigger = document.querySelector('.profile-dropdown .user-info');
+      const isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+      trigger && trigger.setAttribute('aria-expanded', String(!isOpen));
     }
-    
+
     function toggleNotifications() {
-      console.log('Notifications clicked');
+      console.log('การแจ้งเตือนถูกคลิก'); // สามารถเชื่อม API แจ้งเตือนในภายหลังได้
     }
-    
+
+    // ปิดเมนูเมื่อคลิกนอก
     document.addEventListener('click', function (e) {
       const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
+      if (prof && !prof.contains(e.target)) {
         document.getElementById('profileDropdown').style.display = 'none';
+        const trigger = prof.querySelector('.user-info');
+        trigger && trigger.setAttribute('aria-expanded','false');
       }
     });
   </script>

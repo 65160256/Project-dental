@@ -335,7 +335,7 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
+            <!-- <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li> -->
         </ul>
     </div>
 
@@ -475,9 +475,9 @@
                     </button>
                     <% } %>
                     
-                    <button onclick="editAppointment()" class="btn btn-warning">
+                    <!-- <button onclick="editAppointment()" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Edit Details
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
@@ -522,11 +522,11 @@
             }
         }
 
-        function editAppointment() {
-            // Redirect to edit page or open modal
-            const queueId = <%= appointment.queue_id %>;
-            window.location.href = `/dentist/appointments/${queueId}/edit`;
-        }
+        // function editAppointment() {
+        //     // Redirect to edit page or open modal
+        //     const queueId = <%= appointment.queue_id %>;
+        //     window.location.href = `/dentist/appointments/${queueId}/edit`;
+        // }
 
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');

@@ -1,789 +1,414 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Our Dental Specialists</title>
+  <title>ทันตแพทย์ของเรา - คลินิกยิ้มสดใส</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
+    * { box-sizing: border-box; }
+    :root{
+      --primary:#4A90E2; --primary-2:#2DA8FF; --bg:#f5f7fa; --text:#333; --muted:#666; --border:#e1e5e9;
+      --success:#28a745;
+    }
+    html,body{height:100%}
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
+      background-color: var(--bg);
+      color: var(--text);
     }
+    .hidden{display:none !important;}
 
     .sidebar {
-      width: 180px;
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      width: 220px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
       position: fixed;
+      inset: 0 auto 0 0;
       height: 100vh;
       padding: 0;
       color: #fff;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.1);
       z-index: 1000;
     }
-
     .sidebar .logo {
       text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
     }
-
     .sidebar .logo img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
-      background: white;
-      padding: 8px;
+      width: 55px;height: 55px;border-radius: 10px;background: white;padding: 8px;margin-bottom: 10px;
+      object-fit: contain;
     }
-
-    .sidebar .logo h3 {
-      margin: 10px 0 0 0;
-      font-size: 16px;
-      font-weight: 600;
+    .sidebar .logo h3 { margin:0;font-size:18px;font-weight:600 }
+    .sidebar ul{ list-style:none;padding:15px 0;margin:0 }
+    .sidebar ul li{ margin:3px 0 }
+    .sidebar ul li a{
+      display:flex;align-items:center;padding:15px 25px;color:rgba(255,255,255,0.9);
+      text-decoration:none;transition:.3s;font-size:15px;font-weight:500
     }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 10px 0;
-      margin: 0;
+    .sidebar ul li.active a, .sidebar ul li:hover a{
+      background-color: rgba(255,255,255,0.2); color:#fff; border-radius:10px; margin:0 15px; transform:translateX(5px)
     }
+    .sidebar ul li a i{ margin-right:12px;width:20px;text-align:center;font-size:16px }
 
-    .sidebar ul li {
-      margin: 2px 0;
-    }
-
-    .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
-      color: rgba(255,255,255,0.9);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      font-size: 14px;
-    }
-
-    .sidebar ul li.active a,
-    .sidebar ul li:hover a {
-      background-color: rgba(255,255,255,0.2);
-      color: white;
-      border-radius: 8px;
-      margin: 0 10px;
-    }
-
-    .main {
-      margin-left: 180px;
-      padding: 0;
-      min-height: 100vh;
-    }
-
-    .top-bar {
-      background: white;
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 999;
-    }
-
-    .search-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .search-section label {
-      font-weight: 500;
-      color: #555;
-      font-size: 14px;
-    }
-
-    .search-box {
-      background: #f8f9fa;
-      border: 1px solid #e1e5e9;
-      border-radius: 20px;
-      padding: 8px 15px;
-      display: flex;
-      align-items: center;
-      width: 300px;
-      position: relative;
-    }
-
-    .search-box i {
-      color: #666;
-      margin-right: 8px;
-      font-size: 14px;
-    }
-
-    .search-box input {
-      border: none;
-      background: transparent;
-      outline: none;
-      width: 100%;
-      font-size: 13px;
-    }
-
-    .search-clear {
-      background: none;
-      border: none;
-      color: #666;
-      cursor: pointer;
-      padding: 2px;
-      display: none;
-    }
-
-    .user-section {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .notification-icon {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
-
-    .profile-dropdown {
-      position: relative;
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      gap: 10px;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #666;
-    }
-
-    .user-details strong {
-      display: block;
-      font-size: 13px;
-      color: #333;
-    }
-
-    .user-details small {
-      color: #666;
-      font-size: 11px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      background: white;
-      border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 1000;
-    }
-
-    .dropdown-menu a {
-      display: block;
-      padding: 10px 15px;
-      text-decoration: none;
-      color: #333;
-      font-size: 13px;
-    }
-
-    .dropdown-menu a:hover {
-      background-color: #f8f9fa;
-    }
-
-    .content {
-      padding: 30px;
-    }
-
-    .page-header {
-      margin-bottom: 30px;
-      display: flex;
-      justify-content: between;
-      align-items: center;
-      flex-wrap: wrap;
+    .main{ margin-left:220px; min-height:100vh }
+    .top-bar{
+      background:#fff;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08); position: sticky; top:0; z-index: 999;
       gap: 20px;
     }
+    .search-section{ display:flex;align-items:center;gap:15px; flex-shrink: 1; min-width: 0; }
+    .search-section label{ font-weight:600;color:#555;font-size:15px; white-space: nowrap; }
+    .search-box{
+      background:#f8f9fa;border:2px solid var(--border);border-radius:30px;padding:12px 25px;display:flex;align-items:center;
+      width: 300px; transition:.3s; position:relative; flex-shrink: 1;
+    }
+    .search-box:focus-within{ border-color:var(--primary); box-shadow:0 0 0 4px rgba(74,144,226,.1); background:#fff }
+    .search-box i{ color:#666;margin-right:12px;font-size:15px }
+    .search-box input{ border:none;background:transparent;outline:none;width:100%;font-size:15px;color:#333 }
+    .search-box input::placeholder{ color:#999 }
+    .search-clear{
+      background:none;border:none;color:#666;cursor:pointer;padding:4px;display:none;position:absolute;right:15px;transition:.2s
+    }
+    .search-clear:hover{ color:#333 }
 
-    .page-header h1 {
-      font-size: 28px;
-      color: #333;
-      margin: 0;
-      font-weight: 600;
+    .user-section{ display:flex;align-items:center;gap:25px; flex-shrink: 0; }
+    .notification-wrapper{ position:relative }
+    .notification-icon{ font-size:20px;cursor:pointer;color:#666;transition:.3s;padding:8px }
+    .notification-icon:hover{ color:var(--primary) }
+
+    .profile-dropdown{ position:relative }
+    .user-info{
+      display:flex;align-items:center;gap:15px;padding:10px 15px;border-radius:10px;cursor:pointer;transition:.2s
+    }
+    .user-info:hover{ background:#f8f9fa }
+    .avatar{
+      width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;
+      font-size:16px;color:#fff;text-transform:uppercase;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow:hidden
+    }
+    .avatar img{ width:100%;height:100%;object-fit:cover;display:block }
+    .user-details strong{ display:block;font-size:15px;color:#333;font-weight:600 }
+    .user-details small{ color:#666;font-size:13px }
+
+    .dropdown-menu{
+      display:none; position:absolute; right:0; top:110%; background:#fff; border:1px solid var(--border); border-radius:10px;
+      min-width:200px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:1000; overflow:hidden
+    }
+    .dropdown-menu a{
+      display:flex;align-items:center;padding:15px 20px;text-decoration:none;color:#333;font-size:14px;font-weight:500;transition:.2s
+    }
+    .dropdown-menu a i{ margin-right:12px;width:18px;color:#666 }
+    .dropdown-menu a:hover{ background:#f8f9fa }
+    .dropdown-menu hr{ margin:0;border:none;border-top:1px solid var(--border) }
+
+    .content{ padding:30px }
+    .page-header{
+      margin-bottom:30px;background:#fff;padding:30px;border-radius:15px;box-shadow:0 2px 15px rgba(0,0,0,0.08)
+    }
+    .page-header h1{ font-size:32px;color:#333;margin:0 0 10px;font-weight:700;display:flex;align-items:center;gap:15px }
+    .page-header p{ color:#666;margin:0;font-size:16px }
+
+    .filters-bar{
+      background:#fff;padding:25px;border-radius:15px;box-shadow:0 2px 15px rgba(0,0,0,0.08);margin-bottom:30px
+    }
+    .filter-group{ display:flex;gap:12px;align-items:center;flex-wrap:wrap }
+    .filter-label{ font-weight:600;color:#333;font-size:15px;margin-right:10px }
+    .filter-btn{
+      padding:10px 20px;border:2px solid var(--border);background:#fff;border-radius:25px;cursor:pointer;transition:.2s;
+      font-size:14px;font-weight:600;color:#555
+    }
+    .filter-btn:hover{ border-color:var(--primary); color:var(--primary); transform:translateY(-2px) }
+    .filter-btn.active{
+      border-color:var(--primary); background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#fff;
+      box-shadow:0 4px 12px rgba(74,144,226,0.3)
     }
 
-    .stats-bar {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .stat-item {
-      text-align: center;
-      flex: 1;
-      min-width: 120px;
-    }
-
-    .stat-number {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #4A90E2;
-      display: block;
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
-      color: #666;
-      margin-top: 5px;
-    }
-
-    .filters-bar {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .filter-group {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .filter-btn {
-      padding: 8px 16px;
-      border: 2px solid #e1e5e9;
-      background: white;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .filter-btn:hover,
-    .filter-btn.active {
-      border-color: #4A90E2;
-      background: #4A90E2;
-      color: white;
-    }
-
-    .specialty-section {
-      margin-bottom: 40px;
-    }
-
-    .specialty-header {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 20px;
-      padding: 15px 20px;
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      color: white;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .dentists-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      gap: 25px;
-    }
-
-    .dentist-card {
-      background: white;
+    .search-results-info{
+      background: linear-gradient(135deg, #e3f2fd, #f0f9ff);
+      border: 1px solid var(--primary);
       border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      position: relative;
-      overflow: hidden;
+      padding: 20px; margin-bottom: 25px; display:flex;justify-content:space-between;align-items:center; gap:12px
     }
-
-    .dentist-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    .clear-search-btn{
+      background:var(--primary);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s
     }
+    .clear-search-btn:hover{ background:#357abd; transform: translateY(-2px) }
 
-    .dentist-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+    .specialty-section{ margin-bottom:40px }
+    .specialty-header{
+      font-size:20px;font-weight:700;color:#fff;margin-bottom:25px;padding:20px 30px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));border-radius:15px;display:flex;align-items:center;gap:12px;
+      box-shadow:0 4px 15px rgba(74,144,226,.3)
     }
+    .specialty-header small{ font-weight:normal;opacity:.9;font-size:15px }
 
-    .dentist-photo {
-      width: 120px;
-      height: 120px;
-      border-radius: 15px;
-      background: linear-gradient(135deg, #e9ecef, #f8f9fa);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #6c757d;
-      font-size: 3rem;
-      overflow: hidden;
-      position: relative;
-      border: 3px solid #e1e5e9;
+    .dentists-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap:25px }
+    .dentist-card{
+      background:#fff;border-radius:15px;padding:30px; box-shadow:0 2px 15px rgba(0,0,0,0.08); transition:.2s;
+      display:flex; gap:25px; align-items:flex-start; position:relative; overflow:hidden
     }
+    .dentist-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(135deg,var(--primary),var(--primary-2)) }
+    .dentist-card:hover{ transform:translateY(-5px); box-shadow:0 8px 30px rgba(0,0,0,0.15) }
 
-    .dentist-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 12px;
+    .dentist-photo{
+      width:130px;height:130px;border-radius:15px;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      flex-shrink:0; display:flex;align-items:center;justify-content:center;color:#fff;font-size:3.5rem; overflow:hidden; position:relative;
+      box-shadow:0 4px 15px rgba(74,144,226,0.3)
     }
+    .dentist-photo img{ width:100%;height:100%;object-fit:cover; display:block }
+    .dentist-initials{ font-size:2.2rem; font-weight:800; letter-spacing:.5px }
 
-    .dentist-photo.default {
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      color: white;
+    .dentist-info{ flex:1 }
+    .dentist-name{ font-size:20px;font-weight:800;color:#333;margin:0 0 10px;display:flex;align-items:center;gap:10px;line-height:1.2 }
+    .online-indicator{ width:10px;height:10px;background:var(--success);border-radius:50%;animation:pulse 2s infinite }
+    @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    .dentist-specialty{
+      background: linear-gradient(135deg, #f0f9ff, #e3f2fd); color:var(--primary); padding:6px 14px; border-radius:20px;
+      font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px; margin-bottom:15px
     }
+    .dentist-credentials{ margin-bottom:20px }
+    .credential{ display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; font-size:14px; color:#666 }
+    .credential i{ color:var(--primary); margin-top:3px; flex-shrink:0; width:16px }
 
-    .dentist-info {
-      flex: 1;
+    .dentist-actions{ display:flex; gap:10px; flex-wrap:wrap }
+    .make-appointment-btn,
+    .view-profile-btn{
+      color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;
+      text-decoration:none; display:inline-flex; align-items:center; gap:8px
     }
+    .make-appointment-btn{ background:linear-gradient(135deg,#28a745,#20c997); box-shadow:0 4px 12px rgba(40,167,69,.3) }
+    .make-appointment-btn:hover{ background:linear-gradient(135deg,#218838,#1fa875); transform:translateY(-2px); box-shadow:0 6px 16px rgba(40,167,69,.4) }
+    .view-profile-btn{ background:linear-gradient(135deg,var(--primary),var(--primary-2)); box-shadow:0 4px 12px rgba(74,144,226,.3) }
+    .view-profile-btn:hover{ background:linear-gradient(135deg,#357abd,#2691d9); transform:translateY(-2px); box-shadow:0 6px 16px rgba(74,144,226,.4) }
 
-    .dentist-name {
-      font-size: 20px;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .no-dentists{
+      text-align:center;padding:80px 30px;color:#666;background:#fff;border-radius:15px;box-shadow:0 2px 15px rgba(0,0,0,0.08)
     }
+    .no-dentists i{ font-size:80px;color:#ddd;margin-bottom:25px;display:block }
+    .no-dentists h3{ margin:0 0 15px;font-size:24px;color:#555;font-weight:700 }
+    .no-dentists p{ margin:0 0 25px;font-size:16px;line-height:1.5 }
 
-    .online-indicator {
-      width: 10px;
-      height: 10px;
-      background: #28a745;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
+    .loading{ text-align:center;padding:40px;color:#666 }
+    .loading i{ animation:spin 1s linear infinite }
+    @keyframes spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+    /* Modal */
+    .modal{
+      display:none; position:fixed; z-index:2000; inset:0; background:rgba(0,0,0,.5); backdrop-filter: blur(5px);
     }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+    .modal[aria-hidden="false"]{ display:block }
+    .modal-content{
+      background:#fff;margin:5% auto;padding:40px;border-radius:15px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;
+      box-shadow:0 15px 40px rgba(0,0,0,0.3); outline: none;
     }
+    .modal-header{ display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid var(--border) }
+    .modal-title{ font-size:24px;font-weight:700;color:#333;margin:0 }
+    .close{ color:#666;font-size:32px;font-weight:bold;cursor:pointer;transition:.2s; line-height:1 }
+    .close:hover{ color:#333 }
 
-    .dentist-specialty {
-      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-      color: #4A90E2;
-      padding: 4px 12px;
-      border-radius: 15px;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-block;
-      margin-bottom: 15px;
+    @media (max-width: 1024px){
+      .sidebar{ width:200px }
+      .main{ margin-left:200px }
+      .dentists-grid{ grid-template-columns: 1fr }
     }
-
-    .dentist-credentials {
-      margin-bottom: 20px;
+    
+    @media (max-width: 900px){
+      .search-box{ width: 250px; }
     }
-
-    .credential {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: #666;
+    
+    @media (max-width: 768px){
+      .sidebar{ width:100%;height:auto;position:relative }
+      .main{ margin-left:0 }
+      .content{ padding:20px }
+      .top-bar{ flex-wrap: wrap; gap: 15px; }
+      .search-section{ width: 100%; }
+      .search-box{ width:100% }
+      .user-section{ width: 100%; justify-content: flex-end; }
+      .dentist-card{ flex-direction:column;text-align:center;align-items:center }
+      .dentist-photo{ margin-bottom:15px }
+      .dentist-name{ justify-content:center }
+      .dentist-actions{ width:100%; justify-content:center }
+      .filter-group{ justify-content:center }
     }
-
-    .credential i {
-      color: #4A90E2;
-      margin-top: 2px;
-      flex-shrink: 0;
-      width: 16px;
-    }
-
-    .dentist-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .make-appointment-btn {
-      background: linear-gradient(135deg, #28a745, #20c997);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-    }
-
-    .make-appointment-btn:hover {
-      background: linear-gradient(135deg, #218838, #1fa875);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-    }
-
-    .view-profile-btn {
-      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-    }
-
-    .view-profile-btn:hover {
-      background: linear-gradient(135deg, #357abd, #2691d9);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
-    }
-
-    .no-dentists {
-      text-align: center;
-      padding: 60px 20px;
-      color: #666;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .no-dentists i {
-      font-size: 4rem;
-      color: #e1e5e9;
-      margin-bottom: 20px;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-
-    .loading i {
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(5px);
-    }
-
-    .modal-content {
-      background: white;
-      margin: 5% auto;
-      padding: 30px;
-      border-radius: 15px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #e1e5e9;
-    }
-
-    .modal-title {
-      font-size: 24px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .close {
-      color: #666;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-
-    .close:hover {
-      color: #333;
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      
-      .main {
-        margin-left: 0;
-      }
-
-      .content {
-        padding: 20px;
-      }
-
-      .dentists-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .dentist-card {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .dentist-photo {
-        align-self: center;
-      }
-
-      .stats-bar {
-        flex-direction: column;
-      }
-
-      .filter-group {
-        justify-content: center;
-      }
-
-      .search-box {
-        width: 200px;
-      }
+    
+    @media (max-width: 480px){
+      .dentist-actions{ flex-direction:column }
+      .make-appointment-btn,.view-profile-btn{ width:100%; justify-content:center }
     }
   </style>
 </head>
 <body>
   <div class="sidebar">
     <div class="logo">
-      <img src="/img/logo.png" alt="Smile Clinic" />
-      <h3>Smile Clinic</h3>
+      <img src="/img/logo.png" alt="คลินิกยิ้มสดใส" />
+      <h3>คลินิกยิ้มสดใส</h3>
     </div>
     <ul>
-      <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li><a href="/patient/appointments">Appointment</a></li>
-      <li><a href="/patient/history">History</a></li>
-      <li><a href="/patient/my-treatments">My Treatments</a></li>
-      <li class="active"><a href="/patient/dentists">Dentists</a></li>
+      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i>หน้าหลัก</a></li>
+      <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i>จองนัดหมาย</a></li>
+      <li><a href="/patient/history"><i class="fas fa-history"></i>ประวัตินัดหมาย</a></li>
+      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i>ประวัติการรักษา</a></li>
+      <li class="active"><a href="/patient/dentists"><i class="fas fa-user-md"></i>ทันตแพทย์</a></li>
     </ul>
   </div>
 
   <div class="main">
-    <div class="top-bar">
-      <div class="search-section">
-        <label>Search:</label>
+    <div class="top-bar" role="banner">
+      <div class="search-section" role="search">
+        <label for="searchInput">ค้นหา:</label>
         <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" id="searchInput" value="<%= searchQuery %>" 
-                 placeholder="Search dentists by name or specialty..." />
-          <button class="search-clear" id="clearSearch" onclick="clearSearch()">
-            <i class="fas fa-times"></i>
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input type="text" id="searchInput" value="<%= searchQuery %>" placeholder="ค้นหาทันตแพทย์..." aria-label="ค้นหาทันตแพทย์"/>
+          <button class="search-clear" id="clearSearch" type="button" aria-label="ล้างการค้นหา" title="ล้างการค้นหา" onclick="clearSearch()">
+            <i class="fas fa-times" aria-hidden="true"></i>
           </button>
         </div>
       </div>
       <div class="user-section">
-        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
+        <div class="notification-wrapper">
+          <i class="fas fa-bell notification-icon" role="button" tabindex="0" aria-label="การแจ้งเตือน" onclick="toggleNotifications()"></i>
+        </div>
         <div class="profile-dropdown">
-          <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar"/>
-            <div class="user-details">
-              <strong>Hello <%= patient.fname %> <%= patient.lname %></strong>
-              <small>patient</small>
+          <div class="user-info" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" onclick="toggleDropdown()" onkeydown="if(event.key==='Enter'||event.key===' '){toggleDropdown(); event.preventDefault();}">
+            <div class="avatar" aria-hidden="true">
+              <% if (patient && patient.avatar) { %>
+                <img src="/uploads/<%= patient.avatar %>" alt="">
+              <% } else { %>
+                <%= (patient?.fname?.[0] || 'ผ')[0] %><%= (patient?.lname?.[0] || 'ป')[0] %>
+              <% } %>
             </div>
-            <i class="fas fa-caret-down"></i>
+            <div class="user-details">
+              <strong><%= patient.fname %> <%= patient.lname %></strong>
+              <small>ผู้ป่วย</small>
+            </div>
+            <i class="fas fa-caret-down" aria-hidden="true"></i>
           </div>
-          <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile">My Profile</a>
+          <div class="dropdown-menu" id="profileDropdown" role="menu" aria-label="โปรไฟล์">
+            <a href="/patient/profile"><i class="fas fa-user"></i>โปรไฟล์ของฉัน</a>
+            <a href="/patient/profile/change-password"><i class="fas fa-key"></i>เปลี่ยนรหัสผ่าน</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i>ออกจากระบบ</a>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- เนื้อหาส่วนอื่นๆ เหมือนเดิม -->
     <div class="content">
       <div class="page-header">
-        <h1><i class="fas fa-user-md"></i> Our Dental Specialists</h1>
+        <h1><i class="fas fa-user-md" aria-hidden="true"></i> ทันตแพทย์ของเรา</h1>
+        <p>พบกับทีมทันตแพทย์ผู้เชี่ยวชาญของเรา</p>
       </div>
 
-      <!-- Stats Bar -->
-      <div class="stats-bar">
-        <div class="stat-item">
-          <span class="stat-number"><%= totalDentists %></span>
-          <div class="stat-label">Total Dentists</div>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number"><%= specialties.length %></span>
-          <div class="stat-label">Specialties</div>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="availableToday">0</span>
-          <div class="stat-label">Available Today</div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="filters-bar">
+      <div class="filters-bar" aria-label="ตัวกรอง">
         <div class="filter-group">
-          <span style="font-weight: 600; color: #333;">Filter by specialty:</span>
-          <button class="filter-btn active" onclick="filterBySpecialty('all')">
-            All Specialties
-          </button>
+          <span class="filter-label">กรองตามความเชี่ยวชาญ:</span>
+          <button class="filter-btn active" type="button" onclick="filterBySpecialty('all', this)">ทั้งหมด</button>
           <% specialties.forEach(function(specialty) { %>
-          <button class="filter-btn" onclick="filterBySpecialty('<%= specialty %>')">
-            <%= specialty %>
-          </button>
+            <button class="filter-btn" type="button" onclick="filterBySpecialty('<%= specialty %>', this)"><%= specialty %></button>
           <% }); %>
         </div>
       </div>
 
-      <!-- Search Results Info -->
-      <% if (searchQuery) { %>
-      <div class="search-form" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
-        <div class="search-input-group">
-          <span><i class="fas fa-search"></i> Search results for: "<strong><%= searchQuery %></strong>" (<%= totalDentists %> found)</span>
-          <a href="/patient/dentists" class="clear-search">Clear Search</a>
-        </div>
-      </div>
-      <% } %>
+      <div id="searchResultsAnchor"></div>
 
-      <!-- Dentists List -->
       <div id="dentistsContainer">
+        <!-- ส่วนนี้เหมือนเดิม ตามโค้ดก่อนหน้า -->
         <% if (specialties.length > 0) { %>
           <% specialties.forEach(function(specialty) { %>
-          <div class="specialty-section" data-specialty="<%= specialty %>">
-            <h2 class="specialty-header">
-              <i class="fas fa-tooth"></i>
-              <%= specialty %>
-              <small style="font-weight: normal; opacity: 0.8;">
-                (<%= dentistsBySpecialty[specialty].length %> doctors)
-              </small>
-            </h2>
-            
-            <div class="dentists-grid">
-              <% dentistsBySpecialty[specialty].forEach(function(dentist) { %>
-              <div class="dentist-card" data-dentist-name="<%= dentist.full_name.toLowerCase() %>" data-specialty="<%= specialty.toLowerCase() %>">
-                <div class="dentist-photo" id="photo-<%= dentist.dentist_id %>">
-                  <% if (dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                    <img src="/uploads/<%= dentist.photo %>" 
-                         alt="Dr. <%= dentist.full_name %>"
-                         onerror="handleImageError(this, <%= dentist.dentist_id %>)" />
-                  <% } else { %>
-                    <i class="fas fa-user-md"></i>
-                  <% } %>
-                </div>
-                
-                <div class="dentist-info">
-                  <h3 class="dentist-name">
-                    DR. <%= dentist.full_name.toUpperCase() %>
-                    <span class="online-indicator" title="Available for appointments"></span>
-                  </h3>
-                  
-                  <div class="dentist-specialty">
-                    <i class="fas fa-stethoscope"></i>
-                    <%= dentist.specialty %>
-                  </div>
-                  
-                  <div class="dentist-credentials">
-                    <% if (dentist.education) { %>
-                      <% dentist.education.split(',').slice(0, 2).forEach(function(edu) { %>
-                      <div class="credential">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span><%= edu.trim() %></span>
+            <div class="specialty-section" data-specialty="<%= specialty %>">
+              <h2 class="specialty-header">
+                <i class="fas fa-tooth" aria-hidden="true"></i>
+                <%= specialty %>
+                <small>(<%= dentistsBySpecialty[specialty].length %> ท่าน)</small>
+              </h2>
+
+              <div class="dentists-grid">
+                <% dentistsBySpecialty[specialty].forEach(function(dentist) { 
+                     const hasPhoto = dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'default-doctor.png';
+                     const initials = (dentist.full_name || '').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+                %>
+                  <div class="dentist-card is-visible"
+                       data-dentist-name="<%= (dentist.full_name || '').toLowerCase() %>"
+                       data-specialty="<%= (specialty || '').toLowerCase() %>">
+                    <div class="dentist-photo" id="photo-<%= dentist.dentist_id %>">
+                      <% if (hasPhoto) { %>
+                        <img src="/uploads/<%= dentist.photo %>"
+                             alt="ทพ. <%= dentist.full_name %>"
+                             loading="lazy" decoding="async"
+                             onerror="handleImageError(this, <%= dentist.dentist_id %>, '<%= initials %>')">
+                      <% } else { %>
+                        <span class="dentist-initials"><%= initials || 'DR' %></span>
+                      <% } %>
+                    </div>
+
+                    <div class="dentist-info">
+                      <h3 class="dentist-name">
+                        ทพ. <%= (dentist.full_name || '').toUpperCase() %>
+                        <span class="online-indicator" title="พร้อมให้บริการ"></span>
+                      </h3>
+
+                      <div class="dentist-specialty">
+                        <i class="fas fa-stethoscope" aria-hidden="true"></i>
+                        <%= dentist.specialty %>
                       </div>
-                      <% }); %>
-                    <% } else { %>
-                      <div class="credential">
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Bachelor of Dental Surgery with Honors</span>
+
+                      <div class="dentist-credentials">
+                        <% if (dentist.education) { %>
+                          <% dentist.education.split(',').slice(0, 2).forEach(function(edu) { %>
+                            <div class="credential">
+                              <i class="fas fa-graduation-cap"></i>
+                              <span><%= edu.trim() %></span>
+                            </div>
+                          <% }); %>
+                        <% } else { %>
+                          <div class="credential">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>ทันตแพทยศาสตรบัณฑิต เกียรตินิยม</span>
+                          </div>
+                          <div class="credential">
+                            <i class="fas fa-certificate"></i>
+                            <span>วุฒิบัตรชำนาญการ ทันตกรรม</span>
+                          </div>
+                        <% } %>
+                        <div class="credential">
+                          <i class="fas fa-clock"></i>
+                          <span>ประสบการณ์: 5+ ปี</span>
+                        </div>
                       </div>
-                      <div class="credential">
-                        <i class="fas fa-certificate"></i>
-                        <span>Graduate Diploma, Dental Medicine</span>
+
+                      <div class="dentist-actions">
+                        <a href="javascript:void(0)"
+                           onclick="makeAppointment(<%= dentist.dentist_id %>, '<%- dentist.full_name %>')"
+                           class="make-appointment-btn">
+                          <i class="fas fa-calendar-plus"></i>
+                          จองนัดหมาย
+                        </a>
+                        <button type="button"
+                                onclick="viewDentistProfile(<%= dentist.dentist_id %>)"
+                                class="view-profile-btn">
+                          <i class="fas fa-user"></i>
+                          ดูโปรไฟล์
+                        </button>
                       </div>
-                    <% } %>
-                    <div class="credential">
-                      <i class="fas fa-clock"></i>
-                      <span>Experience: 5+ years</span>
                     </div>
                   </div>
-
-                  <div class="dentist-actions">
-                    <a href="#" onclick="makeAppointment(<%= dentist.dentist_id %>, '<%= dentist.full_name %>')" 
-                       class="make-appointment-btn">
-                      <i class="fas fa-calendar-plus"></i>
-                      Book Appointment
-                    </a>
-                    <button onclick="viewDentistProfile(<%= dentist.dentist_id %>)" 
-                            class="view-profile-btn">
-                      <i class="fas fa-user"></i>
-                      View Profile
-                    </button>
-                  </div>
-                </div>
+                <% }); %>
               </div>
-              <% }); %>
             </div>
-          </div>
           <% }); %>
         <% } else { %>
           <div class="no-dentists">
-            <i class="fas fa-user-md"></i>
-            <h3>No dentists found</h3>
+            <i class="fas fa-user-md" aria-hidden="true"></i>
+            <h3>ไม่พบทันตแพทย์</h3>
             <% if (searchQuery) { %>
-              <p>No dentists found matching "<%= searchQuery %>". Please try a different search term.</p>
-              <button onclick="clearSearch()" class="clear-search" style="margin-top: 15px;">
-                Clear Search
-              </button>
+              <p>ไม่พบทันตแพทย์ที่ตรงกับ "<%= searchQuery %>" กรุณาลองค้นหาใหม่</p>
+              <button onclick="clearSearch()" class="clear-search-btn">ล้างการค้นหา</button>
             <% } else { %>
-              <p>No dentists are available at the moment.</p>
+              <p>ไม่มีทันตแพทย์ในขณะนี้</p>
             <% } %>
           </div>
         <% } %>
@@ -791,216 +416,163 @@
     </div>
   </div>
 
-  <!-- Modal for Dentist Profile -->
-  <div id="profileModal" class="modal">
-    <div class="modal-content">
+  <div id="profileModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalTitle">
+    <div class="modal-content" tabindex="-1">
       <div class="modal-header">
-        <h2 class="modal-title">Dentist Profile</h2>
-        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 class="modal-title" id="modalTitle">ข้อมูลทันตแพทย์</h2>
+        <span class="close" role="button" aria-label="ปิด" onclick="closeModal()">&times;</span>
       </div>
       <div id="profileContent">
         <div class="loading">
           <i class="fas fa-spinner fa-spin"></i>
-          Loading profile...
+          กำลังโหลด...
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Global variables
-    let allDentists = [];
+    // JavaScript เหมือนเดิมทั้งหมด
     let currentFilter = 'all';
+    let searchDebounce;
 
-    // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
       initializeSearch();
-      updateStats();
       setupEventListeners();
+      const initial = document.getElementById('searchInput').value.trim();
+      if (initial) performSearch(initial);
     });
 
-    // Setup event listeners
     function setupEventListeners() {
       const searchInput = document.getElementById('searchInput');
-      let searchTimeout;
-
       searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          performSearch(this.value);
-        }, 300);
-        
-        document.getElementById('clearSearch').style.display = this.value ? 'block' : 'none';
+        clearTimeout(searchDebounce);
+        const q = this.value;
+        document.getElementById('clearSearch').style.display = q ? 'block' : 'none';
+        searchDebounce = setTimeout(() => performSearch(q), 250);
       });
-
       searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          performSearch(this.value);
+        if (e.key === 'Enter') performSearch(this.value);
+      });
+      document.addEventListener('click', function (e) {
+        const prof = document.querySelector('.profile-dropdown');
+        if (prof && !prof.contains(e.target)) {
+          const menu = document.getElementById('profileDropdown');
+          menu.style.display = 'none';
+          const trigger = prof.querySelector('.user-info');
+          trigger && trigger.setAttribute('aria-expanded','false');
         }
+      });
+      window.addEventListener('click', function(event) {
+        const modal = document.getElementById('profileModal');
+        if (event.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', function(e){
+        const modal = document.getElementById('profileModal');
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeModal();
       });
     }
 
-    // Initialize search functionality
     function initializeSearch() {
       const searchValue = document.getElementById('searchInput').value;
-      if (searchValue) {
-        document.getElementById('clearSearch').style.display = 'block';
-      }
+      document.getElementById('clearSearch').style.display = searchValue ? 'block' : 'none';
     }
 
-    // Perform search
-    function performSearch(query) {
-      if (!query.trim()) {
-        showAllDentists();
-        return;
-      }
+    function normalize(str){ return (str || '').toString().trim().toLowerCase(); }
 
+    function performSearch(query) {
+      const q = normalize(query);
       const cards = document.querySelectorAll('.dentist-card');
       let visibleCount = 0;
-
       cards.forEach(card => {
-        const name = card.dataset.dentistName;
-        const specialty = card.dataset.specialty;
-        const isMatch = name.includes(query.toLowerCase()) || 
-                       specialty.includes(query.toLowerCase());
-        
-        if (isMatch && (currentFilter === 'all' || specialty === currentFilter.toLowerCase())) {
-          card.style.display = 'flex';
-          visibleCount++;
-        } else {
-          card.style.display = 'none';
-        }
+        const name = normalize(card.dataset.dentistName);
+        const specialty = normalize(card.dataset.specialty);
+        const matchesText = !q || name.includes(q) || specialty.includes(q);
+        const matchesFilter = (currentFilter === 'all') || (specialty === normalize(currentFilter));
+        const shouldShow = matchesText && matchesFilter;
+        card.classList.toggle('hidden', !shouldShow);
+        card.classList.toggle('is-visible', shouldShow);
+        if (shouldShow) visibleCount++;
       });
-
-      // Update section visibility
       document.querySelectorAll('.specialty-section').forEach(section => {
-        const visibleCards = section.querySelectorAll('.dentist-card[style*="flex"]');
-        section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        const visibleCards = section.querySelectorAll('.dentist-card.is-visible');
+        section.classList.toggle('hidden', visibleCards.length === 0);
       });
-
-      updateSearchResults(visibleCount, query);
+      updateSearchResults(visibleCount, q);
     }
 
-    // Update search results info
     function updateSearchResults(count, query) {
-      const container = document.getElementById('dentistsContainer');
-      const existingInfo = document.querySelector('.search-results-info');
-      
-      if (existingInfo) {
-        existingInfo.remove();
-      }
-
+      const old = document.querySelector('.search-results-info');
+      if (old) old.remove();
       if (query) {
-        const resultsInfo = document.createElement('div');
-        resultsInfo.className = 'search-results-info';
-        resultsInfo.style.cssText = 'background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #2196f3;';
-        resultsInfo.innerHTML = `
-          <i class="fas fa-search"></i> 
-          Found <strong>${count}</strong> dentists matching "<strong>${query}</strong>"
-          <button onclick="clearSearch()" style="float: right; background: #2196f3; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
-            <i class="fas fa-times"></i> Clear
-          </button>
+        const info = document.createElement('div');
+        info.className = 'search-results-info';
+        info.innerHTML = `
+          <div><i class="fas fa-search"></i>
+            พบ <strong>${count}</strong> ทันตแพทย์ที่ตรงกับ "<strong>${escapeHtml(query)}</strong>"
+          </div>
+          <button onclick="clearSearch()" class="clear-search-btn"><i class="fas fa-times"></i> ล้าง</button>
         `;
-        container.insertBefore(resultsInfo, container.firstChild);
+        const anchor = document.getElementById('searchResultsAnchor');
+        anchor.parentNode.insertBefore(info, anchor.nextSibling);
       }
     }
 
-    // Clear search
     function clearSearch() {
-      document.getElementById('searchInput').value = '';
+      const input = document.getElementById('searchInput');
+      input.value = '';
       document.getElementById('clearSearch').style.display = 'none';
-      showAllDentists();
-      
-      const existingInfo = document.querySelector('.search-results-info');
-      if (existingInfo) {
-        existingInfo.remove();
-      }
+      performSearch('');
+      input.focus();
     }
 
-    // Show all dentists
-    function showAllDentists() {
-      document.querySelectorAll('.dentist-card').forEach(card => {
-        if (currentFilter === 'all' || card.dataset.specialty === currentFilter.toLowerCase()) {
-          card.style.display = 'flex';
-        }
-      });
-
-      document.querySelectorAll('.specialty-section').forEach(section => {
-        if (currentFilter === 'all' || section.dataset.specialty.toLowerCase() === currentFilter.toLowerCase()) {
-          section.style.display = 'block';
-        }
-      });
-    }
-
-    // Filter by specialty
-    function filterBySpecialty(specialty) {
+    function filterBySpecialty(specialty, el) {
       currentFilter = specialty;
-      
-      // Update active filter button
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      event.target.classList.add('active');
-
-      // Filter sections and cards
-      document.querySelectorAll('.specialty-section').forEach(section => {
-        if (specialty === 'all' || section.dataset.specialty.toLowerCase() === specialty.toLowerCase()) {
-          section.style.display = 'block';
-        } else {
-          section.style.display = 'none';
-        }
-      });
-
-      // If there's an active search, re-apply it
-      const searchValue = document.getElementById('searchInput').value;
-      if (searchValue) {
-        performSearch(searchValue);
-      }
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+      performSearch(document.getElementById('searchInput').value);
     }
 
-    // Handle image errors
-    function handleImageError(img, dentistId) {
+    function handleImageError(img, dentistId, initials) {
       const photoContainer = document.getElementById(`photo-${dentistId}`);
-      photoContainer.innerHTML = '<i class="fas fa-user-md"></i>';
-      photoContainer.classList.add('default');
+      if (!photoContainer) return;
+      photoContainer.innerHTML = `<span class="dentist-initials">${escapeHtml(initials || 'DR')}</span>`;
     }
 
-    // Make appointment
     function makeAppointment(dentistId, dentistName) {
-      // Show confirmation
-      if (confirm(`Do you want to book an appointment with Dr. ${dentistName}?`)) {
-        // Redirect to booking page with pre-selected dentist
-        window.location.href = `/patient/appointment/schedule?dentist_id=${dentistId}`;
+      if (confirm(`คุณต้องการจองนัดหมายกับ ทพ. ${dentistName} ใช่หรือไม่?`)) {
+        window.location.href = `/patient/appointment/schedule?dentist_id=${encodeURIComponent(dentistId)}`;
       }
     }
 
-    // View dentist profile
     async function viewDentistProfile(dentistId) {
       const modal = document.getElementById('profileModal');
       const content = document.getElementById('profileContent');
-      
-      modal.style.display = 'block';
-      content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading profile...</div>';
-      
+      openModal();
+      content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+      const controller = new AbortController();
+      const t = setTimeout(()=>controller.abort(), 10000);
       try {
-        const response = await fetch(`/patient/api/dentist-profile/${dentistId}`);
-        const data = await response.json();
-        
-        if (data.success) {
+        const res = await fetch(`/patient/api/dentist-profile/${encodeURIComponent(dentistId)}`, { signal: controller.signal });
+        clearTimeout(t);
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        if (data && data.success) {
           displayProfile(data.dentist);
         } else {
-          content.innerHTML = '<div class="alert alert-error">Failed to load profile</div>';
+          content.innerHTML = '<div style="padding:20px;text-align:center;color:#dc3545;">ไม่สามารถโหลดข้อมูลได้</div>';
         }
-      } catch (error) {
-        console.error('Error loading profile:', error);
+      } catch (err) {
+        clearTimeout(t);
+        console.error(err);
         content.innerHTML = `
-          <div style="text-align: center; padding: 40px;">
-            <i class="fas fa-user-md" style="font-size: 4rem; color: #4A90E2; margin-bottom: 20px;"></i>
-            <h3>Dr. Profile</h3>
-            <p>Detailed profile information will be available soon.</p>
-            <div style="margin-top: 20px;">
-              <button onclick="makeAppointment(${dentistId}, 'Doctor')" class="make-appointment-btn">
-                <i class="fas fa-calendar-plus"></i> Book Appointment
+          <div style="text-align:center;padding:40px;">
+            <i class="fas fa-user-md" style="font-size:4rem;color:var(--primary);margin-bottom:20px;"></i>
+            <h3>ข้อมูลทันตแพทย์</h3>
+            <p>ข้อมูลรายละเอียดจะพร้อมใช้งานเร็วๆ นี้</p>
+            <div style="margin-top:20px;">
+              <button onclick="makeAppointment(${Number(dentistId)||0}, 'ทันตแพทย์')" class="make-appointment-btn">
+                <i class="fas fa-calendar-plus"></i> จองนัดหมาย
               </button>
             </div>
           </div>
@@ -1008,110 +580,79 @@
       }
     }
 
-    // Display dentist profile
     function displayProfile(dentist) {
       const content = document.getElementById('profileContent');
+      const initials = (dentist.full_name || '').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+      const hasPhoto = dentist.photo && dentist.photo !== 'default-doctor.png';
       content.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #4A90E2, #2DA8FF); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem;">
-            ${dentist.photo ? `<img src="/uploads/${dentist.photo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-            <i class="fas fa-user-md" ${dentist.photo ? 'style="display: none;"' : ''}></i>
+        <div style="text-align:center;margin-bottom:30px;">
+          <div style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg, var(--primary), var(--primary-2));margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:4rem;box-shadow:0 8px 20px rgba(74,144,226,.3); overflow:hidden;">
+            ${hasPhoto
+              ? `<img src="/uploads/${encodeHtml(dentist.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;" loading="lazy" decoding="async" onerror="this.remove();const p=this.parentElement;p.innerHTML='<span style=&quot;font-size:2.2rem;font-weight:800;&quot;>${encodeHtml(initials || 'DR')}</span>';">`
+              : `<span style="font-size:2.2rem;font-weight:800;">${encodeHtml(initials || 'DR')}</span>`}
           </div>
-          <h2>Dr. ${dentist.full_name}</h2>
-          <p style="color: #4A90E2; font-weight: 600;">${dentist.specialty}</p>
+          <h2>ทพ. ${escapeHtml(dentist.full_name || '')}</h2>
+          <p style="color: var(--primary); font-weight:700; font-size:16px;">${escapeHtml(dentist.specialty || '')}</p>
         </div>
-        
-        <div style="margin-bottom: 30px;">
-          <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-graduation-cap"></i> Education & Credentials</h3>
-          ${dentist.education ? dentist.education.split(',').map(edu => `<p style="margin-bottom: 8px; padding-left: 20px;">• ${edu.trim()}</p>`).join('') : '<p style="padding-left: 20px;">• Bachelor of Dental Surgery with Honors<br>• Graduate Diploma in Dental Medicine</p>'}
+        <div style="margin-bottom:30px;">
+          <h3 style="margin-bottom:15px;color:#333;display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-graduation-cap" style="color: var(--primary);"></i> การศึกษาและวุฒิบัตร
+          </h3>
+          <div style="background:#f8f9fa;padding:20px;border-radius:10px;">
+            ${dentist.education
+              ? String(dentist.education).split(',').map(edu => `<p style="margin-bottom:8px;padding-left:10px;">• ${escapeHtml(edu.trim())}</p>`).join('')
+              : '<p style="padding-left:10px;">• ทันตแพทยศาสตรบัณฑิต เกียรตินิยม<br>• วุฒิบัตรชำนาญการทางทันตกรรม</p>'}
+          </div>
         </div>
-        
-        <div style="margin-bottom: 30px;">
-          <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-stethoscope"></i> Specialization</h3>
-          <p style="padding-left: 20px;">${dentist.specialty}</p>
+        <div style="margin-bottom:30px;">
+          <h3 style="margin-bottom:15px;color:#333;display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-stethoscope" style="color: var(--primary);"></i> ความเชี่ยวชาญ
+          </h3>
+          <div style="background:#f8f9fa;padding:20px;border-radius:10px;">
+            <p>${escapeHtml(dentist.specialty || '')}</p>
+          </div>
         </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-          <button onclick="makeAppointment(${dentist.dentist_id}, '${dentist.full_name}')" class="make-appointment-btn" style="font-size: 16px; padding: 15px 30px;">
-            <i class="fas fa-calendar-plus"></i> Book Appointment with Dr. ${dentist.full_name}
+        <div class="credential" style="margin-bottom:20px;">
+          <i class="fas fa-clock"></i>
+          <span>ประสบการณ์: 5+ ปี</span>
+        </div>
+        <div style="text-align:center;margin-top:30px;">
+          <button onclick="makeAppointment(${Number(dentist.dentist_id)||0}, '${escapeJsString(dentist.full_name || "ทันตแพทย์")}')"
+                  class="make-appointment-btn" style="font-size:16px;padding:15px 30px;">
+            <i class="fas fa-calendar-plus"></i> จองนัดหมายกับ ทพ. ${escapeHtml(dentist.full_name || '')}
           </button>
         </div>
       `;
     }
 
-    // Close modal
-    function closeModal() {
-      document.getElementById('profileModal').style.display = 'none';
+    function openModal(){
+      const modal = document.getElementById('profileModal');
+      modal.setAttribute('aria-hidden','false');
+      const focusable = modal.querySelector('.modal-content');
+      focusable && focusable.focus();
+    }
+    function closeModal(){
+      const modal = document.getElementById('profileModal');
+      modal.setAttribute('aria-hidden','true');
     }
 
-    // Update statistics
-    function updateStats() {
-      // Count available dentists today (simulate)
-      const totalDentists = document.querySelectorAll('.dentist-card').length;
-      document.getElementById('availableToday').textContent = Math.floor(totalDentists * 0.8);
-    }
-
-    // Dropdown functions
     function toggleDropdown() {
       const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      const isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+      const trigger = document.querySelector('.profile-dropdown .user-info');
+      trigger && trigger.setAttribute('aria-expanded', String(!isOpen));
     }
-    
+
     function toggleNotifications() {
-      alert('Notifications feature coming soon!');
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-      }
-    });
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-      const modal = document.getElementById('profileModal');
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
+      console.log('การแจ้งเตือนถูกคลิก');
     }
 
-    // Smooth scrolling for specialty navigation
-    function scrollToSpecialty(specialty) {
-      const section = document.querySelector(`[data-specialty="${specialty}"]`);
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
-      }
+    function escapeHtml(str){
+      return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
     }
-
-    // Add some interactive features
-    document.addEventListener('DOMContentLoaded', function() {
-      // Add hover effects to dentist cards
-      document.querySelectorAll('.dentist-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-          this.style.borderLeft = '4px solid #4A90E2';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-          this.style.borderLeft = 'none';
-        });
-      });
-
-      // Add loading states to buttons
-      document.querySelectorAll('.make-appointment-btn, .view-profile-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const originalText = this.innerHTML;
-          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-          this.disabled = true;
-          
-          setTimeout(() => {
-            this.innerHTML = originalText;
-            this.disabled = false;
-          }, 1000);
-        });
-      });
-    });
+    function encodeHtml(str){ return escapeHtml(str); }
+    function escapeJsString(str){ return String(str).replaceAll('\\','\\\\').replaceAll("`","\\`").replaceAll("'","\\'").replaceAll('"','\\"'); }
   </script>
 </body>
 </html>

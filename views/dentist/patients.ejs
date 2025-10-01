@@ -399,7 +399,7 @@
             border-color: #4A90E2;
         }
 
-/* Patients Table */
+        /* Patients Table */
         .table-container {
             border-radius: 12px;
             overflow: hidden;
@@ -543,7 +543,6 @@
         }
 
         .action-btn.view { background: linear-gradient(135deg, #6c757d, #495057); }
-        .action-btn.history { background: linear-gradient(135deg, #28a745, #20c997); }
         .action-btn.appointment { background: linear-gradient(135deg, #ffc107, #fd7e14); }
         .action-btn.edit { background: linear-gradient(135deg, #17a2b8, #138496); }
 
@@ -608,96 +607,6 @@
         .pagination button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 3% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: modalSlideIn 0.3s ease;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-50px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e1e5e9;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-            transition: color 0.3s ease;
-        }
-
-        .close:hover {
-            color: #333;
-            transform: scale(1.1);
-        }
-
-        /* Patient Details */
-        .patient-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .detail-group {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .detail-label {
-            font-size: 12px;
-            color: #666;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            font-size: 14px;
-            color: #333;
-            font-weight: 500;
         }
 
         /* Toast Notifications */
@@ -785,12 +694,6 @@
             .patients-table td {
                 padding: 8px 10px;
             }
-            
-            .modal-content {
-                margin: 10% auto;
-                padding: 20px;
-                width: 95%;
-            }
 
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -814,7 +717,6 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
             <li class="active"><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li>
         </ul>
     </div>
 
@@ -869,8 +771,6 @@
                 <div class="loading-spinner"></div>
                 <p>Loading patients...</p>
             </div>
-
-
 
             <!-- Patients Section -->
             <div class="patients-section">
@@ -982,9 +882,6 @@
                                     <button onclick="viewPatient(<%= patient.patient_id %>)" class="action-btn view" title="View Details">
                                         <i class="fas fa-eye"></i> View
                                     </button>
-                                    <button onclick="addTreatmentHistory(<%= patient.patient_id %>)" class="action-btn history" title="Add History">
-                                        <i class="fas fa-plus"></i> History
-                                    </button>
                                 </td>
                             </tr>
                             <% }); %>
@@ -1009,7 +906,7 @@
         </div>
     </div>
 
-<script>
+    <script>
         let allPatients = [];
         let filteredPatients = [];
 
@@ -1079,11 +976,6 @@
             window.location.href = `/dentist/patients/${patientId}`;
         }
 
-       function addTreatmentHistory(patientId) {
-    // ไปยังหน้าเพิ่มประวัติการรักษา
-    window.location.href = `/dentist/add-history?patientId=${patientId}`;
-}
-
         // Top bar functions
         function showInitials() {
             const avatar = document.getElementById('userAvatar');
@@ -1110,14 +1002,6 @@
                 document.getElementById('profileDropdown').style.display = 'none';
             }
         });
-
-        // Modal close events
-        window.onclick = function(event) {
-            const modal = document.getElementById('patientModal');
-            if (event.target === modal) {
-                closePatientModal();
-            }
-        }
 
         // Toast notification system
         function showToast(message, type = 'info') {
@@ -1148,13 +1032,6 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('patientModal');
-                if (modal.style.display === 'block') {
-                    closePatientModal();
-                }
-            }
-            
             // Search shortcut
             if (e.ctrlKey && e.key === 'f') {
                 e.preventDefault();

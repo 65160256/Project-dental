@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Appointment Details - Smile Clinic</title>
+  <title>รายละเอียดนัดหมาย - คลินิกยิ้มสดใส</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     * {
@@ -590,25 +590,25 @@
 <body>
   <div class="sidebar">
     <div class="logo">
-      <img src="/img/logo.png" alt="Smile Clinic" />
-      <h3>Smile Clinic</h3>
+      <img src="/img/logo.png" alt="คลินิกยิ้มสดใส" />
+      <h3>คลินิกยิ้มสดใส</h3>
     </div>
     <ul>
-      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
-      <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i>Appointments</a></li>
-      <li class="active"><a href="/patient/history"><i class="fas fa-history"></i>History</a></li>
-      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i>My Treatments</a></li>
-      <li><a href="/patient/dentists"><i class="fas fa-user-md"></i>Dentists</a></li>
+      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i>หน้าหลัก</a></li>
+      <li><a href="/patient/appointments"><i class="fas fa-calendar-check"></i>จองนัดหมาย</a></li>
+      <li class="active"><a href="/patient/history"><i class="fas fa-history"></i>ประวัตินัดหมาย</a></li>
+      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i>ประวัติการรักษา</a></li>
+      <li><a href="/patient/dentists"><i class="fas fa-user-md"></i>ทันตแพทย์</a></li>
     </ul>
   </div>
 
   <div class="main">
     <div class="top-bar">
       <div class="search-section">
-        <label>Search:</label>
+        <label>ค้นหา:</label>
         <div class="search-box">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search appointments..." />
+          <input type="text" placeholder="ค้นหานัดหมาย..." />
         </div>
       </div>
       <div class="user-section">
@@ -622,15 +622,15 @@
             </div>
             <div class="user-details">
               <strong><%= patient.fname %> <%= patient.lname %></strong>
-              <small>Patient</small>
+              <small>ผู้ป่วย</small>
             </div>
             <i class="fas fa-caret-down"></i>
           </div>
           <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile"><i class="fas fa-user"></i>My Profile</a>
-            <a href="/patient/profile/change-password"><i class="fas fa-key"></i>Change Password</a>
+            <a href="/patient/profile"><i class="fas fa-user"></i>โปรไฟล์ของฉัน</a>
+            <a href="/patient/profile/change-password"><i class="fas fa-key"></i>เปลี่ยนรหัสผ่าน</a>
             <hr />
-            <a href="/logout"><i class="fas fa-sign-out-alt"></i>Log Out</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i>ออกจากระบบ</a>
           </div>
         </div>
       </div>
@@ -641,49 +641,49 @@
         <a href="/patient/history" class="back-btn">
           <i class="fas fa-chevron-left"></i>
         </a>
-        <h1>Appointment Details</h1>
+        <h1>รายละเอียดนัดหมาย</h1>
       </div>
 
       <!-- Success/Error Messages -->
       <% if (typeof success !== 'undefined' && success === 'updated') { %>
       <div class="alert alert-success">
         <i class="fas fa-check-circle"></i> 
-        Appointment updated successfully.
+        อัปเดตนัดหมายเรียบร้อยแล้ว
       </div>
       <% } %>
 
       <% if (typeof error !== 'undefined' && error === 'cancel_time_limit') { %>
       <div class="alert alert-error">
         <i class="fas fa-exclamation-circle"></i> 
-        Unable to cancel. Appointment is within 24 hours.
+        ไม่สามารถยกเลิกได้ นัดหมายใกล้เวลาแล้ว (น้อยกว่า 24 ชั่วโมง)
       </div>
       <% } %>
 
       <% if (typeof error !== 'undefined' && error === 'cancel_failed') { %>
       <div class="alert alert-error">
         <i class="fas fa-exclamation-circle"></i> 
-        Failed to cancel appointment. Please try again.
+        ไม่สามารถยกเลิกนัดหมายได้ กรุณาลองใหม่อีกครั้ง
       </div>
       <% } %>
 
       <div class="main-content">
         <div class="booking-id-header">
-          <h3 class="booking-id">Booking Request ID: #Y-<%= appointment.queue_id.toString().padStart(6, '0') %></h3>
+          <h3 class="booking-id">รหัสนัดหมาย: #Y-<%= appointment.queue_id.toString().padStart(6, '0') %></h3>
         </div>
 
         <!-- Patient Information Section -->
         <div class="details-section">
           <div class="details-grid">
             <div class="detail-item">
-              <span class="detail-label">Patient Name:</span>
+              <span class="detail-label">ชื่อผู้ป่วย:</span>
               <span class="detail-value"><%= appointment.patient_name %></span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Patient ID:</span>
+              <span class="detail-label">รหัสผู้ป่วย:</span>
               <span class="detail-value">xxxx</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Phone:</span>
+              <span class="detail-label">เบอร์โทรศัพท์:</span>
               <span class="detail-value">087985000</span>
             </div>
           </div>
@@ -693,19 +693,19 @@
         <div class="details-section">
           <div class="details-grid">
             <div class="detail-item">
-              <span class="detail-label">Treatment needed:</span>
+              <span class="detail-label">การรักษาที่ต้องการ:</span>
               <span class="detail-value"><%= appointment.treatment_name %></span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Requested Time:</span>
+              <span class="detail-label">วันเวลาที่นัด:</span>
               <span class="detail-value">
-                <%= new Date(appointment.time).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) %>, 
-                <%= new Date(appointment.time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true}) %>
+                <%= new Date(appointment.time).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) %>, 
+                <%= new Date(appointment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %> น.
               </span>
             </div>
             <div class="detail-item full-width-item">
-              <span class="detail-label">Preferred Doctor:</span>
-              <span class="detail-value">Dr. <%= appointment.dentist_name %></span>
+              <span class="detail-label">ทันตแพทย์ที่เลือก:</span>
+              <span class="detail-value">ทพ. <%= appointment.dentist_name %></span>
             </div>
           </div>
         </div>
@@ -713,16 +713,20 @@
         <!-- Symptom Details Section -->
         <div class="details-section">
           <div class="detail-item">
-            <span class="detail-label">Symptom Details:</span>
+            <span class="detail-label">รายละเอียดอาการ:</span>
             <span class="detail-value"><%= appointment.diagnosis || '-' %></span>
           </div>
         </div>
 
         <!-- Status Section -->
         <div class="status-section">
-          <div class="status-label">Current Status:</div>
+          <div class="status-label">สถานะปัจจุบัน:</div>
           <span class="status-badge status-<%= appointment.queue_status %>">
-            <%= appointment.queue_status.charAt(0).toUpperCase() + appointment.queue_status.slice(1) %>
+            <%= appointment.queue_status === 'confirm' ? 'ยืนยันแล้ว' : 
+                appointment.queue_status === 'pending' ? 'รอยืนยัน' :
+                appointment.queue_status === 'cancel' ? 'ยกเลิกแล้ว' :
+                appointment.queue_status === 'completed' ? 'เสร็จสิ้นแล้ว' :
+                appointment.queue_status.charAt(0).toUpperCase() + appointment.queue_status.slice(1) %>
           </span>
         </div>
 
@@ -741,13 +745,13 @@
           <% if (!canEdit) { %>
           <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>Unable to proceed.</strong> Please contact the clinic directly.
+            <strong>ไม่สามารถดำเนินการได้</strong> กรุณาติดต่อคลินิกโดยตรง
           </div>
           <% } else { %>
           <div class="warning-notice">
             <div class="warning-text">
-              <strong>Note:</strong> You can reschedule your appointment up to 24 hours in advance.<br>
-              After that, please contact the clinic directly for assistance.
+              <strong>หมายเหตุ:</strong> คุณสามารถเปลี่ยนแปลงนัดหมายได้ล่วงหน้าอย่างน้อย 24 ชั่วโมง<br>
+              หากต้องการเปลี่ยนแปลงนัดหมายที่น้อยกว่านี้ กรุณาติดต่อคลินิกโดยตรง
             </div>
           </div>
           <% } %>
@@ -758,22 +762,22 @@
           <% if (isActive && canEdit) { %>
             <a href="/patient/history/edit/<%= appointment.queue_id %>" class="btn btn-edit">
               <i class="fas fa-edit"></i>
-              Edit
+              แก้ไข
             </a>
             <form method="POST" action="/patient/history/cancel/<%= appointment.queue_id %>" style="display: inline;">
-              <button type="submit" class="btn btn-cancel" onclick="return confirm('Are you sure you want to cancel this appointment?')">
+              <button type="submit" class="btn btn-cancel" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกนัดหมายนี้?')">
                 <i class="fas fa-times"></i>
-                Cancel
+                ยกเลิก
               </button>
             </form>
           <% } else { %>
             <button class="btn btn-edit" disabled>
               <i class="fas fa-edit"></i>
-              Edit
+              แก้ไข
             </button>
             <button class="btn btn-cancel" disabled>
               <i class="fas fa-times"></i>
-              Cancel
+              ยกเลิก
             </button>
           <% } %>
         </div>
@@ -788,7 +792,7 @@
     }
     
     function toggleNotifications() {
-      console.log('Notifications clicked - functionality disabled');
+      console.log('การแจ้งเตือนถูกคลิก - ฟังก์ชันถูกปิดใช้งาน');
     }
     
     document.addEventListener('click', function (e) {
@@ -799,7 +803,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('Appointment Details page loaded');
+      console.log('โหลดหน้ารายละเอียดนัดหมายเรียบร้อย');
     });
   </script>
 </body>

@@ -464,7 +464,7 @@
             <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
-            <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li>
+            <!-- <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li> -->
         </ul>
     </div>
 
@@ -697,15 +697,10 @@
         }
 
         // ฟังก์ชันย้อนกลับ
-        function goBack() {
-            if (document.referrer && 
-                (document.referrer.includes('/dentist/patient-history') || 
-                 document.referrer.includes('/dentist/history'))) {
-                window.history.back();
-            } else {
-                window.location.href = '/dentist/patient-history';
-            }
-        }
+       function goBack() {
+    // เปลี่ยนหน้าโดยตรงทันที ไม่รอ history
+    window.location.href = '/dentist/appointments';
+}
 
         // ฟังก์ชันสำหรับโปรไฟล์
         function showInitials() {
