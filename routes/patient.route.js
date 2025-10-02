@@ -84,6 +84,8 @@ router.get('/appointment/book', requirePatient, async (req, res) => {
     }
 });
 // === API Routes สำหรับระบบจองใหม่ ===
+router.get('/api/calendar-data', requirePatient, patientController.getCalendarData);  // ← เพิ่มบรรทัดนี้
+
 router.get('/api/available-dentists', requirePatient, patientController.getAvailableDentistsForBooking);
 router.get('/api/available-slots', requirePatient, patientController.getAvailableTimeSlots);
 router.post('/api/book-appointment', requirePatient, patientController.bookAppointmentWithSchedule);
@@ -91,6 +93,8 @@ router.post('/api/book-appointment', requirePatient, patientController.bookAppoi
 router.get('/api/my-upcoming-appointments', requirePatient, patientController.getMyUpcomingAppointments);
 router.post('/api/cancel-appointment', requirePatient, patientController.cancelMyAppointment);
 router.get('/api/my-appointments', requirePatient, patientController.getMyAppointments);
+
+
 
 // === History routes ===
 router.get('/history', requirePatient, patientController.getHistory);
@@ -313,4 +317,6 @@ router.get('/api/my-appointment-stats', requirePatient, async (req, res) => {
         });
     }
 });
+
+
 module.exports = router;

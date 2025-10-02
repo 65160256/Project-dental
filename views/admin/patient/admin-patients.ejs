@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จัดการผู้ป่วย - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{background-color:#f5f7fa;margin:0}
+
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0;margin:0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
+    .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+    /* Main */
+    .main{margin-left:180px;padding:0;min-height:100vh}
+
+    /* Top Bar */
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1);position:relative}
+    .search-section{display:flex;align-items:center;gap:15px}
+    .search-section label{font-weight:500;color:#555;font-size:14px}
+    .search-box{background:#f8f9fa;border:1px solid #e1e5e9;border-radius:20px;padding:8px 15px;display:flex;align-items:center;width:250px;transition:.3s}
+    .search-box:focus-within{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.1)}
+    .search-box i{color:#666;margin-right:8px;font-size:14px}
+    .search-box input{border:none;background:transparent;outline:none;width:100%;font-size:13px}
+
+    .user-section{display:flex;align-items:center;gap:15px}
+    .notification-container{position:relative}
+    .notification-icon{position:relative;width:20px;height:20px;cursor:pointer;color:#666;transition:.3s}
+    .notification-icon:hover{color:#4A90E2}
+    .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+    .notification-badge.show{display:flex;animation:pulse 2s infinite}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+    .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;display:none;max-height:500px;overflow:hidden}
+    .notification-dropdown.show{display:block;animation:slideDown .3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+    .notification-header h3{margin:0;font-size:18px;font-weight:600}
+    .notification-content{max-height:400px;overflow-y:auto;padding:10px}
+    .notification-item{padding:12px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:.2s}
+    .notification-item:hover{background:#f8f9fa}
+    .notification-item:last-child{border-bottom:none}
+    .notification-title{font-weight:600;color:#333;font-size:13px;margin-bottom:3px}
+    .notification-message{color:#666;font-size:12px;margin-bottom:5px;line-height:1.3}
+    .notification-time{color:#999;font-size:11px}
+
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;align-items:center;cursor:pointer;gap:10px;padding:5px;border-radius:8px;transition:.2s}
+    .user-info:hover{background:#f8f9fa}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:1000;overflow:hidden}
+    .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px;transition:.2s}
+    .dropdown-menu a:hover{background:#f8f9fa}
+    .dropdown-menu hr{margin:5px 0;border:none;border-top:1px solid #e1e5e9}
+
+    /* Content */
+    .content{padding:30px}
+    .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+    .page-title h1{font-size:24px;color:#333;margin:0 0 5px 0;font-weight:600}
+    .page-title p{color:#666;margin:0;font-size:13px}
+    .page-actions{display:flex;gap:15px;align-items:center}
+    .btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.3s;white-space:nowrap}
+    .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,.3)}
+    .btn-secondary{background:#f8f9fa;color:#666;border:1px solid #e1e5e9}
+    .btn-secondary:hover{background:#e9ecef;border-color:#d1d3d6}
+
+    .stats-bar{background:#fff;padding:20px 25px;border-radius:12px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .stats-info{display:flex;align-items:center;gap:10px;color:#666;font-size:14px}
+    .stats-info i{color:#4A90E2;font-size:16px}
+
+    .filter-section{display:flex;gap:10px;align-items:center}
+    .filter-select{padding:8px 12px;border:1px solid #e1e5e9;border-radius:6px;background:#f8f9fa;color:#666;font-size:13px;cursor:pointer;transition:.2s}
+    .filter-select:hover,.filter-select:focus{border-color:#4A90E2;outline:none}
+
+    /* Table */
+    .table-section{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .table-header{padding:20px 25px;background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));border-bottom:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+    .table-header h3{margin:0;font-size:18px;font-weight:600;color:#333}
+    .patients-table{width:100%;border-collapse:collapse;font-size:14px}
+    .patients-table thead{background:#f8f9fa}
+    .patients-table th{padding:15px 20px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e1e5e9;position:relative}
+    .patients-table td{padding:15px 20px;border-bottom:1px solid #f1f3f4;color:#333}
+    .patients-table tr:hover{background:rgba(74,144,226,.05)}
+
+    .patient-info{display:flex;align-items:center;gap:12px}
+    .patient-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600;text-transform:uppercase}
+    .patient-details h4{margin:0 0 2px 0;font-size:14px;font-weight:600;color:#333}
+    .patient-details p{margin:0;font-size:12px;color:#666}
+
+    .specialty-badge{padding:4px 12px;border-radius:15px;font-size:12px;font-weight:500;background:rgba(74,144,226,.1);color:#4A90E2;border:1px solid rgba(74,144,226,.2)}
+
+    .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;text-decoration:none;border:none;cursor:pointer;font-weight:500;transition:.2s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+    .btn-view{background:#e8f5e8;color:#2e7d32;border:1px solid #c8e6c9}
+    .btn-view:hover{background:#c8e6c9;transform:translateY(-1px)}
+    .btn-edit{background:#fff3e0;color:#f57c00;border:1px solid #ffcc02}
+    .btn-edit:hover{background:#ffcc02;color:#fff;transform:translateY(-1px)}
+    .btn-schedule{background:#e3f2fd;color:#1976d2;border:1px solid #bbdefb}
+    .btn-schedule:hover{background:#bbdefb;transform:translateY(-1px)}
+    .btn-delete{background:#ffebee;color:#d32f2f;border:1px solid #ffcdd2}
+    .btn-delete:hover{background:#ffcdd2;transform:translateY(-1px)}
+
+    /* Modal */
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:3000;display:none;align-items:center;justify-content:center}
+    .modal-content{background:#fff;border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;animation:modalSlideIn .3s ease}
+    @keyframes modalSlideIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+    .modal-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #e1e5e9}
+    .modal-icon{width:40px;height:40px;border-radius:50%;background:#ffebee;display:flex;align-items:center;justify-content:center;color:#d32f2f;font-size:18px}
+    .modal-title{font-size:18px;font-weight:600;color:#333;margin:0}
+    .modal-message{margin-bottom:25px;color:#666;line-height:1.5}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+    /* Loading / Empty */
+    .loading{text-align:center;padding:60px;color:#666}
+    .loading-spinner{width:50px;height:50px;border:4px solid rgba(74,144,226,.1);border-top:4px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .empty-state{text-align:center;padding:60px 20px;color:#666}
+    .empty-icon{font-size:48px;color:#ddd;margin-bottom:20px}
+    .empty-state h3{margin:0 0 10px 0;color:#999}
+    .empty-state p{margin:0 0 20px 0;font-size:14px}
+
+    /* Toast */
+    .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideInRight .3s ease;max-width:300px}
+    .toast.success{background:#10b981}.toast.error{background:#ef4444}.toast.info{background:#3b82f6}.toast.warning{background:#f59e0b}
+    @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* Responsive */
+    @media (max-width:1024px){
+      .action-buttons{flex-direction:column;gap:4px}
+      .btn-sm{justify-content:center;min-width:80px}
+    }
+    @media (max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative}
+      .main{margin-left:0}
+      .top-bar{flex-direction:column;gap:15px;align-items:stretch}
+      .search-box{width:100%}
+      .page-header{flex-direction:column;align-items:flex-start;gap:15px}
+      .stats-bar{flex-direction:column;align-items:flex-start;gap:15px}
+      .filter-section{flex-wrap:wrap}
+      .patients-table{font-size:12px}
+      .patients-table th,.patients-table td{padding:10px}
+      .patient-info{flex-direction:column;align-items:flex-start;gap:8px}
+      .patient-avatar{width:30px;height:30px;font-size:14px}
+    }
+    @media (max-width:480px){
+      .content{padding:20px}
+      .modal-content{padding:20px}
+      .notification-dropdown{min-width:300px;max-width:320px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+      <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+      <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+      <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+    </ul>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="search-section">
+        <label>ค้นหา:</label>
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="ค้นหาผู้ป่วย..." id="searchInput"/>
+        </div>
+      </div>
+      <div class="user-section">
+        <div class="notification-container">
+          <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+          <div class="notification-badge" id="notificationBadge">0</div>
+          <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">
+              <h3>การแจ้งเตือน</h3>
+            </div>
+            <div class="notification-content" id="notificationContent">
+              <div style="text-align:center;color:#666;padding:20px;">
+                <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+                <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+              <strong>สวัสดี แอดมิน</strong>
+              <small>ผู้ดูแลระบบ</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+            <hr/>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-title">
+          <h1>จัดการผู้ป่วย</h1>
+          <p>จัดการข้อมูลผู้ป่วย การนัดหมาย และประวัติการรักษา</p>
+        </div>
+        <div class="page-actions">
+          <a href="/admin/patients/add" class="btn btn-primary">
+            <i class="fas fa-plus"></i> เพิ่มผู้ป่วยใหม่
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stats-info">
+          <i class="fas fa-users"></i>
+          <span>ผู้ป่วยทั้งหมด <strong id="totalPatients">0</strong> คน</span>
+        </div>
+        <div class="filter-section">
+          <select class="filter-select" id="ageFilter">
+            <option value="">ทุกช่วงอายุ</option>
+            <option value="0-18">0–18 ปี</option>
+            <option value="19-35">19–35 ปี</option>
+            <option value="36-50">36–50 ปี</option>
+            <option value="51+">51 ปีขึ้นไป</option>
+          </select>
+          <select class="filter-select" id="visitFilter">
+            <option value="">การเข้ารับบริการทั้งหมด</option>
+            <option value="recent">มาไม่นานนี้ (≤ 30 วัน)</option>
+            <option value="never">ไม่เคยมา</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+            <i class="fas fa-times"></i> ล้างตัวกรอง
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลดข้อมูลผู้ป่วย...</p>
+      </div>
+
+      <!-- Table -->
+      <div class="table-section" id="tableSection" style="display:none;">
+        <div class="table-header">
+          <h3>รายชื่อผู้ป่วยทั้งหมด</h3>
+          <div class="filter-section">
+            <button class="btn btn-secondary btn-sm" onclick="refreshData()">
+              <i class="fas fa-rotate"></i> โหลดใหม่
+            </button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="patients-table">
+            <thead>
+              <tr>
+                <th>ผู้ป่วย</th>
+                <th>ข้อมูลติดต่อ</th>
+                <th>อายุ</th>
+                <th>มาครั้งล่าสุด</th>
+                <th>การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="patientsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon"><i class="fas fa-users"></i></div>
+        <h3>ไม่พบผู้ป่วย</h3>
+        <p>เริ่มจากการเพิ่มผู้ป่วยรายแรกของคุณ</p>
+        <a href="/admin/patients/add" class="btn btn-primary"><i class="fas fa-plus"></i> เพิ่มผู้ป่วยรายแรก</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-trash"></i></div>
+        <h3 class="modal-title">ยืนยันการลบ</h3>
+      </div>
+      <div class="modal-message" id="deleteMessage">
+        คุณต้องการลบผู้ป่วยรายนี้หรือไม่? การทำรายการนี้ไม่สามารถย้อนกลับได้
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn btn-delete" id="confirmDeleteBtn"><i class="fas fa-trash"></i> ลบผู้ป่วย</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Globals =====
+    let patientsData = [];
+    let filteredPatients = [];
+    let currentDeleteId = null;
+    let isLoading = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPatients();
+      setupFilters();
+      setupSearch();
+      updateUserAvatar();
+      loadNotifications();
+      setupKeyboardShortcuts();
+    });
+
+    // ===== Load Patients =====
+    async function loadPatients(){
+      if(isLoading) return;
+      const loading = document.getElementById('loading');
+      const tableSection = document.getElementById('tableSection');
+      const emptyState = document.getElementById('emptyState');
+
+      isLoading = true;
+      loading.style.display = 'block';
+      tableSection.style.display = 'none';
+      emptyState.style.display = 'none';
+
+      try{
+        const res = await fetch('/admin/api/patients');
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        if(data.success && Array.isArray(data.patients)){
+          patientsData = data.patients;
+          filteredPatients = [...patientsData];
+        }else{
+          throw new Error(data.error || 'รูปแบบข้อมูลไม่ถูกต้อง');
+        }
+      }catch(err){
+        showToast('โหลดข้อมูลผู้ป่วยไม่สำเร็จ: '+err.message,'error');
+        patientsData = []; filteredPatients = [];
+      }finally{
+        isLoading = false;
+        loading.style.display = 'none';
+        if(filteredPatients.length === 0){
+          emptyState.style.display = 'block';
+        }else{
+          tableSection.style.display = 'block';
+          renderPatientsTable();
+        }
+        updateStats();
+      }
+    }
+
+    // ===== Render Table =====
+    function renderPatientsTable(){
+      const tbody = document.getElementById('patientsTableBody');
+      if(!tbody) return;
+
+      if(filteredPatients.length === 0){
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+              <i class="fas fa-search" style="font-size:24px;margin-bottom:10px;display:block;"></i>
+              ไม่มีผู้ป่วยที่ตรงกับตัวกรองตอนนี้
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredPatients.map(p=>{
+        const initials = getPatientInitials(p);
+        const ageText = formatAgeText(p.dob);
+        const lastVisit = formatRelativeDateTH(p.last_visit);
+        const fullName = getPatientName(p);
+
+        return `
+          <tr data-id="${p.patient_id}" onclick="highlightRow(this)">
+            <td>
+              <div class="patient-info">
+                <div class="patient-avatar">${initials}</div>
+                <div class="patient-details">
+                  <h4>${fullName}</h4>
+                  <p>รหัส: ${String(p.patient_id).padStart(3,'0')}</p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>${p.phone || 'ยังไม่ระบุ'}</div>
+              <div style="font-size:12px;color:#666;margin-top:2px;">${p.email || 'ยังไม่ระบุอีเมล'}</div>
+            </td>
+            <td><span class="specialty-badge">${ageText}</span></td>
+            <td>${lastVisit}</td>
+            <td>
+              <div class="action-buttons">
+                <a href="/admin/patients/${p.patient_id}" class="btn-sm btn-view" title="ดูรายละเอียดผู้ป่วย">
+                  <i class="fas fa-eye"></i> ดู
+                </a>
+                <a href="/admin/patients/${p.patient_id}/edit" class="btn-sm btn-edit" title="แก้ไขข้อมูลผู้ป่วย">
+                  <i class="fas fa-edit"></i> แก้ไข
+                </a>
+                <a href="/admin/patients/${p.patient_id}/treatments" class="btn-sm btn-schedule" title="ดูประวัติการรักษา">
+                  <i class="fas fa-history"></i> ประวัติ
+                </a>
+                <button class="btn-sm btn-delete"
+                        onclick="event.stopPropagation(); confirmDelete(${p.patient_id}, '${escapeHtml(p.fname||'')}', '${escapeHtml(p.lname||'')}')"
+                        title="ลบผู้ป่วย">
+                  <i class="fas fa-trash"></i> ลบ
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ===== Helpers (TH, 24h) =====
+    function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+    function highlightRow(row){
+      document.querySelectorAll('.patients-table tr').forEach(tr=>tr.style.backgroundColor='');
+      row.style.backgroundColor='rgba(74,144,226,.1)';
+    }
+
+    function getPatientInitials(p){const f=p.fname||'U', l=p.lname||'P'; return (f.charAt(0)+l.charAt(0)).toUpperCase()}
+    function getPatientName(p){const f=p.fname||'ไม่ทราบชื่อ', l=p.lname||''; return `${f} ${l}`.trim()}
+
+    // อายุ (ข้อความไทย)
+    function formatAgeText(dob){
+      const age = calculateAgeNumber(dob);
+      if(!dob) return 'ไม่ทราบอายุ';
+      if(age<=0) return 'ไม่ทราบอายุ';
+      return `${age} ปี`;
+    }
+    // อายุ (ตัวเลข)
+    function calculateAgeNumber(dob){
+      if(!dob) return 0;
+      const today = new Date();
+      const birth = new Date(dob);
+      if(isNaN(birth.getTime())) return 0;
+      let age = today.getFullYear()-birth.getFullYear();
+      const m = today.getMonth()-birth.getMonth();
+      if(m<0 || (m===0 && today.getDate()<birth.getDate())) age--;
+      return age>=0?age:0;
+    }
+
+    // เวลา (ไทย 24 ชม. + พ.ศ.)
+    function formatDateTimeTH(dt){
+      if(!dt) return '-';
+      const d = new Date(dt);
+      if(isNaN(d)) return '-';
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear()+543;
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${yyyy} ${hh}:${mi} น.`;
+    }
+
+    // คำอธิบายเวลาแบบสัมพัทธ์ภาษาไทย
+    function formatRelativeDateTH(date){
+      if(!date) return 'ไม่เคยมา';
+      try{
+        const d = new Date(date);
+        if(isNaN(d)) return 'รูปแบบวันเวลาไม่ถูกต้อง';
+        const now = new Date();
+        const diffMs = now - d;
+        const diffDays = Math.floor(diffMs/(1000*60*60*24));
+        if(diffDays===0) return 'วันนี้';
+        if(diffDays===1) return 'เมื่อวาน';
+        if(diffDays<7) return `${diffDays} วันที่แล้ว`;
+        if(diffDays<30) return `${Math.floor(diffDays/7)} สัปดาห์ที่แล้ว`;
+        if(diffDays<365) return `${Math.floor(diffDays/30)} เดือนที่แล้ว`;
+        return `${Math.floor(diffDays/365)} ปีที่แล้ว`;
+      }catch(e){return 'ไม่ทราบ'}
+    }
+
+    // ===== Stats =====
+    function updateStats(){
+      const el = document.getElementById('totalPatients');
+      if(el) el.textContent = filteredPatients.length;
+    }
+
+    // ===== Filters/Search =====
+    function setupFilters(){
+      document.getElementById('ageFilter')?.addEventListener('change', applyFilters);
+      document.getElementById('visitFilter')?.addEventListener('change', applyFilters);
+    }
+    function setupSearch(){
+      const si = document.getElementById('searchInput');
+      if(!si) return;
+      let t; si.addEventListener('input', ()=>{clearTimeout(t); t=setTimeout(applyFilters,300)});
+    }
+    function applyFilters(){
+      const ageVal = document.getElementById('ageFilter')?.value || '';
+      const visitVal = document.getElementById('visitFilter')?.value || '';
+      const term = (document.getElementById('searchInput')?.value || '').toLowerCase();
+
+      filteredPatients = patientsData.filter(p=>{
+        // อายุ
+        let okAge = true;
+        if(ageVal && p.dob){
+          const age = calculateAgeNumber(p.dob);
+          if(ageVal==='0-18') okAge = age<=18;
+          if(ageVal==='19-35') okAge = age>=19 && age<=35;
+          if(ageVal==='36-50') okAge = age>=36 && age<=50;
+          if(ageVal==='51+') okAge = age>=51;
+        }
+        // การมาเยือน
+        let okVisit = true;
+        if(visitVal==='recent'){
+          okVisit = p.last_visit && (new Date()-new Date(p.last_visit)) < (30*24*60*60*1000);
+        }else if(visitVal==='never'){
+          okVisit = !p.last_visit;
+        }
+        // ค้นหา
+        let okSearch = true;
+        if(term){
+          const full = `${p.fname||''} ${p.lname||''}`.toLowerCase();
+          const phone = (p.phone||'').toLowerCase();
+          const email = (p.email||'').toLowerCase();
+          const pid = String(p.patient_id).padStart(3,'0');
+          okSearch = full.includes(term) || phone.includes(term) || email.includes(term) || pid.includes(term);
+        }
+        return okAge && okVisit && okSearch;
+      });
+
+      renderPatientsTable();
+      updateStats();
+
+      const tableSection = document.getElementById('tableSection');
+      const emptyState = document.getElementById('emptyState');
+      if(filteredPatients.length===0 && patientsData.length>0){
+        tableSection.style.display='none';
+        emptyState.style.display='block';
+        emptyState.innerHTML = `
+          <div class="empty-icon"><i class="fas fa-search"></i></div>
+          <h3>ไม่มีผู้ป่วยที่ตรงกับตัวกรอง</h3>
+          <p>ลองปรับเงื่อนไขการค้นหาหรือล้างตัวกรอง</p>
+          <button class="btn btn-secondary" onclick="clearFilters()">
+            <i class="fas fa-times"></i> ล้างตัวกรอง
+          </button>`;
+      }else if(filteredPatients.length===0){
+        tableSection.style.display='none';
+        emptyState.style.display='block';
+      }else{
+        tableSection.style.display='block';
+        emptyState.style.display='none';
+      }
+    }
+    function clearFilters(){
+      const age = document.getElementById('ageFilter');
+      const visit = document.getElementById('visitFilter');
+      const search = document.getElementById('searchInput');
+      if(age) age.value='';
+      if(visit) visit.value='';
+      if(search) search.value='';
+      applyFilters();
+      showToast('ล้างตัวกรองแล้ว','info');
+    }
+
+    // ===== User / Notifications =====
+    async function updateUserAvatar(){
+      try{
+        const res = await fetch('/admin/profile/api');
+        if(res.ok){
+          const data = await res.json();
+          if(data.success && data.email){
+            document.getElementById('userAvatar').textContent = data.email.charAt(0).toUpperCase();
+          }
+        }
+      }catch(e){
+        const el = document.getElementById('userAvatar'); if(el) el.textContent='A';
+      }
+    }
+    async function loadNotifications(){
+      try{
+        const res = await fetch('/admin/api/notifications?limit=10');
+        if(res.ok){
+          const data = await res.json();
+          if(data.success){
+            updateNotificationDisplay(data.notifications, data.pagination?.unread_count || 0);
+          }
+        }
+      }catch(e){showEmptyNotifications()}
+    }
+    function updateNotificationDisplay(list, unread){
+      const badge = document.getElementById('notificationBadge');
+      const content = document.getElementById('notificationContent');
+      if(!badge || !content) return;
+
+      if(unread>0){badge.textContent = unread>99?'99+':unread; badge.classList.add('show')}
+      else{badge.classList.remove('show')}
+
+      if(!list || list.length===0){showEmptyNotifications();return}
+      content.innerHTML = list.map(n=>{
+        const timeText = formatDateTimeTH(n.created_at);
+        return `
+          <div class="notification-item">
+            <div class="notification-title">${escapeHtml(n.title||'การแจ้งเตือน')}</div>
+            <div class="notification-message">${escapeHtml(n.message||'')}</div>
+            <div class="notification-time">${timeText}</div>
+          </div>`;
+      }).join('');
+    }
+    function showEmptyNotifications(){
+      const content = document.getElementById('notificationContent');
+      if(content){
+        content.innerHTML = `
+          <div style="text-align:center;color:#666;padding:20px;">
+            <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+            <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+          </div>`;
+      }
+    }
+
+    function toggleNotifications(){
+      const dd = document.getElementById('notificationDropdown');
+      if(!dd) return;
+      const visible = dd.classList.contains('show');
+      if(visible) dd.classList.remove('show');
+      else { dd.classList.add('show'); loadNotifications(); }
+    }
+    function toggleDropdown(){
+      const menu = document.getElementById('profileDropdown');
+      if(menu){ menu.style.display = menu.style.display==='block' ? 'none' : 'block'; }
+    }
+
+    // ===== Actions =====
+    async function refreshData(){
+      showToast('กำลังโหลดข้อมูลผู้ป่วยใหม่...','info');
+      await loadPatients();
+      showToast('โหลดข้อมูลล่าสุดแล้ว','success');
+    }
+
+    function confirmDelete(id, fname, lname){
+      currentDeleteId = id;
+      const modal = document.getElementById('deleteModal');
+      const msg = document.getElementById('deleteMessage');
+      if(!modal || !msg) return;
+      const name = getPatientName({fname,lname});
+      msg.innerHTML = `
+        ต้องการลบ <strong>${escapeHtml(name)}</strong> ใช่หรือไม่?
+        <br><br>
+        ระบบจะลบการนัดหมายและประวัติการรักษาที่เกี่ยวข้องทั้งหมดด้วย
+        <strong>การทำรายการนี้ไม่สามารถย้อนกลับได้</strong>`;
+      modal.style.display='flex';
+    }
+    function closeModal(){
+      const m = document.getElementById('deleteModal');
+      if(m) m.style.display='none';
+      currentDeleteId = null;
+    }
+    async function deletePatient(){
+      if(!currentDeleteId) return;
+      const btn = document.getElementById('confirmDeleteBtn');
+      if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังลบ...'; }
+      try{
+        const res = await fetch(`/admin/api/patients/${currentDeleteId}`,{method:'DELETE'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        if(data.success){
+          const idx = patientsData.findIndex(p=>p.patient_id===currentDeleteId);
+          if(idx>-1){
+            const del = patientsData[idx];
+            patientsData.splice(idx,1);
+            applyFilters();
+            showToast(`ลบ ${getPatientName(del)} แล้ว`,`success`);
+          }
+        }else{ throw new Error(data.error||'ลบผู้ป่วยไม่สำเร็จ'); }
+      }catch(e){
+        showToast('เกิดข้อผิดพลาดในการลบ: '+e.message,'error');
+      }finally{
+        if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-trash"></i> ลบผู้ป่วย'; }
+        closeModal();
+      }
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('confirmDeleteBtn')?.addEventListener('click', deletePatient);
+    });
+
+    // ===== Shortcuts / Misc =====
+    function showToast(message,type='info'){
+      const toast=document.createElement('div'); toast.className=`toast ${type}`;
+      const icon = {success:'check',error:'exclamation-triangle',warning:'exclamation-triangle',info:'info-circle'}[type]||'info-circle';
+      toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+      document.body.appendChild(toast);
+      setTimeout(()=>{ if(toast.parentNode){ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>toast.remove(),300);} },3000);
+    }
+    const extraStyle=document.createElement('style'); extraStyle.textContent=`@keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}`; document.head.appendChild(extraStyle);
+
+    function setupKeyboardShortcuts(){
+      document.addEventListener('keydown',e=>{
+        if(e.key==='Escape'){ closeModal(); document.getElementById('notificationDropdown')?.classList.remove('show'); const m=document.getElementById('profileDropdown'); if(m) m.style.display='none';}
+        if(e.ctrlKey && e.key==='f'){ e.preventDefault(); const si=document.getElementById('searchInput'); if(si){ si.focus(); si.select(); } }
+        if(e.ctrlKey && e.key==='r'){ e.preventDefault(); refreshData(); }
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click',e=>{
+      const pd = document.querySelector('.profile-dropdown');
+      if(pd && !pd.contains(e.target)){ const m=document.getElementById('profileDropdown'); if(m) m.style.display='none'; }
+      const nc = document.querySelector('.notification-container');
+      if(nc && !nc.contains(e.target)){ const dd=document.getElementById('notificationDropdown'); if(dd) dd.classList.remove('show'); }
+      const modal = document.getElementById('deleteModal');
+      if(modal && e.target===modal) closeModal();
+    });
+
+    // Auto-refresh notifications
+    setInterval(()=>{ loadNotifications(); }, 60000);
+
+    // Online/Offline
+    window.addEventListener('online', ()=>{ showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'); refreshData(); });
+    window.addEventListener('offline', ()=>{ showToast('การเชื่อมต่อหายไป','warning'); });
+  </script>
+</body>
+</html>

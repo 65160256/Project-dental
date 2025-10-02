@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดการรักษา - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .back-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .page-info h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            color: #666;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        /* Treatment Card */
+        .treatment-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .back-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4A90E2;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-icon:hover {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .card-title h2 {
+            color: #333;
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .date-display {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .detail-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .booking-id {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .diagnosis-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-top: 20px;
+        }
+
+        .diagnosis-box h3 {
+            color: #065f46;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .diagnosis-content {
+            color: #065f46;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: none;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .treatment-card {
+                padding: 20px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .detail-label {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="back-section">
+                <div class="page-info">
+                    <h1>ประวัติการรักษา</h1>
+                    <p>รายละเอียดการรักษาของผู้ป่วย</p>
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="profile-dropdown">
+                    <div class="user-info">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="treatment-card">
+                <div class="card-header">
+                    <div class="back-icon" onclick="goBack()">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                    <div class="card-title">
+                        <h2>รายละเอียดการรักษา</h2>
+                        <div class="date-display">วันที่รักษา: <%= detail.formattedDate %></div>
+                    </div>
+                </div>
+
+                <div class="detail-box">
+                    <div class="detail-row">
+                        <span class="detail-label">รหัสการจอง:</span>
+                        <span class="detail-value">
+                            <span class="booking-id">#Y-<%= detail.queue_id %></span>
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">วันที่:</span>
+                        <span class="detail-value"><%= detail.formattedDate %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">เวลา:</span>
+                        <span class="detail-value"><%= detail.formattedTime %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">การรักษา:</span>
+                        <span class="detail-value"><%= detail.treatment_name %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">ทันตแพทย์:</span>
+                        <span class="detail-value">ทพ. <%= detail.dentist_name %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">นัดหมายครั้งถัดไป:</span>
+                        <span class="detail-value"><%= detail.next_appointment || '-' %></span>
+                    </div>
+                </div>
+
+                <% if (detail.diagnosis) { %>
+                <div class="diagnosis-box">
+                    <h3><i class="fas fa-stethoscope"></i> วินิจฉัยและหมายเหตุทางคลินิก</h3>
+                    <div class="diagnosis-content">
+                        <%= detail.diagnosis %>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ดึง user avatar
+        async function updateUserAvatar() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                    document.getElementById('userAvatar').textContent = firstLetter;
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            }
+        }
+
+        // ฟังก์ชันย้อนกลับ
+        function goBack() {
+            const patientId = '<%= patientId %>';
+            window.location.href = `/admin/patients/${patientId}/treatments`;
+        }
+
+        // แสดง toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // เรียกใช้เมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserAvatar();
+        });
+
+        // คีย์บอร์ดช็อตคัท
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                goBack();
+            }
+        });
+    </script>
+</body>
+</html>

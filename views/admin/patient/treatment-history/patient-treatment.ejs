@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติการรักษา - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
+        body{background-color:#f5f7fa;margin:0}
+
+        /* Sidebar */
+        .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,0.1);z-index:1000}
+        .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+        .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+        .sidebar ul{list-style:none;padding:10px 0;margin:0}
+        .sidebar ul li{margin:2px 0}
+        .sidebar ul li a{display:block;padding:12px 20px;color:rgba(255,255,255,0.9);text-decoration:none;transition:all .3s ease;font-size:14px;display:flex;align-items:center;gap:8px}
+        .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,0.2);color:#fff;border-radius:8px;margin:0 10px}
+
+        /* Main Content */
+        .main{margin-left:180px;min-height:100vh}
+
+        /* Top Bar */
+        .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1);position:relative}
+
+        .breadcrumb{display:flex;align-items:center;gap:8px;color:#666;font-size:14px}
+        .breadcrumb a{color:#4A90E2;text-decoration:none}
+        .breadcrumb a:hover{text-decoration:underline}
+
+        .user-section{display:flex;align-items:center;gap:15px}
+        .notification-container{position:relative}
+        .notification-icon{position:relative;width:20px;height:20px;cursor:pointer;color:#666;transition:color .3s ease}
+        .notification-icon:hover{color:#4A90E2}
+        .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+        .notification-badge.show{display:flex;animation:pulse 2s infinite}
+        @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+        .profile-dropdown{position:relative}
+        .user-info{display:flex;align-items:center;cursor:pointer;gap:10px}
+        .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+        .user-details strong{display:block;font-size:13px;color:#333}
+        .user-details small{color:#666;font-size:11px}
+        .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:1000}
+        .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+        .dropdown-menu a:hover{background-color:#f8f9fa}
+
+        /* Content */
+        .content{padding:30px}
+        .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+        .page-title h1{font-size:24px;color:#333;margin:0 0 5px 0;font-weight:600}
+        .page-title p{color:#666;margin:0;font-size:13px}
+
+        .patient-info-card{background:#fff;border-radius:12px;padding:25px;margin-bottom:25px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;align-items:center;gap:20px}
+        .patient-avatar-large{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:600}
+        .patient-details{flex:1}
+        .patient-details h2{margin:0 0 5px 0;font-size:20px;color:#333}
+        .patient-details p{margin:2px 0;color:#666;font-size:14px}
+
+        .filter-section{background:#fff;border-radius:12px;padding:20px;margin-bottom:25px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center}
+        .search-filters{display:flex;gap:15px;align-items:center}
+        .search-filters label{font-weight:500;color:#555;font-size:14px}
+        .filter-input{padding:8px 12px;border:1px solid #e1e5e9;border-radius:6px;font-size:14px;outline:none}
+        .filter-input:focus{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,0.1)}
+        .stats-info{display:flex;align-items:center;gap:10px;color:#666;font-size:14px}
+        .stats-info i{color:#4A90E2;font-size:16px}
+
+        /* History Section */
+        .history-section{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+        .history-header{padding:20px 25px;background:linear-gradient(135deg,rgba(74,144,226,0.1),rgba(45,168,255,0.1));border-bottom:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+        .history-header h3{margin:0;font-size:18px;font-weight:600;color:#333}
+        .timeline-container{padding:25px}
+
+        .year-section{margin-bottom:30px}
+        .year-header{display:flex;align-items:center;gap:15px;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #e1e5e9}
+        .year-header h4{font-size:18px;color:#333;margin:0}
+        .year-stats{background:#f8f9fa;padding:5px 12px;border-radius:15px;font-size:12px;color:#666;font-weight:500}
+
+        .treatment-timeline{position:relative;padding-left:30px}
+        .timeline-line{position:absolute;left:15px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#4A90E2,#e1e5e9)}
+        .treatment-item{position:relative;background:#fff;border:1px solid #e1e5e9;border-radius:10px;padding:20px;margin-bottom:15px;cursor:pointer;transition:all .3s ease;box-shadow:0 2px 4px rgba(0,0,0,0.05)}
+        .treatment-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);border-color:#4A90E2}
+        .treatment-item::before{content:'';position:absolute;left:-35px;top:20px;width:12px;height:12px;border-radius:50%;background:#4A90E2;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+
+        .treatment-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .treatment-date{display:flex;align-items:center;gap:8px;color:#4A90E2;font-weight:600;font-size:14px}
+        .treatment-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase}
+        .status-completed{background:#e8f5e8;color:#2e7d32}
+        .status-pending{background:#fff3e0;color:#f57c00}
+        .status-cancelled{background:#ffebee;color:#d32f2f}
+
+        .treatment-info{display:flex;justify-content:space-between;align-items:center}
+        .treatment-details h5{margin:0 0 5px 0;font-size:16px;color:#333;font-weight:600}
+        .treatment-details p{margin:0;color:#666;font-size:13px}
+
+        .view-details-btn{padding:8px 16px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .3s ease;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+        .view-details-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(74,144,226,0.3)}
+
+        /* Empty State */
+        .empty-state{text-align:center;padding:60px 20px;color:#666}
+        .empty-icon{font-size:48px;color:#ddd;margin-bottom:20px}
+        .empty-state h3{margin:0 0 10px 0;color:#999}
+        .empty-state p{margin:0 0 20px 0;font-size:14px}
+
+        /* Loading */
+        .loading{text-align:center;padding:60px;color:#666}
+        .loading-spinner{width:50px;height:50px;border:4px solid rgba(74,144,226,0.1);border-top:4px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+        @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+        /* Toast */
+        .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideInRight .3s ease}
+        .toast.success{background:#10b981}
+        .toast.error{background:#ef4444}
+        .toast.info{background:#3b82f6}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        /* Responsive */
+        @media (max-width:768px){
+            .sidebar{width:100%;height:auto;position:relative}
+            .main{margin-left:0}
+            .page-header{flex-direction:column;align-items:flex-start;gap:15px}
+            .filter-section{flex-direction:column;align-items:flex-start;gap:15px}
+            .patient-info-card{flex-direction:column;text-align:center}
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="breadcrumb">
+                <a href="/admin/patients">ผู้ป่วย</a>
+                <i class="fas fa-chevron-right"></i>
+                <span id="patientName">ประวัติการรักษา</span>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Patient Info Card -->
+            <div class="patient-info-card" id="patientInfoCard" style="display:none;">
+                <div class="patient-avatar-large" id="patientAvatarLarge">JD</div>
+                <div class="patient-details">
+                    <h2 id="patientFullName">กำลังโหลด...</h2>
+                    <p><i class="fas fa-phone"></i> <span id="patientPhone">-</span></p>
+                    <p><i class="fas fa-envelope"></i> <span id="patientEmail">-</span></p>
+                    <p><i class="fas fa-birthday-cake"></i> <span id="patientAge">-</span></p>
+                </div>
+                <div class="action-buttons">
+                    <a href="#" id="editPatientBtn" class="view-details-btn">
+                        <i class="fas fa-edit"></i> แก้ไขข้อมูล
+                    </a>
+                    <a href="#" id="viewPatientBtn" class="view-details-btn">
+                        <i class="fas fa-eye"></i> ดูโปรไฟล์
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="search-filters">
+                    <label>ช่วงวันที่:</label>
+                    <input type="date" id="startDate" class="filter-input" onchange="applyFilters()" />
+                    <span>ถึง</span>
+                    <input type="date" id="endDate" class="filter-input" onchange="applyFilters()" />
+                    
+                    <label>ประเภทการรักษา:</label>
+                    <select id="treatmentFilter" class="filter-input" onchange="applyFilters()">
+                        <option value="">ทั้งหมด</option>
+                    </select>
+                    
+                    <label>สถานะ:</label>
+                    <select id="statusFilter" class="filter-input" onchange="applyFilters()">
+                        <option value="">ทั้งหมด</option>
+                        <option value="confirm">เสร็จสิ้น</option>
+                        <option value="pending">รอดำเนินการ</option>
+                        <option value="cancel">ยกเลิก</option>
+                    </select>
+                </div>
+                <div class="stats-info">
+                    <i class="fas fa-history"></i>
+                    <span>รวม <strong id="totalTreatments">0</strong> รายการรักษา</span>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดประวัติการรักษา...</p>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-section" id="historySection" style="display:none;">
+                <div class="history-header">
+                    <h3>ไทม์ไลน์การรักษา</h3>
+                    <button class="view-details-btn" onclick="refreshData()">
+                        <i class="fas fa-rotate-right"></i>
+                        รีเฟรช
+                    </button>
+                </div>
+                <div class="timeline-container" id="timelineContainer">
+                    <!-- Timeline content will be injected here -->
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <div class="empty-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3>ไม่พบประวัติการรักษา</h3>
+                <p>ผู้ป่วยรายนี้ยังไม่มีการรักษา</p>
+                <a href="/admin/appointments/add" class="view-details-btn">
+                    <i class="fas fa-plus"></i>
+                    สร้างนัดครั้งแรก
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== Global =====
+        const TH = 'th-TH';
+        let patientId = null;
+        let allTreatments = [];
+        let filteredTreatments = [];
+        let patientData = null;
+
+        // ===== Init =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // ดึง patientId ด้วย regex รองรับมี/ไม่มี '/' ท้าย URL
+            const m = window.location.pathname.match(/\/admin\/patients\/(\d+)\/treatments\/?$/);
+            patientId = m ? m[1] : null;
+
+            if (patientId) {
+                loadPatientInfo();
+                loadTreatmentHistory();
+            } else {
+                showToast('ลิงก์ผู้ป่วยไม่ถูกต้อง', 'error');
+                window.location.href = '/admin/patients';
+            }
+            updateUserAvatar();
+        });
+
+        // ===== Patient Info =====
+        async function loadPatientInfo() {
+            try {
+                const response = await fetch(`/admin/api/patients/${patientId}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.success) {
+                    patientData = data.patient;
+                    displayPatientInfo(patientData);
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลผู้ป่วย');
+                }
+            } catch (error) {
+                console.error('Error loading patient info:', error);
+                showToast('โหลดข้อมูลผู้ป่วยล้มเหลว', 'error');
+            }
+        }
+
+        function displayPatientInfo(patient) {
+            const initials = (patient.fname ? patient.fname.charAt(0) : 'U') + (patient.lname ? patient.lname.charAt(0) : 'P');
+            const fullName = `${patient.fname || 'ไม่ระบุ'} ${patient.lname || ''}`.trim();
+            const ageText = calculateAge(patient.dob);
+
+            document.getElementById('patientAvatarLarge').textContent = initials.toUpperCase();
+            document.getElementById('patientFullName').textContent = fullName || 'ไม่ระบุชื่อ';
+            document.getElementById('patientName').textContent = fullName ? `ประวัติการรักษา - ${fullName}` : 'ประวัติการรักษา';
+            document.getElementById('patientPhone').textContent = patient.phone || 'ไม่ได้ให้ข้อมูล';
+            document.getElementById('patientEmail').textContent = patient.email || 'ไม่ได้ให้ข้อมูล';
+            document.getElementById('patientAge').textContent = ageText;
+
+            document.getElementById('editPatientBtn').href = `/admin/patients/${patientId}/edit`;
+            document.getElementById('viewPatientBtn').href = `/admin/patients/${patientId}`;
+
+            document.getElementById('patientInfoCard').style.display = 'flex';
+        }
+
+        function calculateAge(dob) {
+            if (!dob) return 'ไม่ทราบอายุ';
+            const today = new Date();
+            const birth = new Date(dob);
+            if (isNaN(birth.getTime())) return 'ไม่ทราบอายุ';
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            return age > 0 ? `อายุ ${age} ปี` : 'ไม่ทราบอายุ';
+        }
+
+        // ===== History =====
+        async function loadTreatmentHistory() {
+            const loading = document.getElementById('loading');
+            const historySection = document.getElementById('historySection');
+            const emptyState = document.getElementById('emptyState');
+
+            loading.style.display = 'block';
+            historySection.style.display = 'none';
+            emptyState.style.display = 'none';
+
+            try {
+                const response = await fetch(`/admin/api/patients/${patientId}/treatments`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                if (data.success && data.treatments && data.treatments.length > 0) {
+                    allTreatments = data.treatments;
+                    filteredTreatments = [...allTreatments];
+                    populateTreatmentFilter();
+                    renderTreatmentHistory();
+                    updateStats();
+                    historySection.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading treatment history:', error);
+                emptyState.style.display = 'block';
+                showToast('โหลดประวัติการรักษาล้มเหลว: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function populateTreatmentFilter() {
+            const treatmentFilter = document.getElementById('treatmentFilter');
+            const uniqueTreatments = [...new Set(allTreatments.map(t => t.treatment_name))].filter(Boolean);
+            treatmentFilter.innerHTML = '<option value="">ทั้งหมด</option>';
+            uniqueTreatments.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                treatmentFilter.appendChild(option);
+            });
+        }
+
+        function renderTreatmentHistory() {
+            const container = document.getElementById('timelineContainer');
+            const grouped = groupTreatmentsByYear(filteredTreatments);
+
+            if (Object.keys(grouped).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fas fa-search"></i></div>
+                        <h3>ไม่พบรายการที่ตรงกับตัวกรอง</h3>
+                        <p>ลองปรับเงื่อนไขการค้นหาใหม่</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="timeline-line"></div>';
+
+            Object.keys(grouped).sort((a,b)=>b-a).forEach(year => {
+                const items = grouped[year];
+                html += `
+                    <div class="year-section">
+                        <div class="year-header">
+                            <h4>${year}</h4>
+                            <div class="year-stats">${items.length} รายการ</div>
+                        </div>
+                        <div class="treatment-timeline">
+                `;
+                items.forEach(t => {
+                    const date = new Date(t.date);
+                    const formatted = formatTreatmentDate(date);
+                    const statusClass = getStatusClass(t.queue_status);
+                    const statusText = getStatusText(t.queue_status);
+                    const diag = (t.diagnosis || '').toString();
+                    const diagShort = diag ? (diag.length > 100 ? diag.substring(0,100) + '…' : diag) : '';
+
+                    html += `
+                        <div class="treatment-item" onclick="viewTreatmentDetails(${t.queue_id})">
+                            <div class="treatment-header">
+                                <div class="treatment-date">
+                                    <i class="fas fa-calendar"></i>
+                                    ${formatted}
+                                </div>
+                                <div class="treatment-status ${statusClass}">${statusText}</div>
+                            </div>
+                            <div class="treatment-info">
+                                <div class="treatment-details">
+                                    <h5>${t.treatment_name || '-'}</h5>
+                                    <p><i class="fas fa-user-md"></i> ${t.dentist_name || 'ไม่ระบุ'}</p>
+                                    ${diagShort ? `<p><i class="fas fa-notes-medical"></i> ${diagShort}</p>` : ''}
+                                </div>
+                                <a href="/admin/patients/${patientId}/treatments/${t.queue_id}" class="view-details-btn">
+                                    <i class="fas fa-eye"></i> ดูรายละเอียด
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function groupTreatmentsByYear(treatments) {
+            const grouped = {};
+            treatments.forEach(t => {
+                const y = new Date(t.date).getFullYear();
+                if (!grouped[y]) grouped[y] = [];
+                grouped[y].push(t);
+            });
+            Object.keys(grouped).forEach(y => {
+                grouped[y].sort((a,b)=> new Date(b.date) - new Date(a.date));
+            });
+            return grouped;
+        }
+
+        function formatTreatmentDate(date) {
+            const options = {
+                year:'numeric', month:'long', day:'numeric',
+                hour:'2-digit', minute:'2-digit', hour12:false
+            };
+            return date.toLocaleString(TH, options);
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'confirm': return 'status-completed';
+                case 'pending': return 'status-pending';
+                case 'cancel':  return 'status-cancelled';
+                default:        return 'status-pending';
+            }
+        }
+
+        function getStatusText(status) {
+            switch (status) {
+                case 'confirm': return 'เสร็จสิ้น';
+                case 'pending': return 'รอดำเนินการ';
+                case 'cancel':  return 'ยกเลิก';
+                default:        return 'ไม่ทราบ';
+            }
+        }
+
+        // ===== Filters & Stats =====
+        function applyFilters() {
+            const startVal = document.getElementById('startDate').value;
+            const endVal   = document.getElementById('endDate').value;
+            const treatmentVal = document.getElementById('treatmentFilter').value;
+            const statusVal    = document.getElementById('statusFilter').value;
+
+            filteredTreatments = allTreatments.filter(t => {
+                const d = new Date(t.date);
+                let ok = true;
+
+                if (startVal) ok = ok && d >= new Date(startVal);
+                if (endVal) {
+                    const end = new Date(endVal);
+                    end.setHours(23,59,59,999);
+                    ok = ok && d <= end;
+                }
+
+                const matchTreatment = !treatmentVal || t.treatment_name === treatmentVal;
+                const matchStatus = !statusVal || t.queue_status === statusVal;
+
+                return ok && matchTreatment && matchStatus;
+            });
+
+            renderTreatmentHistory();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalTreatments').textContent = filteredTreatments.length;
+        }
+
+        // ===== Navigation / UI =====
+        function viewTreatmentDetails(queueId) {
+            window.location.href = `/admin/patients/${patientId}/treatments/${queueId}`;
+        }
+
+        async function updateUserAvatar() {
+            try {
+                const r = await fetch('/admin/profile/api');
+                if (r.ok) {
+                    const data = await r.json();
+                    if (data.success) {
+                        const first = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = first;
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching user info:', e);
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        async function refreshData() {
+            showToast('กำลังรีเฟรชประวัติการรักษา...', 'info');
+            await loadTreatmentHistory();
+            showToast('อัปเดตข้อมูลแล้ว', 'success');
+        }
+
+        function toggleNotifications() {
+            showToast('ฟีเจอร์การแจ้งเตือนจะพร้อมใช้งานเร็วๆ นี้', 'info');
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showToast(message, type='info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type==='success'?'check':type==='error'?'exclamation-triangle':'info-circle'}"></i>
+                ${message}
+            `;
+            document.body.appendChild(toast);
+            setTimeout(()=>{
+                toast.style.animation='slideOutRight .3s ease';
+                setTimeout(()=>{ if (toast.parentNode) toast.remove(); },300);
+            }, 3000);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        // slideOutRight animation
+        const additionalStyles = document.createElement('style');
+        additionalStyles.textContent = `
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to   { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(additionalStyles);
+    </script>
+</body>
+</html>

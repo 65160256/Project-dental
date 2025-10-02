@@ -20,7 +20,7 @@ exports.getProfile = async (req, res) => {
     if (userRows.length === 0) return res.redirect('/login');
 
     const user = userRows[0];
-    res.render('admin-profile', { user });
+    res.render('admin/profile/admin-profile', { user });
 
   } catch (err) {
     console.error(err);
@@ -293,7 +293,7 @@ exports.getScheduleAPI = async (req, res) => {
       }
     });
 
-    // Create events for FullCalendar
+    // Create events for FullCalendar with Thai text
     Object.keys(groupedSchedules).forEach(date => {
       Object.keys(groupedSchedules[date]).forEach(dentistKey => {
         const dentistData = groupedSchedules[date][dentistKey];
@@ -342,12 +342,12 @@ exports.getScheduleAPI = async (req, res) => {
           workingBlocks.push(currentBlock);
         }
         
-        // Create FullCalendar events
+        // Create FullCalendar events with Thai labels
         workingBlocks.forEach(block => {
           if (block.type === 'dayoff') {
             events.push({
               id: `dayoff_${dentistKey}_${date}`,
-              title: `Dr. ${dentistData.dentist}\nDay Off`,
+              title: `ทพ. ${dentistData.dentist}\nวันหยุด`,
               start: date,
               color: '#f5f5f5',
               textColor: '#999',
@@ -359,16 +359,17 @@ exports.getScheduleAPI = async (req, res) => {
               }
             });
           } else {
+            // Format time to 24-hour format
             const startTime = block.start.substring(0, 5); // HH:MM
             const endTime = block.end.substring(0, 5);
             
             const appointmentText = block.hasAppointments 
-              ? ` (${block.appointmentCount} appointment${block.appointmentCount > 1 ? 's' : ''})` 
+              ? ` (${block.appointmentCount} นัดหมาย)` 
               : '';
             
             events.push({
               id: `work_${dentistKey}_${date}`,
-              title: `Dr. ${dentistData.dentist}\n${startTime}-${endTime}${appointmentText}`,
+              title: `ทพ. ${dentistData.dentist}\n${startTime}-${endTime}${appointmentText}`,
               start: date,
               color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
               textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
@@ -394,10 +395,10 @@ exports.getScheduleAPI = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error loading schedule API:', error);
+    console.error('เกิดข้อผิดพลาดในการโหลด API ตารางเวลา:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to load schedule data',
+      error: 'ไม่สามารถโหลดข้อมูลตารางเวลาได้',
       events: []
     });
   }
@@ -493,15 +494,21 @@ exports.renderWeekCalendar = (req, res) => {
 
 // หน้า dentist
 exports.viewDentists = async (req, res) => {
-  const [rows] = await db.execute(`
-    SELECT d.*, u.email FROM dentist d
-    JOIN user u ON d.user_id = u.user_id
-  `);
-  res.render('admin-dentists', { dentists: rows });
+  try {
+    res.render('admin/dentists/admin-dentists', { 
+      title: 'จัดการทันตแพทย์ - Smile Clinic',
+      user: req.session.user || { email: 'admin@clinic.com' }
+    });
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการโหลดหน้าทันตแพทย์:', error);
+    res.status(500).render('error', { 
+      message: 'ไม่สามารถโหลดหน้าทันตแพทย์ได้',
+      error: error 
+    });
+  }
 };
-
 exports.addDentistForm = (req, res) => {
-  res.render('add-dentist');
+  res.render('admin/dentists/add-dentist');
 };
 
 exports.addDentist = async (req, res) => {
@@ -684,7 +691,7 @@ exports.viewDentist = async (req, res) => {
     SELECT d.*, u.email FROM dentist d
     JOIN user u ON d.user_id = u.user_id WHERE d.dentist_id = ?
   `, [id]);
-  res.render('view-dentist', { dentist: rows[0] });
+  res.render('admin/dentists/view-dentist', { dentist: rows[0] });
 };
 
 exports.editDentistForm = async (req, res) => {
@@ -703,7 +710,7 @@ exports.editDentistForm = async (req, res) => {
     dentist.dob = new Date(dentist.dob);
   }
 
-  res.render('edit-dentist', { dentist });
+  res.render('admin/dentists/edit-dentist', { dentist });
 };
 
 
@@ -908,7 +915,7 @@ exports.deleteDentist = async (req, res) => {
 
 exports.dentistSchedule = (req, res) => {
   const id = req.params.id;
-  res.render('dentist-schedule', { dentistId: id });
+  res.render('admin/dentists/dentist-schedule', { dentistId: id });
 };
 
 
@@ -919,7 +926,7 @@ exports.getPatients = async (req, res) => {
       SELECT patient_id AS id, CONCAT(fname, ' ', lname) AS name, phone
       FROM patient
     `);
-    res.render('admin-patients', { patients: rows });
+    res.render('admin/patient/admin-patients', { patients: rows });
   } catch (err) {
     console.error(err);
     res.status(500).send('Failed to load patients');
@@ -1112,7 +1119,7 @@ exports.deletePatientAPI = async (req, res) => {
 
 // แสดงฟอร์มเพิ่ม patient
 exports.showAddPatientForm = (req, res) => {
-  res.render('add-patient');
+  res.render('admin/patient/add-patient');
 };
 exports.listPatients = async (req, res) => {
   try {
@@ -1120,7 +1127,7 @@ exports.listPatients = async (req, res) => {
       SELECT patient_id AS id, CONCAT(fname, ' ', lname) AS name, phone
       FROM patient
     `);
-    res.render('admin-patients', { patients: rows });
+    res.render('admin/patient/admin-patients', { patients: rows });
   } catch (err) {
     console.error(err);
     res.status(500).send('Failed to load patients');
@@ -1285,7 +1292,7 @@ exports.showEditPatientForm = async (req, res) => {
       patient.dob = new Date(patient.dob).toISOString().split('T')[0];
     }
 
-    res.render('edit-patient', { patient });
+    res.render('admin/patient/edit-patient', { patient });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading patient for edit');
@@ -1327,7 +1334,7 @@ exports.viewPatient = async (req, res) => {
 
     if (rows.length === 0) return res.status(404).send('Patient not found');
 
-    res.render('view-patient', { patient: rows[0] });
+    res.render('admin/patient/view-patient', { patient: rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1579,7 +1586,7 @@ exports.showEditPatientFormModern = async (req, res) => {
     patient.stats = appointmentStats[0];
 
     // ใช้ template ใหม่
-    res.render('edit-patient-modern', { patient });
+    res.render('admin/patient/edit-patient-modern', { patient });
   } catch (err) {
     console.error('Error loading patient for edit:', err);
     res.status(500).render('error', { 
@@ -1621,7 +1628,7 @@ exports.viewPatientTreatmentHistory = async (req, res) => {
       });
     });
 
-    res.render('patient-treatments', {
+    res.render('admin/patient/treatment-history/patient-treatment', {
       groupedHistory,
       patientId: id
     });
@@ -1639,11 +1646,12 @@ exports.viewTreatmentDetails = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         q.queue_id,
-        qd.date,
+        q.time as date,  
         t.treatment_name,
-        d.fname AS dentist_name,
+        CONCAT(d.fname, ' ', d.lname) AS dentist_name,
         th.diagnosis,
-        th.followUpdate
+        th.followUpdate,
+        q.next_appointment
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       JOIN treatment t ON qd.treatment_id = t.treatment_id
@@ -1652,22 +1660,38 @@ exports.viewTreatmentDetails = async (req, res) => {
       WHERE q.queue_id = ? AND q.patient_id = ?
     `, [queueId, id]);
 
-    if (rows.length === 0) return res.status(404).send('Treatment detail not found');
+    if (rows.length === 0) {
+      return res.status(404).send('ไม่พบข้อมูลการรักษา');
+    }
 
     const detail = rows[0];
-    const dateObj = new Date(detail.date);
-    detail.formattedDate = dateObj.toLocaleDateString('en-GB'); // ex: 11/04/2025
-    detail.formattedTime = dateObj.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    const dateObj = new Date(detail.date);  // ตอนนี้จะได้เวลาถูกต้องแล้ว
+    
+    // รูปแบบวันที่เป็นภาษาไทย
+    const thaiMonths = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    
+    const day = dateObj.getDate();
+    const month = thaiMonths[dateObj.getMonth()];
+    const year = dateObj.getFullYear() + 543;
+    
+    // ✅ ตอนนี้จะได้เวลาจริงแล้ว
+    const hours = dateObj.getHours().toString().padStart(2, '0');
+    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    
+    detail.formattedDate = `${day} ${month} ${year}`;
+    detail.formattedTime = `${hours}:${minutes} น.`;
 
-    res.render('treatment-detail', { detail, patientId: id });
+    res.render('admin/patient/treatment-history/treatment-detail', { 
+      detail, 
+      patientId: id 
+    });
 
   } catch (err) {
     console.error('Error fetching treatment details:', err);
-    res.status(500).send('Server error');
+    res.status(500).send('เกิดข้อผิดพลาดในการโหลดข้อมูล');
   }
 };
 
@@ -1677,7 +1701,7 @@ exports.viewTreatmentDetails = async (req, res) => {
 exports.listTreatments = async (req, res) => {
   try {
     const [rows] = await db.execute(`SELECT * FROM treatment ORDER BY treatment_name ASC`);
-    res.render('admin-treatments', { treatments: rows });
+    res.render('admin/treatment/admin-treatments', { treatments: rows });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading treatments');
@@ -1703,7 +1727,7 @@ exports.viewTreatment = async (req, res) => {
     if (rows.length === 0) return res.status(404).send('Treatment not found');
 
     const treatment = rows[0];
-    res.render('view-treatment', { treatment });
+    res.render('admin/treatment/view-treatment', { treatment });
 
   } catch (err) {
     console.error('Error fetching treatment:', err);
@@ -1714,7 +1738,7 @@ exports.viewTreatment = async (req, res) => {
 exports.showAddTreatmentForm = async (req, res) => {
   try {
     const [dentists] = await db.execute('SELECT dentist_id, fname, lname FROM dentist');
-    res.render('add-treatment', { dentists });
+    res.render('admin/treatment/add-treatment', { dentists });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading dentists');
@@ -1901,6 +1925,7 @@ exports.getNotifications = async (req, res) => {
       whereClause = 'WHERE is_read = 0';
     }
     
+    // แก้ส่วนนี้ - ต้องส่ง params เป็น number
     const [notifications] = await db.execute(`
       SELECT 
         n.id,
@@ -1923,12 +1948,12 @@ exports.getNotifications = async (req, res) => {
       ${whereClause}
       ORDER BY n.created_at DESC
       LIMIT ? OFFSET ?
-    `, [...params, parseInt(limit), parseInt(offset)]);
+    `, [...params, parseInt(limit), parseInt(offset)]);  // ⬅️ ต้องแน่ใจว่าเป็น number
 
     // Get total count with same WHERE clause
     const [countResult] = await db.execute(`
       SELECT COUNT(*) as total FROM notifications n ${whereClause}
-    `, params);
+    `, params);  // ⬅️ ไม่ส่ง limit/offset ที่นี่
 
     const totalCount = countResult[0].total;
     const unreadCount = await getUnreadNotificationCount();
@@ -3175,6 +3200,7 @@ exports.getDentistsAPI = async (req, res) => {
 };
 
 // API: Get single dentist details
+// API: Get single dentist details
 exports.getDentistByIdAPI = async (req, res) => {
   try {
     const { id } = req.params;
@@ -3202,6 +3228,13 @@ exports.getDentistByIdAPI = async (req, res) => {
     }
 
     const dentist = rows[0];
+    
+    // ✅ เพิ่มส่วนนี้เพื่อแปลง license_no เป็นหลายรูปแบบเพื่อรองรับ frontend
+    if (dentist.license_no) {
+      dentist.licenseNo = dentist.license_no;        // camelCase
+      dentist.license_number = dentist.license_no;   // snake_case แบบเต็ม
+      dentist.license = dentist.license_no;          // แบบสั้น
+    }
     
     // ตรวจสอบว่ามีไฟล์รูปจริงหรือไม่
     if (dentist.photo && dentist.photo !== 'default-avatar.png') {
@@ -3233,7 +3266,6 @@ exports.getDentistByIdAPI = async (req, res) => {
     });
   }
 };
-
 // API: Delete dentist
 exports.deleteDentistAPI = async (req, res) => {
   try {
@@ -3996,7 +4028,7 @@ exports.showEditAppointmentForm = async (req, res) => {
 // Show add appointment form
 exports.showAddAppointmentForm = async (req, res) => {
   try {
-    res.render('add-appointment', { 
+    res.render('admin/appointment/add-appointment', { 
       title: 'Book New Appointment - Smile Clinic'
     });
   } catch (error) {
@@ -4262,20 +4294,19 @@ exports.getPatientTreatmentHistoryAPI = async (req, res) => {
 // Enhanced Dashboard with Reports
 exports.getReportsDashboard = async (req, res) => {
   try {
-    // Get current date and month for calculations
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
     const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
     const lastDayOfMonth = new Date(currentYear, currentMonth, 0);
 
-    // 1. Total Patients Count
+    // 1. นับจำนวนผู้ป่วยทั้งหมด
     const [totalPatientsResult] = await db.execute(`
       SELECT COUNT(*) as total_patients FROM patient
     `);
     const totalPatients = totalPatientsResult[0].total_patients;
 
-    // 2. Appointment Statistics by Status
+    // 2. สถิติการนัดหมายตามสถานะ
     const [appointmentStats] = await db.execute(`
       SELECT 
         queue_status,
@@ -4285,7 +4316,6 @@ exports.getReportsDashboard = async (req, res) => {
       GROUP BY queue_status
     `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
 
-    // Format appointment stats
     const appointmentSummary = {
       confirmed: 0,
       pending: 0,
@@ -4294,11 +4324,17 @@ exports.getReportsDashboard = async (req, res) => {
     };
 
     appointmentStats.forEach(stat => {
-      appointmentSummary[stat.queue_status] = stat.count;
+      if (stat.queue_status === 'confirm') {
+        appointmentSummary.confirmed = stat.count;
+      } else if (stat.queue_status === 'pending') {
+        appointmentSummary.pending = stat.count;
+      } else if (stat.queue_status === 'cancel') {
+        appointmentSummary.cancelled = stat.count;
+      }
       appointmentSummary.total += stat.count;
     });
 
-    // 3. Treatment Statistics for current month
+    // 3. สถิติการรักษา
     const [treatmentStats] = await db.execute(`
       SELECT 
         t.treatment_name,
@@ -4311,7 +4347,7 @@ exports.getReportsDashboard = async (req, res) => {
       LIMIT 10
     `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
 
-    // 4. Patient Statistics per Doctor
+    // 4. สถิติผู้ป่วยต่อทันตแพทย์
     const [doctorStats] = await db.execute(`
       SELECT 
         d.dentist_id,
@@ -4326,7 +4362,7 @@ exports.getReportsDashboard = async (req, res) => {
       ORDER BY total_appointments DESC
     `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
 
-    // 5. Today's Doctors (dentists with schedules today)
+    // 5. ทันตแพทย์ที่ทำงานวันนี้
     const [todaysDoctors] = await db.execute(`
       SELECT DISTINCT
         d.dentist_id,
@@ -4340,7 +4376,7 @@ exports.getReportsDashboard = async (req, res) => {
       ORDER BY d.fname, d.lname
     `);
 
-    // 6. Upcoming Appointments for next 7 days
+    // 6. การนัดหมายที่จะมาถึงใน 7 วันข้างหน้า
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
     
@@ -4362,7 +4398,7 @@ exports.getReportsDashboard = async (req, res) => {
       LIMIT 10
     `, [nextWeek.toISOString().split('T')[0]]);
 
-    // 7. Monthly trend data for charts
+    // 7. ข้อมูลแนวโน้มรายเดือน
     const [monthlyTrends] = await db.execute(`
       SELECT 
         DATE(time) as appointment_date,
@@ -4373,7 +4409,7 @@ exports.getReportsDashboard = async (req, res) => {
       ORDER BY appointment_date
     `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
 
-    // Prepare data for frontend
+    // เตรียมข้อมูล
     const dashboardData = {
       totalPatients,
       appointmentSummary,
@@ -4382,17 +4418,17 @@ exports.getReportsDashboard = async (req, res) => {
       todaysDoctors,
       upcomingAppointments,
       monthlyTrends,
-      currentMonth: today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      currentMonth: today.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
     };
 
-    res.render('admin-reports-dashboard', { 
+    res.render('admin/reports/admin-reports-dashboard', { 
       dashboardData,
       user: req.session.user || { email: 'admin@clinic.com' }
     });
 
   } catch (error) {
-    console.error('Error loading reports dashboard:', error);
-    res.render('admin-reports-dashboard', { 
+    console.error('เกิดข้อผิดพลาดในการโหลดแดชบอร์ดรายงาน:', error);
+    res.render('admin/reports/admin-reports-dashboard', { 
       dashboardData: {
         totalPatients: 0,
         appointmentSummary: { confirmed: 0, pending: 0, cancelled: 0, total: 0 },
@@ -4401,7 +4437,7 @@ exports.getReportsDashboard = async (req, res) => {
         todaysDoctors: [],
         upcomingAppointments: [],
         monthlyTrends: [],
-        currentMonth: 'Current Month'
+        currentMonth: 'เดือนปัจจุบัน'
       },
       user: req.session.user || { email: 'admin@clinic.com' }
     });
@@ -4409,7 +4445,9 @@ exports.getReportsDashboard = async (req, res) => {
 };
 
 
+
 // API endpoint for appointment statistics
+// API: รับสถิติการนัดหมาย
 exports.getAppointmentStatsAPI = async (req, res) => {
   try {
     const { period = 'month', status } = req.query;
@@ -4456,15 +4494,16 @@ exports.getAppointmentStatsAPI = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching appointment stats:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงสถิติการนัดหมาย:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch appointment statistics'
+      error: 'ไม่สามารถดึงสถิติการนัดหมายได้'
     });
   }
 };
 
-// API endpoint for treatment statistics
+
+// API: รับสถิติการรักษา
 exports.getTreatmentStatsAPI = async (req, res) => {
   try {
     const { period = 'month' } = req.query;
@@ -4476,6 +4515,8 @@ exports.getTreatmentStatsAPI = async (req, res) => {
       dateFilter = 'AND DATE(q.time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
     } else if (period === 'month') {
       dateFilter = 'AND MONTH(q.time) = MONTH(CURDATE()) AND YEAR(q.time) = YEAR(CURDATE())';
+    } else if (period === 'year') {
+      dateFilter = 'AND YEAR(q.time) = YEAR(CURDATE())';
     }
 
     const [treatmentStats] = await db.execute(`
@@ -4488,6 +4529,7 @@ exports.getTreatmentStatsAPI = async (req, res) => {
       GROUP BY t.treatment_id, t.treatment_name
       HAVING count > 0
       ORDER BY count DESC
+      LIMIT 10
     `);
 
     res.json({
@@ -4497,10 +4539,10 @@ exports.getTreatmentStatsAPI = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching treatment stats:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงสถิติการรักษา:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch treatment statistics'
+      error: 'ไม่สามารถดึงสถิติการรักษาได้'
     });
   }
 };
@@ -4668,7 +4710,7 @@ exports.getDentistTreatmentsAPI = async (req, res) => {
 
 
 // Check ID Card availability function
-exports.checkIdCardAvailability = async (req, res) => {
+exports.checkid_cardAvailability = async (req, res) => {
   try {
     const { id_card, exclude_dentist_id, exclude_patient_id } = req.query;
     
@@ -4803,6 +4845,70 @@ exports.checkEmailAvailabilityEnhanced = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to check email availability'
+    });
+  }
+};
+
+exports.getSchedulePage = async (req, res) => {
+  try {
+    res.render('admin/reports/admin-schedule', { 
+      title: 'ตารางเวลาทันตแพทย์ - Smile Clinic',
+      user: req.session.user || { email: 'admin@clinic.com' }
+    });
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการโหลดหน้าตารางเวลา:', error);
+    res.status(500).render('error', { 
+      message: 'ไม่สามารถโหลดหน้าตารางเวลาได้',
+      error: error 
+    });
+  }
+};
+
+// ตรวจสอบเลขใบประกอบวิชาชีพซ้ำ
+exports.checkLicenseAvailability = async (req, res) => {
+  try {
+    const { license, exclude_dentist_id } = req.query;
+    
+    if (!license) {
+      return res.status(400).json({
+        success: false,
+        error: 'กรุณาระบุเลขใบประกอบวิชาชีพ'
+      });
+    }
+
+    // ตรวจสอบรูปแบบ (6-10 หลัก)
+    if (!/^\d{6,10}$/.test(license)) {
+      return res.json({
+        success: true,
+        exists: false,
+        valid: false,
+        message: 'เลขใบประกอบวิชาชีพต้องเป็นตัวเลข 6-10 หลัก'
+      });
+    }
+
+let query = 'SELECT COUNT(*) as count FROM dentist WHERE license_no = ?';
+    let params = [license];
+    
+    if (exclude_dentist_id) {
+      query += ' AND dentist_id != ?';
+      params.push(exclude_dentist_id);
+    }
+    
+    const [result] = await db.execute(query, params);
+    const exists = result[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists,
+      valid: true,
+      message: exists ? 'เลขใบประกอบวิชาชีพนี้มีในระบบแล้ว' : 'เลขใบประกอบวิชาชีพสามารถใช้ได้'
+    });
+
+  } catch (error) {
+    console.error('Error checking license:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถตรวจสอบเลขใบประกอบวิชาชีพได้'
     });
   }
 };

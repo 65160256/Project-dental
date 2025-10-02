@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางทำงานทันตแพทย์ - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color:#f5f7fa; margin:0; }
+
+        /* Sidebar */
+        .sidebar{ width:180px; background:linear-gradient(135deg,#4A90E2,#2DA8FF); position:fixed; height:100vh; padding:0; color:#fff; box-shadow:2px 0 10px rgba(0,0,0,0.1); z-index:1000;}
+        .sidebar .logo{ text-align:center; padding:20px; border-bottom:1px solid rgba(255,255,255,0.1);}
+        .sidebar .logo .logo-icon{ width:50px; height:50px; border-radius:8px; background:#fff; padding:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:24px; color:#4A90E2;}
+        .sidebar .logo h3{ margin:0; font-size:16px; font-weight:600;}
+        .sidebar ul{ list-style:none; padding:10px 0; margin:0;}
+        .sidebar ul li{ margin:2px 0;}
+        .sidebar ul li a{ display:block; padding:12px 20px; color:rgba(255,255,255,0.9); text-decoration:none; transition:all .3s ease; font-size:14px; display:flex; align-items:center; gap:8px;}
+        .sidebar ul li.active a, .sidebar ul li:hover a{ background-color:rgba(255,255,255,0.2); color:#fff; border-radius:8px; margin:0 10px;}
+
+        /* Main Content */
+        .main{ margin-left:180px; padding:0; min-height:100vh;}
+
+        /* Top Bar */
+        .top-bar{ background:#fff; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); position:relative;}
+        .back-section{ display:flex; align-items:center; gap:15px;}
+        .back-btn{ background:linear-gradient(135deg,#4A90E2,#2DA8FF); color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; transition:all .3s ease; display:flex; align-items:center; gap:8px; text-decoration:none;}
+        .back-btn:hover{ transform:translateY(-2px); box-shadow:0 4px 12px rgba(74,144,226,0.3);}
+        .page-info h1{ font-size:24px; color:#333; margin:0 0 5px 0; font-weight:600;}
+        .page-info p{ color:#666; margin:0; font-size:13px;}
+        .dentist-badge{ background:linear-gradient(135deg,#4A90E2,#2DA8FF); color:#fff; padding:8px 15px; border-radius:20px; font-size:12px; font-weight:600;}
+
+        .user-section{ display:flex; align-items:center; gap:15px;}
+        .notification-container{ position:relative;}
+        .notification-icon{ position:relative; width:20px; height:20px; cursor:pointer; color:#666; transition:color .3s ease;}
+        .notification-icon:hover{ color:#4A90E2;}
+
+        .profile-dropdown{ position:relative;}
+        .user-info{ display:flex; align-items:center; cursor:pointer; gap:10px;}
+        .avatar{ width:32px; height:32px; border-radius:50%; background:#4A90E2; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:600; text-transform:uppercase;}
+        .user-details strong{ display:block; font-size:13px; color:#333;}
+        .user-details small{ color:#666; font-size:11px;}
+        .dropdown-menu{ display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #e1e5e9; border-radius:6px; min-width:160px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000;}
+        .dropdown-menu a{ display:block; padding:10px 15px; text-decoration:none; color:#333; font-size:13px;}
+        .dropdown-menu a:hover{ background-color:#f8f9fa;}
+
+        /* Content */
+        .content{ padding:30px;}
+
+        /* Breadcrumb */
+        .breadcrumb{ background:#fff; padding:15px 20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; font-size:14px;}
+        .breadcrumb a{ color:#4A90E2; text-decoration:none; transition:color .3s ease;}
+        .breadcrumb a:hover{ color:#2DA8FF;}
+        .breadcrumb .separator{ color:#ccc;}
+        .breadcrumb .current{ color:#666; font-weight:500;}
+
+        /* Main Content Grid */
+        .main-content{ display:grid; grid-template-columns:300px 1fr; gap:25px;}
+
+        /* Left Panel - Dentist Info */
+        .dentist-info-card{ background:#fff; border-radius:12px; padding:25px; box-shadow:0 2px 8px rgba(0,0,0,0.08); height:fit-content; text-align:center;}
+        .dentist-photo{ width:120px; height:120px; border-radius:50%; object-fit:cover; margin-bottom:15px; border:3px solid #e1e5e9;}
+        .dentist-name{ font-size:18px; font-weight:600; color:#333; margin-bottom:5px;}
+        .dentist-specialty{ color:#666; font-size:14px; margin-bottom:15px;}
+
+        /* Right Panel - Schedule */
+        .schedule-card{ background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); overflow:hidden;}
+        .schedule-header{ background:linear-gradient(135deg,rgba(74,144,226,0.1),rgba(45,168,255,0.1)); padding:20px 25px; border-bottom:1px solid #e1e5e9; display:flex; justify-content:space-between; align-items:center;}
+        .schedule-header h3{ margin:0; font-size:18px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;}
+        .calendar-controls{ display:flex; gap:10px; align-items:center;}
+
+        .btn{ padding:8px 16px; border:none; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; transition:all .3s ease; display:inline-flex; align-items:center; gap:6px; text-decoration:none;}
+        .btn-primary{ background:linear-gradient(135deg,#4A90E2,#2DA8FF); color:#fff;}
+        .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 3px 8px rgba(74,144,226,0.3);}
+        .btn-secondary{ background:#f8f9fa; color:#666; border:1px solid #e9ecef;}
+        .btn-secondary:hover{ background:#e9ecef;}
+
+        /* Month Navigation */
+        .month-navigation{ display:flex; justify-content:space-between; align-items:center; padding:20px 25px; border-bottom:1px solid #f1f3f4;}
+        .month-nav-btn{ background:none; border:none; color:#4A90E2; font-size:16px; cursor:pointer; padding:8px; border-radius:50%; transition:all .3s ease;}
+        .month-nav-btn:hover{ background:rgba(74,144,226,0.1);}
+        .current-month{ font-size:16px; font-weight:600; color:#333;}
+
+        /* Calendar */
+        .calendar-container{ padding:20px 25px;}
+        .calendar-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#e1e5e9; border-radius:8px; overflow:hidden;}
+        .calendar-header-cell{ background:#f8f9fa; padding:12px 8px; text-align:center; font-size:12px; font-weight:600; color:#666;}
+        .calendar-cell{ background:#fff; min-height:80px; padding:8px; position:relative; cursor:pointer; transition:background .2s ease;}
+        .calendar-cell:hover{ background:#f8f9fa;}
+        .calendar-cell.other-month{ background:#fafbfc; color:#ccc;}
+        .calendar-cell.today{ background:linear-gradient(135deg,rgba(74,144,226,0.1),rgba(45,168,255,0.1));}
+        .calendar-cell.has-schedule{ background:linear-gradient(135deg,#e8f5e8,#d4edda);}
+        .calendar-cell.day-off{ background:linear-gradient(135deg,#fff3cd,#ffeaa7);}
+        .cell-date{ font-size:12px; font-weight:600; color:#333; margin-bottom:4px;}
+        .cell-schedule{ font-size:10px; color:#666; line-height:1.2;}
+        .schedule-indicator{ position:absolute; top:4px; right:4px; width:8px; height:8px; border-radius:50%; background:#10b981;}
+        .schedule-indicator.day-off{ background:#f59e0b;}
+
+        /* Modal */
+        .modal{ position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:3000; display:none; align-items:center; justify-content:center;}
+        .modal-content{ background:#fff; border-radius:12px; padding:30px; max-width:500px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.3); position:relative; max-height:80vh; overflow-y:auto;}
+        .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #f1f3f4;}
+        .modal-title{ font-size:18px; font-weight:600; color:#333; margin:0;}
+        .close{ background:none; border:none; font-size:24px; cursor:pointer; color:#666; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:all .3s ease;}
+        .close:hover{ background:#f8f9fa; color:#333;}
+        .schedule-detail{ margin-bottom:15px;}
+        .detail-label{ font-weight:600; color:#555; font-size:14px; margin-bottom:5px;}
+        .detail-value{ color:#333; font-size:14px; padding:8px 12px; background:#f8f9fa; border-radius:6px;}
+        .schedule-list{ max-height:200px; overflow-y:auto;}
+        .schedule-item{ padding:10px; border:1px solid #e9ecef; border-radius:6px; margin-bottom:8px; background:#fff;}
+        .schedule-item.day-off{ background:#fff3cd; border-color:#ffeaa7;}
+        .schedule-time{ font-weight:600; color:#4A90E2; font-size:13px;}
+        .schedule-status{ font-size:12px; color:#666;}
+
+        /* Loading */
+        .loading{ display:none; text-align:center; padding:60px; color:#666; background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+        .loading-spinner{ width:50px; height:50px; border:4px solid rgba(74,144,226,0.1); border-top:4px solid #4A90E2; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 20px;}
+        @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+        /* Toast */
+        .toast{ position:fixed; top:20px; right:20px; padding:15px 25px; border-radius:8px; color:#fff; font-size:14px; font-weight:500; z-index:4000; box-shadow:0 4px 12px rgba(0,0,0,0.15); animation:slideInRight .3s ease; min-width:300px;}
+        .toast.success{ background:linear-gradient(135deg,#10b981,#059669);}
+        .toast.error{ background:linear-gradient(135deg,#ef4444,#dc2626);}
+        .toast.info{ background:linear-gradient(135deg,#4A90E2,#2DA8FF);}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        /* Responsive */
+        @media (max-width:1024px){ .main-content{ grid-template-columns:1fr;} .dentist-info-card{ order:-1;} }
+        @media (max-width:768px){
+            .sidebar{ width:100%; height:auto; position:relative;}
+            .main{ margin-left:0;}
+            .top-bar{ flex-direction:column; gap:15px; align-items:stretch;}
+            .calendar-grid{ gap:2px;}
+            .calendar-cell{ min-height:60px; padding:4px;}
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตาราง</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="back-section">
+                <a href="/admin/dentists" class="back-btn" id="backButton">
+                    <i class="fas fa-arrow-left"></i>
+                    กลับไปหน้าทันตแพทย์
+                </a>
+                <div class="page-info">
+                    <h1>ตารางทำงานทันตแพทย์</h1>
+                    <p>ดูและจัดการเวลาทำงานของทันตแพทย์</p>
+                </div>
+            </div>
+            <div class="dentist-badge" id="dentistBadge">กำลังโหลด...</div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">ผ</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a>
+                <span class="separator"><i class="fas fa-chevron-right"></i></span>
+                <a href="/admin/dentists/1" id="dentistLink">ข้อมูลทันตแพทย์</a>
+                <span class="separator"><i class="fas fa-chevron-right"></i></span>
+                <span class="current">ตารางทำงาน</span>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดข้อมูลตารางจากฐานข้อมูล...</p>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content" id="mainContent" style="display:none;">
+                <!-- Left Panel - Dentist Info -->
+                <div class="dentist-info-card">
+                    <img id="dentistPhoto" src="/uploads/default-avatar.png" alt="รูปทันตแพทย์" class="dentist-photo">
+                    <div class="dentist-name" id="dentistName">กำลังโหลด...</div>
+                    <div class="dentist-specialty" id="dentistSpecialty">กำลังโหลด...</div>
+                    <!-- (ไม่มีส่วนสถิติแล้ว) -->
+                </div>
+
+                <!-- Right Panel - Schedule Calendar -->
+                <div class="schedule-card">
+                    <div class="schedule-header">
+                        <h3><i class="fas fa-calendar-alt"></i> ปฏิทินเวลาทำงาน</h3>
+                        <div class="calendar-controls">
+                            <button class="btn btn-secondary" onclick="goToToday()">
+                                <i class="fas fa-calendar-day"></i> วันนี้
+                            </button>
+                            <button class="btn btn-primary" onclick="refreshSchedule()">
+                                <i class="fas fa-sync-alt"></i> รีเฟรช
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Month Navigation -->
+                    <div class="month-navigation">
+                        <button class="month-nav-btn" onclick="changeMonth(-1)" title="เดือนก่อนหน้า">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month" id="currentMonth">กำลังโหลด...</div>
+                        <button class="month-nav-btn" onclick="changeMonth(1)" title="เดือนถัดไป">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Calendar -->
+                    <div class="calendar-container">
+                        <div class="calendar-grid" id="calendarGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Details Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">รายละเอียดตาราง</h3>
+                <button class="close" onclick="closeModal()" aria-label="ปิด">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===== ค่าคงที่/ตัวแปรหลัก =====
+        let dentistId = null;
+        let dentistData = null;
+        let scheduleData = [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // หัวตารางวันในสัปดาห์ (ไทย)
+        const daysOfWeekTH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            extractDentistId();
+            updateUserAvatar();
+            initializePage();
+        });
+
+        // ดึง dentistId จาก URL
+        function extractDentistId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/dentists\/(\d+)\/schedule$/);
+            if (matches) {
+                dentistId = parseInt(matches[1]);
+                updateNavigationLinks();
+            } else {
+                showToast('ลิงก์ตารางทำงานไม่ถูกต้อง','error');
+                setTimeout(()=>window.location.href='/admin/dentists',2000);
+            }
+        }
+
+        // อัปเดตลิงก์ Breadcrumb
+        function updateNavigationLinks() {
+            const dentistLink = document.getElementById('dentistLink');
+            if (dentistLink) dentistLink.href = `/admin/dentists/${dentistId}`;
+        }
+
+        // ตัวอักษร Avatar ของผู้ใช้
+        async function updateUserAvatar() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'ผ';
+                    document.getElementById('userAvatar').textContent = firstLetter;
+                } else {
+                    document.getElementById('userAvatar').textContent = 'ผ';
+                }
+            } catch {
+                document.getElementById('userAvatar').textContent = 'ผ';
+            }
+        }
+
+        // เริ่มโหลดข้อมูลหน้า
+        async function initializePage() {
+            const loading = document.getElementById('loading');
+            const mainContent = document.getElementById('mainContent');
+            loading.style.display = 'block';
+            mainContent.style.display = 'none';
+
+            try {
+                await Promise.all([loadDentistData(), loadScheduleData()]);
+                renderCalendar();
+                loading.style.display = 'none';
+                mainContent.style.display = 'grid';
+                showToast('โหลดข้อมูลตารางสำเร็จ','success');
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message,'error');
+                loading.style.display = 'none';
+            }
+        }
+
+        // โหลดข้อมูลทันตแพทย์
+        async function loadDentistData() {
+            if (!dentistId) return;
+            const res = await fetch(`/admin/api/dentists/${dentistId}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลทันตแพทย์ได้');
+            dentistData = data.dentist;
+            populateDentistInfo();
+        }
+
+        // แสดงข้อมูลทันตแพทย์
+        function populateDentistInfo() {
+            if (!dentistData) return;
+            const fullName = `ทพ./ทพญ. ${ (dentistData.fname || '') + ' ' + (dentistData.lname || '') }`.trim();
+            document.getElementById('dentistName').textContent = fullName || 'ไม่ทราบชื่อ';
+            document.getElementById('dentistSpecialty').textContent = dentistData.specialty || 'ทันตกรรมทั่วไป';
+            document.getElementById('dentistBadge').textContent = fullName || 'ทันตแพทย์';
+            displayDentistPhoto(dentistData);
+        }
+
+        // แสดงรูป/ตัวอักษรย่อ
+        function displayDentistPhoto(dentist) {
+            const photoElement = document.getElementById('dentistPhoto');
+            if (dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '') {
+                const imagePath = `/uploads/${dentist.photo}`;
+                const testImg = new Image();
+                testImg.onload = ()=>{ photoElement.src = imagePath; };
+                testImg.onerror = ()=>{ showAvatarFallback(dentist); };
+                testImg.src = imagePath;
+            } else {
+                showAvatarFallback(dentist);
+            }
+        }
+
+        function showAvatarFallback(dentist) {
+            const photoElement = document.getElementById('dentistPhoto');
+            const initials = (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR';
+            const svg = `
+                <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="60" r="60" fill="#4A90E2"/>
+                    <text x="60" y="75" font-family="Arial, sans-serif" font-size="36" font-weight="600" fill="#ffffff" text-anchor="middle">${initials}</text>
+                </svg>`;
+            photoElement.src = 'data:image/svg+xml;base64,' + btoa(svg);
+        }
+
+        // โหลดข้อมูลตาราง (ช่วงเดือนปัจจุบัน)
+        async function loadScheduleData() {
+            if (!dentistId) return;
+            const startDate = new Date(currentYear, currentMonth, 1);
+            const endDate = new Date(currentYear, currentMonth + 1, 0);
+            const startDateStr = startDate.toISOString().split('T')[0];
+            const endDateStr = endDate.toISOString().split('T')[0];
+
+            const res = await fetch(`/admin/api/dentists/${dentistId}/schedule-data?start_date=${startDateStr}&end_date=${endDateStr}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'ไม่สามารถโหลดตารางทำงานได้');
+            scheduleData = data.schedules || [];
+        }
+
+        // วาดปฏิทินจากข้อมูลจริง
+        function renderCalendar() {
+            updateCurrentMonthDisplay();
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // หัวตารางวัน
+            daysOfWeekTH.forEach(d=>{
+                const el = document.createElement('div');
+                el.className = 'calendar-header-cell';
+                el.textContent = d;
+                grid.appendChild(el);
+            });
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDow = firstDay.getDay();
+
+            for (let i=0;i<startDow;i++){
+                const empty = document.createElement('div');
+                empty.className = 'calendar-cell other-month';
+                grid.appendChild(empty);
+            }
+
+            for (let day=1; day<=daysInMonth; day++){
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell';
+
+                const currentDateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (currentDateStr === todayStr) cell.classList.add('today');
+
+                const cellDate = document.createElement('div');
+                cellDate.className = 'cell-date';
+                cellDate.textContent = day;
+                cell.appendChild(cellDate);
+
+                const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
+
+                if (daySchedules.length > 0){
+                    const hasWorking = daySchedules.some(s => s.status === 'working');
+                    const hasDayOff  = daySchedules.some(s => s.status === 'dayoff');
+
+                    if (hasDayOff){
+                        cell.classList.add('day-off');
+                        const indicator = document.createElement('div');
+                        indicator.className = 'schedule-indicator day-off';
+                        cell.appendChild(indicator);
+
+                        const info = document.createElement('div');
+                        info.className = 'cell-schedule';
+                        info.textContent = 'หยุด';
+                        cell.appendChild(info);
+                    } else if (hasWorking){
+                        cell.classList.add('has-schedule');
+                        const indicator = document.createElement('div');
+                        indicator.className = 'schedule-indicator';
+                        cell.appendChild(indicator);
+
+                        const working = daySchedules.filter(s=>s.status==='working').sort((a,b)=>a.hour-b.hour);
+                        const first = working[0];
+                        const last = working[working.length-1];
+                        const info = document.createElement('div');
+                        info.className = 'cell-schedule';
+                        // เวลา HH:MM เป็น 24-hr อยู่แล้วจาก substr(0,5)
+                        info.textContent = `${first.start_time.substr(0,5)} - ${last.end_time.substr(0,5)}`;
+                        cell.appendChild(info);
+                    }
+                }
+
+                cell.addEventListener('click', ()=>showScheduleDetails(currentDateStr, daySchedules));
+                grid.appendChild(cell);
+            }
+        }
+
+        // แสดงเดือนปัจจุบัน (ไทย + ปี พ.ศ. โดยค่าเริ่มต้นของ th-TH)
+        function updateCurrentMonthDisplay(){
+            const d = new Date(currentYear, currentMonth, 1);
+            const label = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long' });
+            document.getElementById('currentMonth').textContent = label;
+        }
+
+        function changeMonth(dir){
+            currentMonth += dir;
+            if (currentMonth < 0){ currentMonth = 11; currentYear--; }
+            else if (currentMonth > 11){ currentMonth = 0; currentYear++; }
+            loadScheduleData().then(renderCalendar);
+        }
+
+        function goToToday(){
+            const t = new Date();
+            currentMonth = t.getMonth();
+            currentYear = t.getFullYear();
+            loadScheduleData().then(renderCalendar);
+        }
+
+        async function refreshSchedule(){
+            showToast('กำลังรีเฟรชข้อมูลตาราง...','info');
+            try{
+                await loadScheduleData();
+                renderCalendar();
+                showToast('รีเฟรชข้อมูลสำเร็จ','success');
+            }catch{
+                showToast('รีเฟรชไม่สำเร็จ','error');
+            }
+        }
+
+        // โมดอลรายละเอียดของวัน
+        function showScheduleDetails(date, schedules){
+            const modal = document.getElementById('scheduleModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('th-TH',{
+                weekday:'long', year:'numeric', month:'long', day:'numeric'
+            });
+
+            modalTitle.textContent = `ตารางวันที่ ${formattedDate}`;
+
+            let html = `
+                <div class="schedule-detail">
+                    <div class="detail-label">วันที่</div>
+                    <div class="detail-value">${formattedDate}</div>
+                </div>
+            `;
+
+            if (schedules.length === 0){
+                html += `
+                    <div class="schedule-detail">
+                        <div class="detail-label">สถานะ</div>
+                        <div class="detail-value">ยังไม่ได้ตั้งตารางในวันนี้</div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="schedule-detail">
+                        <div class="detail-label">รายละเอียดเวลา</div>
+                        <div class="schedule-list">
+                `;
+                schedules.sort((a,b)=>a.hour-b.hour);
+                schedules.forEach(s=>{
+                    const cls = s.status === 'dayoff' ? 'day-off' : '';
+                    const timeRange = `${s.start_time.substr(0,5)} - ${s.end_time.substr(0,5)}`; // 24 ชม.
+                    html += `
+                        <div class="schedule-item ${cls}">
+                            <div class="schedule-time">${timeRange}</div>
+                            <div class="schedule-status">${s.status === 'dayoff' ? 'หยุด' : 'เวลาทำงาน'}${s.note ? ` - ${s.note}` : ''}</div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            modalBody.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(){ document.getElementById('scheduleModal').style.display = 'none'; }
+
+        function toggleNotifications(){ showToast('ฟีเจอร์การแจ้งเตือนพร้อมใช้งานในระบบเต็มรูปแบบ','info'); }
+        function toggleDropdown(){
+            const m = document.getElementById('profileDropdown');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Toast ไทย
+        function showToast(message,type='info'){
+            document.querySelectorAll('.toast').forEach(t=>t.remove());
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}"></i>
+                <span>${message}</span></div>`;
+            document.body.appendChild(toast);
+            setTimeout(()=>{
+                if (toast.parentNode){
+                    toast.style.animation='slideOutRight .3s ease';
+                    setTimeout(()=>{ if (toast.parentNode) toast.remove(); },300);
+                }
+            },4000);
+        }
+
+        // ปิดเมนู/โมดอลเมื่อคลิกนอกพื้นที่
+        document.addEventListener('click', function(e){
+            const pd = document.querySelector('.profile-dropdown');
+            if (!pd.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+            const modal = document.getElementById('scheduleModal');
+            if (e.target === modal) closeModal();
+        });
+
+        // คีย์ลัด
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape'){ closeModal(); document.getElementById('profileDropdown').style.display='none'; }
+            if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey) changeMonth(-1);
+            if (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey) changeMonth(1);
+            if ((e.key==='t'||e.key==='T') && !e.ctrlKey && !e.metaKey) goToToday();
+            if ((e.key==='r'||e.key==='R') && !e.ctrlKey && !e.metaKey){ e.preventDefault(); refreshSchedule(); }
+        });
+
+        window.addEventListener('online', ()=>showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'));
+        window.addEventListener('offline', ()=>showToast('การเชื่อมต่ออินเทอร์เน็ตขาดหาย','error'));
+
+        // รีเฟรชอัตโนมัติทุก 5 นาที
+        setInterval(()=>{ loadScheduleData().then(renderCalendar); }, 300000);
+
+        window.addEventListener('error', e=>{ console.error('JavaScript error:', e.error); showToast('เกิดข้อผิดพลาดไม่คาดคิด','error'); });
+        window.addEventListener('load', ()=>{ const t = performance.now(); console.log(`หน้าโหลดเสร็จใน ${Math.round(t)}ms`); });
+    </script>
+</body>
+</html>

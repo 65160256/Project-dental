@@ -31,7 +31,7 @@ exports.getRegister = (req, res) => {
 
 exports.postRegister = async (req, res) => {
   try {
-    const { fname, lname, dob, idcard, email, password, address, phone, role } = req.body;
+    const { fname, lname, dob, id_card, email, password, address, phone, role } = req.body;
 
     // Validation
     if (!fname || !lname || !email || !password) {
@@ -79,14 +79,14 @@ exports.postRegister = async (req, res) => {
     if (roleId === 2) {
       // สร้างข้อมูล dentist
       await db.execute(
-        'INSERT INTO dentist (user_id, fname, lname, phone, dob, address, idcard) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [user_id, fname, lname, phone, dob, address, idcard]
+        'INSERT INTO dentist (user_id, fname, lname, phone, dob, address, id_card) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [user_id, fname, lname, phone, dob, address, id_card]
       );
     } else {
       // สร้างข้อมูล patient (เดิม)
       await db.execute(
-        'INSERT INTO patient (user_id, fname, lname, phone, dob, address, idcard) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [user_id, fname, lname, phone, dob, address, idcard]
+        'INSERT INTO patient (user_id, fname, lname, phone, dob, address, id_card) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [user_id, fname, lname, phone, dob, address, id_card]
       );
     }
 

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>แก้ไขข้อมูลทันตแพทย์ - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{background:#f5f7fa}
+
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
+    .sidebar ul li.active a,.sidebar ul li:hover a{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+    /* Main */
+    .main{margin-left:180px;min-height:100vh}
+
+    /* Top bar */
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .page-info h1{margin:0 0 5px 0;font-size:24px;color:#333;font-weight:600}
+    .page-info p{margin:0;color:#666;font-size:13px}
+    .user-section{display:flex;align-items:center;gap:15px}
+
+    .notification-container{position:relative}
+    .notification-icon{cursor:pointer;color:#666;transition:.3s;font-size:18px}
+    .notification-icon:hover{color:#4A90E2}
+    .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+    .notification-badge.show{display:flex}
+    .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none;z-index:2000;max-height:500px;overflow:hidden}
+    .notification-dropdown.show{display:block;animation:slideDown .3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .notification-header h3{margin:0;font-size:18px}
+    .mark-all-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer}
+    .notification-content{max-height:400px;overflow-y:auto}
+    .notification-item{padding:15px 20px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:background .2s}
+    .notification-item:hover{background:#f8f9fa}
+    .notification-item.unread{background:#f0f8ff;border-left:4px solid #4A90E2}
+    .notification-title{font-weight:600;color:#333;font-size:14px;margin-bottom:4px}
+    .notification-message{color:#666;font-size:13px;margin-bottom:6px;line-height:1.4}
+    .notification-time{color:#999;font-size:11px}
+    .empty-notifications{padding:40px 20px;text-align:center;color:#666}
+    .empty-notifications i{font-size:32px;color:#ddd;margin-bottom:15px}
+
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;align-items:center;gap:10px;cursor:pointer}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;text-transform:uppercase}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:1000}
+    .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+    .dropdown-menu a:hover{background:#f8f9fa}
+
+    /* Content */
+    .content{padding:30px}
+    .form-container{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
+    .form-header{background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));padding:25px 30px;border-bottom:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+    .form-header-left h2{margin:0 0 5px 0;font-size:20px;color:#333;font-weight:600}
+    .form-header-left p{margin:0;color:#666;font-size:14px}
+    .dentist-id-badge{background:#4A90E2;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600}
+    .form-body{padding:30px;display:grid;grid-template-columns:300px 1fr;gap:40px}
+
+    .photo-section{text-align:center}
+    .photo-preview{width:200px;height:200px;border-radius:12px;border:3px solid #e1e5e9;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;background:#f8f9fa;overflow:hidden;cursor:pointer;position:relative;transition:.3s}
+    .photo-preview:hover{border-color:#4A90E2}
+    .photo-preview img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+    .photo-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;transition:.3s;border-radius:8px}
+    .photo-preview:hover .photo-overlay{opacity:1}
+    .photo-placeholder{color:#999;text-align:center}
+    .photo-placeholder i{font-size:48px;margin-bottom:10px;color:#ddd}
+    .photo-input{display:none}
+    .upload-btn{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .btn-remove{background:#e74c3c;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;cursor:pointer}
+    .photo-actions{display:flex;gap:10px;justify-content:center}
+    .photo-info{font-size:12px;color:#666;margin-top:15px;line-height:1.4}
+
+    .form-fields{display:flex;flex-direction:column;gap:25px}
+    .form-section{background:#f8f9fa;padding:25px;border-radius:8px;border-left:4px solid #4A90E2}
+    .section-title{margin:0 0 20px 0;font-size:16px;font-weight:600;color:#333;display:flex;align-items:center;gap:8px}
+    .section-title i{color:#4A90E2}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+    .form-row.single{grid-template-columns:1fr}
+    .form-group{display:flex;flex-direction:column}
+    .form-group label{margin-bottom:6px;font-weight:500;color:#333;font-size:14px}
+    .required{color:#e74c3c;margin-left:2px}
+    .form-control{padding:12px 15px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;background:#fff;transition:.3s}
+    .form-control:focus{outline:none;border-color:#4A90E2;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
+    textarea.form-control{resize:vertical;min-height:80px}
+    .field-help{font-size:12px;color:#666;margin-top:4px}
+    .field-changed{border-color:#f39c12!important;background:#fef9e7!important}
+    .error-message{color:#e74c3c;font-size:12px;margin-top:4px;display:none}
+    .form-group.error .form-control{border-color:#e74c3c;background:#fdf2f2}
+    .form-group.error .error-message{display:block}
+    .form-group.success .form-control{border-color:#27ae60;background:#f0fff4}
+
+    .last-updated{background:rgba(74,144,226,.1);padding:15px;border-radius:8px;margin-bottom:25px;font-size:13px;color:#666}
+    .last-updated i{color:#4A90E2;margin-right:8px}
+
+    .form-actions{background:#f8f9fa;padding:25px 30px;border-top:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+    .changes-summary{font-size:13px;color:#666}
+    .changes-count{color:#f39c12;font-weight:600}
+    .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.3s}
+    .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+    .btn-primary:disabled{background:#ccc;cursor:not-allowed}
+    .btn-secondary{background:#f8f9fa;color:#666;border:1px solid #e1e5e9}
+    .btn-warning{background:#ffc107;color:#212529}
+    .btn-success{background:#28a745;color:#fff}
+
+    /* Toast */
+    .toast{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideInRight .3s ease;display:flex;align-items:center;gap:10px;min-width:300px}
+    .toast.success{background:#10b981}.toast.error{background:#ef4444}.toast.info{background:#3b82f6}.toast.warning{background:#f59e0b}
+    @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3000;display:none;align-items:center;justify-content:center}
+    .modal-content{background:#fff;border-radius:12px;padding:30px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .modal-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #e1e5e9}
+    .modal-icon{width:40px;height:40px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;color:#856404;font-size:18px}
+    .modal-title{font-size:18px;font-weight:600;color:#333;margin:0}
+    .modal-message{margin-bottom:25px;color:#666;line-height:1.5}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+    @media (max-width:1024px){.form-body{grid-template-columns:1fr;gap:30px}.photo-section{order:-1}}
+    @media (max-width:768px){.sidebar{width:100%;height:auto;position:relative}.main{margin-left:0}.form-row{grid-template-columns:1fr;gap:15px}.form-actions{flex-direction:column;gap:15px}}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="../../dashboard"><i class="fas fa-calendar-alt"></i> แดชบอร์ด</a></li>
+      <li><a href="../../appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+      <li class="active"><a href="../../dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+      <li><a href="../../patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+      <li><a href="../../treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+    </ul>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="top-bar">
+      <div class="page-info">
+        <h1>แก้ไขข้อมูลทันตแพทย์</h1>
+        <p>ปรับปรุงโปรไฟล์และข้อมูลบัญชีของทันตแพทย์</p>
+      </div>
+      <div class="user-section">
+        <div class="notification-container">
+          <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+          <div class="notification-badge" id="notificationBadge">0</div>
+          <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">
+              <h3>การแจ้งเตือน</h3>
+              <button class="mark-all-btn" onclick="markAllAsRead()">ทำเป็นอ่านทั้งหมด</button>
+            </div>
+            <div class="notification-content" id="notificationContent">
+              <div class="empty-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <p>กำลังโหลดการแจ้งเตือน…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+              <strong>สวัสดี แอดมิน</strong>
+              <small>ผู้ดูแลระบบ</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="../../profile">โปรไฟล์ของฉัน</a>
+            <hr/>
+            <a href="../../../logout">ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <form id="editDentistForm" class="form-container" enctype="multipart/form-data">
+        <div class="form-header">
+          <div class="form-header-left">
+            <h2>ข้อมูลทันตแพทย์</h2>
+            <p>อัปเดตข้อมูลโปรไฟล์และการตั้งค่าบัญชี</p>
+          </div>
+          <div class="dentist-id-badge" id="dentistIdBadge">กำลังโหลด…</div>
+        </div>
+
+        <div class="form-body">
+          <!-- Photo -->
+          <div class="photo-section">
+            <div class="last-updated" id="lastUpdated" style="display:none;">
+              <i class="fas fa-clock"></i>
+              <span id="lastUpdatedText">อัปเดตล่าสุด: ไม่เคย</span>
+            </div>
+
+            <div class="photo-upload-container">
+              <div class="photo-preview" onclick="document.getElementById('photoInput').click()">
+                <div class="photo-placeholder" id="photoPlaceholder">
+                  <i class="fas fa-camera"></i>
+                  <p>คลิกเพื่ออัปโหลดรูป</p>
+                </div>
+                <img id="photoPreview" style="display:none"/>
+                <div class="photo-overlay"><i class="fas fa-camera"></i></div>
+              </div>
+              <input type="file" id="photoInput" name="photo" class="photo-input" accept="image/*"/>
+
+              <div class="photo-actions">
+                <button type="button" class="upload-btn" onclick="document.getElementById('photoInput').click()">
+                  <i class="fas fa-upload"></i> เปลี่ยนรูป
+                </button>
+                <button type="button" class="btn-remove" onclick="removePhoto()" id="removePhotoBtn" style="display:none;">
+                  <i class="fas fa-trash"></i> ลบรูป
+                </button>
+              </div>
+            </div>
+
+            <div class="photo-info">
+              <p><strong>แนวทางรูปภาพ:</strong></p>
+              <p>• ขนาดไฟล์สูงสุด 5MB • รองรับ JPG, PNG, GIF • แนะนำ 400×400px • เว้นว่างหากต้องการใช้รูปเดิม</p>
+            </div>
+          </div>
+
+          <!-- Fields -->
+          <div class="form-fields">
+            <!-- Personal -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-user"></i> ข้อมูลส่วนบุคคล</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="fname">ชื่อ <span class="required">*</span></label>
+                  <input type="text" id="fname" name="fname" class="form-control" required/>
+                  <div class="error-message">กรุณากรอกชื่อ</div>
+                </div>
+                <div class="form-group">
+                  <label for="lname">นามสกุล <span class="required">*</span></label>
+                  <input type="text" id="lname" name="lname" class="form-control" required/>
+                  <div class="error-message">กรุณากรอกนามสกุล</div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="dob">วันเดือนปีเกิด <span class="required">*</span></label>
+                  <input type="date" id="dob" name="dob" class="form-control" required/>
+                  <div class="error-message">กรุณาเลือกวันเดือนปีเกิดที่ถูกต้อง</div>
+                </div>
+                <div class="form-group">
+                  <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+                  <input type="text" id="id_card" name="id_card" class="form-control" maxlength="13" required/>
+                  <div class="field-help">ตัวเลข 13 หลัก</div>
+                  <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลัก</div>
+                </div>
+              </div>
+
+              <div class="form-row">
+               <div class="form-group">
+    <label for="license_no">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม <span class="required">*</span></label>
+    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20"/>
+    <div class="field-help">กรอกตามที่ปรากฏในใบอนุญาต</div>
+    <div class="error-message">กรุณากรอกเลขที่ใบอนุญาต</div>
+</div>
+                <div class="form-group">
+                  <label for="specialty">สาขา/ความชำนาญ <span class="required">*</span></label>
+                  <select id="specialty" name="specialty" class="form-control" required>
+                    <option value="">เลือกสาขา</option>
+                    <option value="General Dentistry">ทันตกรรมทั่วไป</option>
+                    <option value="Orthodontics">จัดฟัน</option>
+                    <option value="Oral Surgery">ศัลยกรรมช่องปาก</option>
+                    <option value="Endodontics">รักษารากฟัน</option>
+                    <option value="Periodontics">ปริทันตวิทยา</option>
+                    <option value="Pediatric Dentistry">ทันตกรรมเด็ก</option>
+                    <option value="Prosthodontics">ใส่ฟัน/ประดิษฐ์</option>
+                    <option value="Oral Pathology">พยาธิวิทยาช่องปาก</option>
+                    <option value="Tooth Extraction">ถอนฟัน</option>
+                  </select>
+                  <div class="error-message">กรุณาเลือกสาขา</div>
+                </div>
+              </div>
+
+              <div class="form-row single">
+                <div class="form-group">
+                  <label for="education">การศึกษา</label>
+                  <textarea id="education" name="education" class="form-control" rows="3" placeholder="ประวัติการศึกษาและวุฒิการศึกษา"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-address-book"></i> ข้อมูลการติดต่อ</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                  <input type="tel" id="phone" name="phone" class="form-control" required/>
+                  <div class="field-help">รูปแบบ 08xxxxxxxx หรือ 02xxxxxxx</div>
+                  <div class="error-message">กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง</div>
+                </div>
+                <div class="form-group">
+                  <label for="address">ที่อยู่</label>
+                  <textarea id="address" name="address" class="form-control" rows="3" placeholder="ที่อยู่รวมจังหวัด"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Account -->
+            <div class="form-section">
+              <h3 class="section-title"><i class="fas fa-key"></i> ข้อมูลบัญชี</h3>
+              <div class="form-row single">
+                <div class="form-group">
+                  <label for="email">อีเมล <span class="required">*</span></label>
+                  <input type="email" id="email" name="email" class="form-control" required/>
+                  <div class="field-help">ใช้สำหรับเข้าสู่ระบบและรับการแจ้งเตือน</div>
+                  <div class="error-message">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="password">รหัสผ่านใหม่</label>
+                  <input type="password" id="password" name="password" class="form-control" minlength="6"/>
+                  <div class="field-help">เว้นว่างหากไม่ต้องการเปลี่ยนรหัสผ่าน</div>
+                  <div class="error-message">รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร</div>
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"/>
+                  <div class="field-help">กรอกเมื่อมีการเปลี่ยนรหัสผ่าน</div>
+                  <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <div class="changes-summary"><span id="changesText">ยังไม่มีการเปลี่ยนแปลง</span></div>
+          <div>
+            <a href="../../dentists" class="btn btn-secondary"><i class="fas fa-times"></i> ยกเลิก</a>
+            <button type="button" class="btn btn-warning" onclick="resetChanges()" id="resetBtn" disabled>
+              <i class="fas fa-undo"></i> ล้างการเปลี่ยนแปลง
+            </button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+              <i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 class="modal-title">ยืนยันการบันทึก</h3>
+      </div>
+      <div class="modal-message" id="modalMessage">
+        ต้องการบันทึกการเปลี่ยนแปลงเหล่านี้หรือไม่? ระบบจะอัปเดตโปรไฟล์และข้อมูลบัญชีของทันตแพทย์
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn btn-success" id="confirmSaveBtn"><i class="fas fa-check"></i> บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------- ตัวแปร -------
+    let originalData = {};
+    let currentData = {};
+    let dentistId = null;
+    let isSubmitting = false;
+    let hasChanges = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      extractDentistId();
+      loadDentistData();
+      loadUserInfo();
+      loadNotifications();
+      setupFormHandlers();
+      setupChangeTracking();
+      setupUnsavedChangesWarning();
+    });
+
+    // อ่าน ID จาก URL
+    function extractDentistId(){
+      const m = window.location.pathname.match(/\/dentists\/(\d+)\/edit/);
+      if (m){ dentistId = parseInt(m[1]); document.getElementById('dentistIdBadge').textContent = `รหัส: ${dentistId}`; }
+      else { showToast('รหัสทันตแพทย์ไม่ถูกต้อง','error'); setTimeout(()=>location.href='../../dentists',2000); }
+    }
+
+    // โหลดข้อมูลทันตแพทย์
+    async function loadDentistData(){
+      if(!dentistId) return;
+      try{
+        const res = await fetch(`../../api/dentists/${dentistId}`);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if(data.success){
+          populateForm(data.dentist);
+          originalData = {...data.dentist};
+          currentData = {...data.dentist};
+        }else throw new Error(data.error||'โหลดข้อมูลไม่สำเร็จ');
+      }catch(e){
+        showToast('ไม่สามารถโหลดข้อมูลทันตแพทย์: '+e.message,'error');
+        setTimeout(()=>location.href='../../dentists',3000);
+      }
+    }
+
+    // ใส่ข้อมูลลงฟอร์ม (รวม license number)
+    function populateForm(d){
+      document.getElementById('fname').value = d.fname || '';
+      document.getElementById('lname').value = d.lname || '';
+      document.getElementById('phone').value = d.phone || '';
+      document.getElementById('specialty').value = d.specialty || '';
+      document.getElementById('education').value = d.education || '';
+      document.getElementById('address').value = d.address || '';
+      document.getElementById('email').value = d.email || '';
+      document.getElementById('id_card').value = d.id_card || '';
+      document.getElementById('license_no').value = d.license_number || d.licenseNo || d.license || d.dental_license || '';
+
+      if (d.dob){
+        const date = new Date(d.dob);
+        document.getElementById('dob').value = date.toISOString().split('T')[0];
+      }
+
+      displayDentistAvatar(d);
+
+      if (d.updated_at || d.created_at){
+        const updateDate = new Date(d.updated_at || d.created_at);
+        document.getElementById('lastUpdatedText').textContent = `อัปเดตล่าสุด: ${formatDateTime(updateDate)}`;
+        document.getElementById('lastUpdated').style.display = 'block';
+      }
+    }
+
+    // รูป/Avatar
+    function displayDentistAvatar(d){
+      const prev = document.getElementById('photoPreview');
+      const ph   = document.getElementById('photoPlaceholder');
+      const rm   = document.getElementById('removePhotoBtn');
+
+      if (d.photo && d.photo!=='default-avatar.png' && d.photo!=='null' && d.photo!==''){
+        const path = `/uploads/${d.photo}`;
+        const t = new Image();
+        t.onload = ()=>{ prev.src = path; prev.style.display='block'; ph.style.display='none'; rm.style.display='inline-block'; };
+        t.onerror= ()=> showAvatarFallback(d);
+        t.src = path;
+      } else {
+        showAvatarFallback(d);
+      }
+    }
+    function showAvatarFallback(d){
+      const prev = document.getElementById('photoPreview');
+      const ph   = document.getElementById('photoPlaceholder');
+      const rm   = document.getElementById('removePhotoBtn');
+      const initials = (d.fname && d.lname) ? (d.fname[0]+d.lname[0]).toUpperCase() : 'DR';
+      const svg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" rx="12" fill="#4A90E2"/><text x="100" y="120" font-family="Arial" font-size="60" font-weight="600" fill="#fff" text-anchor="middle">${initials}</text></svg>`;
+      prev.src = 'data:image/svg+xml;base64,'+btoa(svg);
+      prev.style.display='block'; ph.style.display='none'; rm.style.display='none';
+    }
+
+    // จัดการฟอร์ม/อัปโหลดรูป
+    function setupFormHandlers(){
+      const form = document.getElementById('editDentistForm');
+      const photoInput = document.getElementById('photoInput');
+      const prev = document.getElementById('photoPreview');
+      const ph   = document.getElementById('photoPlaceholder');
+      const rm   = document.getElementById('removePhotoBtn');
+
+      photoInput.addEventListener('change', e=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        if(file.size > 5*1024*1024){ showToast('ขนาดไฟล์ต้องไม่เกิน 5MB','error'); return; }
+        const reader = new FileReader();
+        reader.onload = ev=>{ prev.src = ev.target.result; prev.style.display='block'; ph.style.display='none'; rm.style.display='inline-block'; trackChange('photo', file.name); };
+        reader.readAsDataURL(file);
+      });
+
+      // validate เบื้องต้น
+      const idInput = document.getElementById('id_card');
+      idInput.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').substring(0,13); validateField(this); });
+      const phoneInput = document.getElementById('phone');
+      phoneInput.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').substring(0,10); validateField(this); });
+
+      form.addEventListener('submit', handleFormSubmission);
+    }
+
+    // Tracking การเปลี่ยนแปลง (รวม license_number)
+    function setupChangeTracking(){
+      const form = document.getElementById('editDentistForm');
+      const inputs = form.querySelectorAll('.form-control');
+      const allowed = ['fname','lname','dob','id_card','license_number','specialty','education','address','phone','email','password','confirmPassword'];
+      inputs.forEach(inp=>{
+        if(!allowed.includes(inp.name)) return;
+        inp.addEventListener('input', function(){
+          const k = this.name;
+          const cur = this.value;
+          const orig = (originalData[k] || '');
+          if (cur !== orig){ trackChange(k, cur); this.classList.add('field-changed'); }
+          else { untrackChange(k); this.classList.remove('field-changed'); }
+        });
+      });
+    }
+    function trackChange(k,v){ currentData[k]=v; updateChangesDisplay(); }
+    function untrackChange(k){ currentData[k]=originalData[k]||''; updateChangesDisplay(); }
+    function updateChangesDisplay(){
+      const changed = Object.keys(currentData).filter(k=> currentData[k] !== (originalData[k]||''));
+      hasChanges = changed.length>0;
+      const txt = document.getElementById('changesText');
+      const submit = document.getElementById('submitBtn');
+      const reset = document.getElementById('resetBtn');
+      if(hasChanges){ txt.innerHTML = `<span class="changes-count">${changed.length}</span> รายการมีการเปลี่ยนแปลง`; submit.disabled=false; reset.disabled=false; }
+      else { txt.textContent='ยังไม่มีการเปลี่ยนแปลง'; submit.disabled=true; reset.disabled=true; }
+    }
+
+    // รีเซ็ต
+    function resetChanges(){
+      populateForm(originalData);
+      currentData = {...originalData};
+      document.getElementById('photoInput').value='';
+      document.querySelectorAll('.field-changed').forEach(el=>el.classList.remove('field-changed'));
+      updateChangesDisplay();
+      showToast('ล้างการเปลี่ยนแปลงแล้ว','info');
+    }
+
+    // ลบรูป
+    function removePhoto(){
+      document.getElementById('photoPreview').style.display='none';
+      document.getElementById('photoPlaceholder').style.display='block';
+      document.getElementById('removePhotoBtn').style.display='none';
+      document.getElementById('photoInput').value='';
+      trackChange('photo','removed');
+      showToast('ระบบจะลบรูปเมื่อบันทึก','warning');
+    }
+
+    // Validate field รายตัว
+    function validateField(field){
+      const group = field.parentElement;
+      const val = field.value.trim();
+      group.classList.remove('error','success');
+
+      if(field.hasAttribute('required') && !val){ group.classList.add('error'); return false; }
+      if(field.type==='email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ group.classList.add('error'); return false; }
+      if(field.name==='id_card' && val && val.length!==13){ group.classList.add('error'); return false; }
+      if(field.name==='phone' && val && (val.length<9 || val.length>10)){ group.classList.add('error'); return false; }
+      if(field.name==='dob' && val){
+        const birth = new Date(val); const today=new Date(); const age=today.getFullYear()-birth.getFullYear();
+        if(age<18 || age>80){ group.classList.add('error'); return false; }
+      }
+      group.classList.add('success'); return true;
+    }
+
+    function validateAllFields(){
+      const req = document.querySelectorAll('.form-control[required]');
+      let ok = true; req.forEach(f=>{ if(!validateField(f)) ok=false; }); return ok;
+    }
+
+    // Submit
+    async function handleFormSubmission(e){
+      e.preventDefault();
+      if(isSubmitting || !hasChanges) return;
+      if(!validateAllFields()){ showToast('กรุณาแก้ไขข้อผิดพลาดในแบบฟอร์ม','error'); return; }
+      const pw = document.getElementById('password').value;
+      const cf = document.getElementById('confirmPassword').value;
+      if(pw && pw!==cf){ showToast('รหัสผ่านไม่ตรงกัน','error'); return; }
+      showConfirmationModal();
+    }
+
+    function showConfirmationModal(){
+      const modal = document.getElementById('confirmModal');
+      const msg = document.getElementById('modalMessage');
+      const changed = Object.keys(currentData).filter(k=> currentData[k] !== (originalData[k]||''));
+      msg.innerHTML = `
+        <p>คุณกำลังบันทึกการเปลี่ยนแปลงในฟิลด์ต่อไปนี้:</p>
+        <ul style="margin:10px 0;padding-left:20px;">${changed.map(f=>`<li><strong>${formatFieldName(f)}</strong></li>`).join('')}</ul>
+        <p>ยืนยันที่จะบันทึกหรือไม่?</p>`;
+      modal.style.display='flex';
+    }
+    function closeModal(){ document.getElementById('confirmModal').style.display='none'; }
+    document.getElementById('confirmSaveBtn').addEventListener('click', async ()=>{ closeModal(); await saveChanges(); });
+
+    async function saveChanges(){
+      isSubmitting = true;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+
+      try{
+        const fd = new FormData();
+        Object.keys(currentData).forEach(k=>{
+          let v = currentData[k];
+          if (k==='dob' && (!v || v==='')) v = null;
+          if (v !== (originalData[k]||'')) fd.append(k, v ?? '');
+        });
+        const photoInput = document.getElementById('photoInput');
+        if(photoInput.files.length>0) fd.append('photo', photoInput.files[0]);
+
+        const res = await fetch(`/admin/dentists/${dentistId}/edit`, { method:'POST', body:fd });
+        if(!res.ok) throw new Error(await res.text() || 'บันทึกไม่สำเร็จ');
+
+        showToast('อัปเดตข้อมูลทันตแพทย์สำเร็จ!','success');
+        setTimeout(()=>{ location.href='../../dentists'; },1000);
+      }catch(e){
+        showToast('เกิดข้อผิดพลาดในการอัปเดต: '+e.message,'error');
+      }finally{
+        isSubmitting=false;
+        submitBtn.disabled=false;
+      }
+    }
+
+    // แปลงชื่อฟิลด์ (แสดงใน modal)
+    function formatFieldName(n){
+      const map = {
+        fname:'ชื่อ', lname:'นามสกุล', phone:'เบอร์โทรศัพท์', specialty:'สาขา/ความชำนาญ',
+        education:'การศึกษา', address:'ที่อยู่', email:'อีเมล', id_card:'เลขบัตรประชาชน',
+        dob:'วันเดือนปีเกิด', photo:'รูปโปรไฟล์', password:'รหัสผ่าน', license_number:'เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม'
+      };
+      return map[n] || n;
+    }
+
+    // โปรไฟล์/แจ้งเตือน/เวลาไทย 24 ชม.
+    async function loadUserInfo(){
+      try{
+        const r = await fetch('../../profile/api');
+        if(r.ok){
+          const d = await r.json();
+          if(d.success){
+            document.getElementById('userAvatar').textContent = (d.email||'A')[0].toUpperCase();
+            const u = document.querySelector('.user-details strong'); if(u) u.textContent = `สวัสดี ${d.role||'แอดมิน'}`;
+          }
+        }
+      }catch{ document.getElementById('userAvatar').textContent='A'; }
+    }
+    async function loadNotifications(){
+      try{
+        const r = await fetch('../../api/notifications?limit=10');
+        if(r.ok){
+          const d = await r.json();
+          if(d.success) updateNotificationDisplay(d.notifications, d.pagination.unread_count);
+        }
+      }catch{ showEmptyNotifications(); }
+    }
+    function updateNotificationDisplay(list, unread){
+      const badge = document.getElementById('notificationBadge');
+      const content = document.getElementById('notificationContent');
+      if (unread>0){ badge.textContent = unread>99?'99+':unread; badge.classList.add('show'); } else { badge.classList.remove('show'); }
+      if (!list.length){ showEmptyNotifications(); return; }
+      content.innerHTML = list.map(n=>{
+        const t = getTimeAgoTH(new Date(n.created_at));
+        return `<div class="notification-item ${!n.is_read?'unread':''}" onclick="markAsRead(${n.id})">
+          <div class="notification-title">${n.title}</div>
+          <div class="notification-message">${n.message}</div>
+          <div class="notification-time">${t}</div>
+        </div>`;
+      }).join('');
+    }
+    function showEmptyNotifications(){ document.getElementById('notificationContent').innerHTML = `<div class="empty-notifications"><i class="fas fa-bell-slash"></i><p>ไม่มีการแจ้งเตือนใหม่</p></div>`; }
+    function toggleNotifications(){ const d=document.getElementById('notificationDropdown'); d.classList.toggle('show'); if(d.classList.contains('show')) loadNotifications(); }
+    async function markAllAsRead(){ try{ const r=await fetch('../../api/notifications/read-all',{method:'POST'}); if(r.ok){ loadNotifications(); showToast('ทำเป็นอ่านทั้งหมดแล้ว','success'); } }catch{ showToast('ทำเครื่องหมายไม่สำเร็จ','error'); } }
+    async function markAsRead(id){ try{ const r=await fetch(`../../api/notifications/${id}/read`,{method:'POST'}); if(r.ok) loadNotifications(); }catch{} }
+    function toggleDropdown(){ const m=document.getElementById('profileDropdown'); m.style.display = m.style.display==='block'?'none':'block'; }
+
+    function showToast(msg,type='info'){
+      const t=document.createElement('div'); t.className=`toast ${type}`;
+      const icon={success:'fas fa-check-circle',error:'fas fa-exclamation-triangle',warning:'fas fa-exclamation-circle',info:'fas fa-info-circle'};
+      t.innerHTML = `<i class="${icon[type]}"></i>${msg}`;
+      document.body.appendChild(t);
+      setTimeout(()=>{ t.style.animation='slideOutRight .3s ease'; setTimeout(()=>t.remove(),300); },4000);
+    }
+
+    // เวลาไทย 24 ชม.
+    function getTimeAgoTH(date){
+      const now=new Date(); const s=Math.floor((now-date)/1000);
+      if(s<60) return 'เมื่อสักครู่';
+      if(s<3600) return `${Math.floor(s/60)} นาทีที่ผ่านมา`;
+      if(s<86400) return `${Math.floor(s/3600)} ชม.ที่ผ่านมา`;
+      if(s<604800) return `${Math.floor(s/86400)} วันที่แล้ว`;
+      return formatDateTime(date);
+    }
+    function formatDateTime(date){
+      return date.toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+    }
+
+    // อื่น ๆ
+    function setupUnsavedChangesWarning(){
+      window.addEventListener('beforeunload', e=>{
+        if(hasChanges && !isSubmitting){ e.preventDefault(); e.returnValue='คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก'; return 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก';}
+      });
+    }
+    document.addEventListener('click', e=>{
+      const pd=document.querySelector('.profile-dropdown'); if(pd && !pd.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+      const nc=document.querySelector('.notification-container'); if(nc && !nc.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
+      const modal=document.getElementById('confirmModal'); if(e.target===modal) closeModal();
+    });
+    document.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ document.getElementById('notificationDropdown').classList.remove('show'); document.getElementById('profileDropdown').style.display='none'; closeModal(); }
+      if(e.ctrlKey && e.key==='s'){ e.preventDefault(); if(hasChanges) showConfirmationModal(); }
+      if(e.ctrlKey && e.key==='r'){ e.preventDefault(); if(hasChanges) resetChanges(); }
+      if(e.key==='Enter' && document.getElementById('confirmModal').style.display==='flex'){ e.preventDefault(); document.getElementById('confirmSaveBtn').click(); }
+    });
+
+    // เครือข่าย
+    window.addEventListener('online', ()=>showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'));
+    window.addEventListener('offline', ()=>showToast('การเชื่อมต่อขาดหาย การเปลี่ยนแปลงจะถูกบันทึกเมื่อเชื่อมต่ออีกครั้ง','warning'));
+    setInterval(()=>loadNotifications(),60000);
+  </script>
+</body>
+</html>

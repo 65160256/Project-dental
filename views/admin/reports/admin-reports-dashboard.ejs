@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinic Reports Dashboard - Smile Clinic</title>
+    <title>แดชบอร์ดรายงานคลินิก - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,7 +11,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
@@ -19,7 +19,6 @@
             margin: 0;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 180px;
             background: linear-gradient(135deg, #4A90E2, #2DA8FF);
@@ -87,14 +86,12 @@
             margin: 0 10px;
         }
 
-        /* Main Content */
         .main {
             margin-left: 180px;
             padding: 0;
             min-height: 100vh;
         }
 
-        /* Top Bar */
         .top-bar {
             background: white;
             padding: 15px 30px;
@@ -215,12 +212,10 @@
             font-size: 11px;
         }
 
-        /* Content */
         .content {
             padding: 30px;
         }
 
-        /* Header Section */
         .header-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 16px;
@@ -250,6 +245,12 @@
 
         .total-patients {
             text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .total-patients:hover {
+            transform: scale(1.05);
         }
 
         .total-patients .number {
@@ -277,7 +278,6 @@
             margin: 0 auto 10px;
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -285,8 +285,7 @@
             margin-bottom: 30px;
         }
 
-        /* Appointment Report Card */
-        .appointment-report {
+        .appointment-report, .todays-doctors, .treatment-section, .upcoming-section, .doctor-stats-section {
             background: white;
             border-radius: 16px;
             padding: 25px;
@@ -295,7 +294,7 @@
 
         .card-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
@@ -381,14 +380,6 @@
             opacity: 0.9;
         }
 
-        /* Today's Doctors */
-        .todays-doctors {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
         .doctors-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -422,6 +413,13 @@
             color: white;
             font-weight: 600;
             font-size: 18px;
+            overflow: hidden;
+        }
+
+        .doctor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .doctor-name {
@@ -437,7 +435,6 @@
             margin: 0;
         }
 
-        /* Content Grid */
         .content-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -445,26 +442,10 @@
             margin-bottom: 30px;
         }
 
-        /* Treatment Statistics */
-        .treatment-section {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
         .chart-container {
             margin-top: 20px;
             height: 300px;
             position: relative;
-        }
-
-        /* Upcoming Appointments */
-        .upcoming-section {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         .calendar-section {
@@ -567,63 +548,78 @@
         .appointment-item:hover {
             background: #e9ecef;
             transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .appointment-time {
             font-size: 12px;
             color: #666;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .appointment-time i {
+            color: #4A90E2;
         }
 
         .appointment-patient {
             font-weight: 600;
             color: #333;
             margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .appointment-patient i {
+            color: #10b981;
         }
 
         .appointment-treatment {
             font-size: 12px;
             color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        /* Patient Statistics per Doctor */
+        .appointment-treatment i {
+            color: #f59e0b;
+        }
+
         .doctor-stats-section {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 30px;
         }
 
         .doctor-stats-chart {
             margin-top: 20px;
-            height: 300px;
+            height: 350px;
             position: relative;
         }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
+        #doctorSummaryTable table {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(74, 144, 226, 0.1);
-            border-top: 3px solid #4A90E2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+        #doctorSummaryTable th {
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #doctorSummaryTable td {
+            transition: background 0.2s ease;
         }
 
-        /* Toast notification */
+        #doctorSummaryTable tr:hover td {
+            background: #e3f2fd !important;
+        }
+
         .toast {
             position: fixed;
             top: 20px;
@@ -648,7 +644,6 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
                 width: 100%;
@@ -682,25 +677,22 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo">
             <div class="logo-icon">🦷</div>
             <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li class="active"><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
-            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> Dentists</a></li>
-            <li><a href="/admin/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> Treatments</a></li>
+            <li class="active"><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
         </ul>
     </div>
 
-    <!-- Main Content -->
     <div class="main">
-        <!-- Top Bar -->
         <div class="top-bar">
             <div></div>
             <div class="user-section">
@@ -712,99 +704,98 @@
                     <div class="user-info" onclick="toggleDropdown()">
                         <div class="avatar" id="userAvatar">A</div>
                         <div class="user-details">
-                            <strong>Hello Admin</strong>
-                            <small>administrator</small>
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
                         </div>
                         <i class="fas fa-caret-down"></i>
                     </div>
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/admin/profile"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
                         <hr />
-                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Content -->
         <div class="content">
-            <!-- Header Section -->
             <div class="header-section">
                 <div class="header-content">
                     <div class="welcome-text">
-                        <h1>Hello Admin</h1>
-                        <p id="currentDateTime">24/05/2025 11:00 AM</p>
+                        <h1>สวัสดี แอดมิน</h1>
+                        <p id="currentDateTime">01/10/2568 13:00 น.</p>
                     </div>
                     <div class="total-patients" onclick="window.location.href='/admin/patients'">
                         <div class="patient-icon">
-                            <i class="fas fa-user-md"></i>
+                            <i class="fas fa-user-injured"></i>
                         </div>
                         <h2 class="number" id="totalPatientsDisplay"><%= dashboardData.totalPatients %></h2>
-                        <p class="label">Total Patients</p>
+                        <p class="label">ผู้ป่วยทั้งหมด</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
             <div class="stats-grid">
-                <!-- Appointment Report -->
                 <div class="appointment-report">
                     <div class="card-header">
-                        <h3 class="card-title">Appointment Report:</h3>
+                        <h3 class="card-title">รายงานการนัดหมาย</h3>
                         <div class="period-selector">
-                            <button class="period-btn active" data-period="day">Day</button>
-                            <button class="period-btn" data-period="week">Week</button>
-                            <button class="period-btn" data-period="month">Month</button>
+                            <button class="period-btn active" data-period="day">วัน</button>
+                            <button class="period-btn" data-period="week">สัปดาห์</button>
+                            <button class="period-btn" data-period="month">เดือน</button>
                         </div>
                     </div>
                     
                     <div class="appointment-stats">
                         <div class="stat-item confirmed" onclick="showAppointmentDetails('confirmed')">
                             <h3 class="stat-number" id="confirmedCount"><%= dashboardData.appointmentSummary.confirmed %></h3>
-                            <p class="stat-label">Confirmed</p>
+                            <p class="stat-label">ยืนยันแล้ว</p>
                         </div>
                         <div class="stat-item pending" onclick="showAppointmentDetails('pending')">
                             <h3 class="stat-number" id="pendingCount"><%= dashboardData.appointmentSummary.pending %></h3>
-                            <p class="stat-label">Pending</p>
+                            <p class="stat-label">รอยืนยัน</p>
                         </div>
                         <div class="stat-item cancelled" onclick="showAppointmentDetails('cancelled')">
                             <h3 class="stat-number" id="cancelledCount"><%= dashboardData.appointmentSummary.cancelled %></h3>
-                            <p class="stat-label">Cancelled</p>
+                            <p class="stat-label">ยกเลิกแล้ว</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Today's Doctors -->
                 <div class="todays-doctors">
-                    <h3 class="card-title">Today's Doctors</h3>
+                    <h3 class="card-title">ทันตแพทย์ที่ทำงานวันนี้</h3>
                     <div class="doctors-grid" id="doctorsGrid">
-                        <% dashboardData.todaysDoctors.forEach(doctor => { %>
-                        <div class="doctor-card" onclick="window.location.href='/admin/dentists/<%= doctor.dentist_id %>'">
-                            <div class="doctor-avatar">
-                                <% if (doctor.photo && doctor.photo !== 'default-avatar.png') { %>
-                                    <img src="/uploads/<%= doctor.photo %>" alt="<%= doctor.fname %>" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                <% } else { %>
-                                    <%= doctor.fname.charAt(0) %><%= doctor.lname.charAt(0) %>
-                                <% } %>
+                        <% if (dashboardData.todaysDoctors && dashboardData.todaysDoctors.length > 0) { %>
+                            <% dashboardData.todaysDoctors.forEach(doctor => { %>
+                            <div class="doctor-card" onclick="window.location.href='/admin/dentists/<%= doctor.dentist_id %>'">
+                                <div class="doctor-avatar">
+                                    <% if (doctor.photo && doctor.photo !== 'default-avatar.png') { %>
+                                        <img src="/uploads/<%= doctor.photo %>" alt="<%= doctor.fname %>">
+                                    <% } else { %>
+                                        <%= doctor.fname.charAt(0) %><%= doctor.lname.charAt(0) %>
+                                    <% } %>
+                                </div>
+                                <p class="doctor-name">ทพ. <%= doctor.fname %> <%= doctor.lname %></p>
+                                <p class="doctor-specialty"><%= doctor.specialty || 'ทั่วไป' %></p>
                             </div>
-                            <p class="doctor-name">Dr. <%= doctor.fname %> <%= doctor.lname %></p>
-                            <p class="doctor-specialty"><%= doctor.specialty || 'General' %></p>
-                        </div>
-                        <% }); %>
+                            <% }); %>
+                        <% } else { %>
+                            <p style="grid-column: 1 / -1; text-align: center; color: #999; padding: 20px;">
+                                ไม่มีทันตแพทย์ที่ทำงานวันนี้
+                            </p>
+                        <% } %>
                     </div>
                 </div>
             </div>
 
-            <!-- Content Grid -->
             <div class="content-grid">
-                <!-- Treatment Statistics -->
                 <div class="treatment-section">
                     <div class="card-header">
-                        <h3 class="card-title">Treatments:</h3>
+                        <h3 class="card-title">การรักษา</h3>
                         <div class="period-selector">
-                            <button class="period-btn" data-period="week">Week</button>
-                            <button class="period-btn active" data-period="month">Month</button>
-                            <button class="period-btn" data-period="year">Year</button>
+                            <button class="period-btn" data-period="week">สัปดาห์</button>
+                            <button class="period-btn active" data-period="month">เดือน</button>
+                            <button class="period-btn" data-period="year">ปี</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -812,14 +803,12 @@
                     </div>
                 </div>
 
-                <!-- Upcoming Appointments -->
                 <div class="upcoming-section">
-                    <h3 class="card-title">April 2025</h3>
+                    <h3 class="card-title"><%= dashboardData.currentMonth %></h3>
                     
-                    <!-- Mini Calendar -->
                     <div class="calendar-section">
                         <div class="calendar-header">
-                            <h4 class="month-year" id="calendarMonthYear">April 2025</h4>
+                            <h4 class="month-year" id="calendarMonthYear"><%= dashboardData.currentMonth %></h4>
                             <div class="calendar-nav">
                                 <button class="nav-btn" onclick="changeMonth(-1)">
                                     <i class="fas fa-chevron-left"></i>
@@ -829,44 +818,58 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="calendar-grid" id="calendarGrid">
-                            <!-- Calendar will be generated by JavaScript -->
-                        </div>
+                        <div class="calendar-grid" id="calendarGrid"></div>
                     </div>
 
-                    <h4 style="margin-bottom: 15px; color: #333;">Upcoming Appointments</h4>
+                    <h4 style="margin-bottom: 15px; color: #333;">การนัดหมายที่กำลังจะมาถึง</h4>
                     <div class="appointments-list" id="appointmentsList">
-                        <% dashboardData.upcomingAppointments.forEach(appointment => { %>
-                        <div class="appointment-item" onclick="window.location.href='/admin/appointments/edit/<%= appointment.queue_id %>'">
-                            <div class="appointment-time">
-                                <%= new Date(appointment.time).toLocaleDateString('en-US', { 
-                                    weekday: 'short', 
-                                    month: 'short', 
-                                    day: 'numeric' 
-                                }) %> - <%= new Date(appointment.time).toLocaleTimeString('en-US', { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                }) %>
+                        <% if (dashboardData.upcomingAppointments && dashboardData.upcomingAppointments.length > 0) { %>
+                            <% dashboardData.upcomingAppointments.forEach(appointment => { %>
+                            <div class="appointment-item" onclick="viewAppointmentDetail(<%= appointment.queue_id %>)">
+                                <div class="appointment-time">
+                                    <i class="fas fa-clock"></i>
+                                    <%= new Date(appointment.time).toLocaleDateString('th-TH', { 
+                                        weekday: 'short', 
+                                        day: 'numeric',
+                                        month: 'short'
+                                    }) %> - <%= new Date(appointment.time).toLocaleTimeString('th-TH', { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: false 
+                                    }) %> น.
+                                </div>
+                                <div class="appointment-patient">
+                                    <i class="fas fa-user"></i>
+                                    <%= appointment.patient_name %>
+                                </div>
+                                <div class="appointment-treatment">
+                                    <i class="fas fa-tooth"></i>
+                                    <%= appointment.treatment_name %>
+                                </div>
                             </div>
-                            <div class="appointment-patient"><%= appointment.patient_name %></div>
-                            <div class="appointment-treatment"><%= appointment.treatment_name %></div>
-                        </div>
-                        <% }); %>
+                            <% }); %>
+                        <% } else { %>
+                            <p style="text-align: center; color: #999; padding: 20px;">
+                                ไม่มีการนัดหมายที่กำลังจะมาถึง
+                            </p>
+                        <% } %>
                     </div>
                 </div>
             </div>
 
-            <!-- Patient Statistics per Doctor -->
             <div class="doctor-stats-section">
-                <h3 class="card-title">Patient Statistics per Doctor:</h3>
-                <div class="period-selector" style="margin-top: 15px;">
-                    <button class="period-btn" data-period="week">Week</button>
-                    <button class="period-btn active" data-period="month">Month</button>
-                    <button class="period-btn" data-period="year">Year</button>
+                <div class="card-header">
+                    <h3 class="card-title">📊 สถิติการทำงานของทันตแพทย์</h3>
+                    <div class="period-selector">
+                        <button class="period-btn" data-period="week">สัปดาห์</button>
+                        <button class="period-btn active" data-period="month">เดือน</button>
+                        <button class="period-btn" data-period="year">ปี</button>
+                    </div>
                 </div>
                 <div class="doctor-stats-chart">
                     <canvas id="doctorStatsChart"></canvas>
                 </div>
+                <div id="doctorSummaryTable"></div>
             </div>
         </div>
     </div>
@@ -877,33 +880,31 @@
         let currentDate = new Date();
         let currentPeriod = 'month';
 
-        // Initialize dashboard
+        const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        const thaiDays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
         document.addEventListener('DOMContentLoaded', function() {
             updateDateTime();
             initializeCharts();
             generateCalendar();
             setupEventListeners();
             loadUserInfo();
-            
-            // Update time every minute
             setInterval(updateDateTime, 60000);
         });
 
-        // Update current date and time
         function updateDateTime() {
             const now = new Date();
-            const options = { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-GB', options).replace(',', '');
+            const thaiYear = now.getFullYear() + 543;
+            const day = now.getDate().toString().padStart(2, '0');
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            
+            document.getElementById('currentDateTime').textContent = 
+                `${day}/${month}/${thaiYear} ${hours}:${minutes} น.`;
         }
 
-        // Load user information
         async function loadUserInfo() {
             try {
                 const response = await fetch('/admin/profile/api');
@@ -915,20 +916,17 @@
                     }
                 }
             } catch (error) {
-                console.error('Error loading user info:', error);
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้:', error);
             }
         }
 
-        // Initialize charts
         function initializeCharts() {
             initializeTreatmentChart();
             initializeDoctorStatsChart();
         }
 
-        // Initialize treatment chart
         function initializeTreatmentChart() {
             const ctx = document.getElementById('treatmentChart').getContext('2d');
-            
             const treatmentData = <%- JSON.stringify(dashboardData.treatmentStats) %>;
             
             treatmentChart = new Chart(ctx, {
@@ -936,20 +934,9 @@
                 data: {
                     labels: treatmentData.map(item => item.treatment_name),
                     datasets: [{
-                        label: 'Number of Treatments',
+                        label: 'จำนวนการรักษา',
                         data: treatmentData.map(item => item.count),
-                        backgroundColor: [
-                            '#4A90E2',
-                            '#50C878',
-                            '#FFB347',
-                            '#FF6B6B',
-                            '#9B59B6',
-                            '#3498DB',
-                            '#E74C3C',
-                            '#F39C12',
-                            '#2ECC71',
-                            '#1ABC9C'
-                        ],
+                        backgroundColor: ['#4A90E2', '#50C878', '#FFB347', '#FF6B6B', '#9B59B6', '#3498DB', '#E74C3C', '#F39C12', '#2ECC71', '#1ABC9C'],
                         borderRadius: 8,
                         borderSkipped: false,
                     }]
@@ -957,97 +944,154 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f3f4'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
+                        y: { beginAtZero: true, grid: { color: '#f1f3f4' } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        // Initialize doctor stats chart
         function initializeDoctorStatsChart() {
             const ctx = document.getElementById('doctorStatsChart').getContext('2d');
-            
             const doctorData = <%- JSON.stringify(dashboardData.doctorStats) %>;
             
             doctorStatsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: doctorData.map(item => item.doctor_name),
-                    datasets: [
-                        {
-                            label: 'Unique Patients',
-                            data: doctorData.map(item => item.unique_patients),
-                            backgroundColor: '#4A90E2',
-                            borderRadius: 8,
-                        },
-                        {
-                            label: 'Total Appointments',
-                            data: doctorData.map(item => item.total_appointments),
-                            backgroundColor: '#50C878',
-                            borderRadius: 8,
-                        }
-                    ]
+                    labels: doctorData.map(item => 'ทพ. ' + item.doctor_name),
+                    datasets: [{
+                        label: 'จำนวนการนัดหมายทั้งหมด',
+                        data: doctorData.map(item => item.total_appointments),
+                        backgroundColor: ['#4A90E2', '#50C878', '#FFB347', '#FF6B6B', '#9B59B6'],
+                        borderRadius: 8,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'top',
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const doctor = doctorData[index];
+                                    return [
+                                        'การนัดหมายทั้งหมด: ' + doctor.total_appointments + ' ครั้ง',
+                                        'จำนวนผู้ป่วย: ' + doctor.unique_patients + ' คน',
+                                        'เฉลี่ยต่อคน: ' + (doctor.total_appointments / doctor.unique_patients || 0).toFixed(1) + ' ครั้ง'
+                                    ];
+                                }
+                            }
                         }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#f1f3f4'
-                            }
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'จำนวนการนัดหมาย (ครั้ง)' },
+                            grid: { color: '#f1f3f4' }
                         },
-                        x: {
-                            grid: {
-                                display: false
-                            }
+                        x: { 
+                            title: { display: true, text: 'ทันตแพทย์' },
+                            grid: { display: false }
                         }
                     }
                 }
             });
+            
+            createDoctorSummaryTable(doctorData);
         }
 
-        // Setup event listeners
+        function createDoctorSummaryTable(doctorData) {
+            const tableContainer = document.getElementById('doctorSummaryTable');
+            if (!tableContainer) return;
+            
+            let tableHTML = `
+                <div style="margin-top: 20px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">ทันตแพทย์</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">จำนวนผู้ป่วย</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">จำนวนนัดหมาย</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">เฉลี่ยต่อคน</th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            doctorData.forEach((doctor, index) => {
+                const avgPerPatient = doctor.unique_patients > 0 ? (doctor.total_appointments / doctor.unique_patients).toFixed(1) : 0;
+                const bgColor = index % 2 === 0 ? '#f8f9fa' : 'white';
+                
+                let statusBadge = '', statusText = '';
+                if (doctor.total_appointments === 0) {
+                    statusBadge = 'background: #6c757d;';
+                    statusText = 'ไม่มีนัดหมาย';
+                } else if (avgPerPatient >= 2) {
+                    statusBadge = 'background: #28a745;';
+                    statusText = 'ผู้ป่วยติดตาม';
+                } else {
+                    statusBadge = 'background: #17a2b8;';
+                    statusText = 'ผู้ป่วยใหม่';
+                }
+                
+                tableHTML += `
+                    <tr style="background: ${bgColor};">
+                        <td style="padding: 12px; border: 1px solid #ddd;">
+                            <strong>ทพ. ${doctor.doctor_name}</strong><br>
+                            <small style="color: #666;">${doctor.specialty || 'ทั่วไป'}</small>
+                        </td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-size: 18px; font-weight: bold; color: #4A90E2;">${doctor.unique_patients}</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-size: 18px; font-weight: bold; color: #50C878;">${doctor.total_appointments}</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-size: 16px; font-weight: bold;">${avgPerPatient} ครั้ง</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">
+                            <span style="${statusBadge} color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${statusText}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <strong style="color: #1976d2;">💡 คำอธิบาย:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px; color: #555;">
+                        <li><strong>จำนวนผู้ป่วย</strong> = คนที่มารักษา (นับแต่ละคนครั้งเดียว)</li>
+                        <li><strong>จำนวนนัดหมาย</strong> = จำนวนครั้งทั้งหมดที่มีการนัดหมาย</li>
+                        <li><strong>เฉลี่ยต่อคน</strong> = ผู้ป่วยแต่ละคนมากี่ครั้งโดยเฉลี่ย</li>
+                        <li><strong>ผู้ป่วยติดตาม</strong> = มีผู้ป่วยนัดกลับมารักษาต่อเนื่อง (≥2 ครั้ง)</li>
+                        <li><strong>ผู้ป่วยใหม่</strong> = ส่วนใหญ่เป็นผู้ป่วยใหม่ (เฉลี่ย <2 ครั้ง)</li>
+                    </ul>
+                </div>
+            `;
+            
+            tableContainer.innerHTML = tableHTML;
+        }
+
         function setupEventListeners() {
-            // Period selector buttons
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const section = this.closest('.appointment-report, .treatment-section, .doctor-stats-section');
                     section.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    
                     const period = this.dataset.period;
                     updateStats(period);
                 });
             });
         }
 
-        // Update statistics based on period
         async function updateStats(period) {
             try {
-                // Update appointment stats
                 const appointmentResponse = await fetch(`/admin/api/dashboard/appointments?period=${period}`);
                 if (appointmentResponse.ok) {
                     const appointmentData = await appointmentResponse.json();
@@ -1056,7 +1100,6 @@
                     }
                 }
 
-                // Update treatment stats
                 const treatmentResponse = await fetch(`/admin/api/dashboard/treatments?period=${period}`);
                 if (treatmentResponse.ok) {
                     const treatmentData = await treatmentResponse.json();
@@ -1065,14 +1108,13 @@
                     }
                 }
 
-                showToast(`Statistics updated for ${period}`, 'success');
+                showToast(`อัพเดทสถิติสำหรับ${period === 'day' ? 'วัน' : period === 'week' ? 'สัปดาห์' : 'เดือน'}แล้ว`, 'success');
             } catch (error) {
-                console.error('Error updating stats:', error);
-                showToast('Failed to update statistics', 'error');
+                console.error('เกิดข้อผิดพลาดในการอัพเดทสถิติ:', error);
+                showToast('ไม่สามารถอัพเดทสถิติได้', 'error');
             }
         }
 
-        // Update appointment display
         function updateAppointmentDisplay(appointments) {
             const confirmed = appointments.filter(apt => apt.queue_status === 'confirm').length;
             const pending = appointments.filter(apt => apt.queue_status === 'pending').length;
@@ -1083,31 +1125,32 @@
             document.getElementById('cancelledCount').textContent = cancelled;
         }
 
-        // Update treatment chart
         function updateTreatmentChart(treatments) {
             treatmentChart.data.labels = treatments.map(item => item.treatment_name);
             treatmentChart.data.datasets[0].data = treatments.map(item => item.count);
             treatmentChart.update();
         }
 
-        // Show appointment details
         function showAppointmentDetails(status) {
-            const params = new URLSearchParams();
-            params.append('status', status);
-            params.append('period', currentPeriod);
-            
-            window.location.href = `/admin/appointments?${params.toString()}`;
+            window.location.href = `/admin/appointments?status=${status}`;
         }
 
-        // Generate calendar
+        // ฟังก์ชันสำหรับดูรายละเอียดการนัดหมาย
+        function viewAppointmentDetail(appointmentId) {
+            if (!appointmentId) {
+                showToast('ไม่พบรหัสการนัดหมาย', 'error');
+                return;
+            }
+            // เปลี่ยนเส้นทางไปยังหน้ารายละเอียดการนัดหมาย
+            window.location.href = `/admin/appointments?highlight=${appointmentId}`;
+        }
+
         function generateCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
+            const thaiYear = year + 543;
             
-            // Update month year display
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"];
-            document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+            document.getElementById('calendarMonthYear').textContent = `${thaiMonths[month]} ${thaiYear}`;
             
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
@@ -1117,33 +1160,26 @@
             const calendarGrid = document.getElementById('calendarGrid');
             calendarGrid.innerHTML = '';
             
-            // Add day headers
-            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            dayHeaders.forEach(day => {
+            thaiDays.forEach(day => {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day header';
                 dayElement.textContent = day;
                 calendarGrid.appendChild(dayElement);
             });
             
-            // Add empty cells for days before the first day of the month
             for (let i = 0; i < startingDayOfWeek; i++) {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day other-month';
                 calendarGrid.appendChild(dayElement);
             }
             
-            // Add days of the month
             const today = new Date();
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day';
                 dayElement.textContent = day;
                 
-                // Highlight today
-                if (year === today.getFullYear() && 
-                    month === today.getMonth() && 
-                    day === today.getDate()) {
+                if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
                     dayElement.classList.add('today');
                 }
                 
@@ -1151,37 +1187,25 @@
             }
         }
 
-        // Change month
         function changeMonth(direction) {
             currentDate.setMonth(currentDate.getMonth() + direction);
             generateCalendar();
         }
 
-        // Show toast notification
         function showToast(message, type = 'info') {
-            // Remove existing toasts
             document.querySelectorAll('.toast').forEach(toast => toast.remove());
-            
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
-            
             document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 4000);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
         }
 
-        // Toggle profile dropdown
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
             menu.classList.toggle('show');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const profileDropdown = document.querySelector('.profile-dropdown');
             if (!profileDropdown.contains(event.target)) {
@@ -1189,14 +1213,8 @@
             }
         });
 
-        // Handle online/offline status
-        window.addEventListener('online', () => {
-            showToast('Connection restored', 'success');
-        });
-
-        window.addEventListener('offline', () => {
-            showToast('Connection lost', 'error');
-        });
+        window.addEventListener('online', () => showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว', 'success'));
+        window.addEventListener('offline', () => showToast('ขาดการเชื่อมต่ออินเทอร์เน็ต', 'error'));
     </script>
 </body>
 </html>

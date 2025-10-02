@@ -570,8 +570,8 @@
       return /^\d{10}$/.test(phone);
     }
 
-    function isValidIdCard(idCard) {
-      return /^\d{13}$/.test(idCard);
+    function isValidid_card(id_card) {
+      return /^\d{13}$/.test(id_card);
     }
 
     function isValidPassword(password) {
@@ -657,7 +657,7 @@
             }
             break;
           case 'id_card':
-            if (!isValidIdCard(value)) {
+            if (!isValidid_card(value)) {
               isValid = false;
               errorMessage = 'ID card must be exactly 13 digits';
             }
@@ -749,9 +749,9 @@
       }
     }
 
-    async function checkIdCardAvailability(idCard) {
+    async function checkid_cardAvailability(id_card) {
       try {
-        const response = await fetch(`/api/check-id-card?id_card=${encodeURIComponent(idCard)}`);
+        const response = await fetch(`/api/check-id-card?id_card=${encodeURIComponent(id_card)}`);
         const data = await response.json();
         return data.success ? data.available : true;
       } catch (e) {
@@ -796,7 +796,7 @@
 
         // Second pass: async checks
         const email = safeGetValue(safeGetElement('email'));
-        const idCard = safeGetValue(safeGetElement('id_card'));
+        const id_card = safeGetValue(safeGetElement('id_card'));
         
         if (email && isValidEmail(email)) {
           const emailAvailable = await checkEmailAvailability(email);
@@ -808,8 +808,8 @@
           }
         }
 
-        if (idCard && isValidIdCard(idCard)) {
-          const idAvailable = await checkIdCardAvailability(idCard);
+        if (id_card && isValidid_card(id_card)) {
+          const idAvailable = await checkid_cardAvailability(id_card);
           if (!idAvailable) {
             isFormValid = false;
             const idInput = safeGetElement('id_card');
@@ -950,14 +950,14 @@
       }
 
       // ID card availability check
-      const idCardInput = safeGetElement('id_card');
-      if (idCardInput) {
-        let idCardTimeout;
-        idCardInput.addEventListener('input', function() {
-          clearTimeout(idCardTimeout);
+      const id_cardInput = safeGetElement('id_card');
+      if (id_cardInput) {
+        let id_cardTimeout;
+        id_cardInput.addEventListener('input', function() {
+          clearTimeout(id_cardTimeout);
           if (this.value.length === 13) {
-            idCardTimeout = setTimeout(async () => {
-              const isAvailable = await checkIdCardAvailability(this.value);
+            id_cardTimeout = setTimeout(async () => {
+              const isAvailable = await checkid_cardAvailability(this.value);
               if (!isAvailable) {
                 setValidationState(this, false, 'This ID card number is already registered');
               }

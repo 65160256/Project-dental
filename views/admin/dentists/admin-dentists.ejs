@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการทันตแพทย์ - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-info h1 {
+            font-size: 22px;
+            margin: 0 0 4px;
+            color: #333;
+        }
+
+        .page-info p {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+        }
+
+        .search-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 260px;
+            padding: 10px 40px 10px 14px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74,144,226,.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            font-size: 18px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.15);
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+            z-index: 2000;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown .25s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.3);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background: #f8f9fa;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tools-bar {
+            background: #fff;
+            padding: 18px 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stats-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74,144,226,.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220,53,69,.4);
+        }
+
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 18px 24px;
+            background: linear-gradient(135deg, rgba(74,144,226,.1), rgba(45,168,255,.1));
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .dentist-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dentist-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .dentist-details h4 {
+            margin: 0 0 2px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .dentist-details p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .specialty-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            transition: all .2s ease;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-view {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .btn-view:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-edit:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .btn-schedule {
+            background: #6f42c1;
+            color: #fff;
+        }
+
+        .btn-schedule:hover {
+            background: #5a32a3;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .loading, .empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn .3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(-30px) scale(.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0,0,0,.25);
+            max-width: 480px;
+            width: 92%;
+            overflow: hidden;
+            animation: modalSlide .3s ease;
+        }
+
+        .modal-header {
+            padding: 24px;
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .modal-header-text h3 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-header-text p {
+            margin: 0;
+            font-size: 13px;
+            opacity: .9;
+        }
+
+        .modal-body {
+            padding: 28px 24px;
+        }
+
+        .modal-body .dentist-info-box {
+            background: #fff5f5;
+            border: 1px dashed #dc3545;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .modal-body .dentist-info-box .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .modal-body .dentist-info-box .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #dc3545;
+        }
+
+        .modal-body .warning-text {
+            display: flex;
+            gap: 12px;
+            align-items: start;
+            margin-top: 16px;
+            padding: 14px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .modal-body .warning-text i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-footer .btn {
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        @media (max-width:768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            .main {
+                margin-left: 0;
+            }
+            .search-box input {
+                width: 200px;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: 400px;
+            }
+            .modal-header {
+                padding: 20px;
+            }
+            .modal-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+            .modal-body {
+                padding: 20px;
+            }
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> <span>แดชบอร์ด</span></a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> <span>ตารางเวลา</span></a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> <span>การนัดหมาย</span></a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> <span>ทันตแพทย์</span></a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> <span>ผู้ป่วย</span></a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> <span>การรักษา</span></a></li>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>จัดการทันตแพทย์</h1>
+                <p>จัดการโปรไฟล์ ตารางเวลา และความเชี่ยวชาญของทันตแพทย์</p>
+            </div>
+            <div class="search-section">
+                <div class="search-box">
+                    <input id="searchInput" type="text" placeholder="ค้นหาทันตแพทย์...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div id="notificationBadge" class="notification-badge">0</div>
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-header">
+                            <strong>การแจ้งเตือน</strong>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">อ่านทั้งหมด</button>
+                        </div>
+                        <div id="notificationContent" class="notification-content">
+                            <div class="loading"><i class="fas fa-spinner fa-spin"></i><p>กำลังโหลดการแจ้งเตือน...</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleProfileDropdown()">
+                        <div id="userAvatar" class="avatar">A</div>
+                        <div class="user-details">
+                            <strong>ผู้ดูแลระบบ</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div id="profileDropdown" class="dropdown-menu">
+                        <a href="/admin/profile">โปรไฟล์ของฉัน</a>
+                        <hr>
+                        <a href="/logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="tools-bar">
+                <div class="stats-info">
+                    <i class="fas fa-user-md"></i>
+                    <span id="treatmentCount">กำลังนับ...</span> รายการ
+                </div>
+                <div class="filter-section">
+                    <select class="filter-select" id="specialtyFilter">
+                        <option value="">ความเชี่ยวชาญทั้งหมด</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        <i id="refreshIcon" class="fas fa-rotate"></i> โหลดใหม่
+                    </button>
+                    <a class="btn btn-primary" href="/admin/dentists/add">
+                        <i class="fas fa-plus"></i> เพิ่มทันตแพทย์
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header"><h3>รายชื่อทันตแพทย์</h3></div>
+                <div id="tableContent" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>กำลังโหลดข้อมูลทันตแพทย์...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div class="modal-header-text">
+                    <h3>ยืนยันการลบ</h3>
+                    <p>การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <p style="color:#333;font-size:15px;line-height:1.6">คุณแน่ใจหรือไม่ว่าต้องการลบทันตแพทย์นี้?</p>
+                
+                <div class="dentist-info-box">
+                    <div class="label">ชื่อทันตแพทย์</div>
+                    <div class="value" id="deleteItemName">-</div>
+                </div>
+                
+                <div class="warning-text">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>คำเตือน:</strong> การลบทันตแพทย์จะลบตารางเวลาและการนัดหมายที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนข้อมูลได้
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> ลบทันตแพทย์
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dentistsData = [];
+        let filtered = [];
+        let deleteId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setup();
+        });
+
+        function setup() {
+            let timer;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => filterList(e.target.value), 250);
+            });
+
+            document.getElementById('specialtyFilter').addEventListener('change', () => filterList());
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+                if(deleteId) removeDentist(deleteId);
+            });
+
+            document.addEventListener('click', (e) => {
+                const profile = document.querySelector('.profile-dropdown');
+                if(profile && !profile.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+                const noti = document.querySelector('.notification-container');
+                if(noti && !noti.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
+            });
+
+            document.getElementById('deleteModal').addEventListener('click', (e) => {
+                if(e.target.id === 'deleteModal') closeModal();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'Escape' && document.getElementById('deleteModal').classList.contains('show')){
+                    closeModal();
+                }
+            });
+
+            loadDentists();
+            loadNotifications();
+        }
+
+        const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+        function pad2(n){return n.toString().padStart(2,'0')}
+        function fmtDateTime24(s){
+            const d = new Date(s);
+            if(isNaN(d)) return '-';
+            const dd = d.getDate(), mm = TH_MONTHS[d.getMonth()], yy = d.getFullYear()+543;
+            const hh = pad2(d.getHours()), mi = pad2(d.getMinutes());
+            return `${dd} ${mm} ${yy} • ${hh}:${mi} น.`;
+        }
+
+        function toggleNotifications(){
+            document.getElementById('notificationDropdown').classList.toggle('show');
+        }
+        function toggleProfileDropdown(){
+            const el = document.getElementById('profileDropdown');
+            el.style.display = (el.style.display==='block'?'none':'block');
+        }
+
+        async function loadDentists(){
+            try{
+                setLoading();
+                const res = await fetch('/admin/api/dentists',{headers:{'Content-Type':'application/json'}});
+                if(!res.ok) throw new Error('HTTP '+res.status);
+                const data = await res.json();
+                if(!data.success) throw new Error(data.error||'โหลดข้อมูลไม่สำเร็จ');
+                dentistsData = data.dentists||[];
+                filtered = [...dentistsData];
+                loadSpecialtyOptions();
+                renderTable(filtered);
+                updateCount(filtered.length);
+            }catch(err){
+                renderError('ไม่สามารถโหลดข้อมูลทันตแพทย์ได้');
+            }
+        }
+
+        function loadSpecialtyOptions(){
+            const specialties = [...new Set(dentistsData.map(d => d.specialty).filter(s => s))];
+            const select = document.getElementById('specialtyFilter');
+            select.innerHTML = '<option value="">ความเชี่ยวชาญทั้งหมด</option>';
+            specialties.sort().forEach(s => {
+                select.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+
+        async function loadNotifications(){
+            try{
+                const res = await fetch('/admin/api/notifications?limit=20');
+                if(!res.ok) throw new Error('HTTP '+res.status);
+                const data = await res.json();
+                const list = data.notifications||[];
+                const badge = document.getElementById('notificationBadge');
+                const unread = list.filter(x=>x.is_read===0).length;
+                if(unread>0){badge.textContent=unread;badge.classList.add('show')}
+                const wrap = document.getElementById('notificationContent');
+                if(list.length===0){wrap.innerHTML='<div class="empty"><i class="fas fa-bell-slash"></i><p>ยังไม่มีการแจ้งเตือน</p></div>';return}
+                wrap.innerHTML = list.map(n=>`
+                    <div class="notification-item ${n.is_read? '' : 'unread'}">
+                        <div class="notification-title">${escapeHtml(n.title||'การแจ้งเตือน')}</div>
+                        <div class="notification-message">${escapeHtml(n.message||'-')}</div>
+                        <div class="notification-time">${fmtDateTime24(n.created_at||new Date())}</div>
+                    </div>
+                `).join('');
+            }catch(e){
+                document.getElementById('notificationContent').innerHTML='<div class="error"><i class="fas fa-triangle-exclamation"></i><p>โหลดการแจ้งเตือนไม่ได้</p></div>';
+            }
+        }
+
+        function setLoading(){
+            document.getElementById('tableContent').innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>กำลังโหลดข้อมูลทันตแพทย์...</p></div>`;
+        }
+
+        function renderTable(list){
+            if(!list || list.length===0){
+                document.getElementById('tableContent').innerHTML = `
+                    <div class="empty">
+                        <i class="fas fa-user-md"></i>
+                        <h3>ไม่พบข้อมูล</h3>
+                        <p>เริ่มจากการเพิ่มทันตแพทย์คนแรกของคุณ</p>
+                        <a class="btn btn-primary" href="/admin/dentists/add"><i class="fas fa-plus"></i> เพิ่มทันตแพทย์</a>
+                    </div>`;
+                return;
+            }
+
+            const html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>ทันตแพทย์</th>
+                        <th>ความเชี่ยวชาญ</th>
+                        <th>ติดต่อ</th>
+                        <th>การศึกษา</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${list.map(d=>{
+                        const initials = ((d.fname||'D').charAt(0)+(d.lname||'R').charAt(0)).toUpperCase();
+                        return `
+                        <tr>
+                            <td>
+                                <div class="dentist-info">
+                                    <div class="dentist-avatar">${initials}</div>
+                                    <div class="dentist-details">
+                                        <h4>ทพ. ${escapeHtml(d.fname||'ไม่ระบุ')} ${escapeHtml(d.lname||'')}</h4>
+                                        <p>${escapeHtml(d.email||'ไม่มีอีเมล')}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="specialty-badge">${escapeHtml(d.specialty||'ทันตกรรมทั่วไป')}</span></td>
+                            <td>${escapeHtml(d.phone||'ไม่มีข้อมูล')}</td>
+                            <td>${escapeHtml(d.education||'ไม่ระบุ')}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="/admin/dentists/${d.dentist_id}" class="btn-sm btn-view"><i class="fas fa-eye"></i> ดู</a>
+                                    <a href="/admin/dentists/${d.dentist_id}/edit" class="btn-sm btn-edit"><i class="fas fa-pen"></i> แก้ไข</a>
+                                    <a href="/admin/dentists/${d.dentist_id}/schedule" class="btn-sm btn-schedule"><i class="fas fa-calendar"></i> ตาราง</a>
+                                    <button class="btn-sm btn-delete" onclick="confirmDelete(${d.dentist_id}, '${escapeHtml(d.fname||'')} ${escapeHtml(d.lname||'')}')"><i class="fas fa-trash"></i> ลบ</button>
+                                </div>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>`;
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        function renderError(msg){
+            document.getElementById('tableContent').innerHTML = `<div class="error"><i class="fas fa-triangle-exclamation"></i><p>${escapeHtml(msg)}</p></div>`;
+        }
+
+        function updateCount(n){document.getElementById('treatmentCount').textContent = n}
+
+        function filterList(searchTerm){
+            const specialty = document.getElementById('specialtyFilter').value;
+            const search = (searchTerm || document.getElementById('searchInput').value || '').toLowerCase().trim();
+            
+            filtered = dentistsData.filter(d => {
+                const matchSpecialty = !specialty || d.specialty === specialty;
+                const matchSearch = !search || 
+                    (d.fname||'').toLowerCase().includes(search) ||
+                    (d.lname||'').toLowerCase().includes(search) ||
+                    (d.email||'').toLowerCase().includes(search) ||
+                    (d.specialty||'').toLowerCase().includes(search) ||
+                    (d.phone||'').includes(search);
+                return matchSpecialty && matchSearch;
+            });
+            
+            renderTable(filtered);
+            updateCount(filtered.length);
+        }
+
+        async function refreshData(){
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('fa-spin');
+            await loadDentists();
+            icon.classList.remove('fa-spin');
+        }
+
+        function confirmDelete(id, name){
+            deleteId = id;
+            document.getElementById('deleteItemName').textContent = 'ทพ. ' + name;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeModal(){
+            document.getElementById('deleteModal').classList.remove('show');
+            deleteId = null;
+        }
+
+        async function removeDentist(id){
+            try{
+                const btn = document.getElementById('confirmDeleteBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังลบ...';
+                
+                const res = await fetch(`/admin/api/dentists/${id}`,{method:'DELETE'});
+                if(!res.ok) throw new Error('HTTP '+res.status);
+                
+                closeModal();
+                showToast('ลบทันตแพทย์สำเร็จ', 'success');
+                await refreshData();
+            }catch(e){
+                console.error(e);
+                showToast('ลบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
+                document.getElementById('confirmDeleteBtn').disabled = false;
+                document.getElementById('confirmDeleteBtn').innerHTML = '<i class="fas fa-trash-alt"></i> ลบทันตแพทย์';
+            }
+        }
+
+        function showToast(message, type = 'info'){
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position:fixed;
+                top:20px;
+                right:20px;
+                padding:16px 20px;
+                border-radius:10px;
+                color:#fff;
+                font-size:14px;
+                font-weight:500;
+                z-index:10000;
+                box-shadow:0 4px 12px rgba(0,0,0,.15);
+                animation:slideInRight .3s ease;
+                display:flex;
+                align-items:center;
+                gap:10px;
+                min-width:280px;
+            `;
+            
+            const colors = {
+                success: 'linear-gradient(135deg,#10b981,#059669)',
+                error: 'linear-gradient(135deg,#ef4444,#dc2626)',
+                info: 'linear-gradient(135deg,#3b82f6,#2563eb)',
+                warning: 'linear-gradient(135deg,#f59e0b,#d97706)'
+            };
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle',
+                warning: 'fas fa-exclamation-triangle'
+            };
+            
+            toast.style.background = colors[type] || colors.info;
+            toast.innerHTML = `<i class="${icons[type] || icons.info}"></i> ${message}`;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight .3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function escapeHtml(text){const div=document.createElement('div');div.textContent=String(text);return div.innerHTML}
+        function markAllAsRead(){fetch('/admin/api/notifications/mark-all-read',{method:'PUT'}).then(()=>loadNotifications())}
+    </script>
+    
+    <style>
+        @keyframes slideInRight{
+            from{transform:translateX(100%);opacity:0}
+            to{transform:translateX(0);opacity:1}
+        }
+        @keyframes slideOutRight{
+            from{transform:translateX(0);opacity:1}
+            to{transform:translateX(100%);opacity:0}
+        }
+    </style>
+</body>
+</html>

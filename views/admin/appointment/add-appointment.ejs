@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จองนัดหมาย - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif}
+    body{background:#f5f7fa}
+
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
+    .sidebar ul li.active a,.sidebar ul li:hover a{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+    /* Main */
+    .main{margin-left:180px;min-height:100vh}
+
+    /* Top Bar */
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .page-title{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:600;color:#333}
+    .user-section{display:flex;align-items:center;gap:15px}
+    .notification-container{position:relative}
+    .notification-icon{width:20px;height:20px;cursor:pointer;color:#666;transition:.3s}
+    .notification-icon:hover{color:#4A90E2}
+
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;align-items:center;gap:10px;cursor:pointer;transition:.2s}
+    .user-info:hover{transform:translateY(-1px)}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:8px;min-width:180px;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:2000;margin-top:8px;overflow:hidden}
+    .dropdown-menu.show{display:block;animation:slideDown .3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .dropdown-menu a{display:flex;align-items:center;gap:10px;padding:12px 15px;text-decoration:none;color:#333;font-size:13px;font-weight:500;transition:.2s}
+    .dropdown-menu a:hover{background:#f8f9fa;color:#4A90E2}
+    .dropdown-menu hr{margin:5px 0;border:none;border-top:1px solid #e1e5e9}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px}
+
+    /* Content */
+    .content{padding:30px}
+
+    /* Steps */
+    .progress-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:30px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .progress-steps{display:flex;justify-content:center;align-items:center;gap:40px}
+    .step{display:flex;align-items:center;color:#6c757d;flex-direction:column;text-align:center;min-width:120px}
+    .step.active{color:#4A90E2;font-weight:600}
+    .step.completed{color:#10b981}
+    .step-number{width:48px;height:48px;border-radius:50%;background:#e9ecef;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:18px;font-weight:600;transition:.3s}
+    .step.active .step-number{background:#4A90E2;color:#fff;transform:scale(1.1)}
+    .step.completed .step-number{background:#10b981;color:#fff}
+    .step-label{font-size:14px;font-weight:500}
+    .step-connector{flex:1;height:2px;background:#e9ecef;max-width:100px}
+    .step.completed + .step-connector{background:#10b981}
+
+    .step-content{display:none}
+    .step-content.active{display:block;animation:fadeIn .4s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Form */
+    .form-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .section-title{font-size:20px;font-weight:600;color:#333;margin-bottom:25px;display:flex;align-items:center;gap:10px}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:20px}
+    .form-group{display:flex;flex-direction:column}
+    .form-group label{margin-bottom:8px;font-weight:600;color:#333;font-size:14px}
+    .form-control{padding:12px 16px;border:2px solid #e9ecef;border-radius:8px;font-size:14px;transition:.3s;background:#f8f9fa}
+    .form-control:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
+    .form-control:disabled{background:#f1f3f4;color:#666}
+
+    /* Calendar */
+    .calendar-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+    .calendar-title{font-size:24px;font-weight:600;color:#333}
+    .calendar-nav{background:none;border:none;color:#4A90E2;font-size:18px;cursor:pointer;padding:10px 15px;border-radius:8px;transition:.3s}
+    .calendar-nav:hover{background:rgba(74,144,226,.1);transform:scale(1.05)}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:#f1f3f4;border-radius:12px;overflow:hidden}
+    .calendar-weekdays{display:contents}
+    .weekday{padding:15px;text-align:center;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;font-weight:600;font-size:14px}
+    .calendar-day{background:#fff;min-height:100px;padding:12px;cursor:pointer;transition:.3s;position:relative;border:2px solid transparent}
+    .calendar-day:hover{background:#f8f9fa;border-color:#4A90E2;transform:translateY(-2px)}
+    .calendar-day.selected{background:rgba(74,144,226,.1);border-color:#4A90E2;transform:translateY(-2px)}
+    .calendar-day.other-month{background:#f8f9fa;color:#999}
+    .calendar-day.today{background:linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%);border-color:#fdcb6e}
+    .calendar-day.past{background:#f8f9fa;color:#999;cursor:not-allowed;opacity:.5}
+    .calendar-day.past:hover{background:#f8f9fa;border-color:#e9ecef;transform:none}
+    .day-number{font-weight:600;font-size:16px;margin-bottom:8px;color:#333}
+    .calendar-day.other-month .day-number,.calendar-day.past .day-number{color:#999}
+    .day-doctors{display:flex;flex-direction:column;gap:4px}
+    .doctor-item{display:flex;align-items:center;gap:6px;padding:4px;border-radius:4px;background:rgba(74,144,226,.1);font-size:11px;transition:.2s}
+    .doctor-item:hover{background:rgba(74,144,226,.2);transform:scale(1.02)}
+    .doctor-mini-avatar{width:18px;height:18px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:9px}
+    .doctor-name-mini{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+    .doctor-status{width:6px;height:6px;border-radius:50%;background:#10b981}
+    .doctor-status.busy{background:#ef4444}
+
+    /* Doctors */
+    .doctors-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .doctors-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+    .doctor-card{border:2px solid #e9ecef;border-radius:12px;padding:20px;cursor:pointer;transition:.3s;background:#f8f9fa}
+    .doctor-card:hover{border-color:#4A90E2;background:#fff;transform:translateY(-3px);box-shadow:0 10px 30px rgba(74,144,226,.2)}
+    .doctor-card.selected{border-color:#4A90E2;background:rgba(74,144,226,.1);transform:translateY(-3px);box-shadow:0 10px 30px rgba(74,144,226,.3)}
+    .doctor-card-header{display:flex;align-items:center;gap:15px;margin-bottom:15px}
+    .doctor-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:20px}
+    .doctor-details h5{margin:0 0 5px 0;color:#333;font-size:16px;font-weight:600}
+    .doctor-details p{margin:0;color:#666;font-size:14px}
+    .doctor-license{font-size:12px;color:#0f766e;background:#d1fae5;display:inline-block;padding:3px 8px;border-radius:999px}
+    .doctor-treatments{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 15px}
+    .treatment-tag{background:rgba(74,144,226,.1);color:#4A90E2;padding:4px 8px;border-radius:12px;font-size:12px;font-weight:500}
+    .doctor-availability{display:flex;flex-wrap:wrap;gap:5px}
+    .time-slot{display:inline-block;background:#e8f5e8;color:#2e7d32;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:500}
+    .time-slot.busy{background:#fce4ec;color:#c2185b}
+
+    /* Time */
+    .time-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .selected-doctor-info{background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));border-radius:12px;padding:20px;margin-bottom:25px;display:flex;align-items:center;gap:20px}
+    .date-selector{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:25px}
+    .date-nav{background:none;border:none;color:#4A90E2;font-size:18px;cursor:pointer;padding:10px;border-radius:50%;transition:.2s}
+    .date-nav:hover{background:rgba(74,144,226,.1);transform:scale(1.1)}
+    .selected-date{font-size:18px;font-weight:600;color:#333;text-align:center;min-width:250px}
+    .time-slots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+    .time-slot-btn{padding:15px 12px;border:2px solid #e9ecef;background:#f8f9fa;border-radius:8px;cursor:pointer;text-align:center;transition:.3s;font-size:14px;font-weight:500}
+    .time-slot-btn:hover{border-color:#4A90E2;background:rgba(74,144,226,.1);transform:translateY(-2px)}
+    .time-slot-btn.available{border-color:#10b981;background:#d1f2eb;color:#0c5a40}
+    .time-slot-btn.selected{border-color:#4A90E2;background:#4A90E2;color:#fff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(74,144,226,.3)}
+    .time-slot-btn.unavailable{border-color:#ef4444;background:#fee2e2;color:#991b1b;cursor:not-allowed}
+
+    /* Patient */
+    .patient-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .search-container{position:relative;margin-bottom:20px}
+    .search-input{width:100%;padding:12px 15px 12px 45px;border:2px solid #e9ecef;border-radius:8px;font-size:14px;transition:.3s;background:#f8f9fa}
+    .search-input:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
+    .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#666;font-size:16px}
+    .patient-dropdown{max-height:200px;overflow-y:auto;border:2px solid #e9ecef;border-top:none;border-radius:0 0 8px 8px;background:#fff;position:absolute;width:100%;z-index:10;display:none}
+    .patient-option{padding:12px 15px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:.2s}
+    .patient-option:hover{background:rgba(74,144,226,.1)}
+    .patient-option:last-child{border-bottom:none}
+    .patient-name{font-weight:600;color:#333;margin-bottom:2px}
+    .patient-phone{font-size:12px;color:#666}
+    .selected-patient-info{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);border-radius:8px;padding:15px;margin-top:15px;display:none;align-items:center;justify-content:space-between}
+    .clear-patient-btn{background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:5px;border-radius:4px;transition:.2s}
+    .clear-patient-btn:hover{background:rgba(239,68,68,.1)}
+
+    /* Confirmation */
+    .confirmation-section{background:#fff;border-radius:16px;padding:40px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .booking-id{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;padding:20px;border-radius:12px;margin-bottom:30px;font-size:20px;font-weight:600}
+    .booking-details{background:#f8f9fa;padding:25px;border-radius:12px;margin:25px 0;text-align:left}
+    .booking-details h4{margin:0 0 20px 0;color:#333;text-align:center;font-size:18px}
+    .detail-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e9ecef}
+    .detail-row:last-child{border-bottom:none}
+    .detail-label{color:#666;font-weight:500}
+    .detail-value{color:#333;font-weight:600}
+    .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-transform:uppercase}
+    .status-pending{background:#fff3cd;color:#856404}
+    .status-confirmed{background:#d1f2eb;color:#065f46}
+
+    /* Buttons & misc */
+    .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+    .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(74,144,226,.3)}
+    .btn-primary:disabled{background:#e9ecef;color:#666;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-secondary{background:#f8f9fa;color:#666;border:2px solid #e9ecef}
+    .btn-secondary:hover{background:#e9ecef;transform:translateY(-1px)}
+    .btn-success{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+    .btn-success:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(16,185,129,.3)}
+    .step-navigation{display:flex;justify-content:space-between;align-items:center;padding:25px 0;margin-top:20px}
+
+    /* Loading & Toast */
+    .loading{display:flex;justify-content:center;align-items:center;padding:60px;color:#666}
+    .loading-spinner{width:40px;height:40px;border:3px solid rgba(74,144,226,.1);border-top:3px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite;margin-right:15px}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .toast{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;min-width:300px;display:none;align-items:center;gap:10px}
+    .toast.show{display:flex;animation:slideInRight .3s ease}
+    .toast.success{background:linear-gradient(135deg,#10b981,#059669)}
+    .toast.error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    .toast.info{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+    @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    /* Responsive */
+    @media (max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative}
+      .main{margin-left:0}
+      .form-grid{grid-template-columns:1fr}
+      .doctors-grid{grid-template-columns:1fr}
+      .time-slots-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+      .step-navigation{flex-direction:column;gap:15px}
+      .progress-steps{flex-direction:column;gap:20px}
+      .step-connector{display:none}
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางทำงาน</a></li>
+      <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+      <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+      <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+      <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+    </ul>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="page-title">
+        <i class="fas fa-plus-circle"></i>
+        จองนัดหมายใหม่
+      </div>
+      <div class="user-section">
+        <div class="notification-container">
+          <i class="fas fa-bell notification-icon"></i>
+        </div>
+
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+              <strong id="userName">แอดมิน</strong>
+              <small>ผู้ดูแลระบบ</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+            <hr />
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-steps">
+          <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-label">เลือกวันที่ & ทันตแพทย์</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <div class="step-label">เลือกเวลา & ผู้ป่วย</div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <div class="step-label">ยืนยันการจอง</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toastMessage">
+        <i class="fas fa-check-circle"></i>
+        <span></span>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-content active" id="step1Content">
+        <!-- Filter -->
+        <div class="form-section">
+          <h3 class="section-title"><i class="fas fa-filter"></i> กรองตามการรักษา</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="treatmentFilter">การรักษา:</label>
+              <select id="treatmentFilter" class="form-control">
+                <option value="">การรักษาทั้งหมด</option>
+              </select>
+            </div>
+            <div class="form-group" style="display:flex;align-items:end;gap:10px;">
+              <button type="button" class="btn btn-primary" onclick="applyTreatmentFilter()"><i class="fas fa-filter"></i> ใช้ตัวกรอง</button>
+              <button type="button" class="btn btn-secondary" onclick="clearTreatmentFilter()"><i class="fas fa-times"></i> ล้าง</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-section">
+          <div class="calendar-header">
+            <button type="button" class="calendar-nav" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="calendar-title" id="calendarTitle">เมษายน 2025</div>
+            <button type="button" class="calendar-nav" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <div class="calendar-grid" id="calendarGrid">
+            <div class="weekday">อา</div>
+            <div class="weekday">จ</div>
+            <div class="weekday">อ</div>
+            <div class="weekday">พ</div>
+            <div class="weekday">พฤ</div>
+            <div class="weekday">ศ</div>
+            <div class="weekday">ส</div>
+            <!-- days injected by JS -->
+          </div>
+        </div>
+
+        <!-- Doctors -->
+        <div class="doctors-section" id="doctorsSection" style="display:none;">
+          <h3 class="section-title"><i class="fas fa-user-md"></i> ทันตแพทย์ที่ว่างในวันที่ <span id="selectedDateText"></span></h3>
+          <div class="doctors-grid" id="doctorsGrid"></div>
+        </div>
+
+        <!-- Nav -->
+        <div class="step-navigation">
+          <a href="/admin/appointments" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> กลับไปหน้าการนัดหมาย</a>
+          <button type="button" class="btn btn-primary" onclick="nextStep(2)" id="step1Next" disabled>ถัดไป: เลือกเวลา <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-content" id="step2Content">
+        <div class="time-section">
+          <div class="selected-doctor-info" id="selectedDoctorInfo">
+            <div class="doctor-avatar" id="selectedDoctorAvatar">D</div>
+            <div class="doctor-details">
+              <h3 id="selectedDoctorName">ทพ./ทพญ. ชื่อ</h3>
+              <p id="selectedDoctorSpecialty">สาขา</p>
+              <p id="selectedDoctorLicense" style="margin-top:6px;font-size:12px;color:#065f46;display:none;"></p>
+            </div>
+          </div>
+
+          <!-- Date Nav -->
+          <div class="date-selector">
+            <button type="button" class="date-nav" onclick="changeSelectedDate(-1)"><i class="fas fa-chevron-left"></i></button>
+            <div class="selected-date" id="selectedDateDisplay">วันนี้</div>
+            <button type="button" class="date-nav" onclick="changeSelectedDate(1)"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <!-- Time Slots -->
+          <h4 style="margin-bottom:15px;color:#333;">ช่วงเวลาที่ว่าง</h4>
+          <div class="time-slots-grid" id="timeSlotsGrid">
+            <div class="loading" style="grid-column:1/-1;">
+              <div class="loading-spinner"></div><span>กำลังโหลดช่วงเวลาที่ว่าง…</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patient -->
+        <div class="patient-section">
+          <h3 class="section-title"><i class="fas fa-user-search"></i> ค้นหา & เลือกผู้ป่วย</h3>
+          <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="patientSearch" class="search-input" placeholder="พิมพ์ชื่อหรือเบอร์โทรผู้ป่วย…" autocomplete="off">
+            <div class="patient-dropdown" id="patientDropdown"></div>
+          </div>
+          <input type="hidden" id="selectedPatientId" value="">
+          <div class="selected-patient-info" id="selectedPatientInfo">
+            <div><strong>ผู้ป่วยที่เลือก:</strong> <span id="selectedPatientName"></span></div>
+            <button type="button" class="clear-patient-btn" onclick="clearPatientSelection()"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+
+        <!-- Appointment Details -->
+        <div class="form-section">
+          <h3 class="section-title"><i class="fas fa-clipboard-list"></i> รายละเอียดการนัด</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="treatmentSelect">การรักษา: *</label>
+              <select id="treatmentSelect" class="form-control" required>
+                <option value="">เลือกการรักษา</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label for="symptoms">อาการ/รายละเอียดเพิ่มเติม:</label>
+              <textarea id="symptoms" class="form-control" rows="4" placeholder="อธิบายอาการ ความกังวล หรือข้อมูลเพิ่มเติม…" style="resize:vertical;min-height:100px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nav -->
+        <div class="step-navigation">
+          <button type="button" class="btn btn-secondary" onclick="previousStep(1)"><i class="fas fa-arrow-left"></i> ย้อนกลับ</button>
+          <button type="button" class="btn btn-primary" onclick="nextStep(3)" id="step2Next" disabled>ถัดไป: ยืนยันการจอง <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-content" id="step3Content">
+        <div class="confirmation-section">
+          <div class="booking-id" id="bookingId">
+            <i class="fas fa-calendar-check"></i>
+            รหัสคำขอ: #REQ-<span id="requestNumber">000000</span>
+          </div>
+
+          <div class="booking-details">
+            <h4><i class="fas fa-file-alt"></i> สรุปการนัดหมาย</h4>
+            <div class="detail-row"><span class="detail-label">ชื่อผู้ป่วย:</span><span class="detail-value" id="finalPatientName">-</span></div>
+            <div class="detail-row"><span class="detail-label">เบอร์ผู้ป่วย:</span><span class="detail-value" id="finalPatientPhone">-</span></div>
+            <div class="detail-row"><span class="detail-label">การรักษา:</span><span class="detail-value" id="finalTreatment">-</span></div>
+            <div class="detail-row"><span class="detail-label">ทันตแพทย์:</span><span class="detail-value" id="finalDoctor">-</span></div>
+            <div class="detail-row"><span class="detail-label">เลขที่ใบอนุญาต:</span><span class="detail-value" id="finalDoctorLicense">-</span></div>
+            <div class="detail-row"><span class="detail-label">วันที่:</span><span class="detail-value" id="finalDate">-</span></div>
+            <div class="detail-row"><span class="detail-label">เวลา:</span><span class="detail-value" id="finalTime">-</span></div>
+            <div class="detail-row"><span class="detail-label">หมายเหตุ:</span><span class="detail-value" id="finalSymptoms">-</span></div>
+            <div class="detail-row"><span class="detail-label">สถานะ:</span><span class="status-badge status-pending">รอยืนยัน</span></div>
+          </div>
+
+          <div class="step-navigation">
+            <button type="button" class="btn btn-secondary" onclick="previousStep(2)"><i class="fas fa-edit"></i> แก้ไขรายละเอียด</button>
+            <button type="button" class="btn btn-success" onclick="confirmBooking()"><i class="fas fa-check"></i> ยืนยันการจอง</button>
+          </div>
+
+          <div class="step-navigation" style="margin-top:30px;">
+            <button type="button" class="btn btn-secondary" onclick="startNewBooking()"><i class="fas fa-plus"></i> จองอีกครั้ง</button>
+            <a href="/admin/appointments" class="btn btn-primary"><i class="fas fa-list"></i> ดูการนัดทั้งหมด</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== ตัวแปรหลัก =====
+    let currentStep = 1;
+    let selectedDoctor = null;
+    let selectedDate = new Date().toISOString().split('T')[0];
+    let selectedTime = null;
+    let currentCalendarDate = new Date();
+    let doctorsData = [];
+    let patientsData = [];
+    let treatmentsData = [];
+    let doctorTreatmentMap = {};
+    let allSchedules = [];
+    let filteredTreatmentId = '';
+    let filteredPatients = [];
+
+    document.addEventListener('DOMContentLoaded', function(){
+      initializePage();
+      setupPatientSearch();
+      setupFormValidation();
+    });
+
+    // ===== โหลดข้อมูลเริ่มต้น =====
+    async function initializePage(){
+      try{
+        showToast('กำลังโหลดข้อมูลคลินิก…','info');
+        await Promise.all([loadTreatments(), loadPatients(), loadDentists(), loadDentistTreatmentMap(), loadUserInfo()]);
+        generateCalendar();
+        showToast('พร้อมสำหรับการจองนัดแล้ว','success');
+      }catch(e){
+        console.error(e);
+        showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล โปรดรีเฟรชหน้า','error');
+      }
+    }
+
+    // ผู้ใช้
+    async function loadUserInfo(){
+      try{
+        const r = await fetch('/admin/profile/api');
+        if(r.ok){
+          const d = await r.json();
+          if(d.success && d.email){
+            document.getElementById('userAvatar').textContent = d.email.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = d.email.split('@')[0];
+          }
+        }
+      }catch{}
+    }
+
+    // แผนผังหมอ-การรักษา
+    async function loadDentistTreatmentMap(){
+      try{
+        const r = await fetch('/admin/api/dentist-treatments/mappings');
+        const data = await r.json();
+        if(data.success && data.mappings){
+          doctorTreatmentMap = {};
+          for(const [dentistId, m] of Object.entries(data.mappings)){
+            doctorTreatmentMap[dentistId] = m.treatments;
+          }
+        }else{
+          await loadFallbackTreatmentMap();
+        }
+      }catch{
+        await loadFallbackTreatmentMap();
+      }
+    }
+    async function loadFallbackTreatmentMap(){
+      doctorTreatmentMap = {};
+      doctorsData.forEach(d=>{ doctorTreatmentMap[d.dentist_id] = [...treatmentsData]; });
+    }
+
+    // การรักษา
+    async function loadTreatments(){
+      try{
+        const r = await fetch('/admin/api/treatments');
+        const data = await r.json();
+        if(data.success){
+          treatmentsData = data.treatments;
+          populateTreatmentFilter();
+          populateTreatmentSelect();
+        }
+      }catch(e){ console.error(e); }
+    }
+
+    // หมอฟัน
+    async function loadDentists(){
+      try{
+        const r = await fetch('/admin/api/dentists');
+        const data = await r.json();
+        if(data.success){ doctorsData = data.dentists; }
+      }catch(e){ console.error(e); }
+    }
+
+    // ผู้ป่วย
+    async function loadPatients(){
+      try{
+        const r = await fetch('/admin/api/patients');
+        const data = await r.json();
+        if(data.success){ patientsData = data.patients; filteredPatients=[...patientsData]; }
+      }catch(e){ console.error(e); }
+    }
+
+    // เติมตัวกรอง/ตัวเลือกการรักษา
+    function populateTreatmentFilter(){
+      const sel = document.getElementById('treatmentFilter');
+      sel.innerHTML = '<option value="">การรักษาทั้งหมด</option>';
+      treatmentsData.forEach(t=>{
+        const opt = document.createElement('option');
+        opt.value = t.treatment_id;
+        opt.textContent = t.treatment_name;
+        sel.appendChild(opt);
+      });
+    }
+    function populateTreatmentSelect(){
+      const sel = document.getElementById('treatmentSelect');
+      sel.innerHTML = '<option value="">เลือกการรักษา</option>';
+      treatmentsData.forEach(t=>{
+        const opt = document.createElement('option');
+        opt.value = t.treatment_id;
+        opt.textContent = `${t.treatment_name} (${t.duration} นาที)`;
+        sel.appendChild(opt);
+      });
+    }
+
+    // ===== ปฏิทิน (ภาษาไทย/24 ชม.) =====
+    function changeCalendarMonth(dir){
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth()+dir);
+      generateCalendar();
+    }
+
+    function generateCalendar(){
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      const monthNamesTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+      document.getElementById('calendarTitle').textContent = `${monthNamesTH[month]} ${year}`;
+
+      const grid = document.getElementById('calendarGrid');
+      const headers = grid.querySelectorAll('.weekday');
+      grid.innerHTML = '';
+      headers.forEach(h=>grid.appendChild(h));
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month+1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay()); // เริ่มจากวันอาทิตย์
+
+      for(let i=0;i<42;i++){
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate()+i);
+        const dayEl = createDayElement(d, month);
+        grid.appendChild(dayEl);
+      }
+      loadMonthSchedules(year, month);
+    }
+
+    function createDayElement(date, currentMonth){
+      const day = document.createElement('div');
+      day.className = 'calendar-day';
+
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth()+1).padStart(2,'0');
+      const dd = String(date.getDate()).padStart(2,'0');
+      const dateString = `${yyyy}-${mm}-${dd}`;
+      day.dataset.date = dateString;
+
+      const today = new Date(); today.setHours(0,0,0,0);
+      const compare = new Date(date); compare.setHours(0,0,0,0);
+      const dow = date.getDay();
+
+      if(date.getMonth()!==currentMonth) day.classList.add('other-month');
+      if(compare.getTime()===today.getTime()) day.classList.add('today');
+      if(compare<today) day.classList.add('past');
+      if(dow===0) day.classList.add('closed');
+
+      const num = document.createElement('div');
+      num.className='day-number';
+      num.textContent = date.getDate();
+      day.appendChild(num);
+
+      if(compare<today){ num.innerHTML += '<br><small style="color:#dc3545;font-size:10px;">ผ่านมาแล้ว</small>'; }
+
+      const docs = document.createElement('div');
+      docs.className = 'day-doctors';
+      day.appendChild(docs);
+
+      if(dow!==0 && date.getMonth()===currentMonth && compare>=today){
+        day.addEventListener('click', ()=> selectCalendarDate(dateString, day));
+      }
+      return day;
+    }
+
+    async function loadMonthSchedules(year, month){
+      try{
+        const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+        const endDate   = new Date(year, month+1, 0).toISOString().split('T')[0];
+
+        const promises = doctorsData.map(async d=>{
+          try{
+            const r = await fetch(`/admin/api/dentists/${d.dentist_id}/schedule-data?start_date=${startDate}&end_date=${endDate}`);
+            const data = await r.json();
+            if(data.success && data.schedules){
+              return data.schedules.map(s=>({
+                dentist_id:d.dentist_id,
+                dentist_name:`${d.fname} ${d.lname}`,
+                schedule_date:s.schedule_date,
+                start_time:s.start_time,
+                end_time:s.end_time,
+                status:s.status,
+                appointment_count:s.appointment_count||0
+              }));
+            }
+            return [];
+          }catch{ return []; }
+        });
+
+        const all = await Promise.all(promises);
+        allSchedules = all.flat();
+        populateCalendarDoctors();
+      }catch(e){
+        console.error(e);
+        generateDefaultSchedules(year, month);
+      }
+    }
+
+    function generateDefaultSchedules(year, month){
+      allSchedules = [];
+      const start = new Date(year, month, 1);
+      const end = new Date(year, month+1, 0);
+      for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+        if(d.getDay()===0) continue;
+        doctorsData.forEach(doc=>{
+          allSchedules.push({
+            dentist_id:doc.dentist_id,
+            dentist_name:`${doc.fname} ${doc.lname}`,
+            schedule_date:d.toISOString().split('T')[0],
+            start_time:'10:00:00',
+            end_time:'20:00:00',
+            status:'working',
+            appointment_count:0
+          });
+        });
+      }
+      populateCalendarDoctors();
+    }
+
+    function populateCalendarDoctors(){
+      document.querySelectorAll('.day-doctors').forEach(c=>c.innerHTML='');
+      const byDate = {};
+      allSchedules.forEach(s=>{
+        if(!byDate[s.schedule_date]) byDate[s.schedule_date]=[];
+        byDate[s.schedule_date].push(s);
+      });
+
+      Object.keys(byDate).forEach(date=>{
+        const dayEl = document.querySelector(`[data-date="${date}"]`);
+        if(!dayEl || dayEl.classList.contains('closed') || dayEl.classList.contains('other-month')) return;
+
+        const container = dayEl.querySelector('.day-doctors');
+        const list = byDate[date];
+        const filtered = list.filter(s=> shouldShowDoctor(s.dentist_id));
+        const set = new Set();
+        filtered.forEach(s=>{ if(s.status==='working') set.add(`${s.dentist_id}|${s.dentist_name}`); });
+
+        Array.from(set).forEach(info=>{
+          const [id, name] = info.split('|');
+          const hasAppt = filtered.filter(s=>s.dentist_id==id).some(s=>s.appointment_count>0);
+          container.appendChild(createDoctorItem(name, hasAppt));
+        });
+      });
+    }
+
+    function createDoctorItem(name, hasAppointments){
+      const item=document.createElement('div'); item.className='doctor-item';
+      const initials = name.split(' ').map(p=>p.charAt(0)).join('');
+      item.innerHTML = `
+        <div class="doctor-mini-avatar">${initials}</div>
+        <div class="doctor-name-mini">${name}</div>
+        <div class="doctor-status ${hasAppointments?'busy':''}"></div>`;
+      return item;
+    }
+
+    function shouldShowDoctor(dentistId){
+      if(!filteredTreatmentId) return true;
+      const ts = doctorTreatmentMap[dentistId]||[];
+      return ts.some(t=> t.treatment_id==filteredTreatmentId);
+    }
+
+    function applyTreatmentFilter(){
+      filteredTreatmentId = document.getElementById('treatmentFilter').value;
+      populateCalendarDoctors();
+      if(filteredTreatmentId){
+        const t = treatmentsData.find(x=>x.treatment_id==filteredTreatmentId);
+        showToast(`กรองตาม: ${t.treatment_name}`,'success');
+      }else{
+        showToast('แสดงทันตแพทย์ทั้งหมด','success');
+      }
+    }
+    function clearTreatmentFilter(){
+      document.getElementById('treatmentFilter').value='';
+      filteredTreatmentId='';
+      populateCalendarDoctors();
+      showToast('ล้างตัวกรองแล้ว','success');
+    }
+
+    function selectCalendarDate(dateStr, dayEl){
+      document.querySelectorAll('.calendar-day.selected').forEach(d=>d.classList.remove('selected'));
+      dayEl.classList.add('selected');
+      selectedDate = dateStr;
+      showAvailableDoctors(dateStr);
+    }
+
+    async function showAvailableDoctors(dateStr){
+      const section = document.getElementById('doctorsSection');
+      const grid = document.getElementById('doctorsGrid');
+      const date = new Date(dateStr);
+      const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+      document.getElementById('selectedDateText').textContent = date.toLocaleDateString('th-TH', opts);
+
+      grid.innerHTML = `<div class="loading" style="grid-column:1/-1;"><div class="loading-spinner"></div><span>กำลังโหลดรายชื่อทันตแพทย์…</span></div>`;
+      section.style.display='block';
+
+      try{
+        const daySchedules = allSchedules.filter(s=> s.schedule_date === dateStr);
+        if(daySchedules.length===0){
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">
+            <i class="fas fa-info-circle" style="font-size:32px;margin-bottom:15px;color:#ddd;"></i>
+            <h4>ไม่มีทันตแพทย์ว่างในวันนี้</h4><p>โปรดเลือกวันอื่น</p></div>`;
+          return;
+        }
+        const groups={};
+        daySchedules.forEach(s=>{
+          if(s.status==='working' && shouldShowDoctor(s.dentist_id)){
+            if(!groups[s.dentist_id]) groups[s.dentist_id]={schedules:[], dentist_name:s.dentist_name};
+            groups[s.dentist_id].schedules.push(s);
+          }
+        });
+        if(Object.keys(groups).length===0){
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#666;">
+            <i class="fas fa-filter" style="font-size:32px;margin-bottom:15px;color:#ddd;"></i>
+            <h4>ไม่มีทันตแพทย์ตามการรักษาที่เลือก</h4><p>โปรดลองล้างตัวกรองหรือเลือกวันอื่น</p></div>`;
+          return;
+        }
+
+        let html='';
+        for(const dentistId of Object.keys(groups)){
+          const doc = doctorsData.find(d=> d.dentist_id==dentistId);
+          if(doc){ html += await createDoctorCard(doc, groups[dentistId].schedules); }
+        }
+        grid.innerHTML = html;
+
+        setTimeout(()=>{ section.scrollIntoView({behavior:'smooth', block:'start'}); },100);
+      }catch(e){
+        console.error(e);
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">
+          <i class="fas fa-exclamation-triangle" style="font-size:32px;margin-bottom:15px;"></i>
+          <h4>เกิดข้อผิดพลาดในการโหลดข้อมูลทันตแพทย์</h4><p>โปรดลองอีกครั้ง</p></div>`;
+      }
+    }
+
+    async function createDoctorCard(doctor, schedules){
+      const initials = doctor.fname.charAt(0) + doctor.lname.charAt(0);
+      const license = doctor.license_number || doctor.licenseNo || doctor.license || doctor.dental_license || '';
+
+      let slots=''; let hasAny=false;
+      schedules.forEach(s=>{
+        const hasAppt = s.appointment_count>0; if(hasAppt) hasAny=true;
+        const st = s.start_time.substring(0,5); // 24 ชม.
+        const et = s.end_time.substring(0,5);
+        slots += `<span class="time-slot ${hasAppt?'busy':''}">${st}-${et}${hasAppt?` (${s.appointment_count})`:''}</span>`;
+      });
+      if(!slots){ slots = '<span class="time-slot">10:00-20:00</span>'; }
+
+      const docTreats = doctorTreatmentMap[doctor.dentist_id]||[];
+      let tags='';
+      if(docTreats.length===0){
+        treatmentsData.slice(0,3).forEach(t=> tags+=`<span class="treatment-tag">${t.treatment_name}</span>`);
+      }else{
+        docTreats.slice(0,5).forEach(t=> tags+=`<span class="treatment-tag">${t.treatment_name}</span>`);
+        if(docTreats.length>5) tags+=`<span class="treatment-tag">+${docTreats.length-5} รายการ</span>`;
+      }
+
+      const licenseHtml = license ? `<div><span class="doctor-license">ใบอนุญาต: ${license}</span></div>` : '';
+
+      return `
+        <div class="doctor-card" onclick="selectDoctorFromCard(${doctor.dentist_id}, '${doctor.fname}', '${doctor.lname}', '${doctor.specialty || 'ทันตกรรมทั่วไป'}', '${license}', this)">
+          <div class="doctor-card-header">
+            <div class="doctor-avatar">${initials}</div>
+            <div class="doctor-details">
+              <h5>ทพ./ทพญ. ${doctor.fname} ${doctor.lname}</h5>
+              <p>${doctor.specialty || 'ทันตกรรมทั่วไป'}</p>
+              ${licenseHtml}
+            </div>
+          </div>
+          <div class="doctor-treatments">${tags}</div>
+          <div class="doctor-availability"><strong>ช่วงเวลา:</strong><br>${slots}</div>
+        </div>`;
+    }
+
+    function selectDoctorFromCard(id, fname, lname, specialty, license, card){
+      document.querySelectorAll('.doctor-card.selected').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedDoctor = { id, name:`${fname} ${lname}`, specialty, fname, lname, license };
+      document.getElementById('step1Next').disabled=false;
+      showToast(`เลือก ทพ./ทพญ. ${fname} ${lname} แล้ว`,'success');
+
+      setTimeout(()=>{ document.querySelector('.step-navigation').scrollIntoView({behavior:'smooth', block:'end'}); },300);
+    }
+
+    // ===== ค้นหาผู้ป่วย =====
+    function setupPatientSearch(){
+      const input = document.getElementById('patientSearch');
+      const dropdown = document.getElementById('patientDropdown');
+
+      input.addEventListener('input', function(){
+        const q = this.value.toLowerCase().trim();
+        if(q.length===0){ dropdown.style.display='none'; filteredPatients=[...patientsData]; return; }
+        filteredPatients = patientsData.filter(p=>{
+          const name = `${p.fname} ${p.lname}`.toLowerCase();
+          const phone = p.phone||'';
+          return name.includes(q) || phone.includes(q);
+        });
+        displayPatientOptions();
+      });
+
+      input.addEventListener('focus', function(){ if(this.value.length>0) displayPatientOptions(); });
+      document.addEventListener('click', e=>{ if(!e.target.closest('.search-container')) dropdown.style.display='none'; });
+    }
+
+    function displayPatientOptions(){
+      const dropdown = document.getElementById('patientDropdown');
+      if(filteredPatients.length===0){
+        dropdown.innerHTML = '<div style="padding:15px;text-align:center;color:#666;font-style:italic;">ไม่พบผู้ป่วย</div>';
+      }else{
+        let html='';
+        filteredPatients.slice(0,10).forEach(p=>{
+          html += `<div class="patient-option" onclick="selectPatient(${p.patient_id}, '${p.fname}', '${p.lname}', '${p.phone}')">
+            <div class="patient-name">${p.fname} ${p.lname}</div>
+            <div class="patient-phone">${p.phone||''}</div></div>`;
+        });
+        dropdown.innerHTML = html;
+      }
+      dropdown.style.display='block';
+    }
+
+    function selectPatient(id, fname, lname, phone){
+      const input = document.getElementById('patientSearch');
+      const dropdown = document.getElementById('patientDropdown');
+      const hid = document.getElementById('selectedPatientId');
+      const info = document.getElementById('selectedPatientInfo');
+      const name = document.getElementById('selectedPatientName');
+
+      input.value = `${fname} ${lname} - ${phone}`;
+      dropdown.style.display='none';
+      hid.value = id;
+      name.textContent = `${fname} ${lname} (${phone})`;
+      info.style.display='flex';
+      validateStep2();
+      showToast(`เลือกผู้ป่วย ${fname} ${lname} แล้ว`,'success');
+
+      setTimeout(()=>{ document.querySelector('.form-section').scrollIntoView({behavior:'smooth', block:'start'}); },300);
+    }
+
+    function clearPatientSelection(){
+      document.getElementById('patientSearch').value='';
+      document.getElementById('selectedPatientId').value='';
+      document.getElementById('selectedPatientInfo').style.display='none';
+      validateStep2();
+    }
+
+    // ===== Validation =====
+    function setupFormValidation(){
+      document.getElementById('treatmentSelect').addEventListener('change', validateStep2);
+      window.validateStep2 = validateStep2;
+    }
+    function validateStep2(){
+      const hasPatient = document.getElementById('selectedPatientId').value!=='';
+      const hasTreatment = document.getElementById('treatmentSelect').value!=='';
+      const hasTime = selectedTime!==null;
+      document.getElementById('step2Next').disabled = !(hasPatient && hasTreatment && hasTime);
+    }
+
+    // ===== Step Nav =====
+    function nextStep(step){
+      if(step===2 && !selectedDoctor){ showToast('กรุณาเลือกทันตแพทย์ก่อน','error'); return; }
+      if(step===3){
+        const hasPatient = document.getElementById('selectedPatientId').value;
+        const hasTreatment = document.getElementById('treatmentSelect').value;
+        const hasTime = selectedTime;
+        if(!hasPatient || !hasTreatment || !hasTime){ showToast('กรุณากรอกข้อมูลให้ครบถ้วน','error'); return; }
+      }
+      currentStep = step; updateStepDisplay();
+      if(step===2){ initializeStep2(); }
+      else if(step===3){ initializeStep3(); }
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function previousStep(step){ currentStep = step; updateStepDisplay(); window.scrollTo({top:0, behavior:'smooth'}); }
+    function updateStepDisplay(){
+      for(let i=1;i<=3;i++){
+        const st = document.getElementById(`step${i}`), ct = document.getElementById(`step${i}Content`);
+        st.classList.remove('active','completed'); ct.classList.remove('active');
+        if(i<currentStep) st.classList.add('completed');
+        else if(i===currentStep){ st.classList.add('active'); ct.classList.add('active'); }
+      }
+    }
+
+    function initializeStep2(){
+      document.getElementById('selectedDoctorName').textContent = `ทพ./ทพญ. ${selectedDoctor.name}`;
+      document.getElementById('selectedDoctorSpecialty').textContent = selectedDoctor.specialty;
+      document.getElementById('selectedDoctorAvatar').textContent = selectedDoctor.fname.charAt(0)+selectedDoctor.lname.charAt(0);
+      const lic = selectedDoctor.license || '';
+      const licEl = document.getElementById('selectedDoctorLicense');
+      if(lic){ licEl.textContent = `ใบอนุญาต: ${lic}`; licEl.style.display='block'; } else { licEl.style.display='none'; }
+
+      updateSelectedDateDisplay();
+      loadTimeSlots();
+      updateTreatmentSelectForDoctor();
+    }
+
+    function updateTreatmentSelectForDoctor(){
+      const sel = document.getElementById('treatmentSelect');
+      const ts = doctorTreatmentMap[selectedDoctor.id]||[];
+      sel.innerHTML = '<option value="">เลือกการรักษา</option>';
+      if(ts.length===0){
+        treatmentsData.forEach(t=>{
+          const opt=document.createElement('option');
+          opt.value=t.treatment_id; opt.textContent=`${t.treatment_name} (${t.duration} นาที)`; sel.appendChild(opt);
+        });
+      }else{
+        ts.forEach(t=>{
+          const opt=document.createElement('option');
+          opt.value=t.treatment_id; opt.textContent=`${t.treatment_name} (${t.duration} นาที)`; sel.appendChild(opt);
+        });
+      }
+    }
+
+    function updateSelectedDateDisplay(){
+      const d = new Date(selectedDate);
+      const o = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+      document.getElementById('selectedDateDisplay').textContent = d.toLocaleDateString('th-TH', o);
+    }
+
+    function changeSelectedDate(dir){
+      const d = new Date(selectedDate); d.setDate(d.getDate()+dir);
+      selectedDate = d.toISOString().split('T')[0];
+      updateSelectedDateDisplay(); loadTimeSlots(); selectedTime=null; validateStep2();
+    }
+
+    async function loadTimeSlots(){
+      const grid = document.getElementById('timeSlotsGrid');
+      grid.innerHTML = `<div class="loading" style="grid-column:1/-1;"><div class="loading-spinner"></div><span>กำลังโหลดช่วงเวลาที่ว่าง…</span></div>`;
+
+      try{
+        const date = new Date(selectedDate);
+        const today = new Date();
+        const dow = date.getDay();
+        const isToday = date.toDateString()===today.toDateString();
+        const curHour = today.getHours();
+
+        if(dow===0){
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">
+            <i class="fas fa-times-circle" style="font-size:32px;margin-bottom:15px;"></i>
+            <h4>คลินิกปิดวันอาทิตย์</h4><p>โปรดเลือกวันอื่น</p></div>`;
+          return;
+        }
+
+        const r = await fetch(`/admin/api/dentists/${selectedDoctor.id}/schedule-data?start_date=${selectedDate}&end_date=${selectedDate}`);
+        let html='';
+        if(r.ok){
+          const data = await r.json();
+          if(data.success && data.schedules.length>0){
+            data.schedules.forEach(s=>{
+              if(s.status==='working'){
+                const stHour = parseInt(s.start_time.split(':')[0],10);
+                const enHour = parseInt(s.end_time.split(':')[0],10);
+                for(let h=stHour; h<enHour; h++){
+                  const t = `${String(h).padStart(2,'0')}:00`;
+                  const booked = s.appointment_count>0;
+                  const past = isToday && h<=curHour;
+                  let cls='available', txt='ว่าง', handler=`selectTimeSlot('${t}')`;
+                  if(past){ cls='unavailable'; txt='ผ่านมาแล้ว'; handler=''; }
+                  else if(booked){ cls='unavailable'; txt='ไม่ว่าง'; handler=''; }
+                  html += `<div class="time-slot-btn ${cls}" onclick="${handler}" data-time="${t}">
+                    <strong>${t}</strong><br><small>${txt}</small></div>`;
+                }
+              }
+            });
+          }
+        }
+        if(!html){
+          for(let h=10; h<=19; h++){
+            const t = `${String(h).padStart(2,'0')}:00`;
+            const past = isToday && h<=curHour;
+            let cls='available', txt='ว่าง', handler=`selectTimeSlot('${t}')`;
+            if(past){ cls='unavailable'; txt='ผ่านมาแล้ว'; handler=''; }
+            html += `<div class="time-slot-btn ${cls}" onclick="${handler}" data-time="${t}">
+              <strong>${t}</strong><br><small>${txt}</small></div>`;
+          }
+        }
+        grid.innerHTML = html;
+      }catch(e){
+        console.error(e);
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">
+          <i class="fas fa-exclamation-triangle" style="font-size:32px;margin-bottom:15px;"></i>
+          <h4>โหลดช่วงเวลาไม่สำเร็จ</h4><p>โปรดลองใหม่</p></div>`;
+      }
+    }
+
+    function selectTimeSlot(time){
+      document.querySelectorAll('.time-slot-btn.selected').forEach(b=>{ b.classList.remove('selected'); b.classList.add('available'); });
+      const btn = document.querySelector(`[data-time="${time}"]`);
+      if(btn){
+        btn.classList.remove('available'); btn.classList.add('selected');
+        selectedTime = time; validateStep2(); showToast('เลือกช่วงเวลาแล้ว','success');
+        if(!document.getElementById('selectedPatientId').value){
+          setTimeout(()=>{ document.querySelector('.patient-section').scrollIntoView({behavior:'smooth', block:'start'}); },300);
+        }
+      }
+    }
+
+    function initializeStep3(){
+      const req = Date.now().toString().slice(-6);
+      document.getElementById('requestNumber').textContent = req;
+
+      const pid = document.getElementById('selectedPatientId').value;
+      const tid = document.getElementById('treatmentSelect').value;
+      const sym = document.getElementById('symptoms').value;
+
+      const p = patientsData.find(x=> x.patient_id==pid);
+      const t = treatmentsData.find(x=> x.treatment_id==tid);
+
+      document.getElementById('finalPatientName').textContent = p ? `${p.fname} ${p.lname}` : '-';
+      document.getElementById('finalPatientPhone').textContent = p ? (p.phone||'') : '-';
+      document.getElementById('finalTreatment').textContent = t ? t.treatment_name : '-';
+      document.getElementById('finalDoctor').textContent = `ทพ./ทพญ. ${selectedDoctor.name}`;
+      document.getElementById('finalDoctorLicense').textContent = selectedDoctor.license || '-';
+      document.getElementById('finalDate').textContent =
+        new Date(selectedDate).toLocaleDateString('th-TH',{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      document.getElementById('finalTime').textContent = selectedTime || '-';
+      document.getElementById('finalSymptoms').textContent = sym || '—';
+    }
+
+    async function confirmBooking(){
+      try{
+        const btn = event.target;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก…';
+        btn.disabled = true;
+
+        const patientId = document.getElementById('selectedPatientId').value;
+        const treatmentId = document.getElementById('treatmentSelect').value;
+        const symptoms = document.getElementById('symptoms').value;
+
+        const booking = {
+          patient_id: patientId,
+          dentist_id: selectedDoctor.id,
+          treatment_id: treatmentId,
+          appointment_time: `${selectedDate}T${selectedTime}:00`,
+          notes: symptoms || ''
+        };
+
+        const r = await fetch('/admin/api/appointments', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(booking)
+        });
+        const result = await r.json();
+
+        if(r.ok && result.success){
+          showToast('จองนัดหมายสำเร็จ!','success');
+          const st = document.querySelector('.status-pending');
+          st.textContent='ยืนยันแล้ว'; st.className='status-badge status-confirmed';
+          btn.innerHTML = '<i class="fas fa-check"></i> จองสำเร็จ!';
+          btn.className = 'btn btn-success';
+        }else{
+          throw new Error(result.error || 'บันทึกการจองไม่สำเร็จ');
+        }
+      }catch(e){
+        showToast(e.message,'error');
+        const btn = event.target;
+        btn.innerHTML = '<i class="fas fa-check"></i> ยืนยันการจอง';
+        btn.disabled=false;
+      }
+    }
+
+    function startNewBooking(){ location.reload(); }
+
+    // Toast
+    function showToast(msg, type='success'){
+      const t = document.getElementById('toastMessage');
+      const icon = t.querySelector('i');
+      t.className = `toast ${type} show`;
+      icon.className = (type==='success') ? 'fas fa-check-circle' : (type==='error') ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
+      t.querySelector('span').textContent = msg;
+      setTimeout(()=>{ t.classList.remove('show'); }, 4000);
+    }
+
+    function toggleDropdown(){ document.getElementById('profileDropdown').classList.toggle('show'); }
+    document.addEventListener('click', e=>{
+      const pd = document.querySelector('.profile-dropdown');
+      if(!pd.contains(e.target)){ document.getElementById('profileDropdown').classList.remove('show'); }
+    });
+  </script>
+</body>
+</html>

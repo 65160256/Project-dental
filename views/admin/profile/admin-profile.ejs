@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์ของฉัน - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+        body{background-color:#f5f7fa;margin:0}
+
+        /* Sidebar */
+        .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+        .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+        .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+        .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+        .sidebar ul{list-style:none;padding:10px 0;margin:0}
+        .sidebar ul li{margin:2px 0}
+        .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
+        .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+        /* Main */
+        .main{margin-left:180px;min-height:100vh}
+
+        /* Top Bar */
+        .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1);position:relative}
+        .topbar-left{display:flex;align-items:center;gap:15px}
+        .topbar-left h2{margin:0;font-size:20px;color:#333;font-weight:600}
+        .back-btn{width:40px;height:40px;border-radius:50%;background:#f8f9fa;border:1px solid #e1e5e9;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.3s;text-decoration:none;color:#666}
+        .back-btn:hover{background:#4A90E2;color:#fff;border-color:#4A90E2}
+
+        .user-section{display:flex;align-items:center;gap:15px}
+        .notification-container{position:relative}
+        .notification-icon{width:20px;height:20px;cursor:pointer;color:#666;transition:.3s}
+        .notification-icon:hover{color:#4A90E2}
+        .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+        .notification-badge.show{display:flex;animation:pulse 2s infinite}
+        @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+        .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;display:none;max-height:500px;overflow:hidden}
+        .notification-dropdown.show{display:block;animation:slideDown .3s ease}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+        .notification-header h3{margin:0;font-size:18px;font-weight:600}
+        .notification-content{max-height:400px;overflow-y:auto;padding:10px}
+        .notification-item{padding:12px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:.2s}
+        .notification-item:hover{background:#f8f9fa}
+        .notification-item:last-child{border-bottom:none}
+        .notification-title{font-weight:600;color:#333;font-size:13px;margin-bottom:3px}
+        .notification-message{color:#666;font-size:12px;margin-bottom:5px;line-height:1.3}
+        .notification-time{color:#999;font-size:11px}
+
+        .profile-dropdown{position:relative}
+        .user-info{display:flex;align-items:center;cursor:pointer;gap:10px}
+        .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+        .user-details strong{display:block;font-size:13px;color:#333}
+        .user-details small{color:#666;font-size:11px}
+        .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:1000}
+        .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+        .dropdown-menu a:hover{background:#f8f9fa}
+
+        /* Content */
+        .content{padding:30px}
+
+        /* Alerts */
+        .alert{padding:15px 20px;border-radius:8px;margin-bottom:20px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px}
+        .alert.success{background:#d1f2eb;color:#0c5460;border:1px solid #bee5eb}
+        .alert.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+        .alert i{font-size:16px}
+
+        /* Profile Card */
+        .profile-card{background:#fff;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:600px;margin:0 auto;text-align:center}
+        .profile-image{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;margin:0 auto 25px;font-size:48px;color:#fff;font-weight:600;text-transform:uppercase}
+        .profile-card h2{font-size:28px;color:#333;margin:0 0 10px 0;font-weight:600}
+        .last-login{color:#666;font-size:14px;margin-bottom:30px;padding:8px 16px;background:#f8f9fa;border-radius:20px;display:inline-block}
+
+        .profile-info{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px;text-align:left}
+        .info-item{padding:20px;background:#f8f9fa;border-radius:12px;border:1px solid #e1e5e9}
+        .info-item label{display:block;font-size:12px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+        .info-item .value{font-size:16px;color:#333;font-weight:500}
+        .info-item .password-value{display:flex;align-items:center;gap:10px}
+        .password-dots{font-family:monospace;letter-spacing:3px;color:#666}
+        .toggle-password{background:none;border:none;color:#4A90E2;cursor:pointer;font-size:12px;padding:0}
+        .toggle-password:hover{text-decoration:underline}
+
+        .buttons{display:flex;gap:15px;justify-content:center;margin-top:30px}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.3s;min-width:140px;justify-content:center}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,.3)}
+        .btn-secondary{background:#6c757d;color:#fff}
+        .btn-secondary:hover{background:#5a6268;transform:translateY(-2px)}
+        .btn-danger{background:#dc3545;color:#fff}
+        .btn-danger:hover{background:#c82333;transform:translateY(-2px)}
+
+        /* Modal */
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:3000;display:none;align-items:center;justify-content:center}
+        .modal.show{display:flex}
+        .modal-content{background:#fff;border-radius:16px;padding:30px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;max-height:80vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:1px solid #e1e5e9}
+        .modal-title{font-size:20px;font-weight:600;color:#333;margin:0}
+        .close{background:none;border:none;font-size:24px;cursor:pointer;color:#666;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:.3s}
+        .close:hover{background:#f8f9fa;color:#333}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:8px}
+        .form-group input{width:100%;padding:12px 16px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;transition:.2s}
+        .form-group input:focus{outline:none;border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.1)}
+        .password-input{position:relative}
+        .password-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#666;cursor:pointer;padding:4px}
+        .password-toggle:hover{color:#4A90E2}
+        .form-buttons{display:flex;gap:15px;justify-content:flex-end;margin-top:25px;padding-top:20px;border-top:1px solid #e1e5e9}
+
+        /* Toast */
+        .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideInRight .3s ease;max-width:300px;display:none}
+        .toast.success{background:#10b981}.toast.error{background:#ef4444}.toast.info{background:#3b82f6}
+        .toast.show{display:flex;align-items:center;gap:10px}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+        /* Loading */
+        .loading{opacity:.6;pointer-events:none}
+        .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top:2px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+        /* Responsive */
+        @media (max-width:768px){
+            .sidebar{width:100%;height:auto;position:relative}
+            .main{margin-left:0}
+            .top-bar{flex-direction:column;gap:15px;align-items:stretch}
+            .profile-info{grid-template-columns:1fr}
+            .buttons{flex-direction:column}
+            .form-buttons{flex-direction:column}
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="topbar-left">
+                <a href="/admin/dashboard" class="back-btn" title="กลับไปหน้าแดชบอร์ด">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2>โปรไฟล์ของฉัน</h2>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header"><h3>การแจ้งเตือน</h3></div>
+                        <div class="notification-content" id="notificationContent">
+                            <div style="text-align:center;color:#666;padding:20px;">
+                                <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+                                <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div id="alertContainer"></div>
+
+            <div class="profile-card">
+                <div class="profile-image" id="profileAvatar">A</div>
+                <h2 id="userRole">ผู้ดูแลระบบ</h2>
+                <p class="last-login" id="lastLogin">เข้าสู่ระบบครั้งล่าสุด: กำลังโหลด...</p>
+
+                <div class="profile-info">
+                    <div class="info-item">
+                        <label>ชื่อผู้ใช้</label>
+                        <div class="value" id="username">กำลังโหลด...</div>
+                    </div>
+                    <div class="info-item">
+                        <label>อีเมล</label>
+                        <div class="value" id="email">กำลังโหลด...</div>
+                    </div>
+                    <div class="info-item">
+                        <label>สิทธิ์การใช้งาน</label>
+                        <div class="value" id="role">กำลังโหลด...</div>
+                    </div>
+                    <div class="info-item">
+                        <label>รหัสผ่าน</label>
+                        <div class="password-value">
+                            <span class="password-dots">••••••••</span>
+                            <button class="toggle-password" onclick="showChangePasswordModal()">
+                                <i class="fas fa-edit"></i> เปลี่ยน
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="showChangePasswordModal()">
+                        <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshProfile()">
+                        <i class="fas fa-sync-alt"></i> โหลดใหม่
+                    </button>
+                    <a href="/logout" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">เปลี่ยนรหัสผ่าน</h3>
+                <button class="close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">รหัสผ่านเดิม</label>
+                    <div class="password-input">
+                        <input type="password" id="currentPassword" name="currentPassword" required>
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('currentPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">รหัสผ่านใหม่</label>
+                    <div class="password-input">
+                        <input type="password" id="newPassword" name="newPassword" required minlength="6">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('newPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
+                    <div class="password-input">
+                        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="submitPasswordBtn">
+                        <i class="fas fa-save"></i> อัปเดตรหัสผ่าน
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"><i class="fas fa-check-circle"></i><span id="toastMessage">ข้อความ</span></div>
+
+    <script>
+        let userProfileData = {};
+        let notificationData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserProfile();
+            loadNotifications();
+            setupEventListeners();
+            checkUrlParameters();
+            setInterval(loadNotifications, 120000);
+        });
+
+        function setupEventListeners(){
+            document.getElementById('changePasswordForm').addEventListener('submit', handlePasswordChange);
+
+            document.addEventListener('click', (e) => {
+                const profileDropdown = document.querySelector('.profile-dropdown');
+                if (profileDropdown && !profileDropdown.contains(e.target)) {
+                    document.getElementById('profileDropdown').style.display = 'none';
+                }
+                const notificationContainer = document.querySelector('.notification-container');
+                if (notificationContainer && !notificationContainer.contains(e.target)) {
+                    document.getElementById('notificationDropdown').classList.remove('show');
+                }
+                const modal = document.getElementById('changePasswordModal');
+                if (e.target === modal) closeChangePasswordModal();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeChangePasswordModal();
+                    document.getElementById('notificationDropdown').classList.remove('show');
+                    document.getElementById('profileDropdown').style.display = 'none';
+                }
+            });
+
+            window.addEventListener('online', () => { showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'); loadUserProfile(); loadNotifications(); });
+            window.addEventListener('offline', () => showToast('การเชื่อมต่อหายไป','error'));
+
+            window.addEventListener('error', (e) => { console.error('JavaScript error:', e.error); showToast('เกิดข้อผิดพลาดที่ไม่คาดคิด','error'); });
+        }
+
+        // ===== API: Profile =====
+        async function loadUserProfile(){
+            try{
+                showLoading(true);
+                const res = await fetch('/admin/profile/api');
+                if(!res.ok) throw new Error('HTTP '+res.status);
+                const data = await res.json();
+                if(data.success){ userProfileData = data; updateProfileDisplay(data); }
+                else throw new Error(data.error || 'โหลดโปรไฟล์ไม่สำเร็จ');
+            }catch(err){
+                console.error(err);
+                showToast('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้','error');
+                showAlert('โหลดข้อมูลโปรไฟล์ไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง','error');
+            }finally{
+                showLoading(false);
+            }
+        }
+
+        function updateProfileDisplay(data){
+            const firstLetter = (data.email||'A').charAt(0).toUpperCase();
+            document.getElementById('profileAvatar').textContent = firstLetter;
+            document.getElementById('userAvatar').textContent = firstLetter;
+
+            document.getElementById('userRole').textContent = data.role || 'ผู้ดูแลระบบ';
+            document.getElementById('username').textContent = data.username || data.email || '-';
+            document.getElementById('email').textContent   = data.email || '-';
+            document.getElementById('role').textContent    = data.role || 'ผู้ดูแลระบบ';
+
+            if (data.last_login){
+                document.getElementById('lastLogin').textContent = 'เข้าสู่ระบบครั้งล่าสุด: ' + formatDateTimeTH(data.last_login);
+            }else{
+                document.getElementById('lastLogin').textContent = 'เข้าสู่ระบบครั้งล่าสุด: ไม่เคย';
+            }
+        }
+
+        // ===== Time utils: TH 24h + พ.ศ. =====
+        function pad2(n){return String(n).padStart(2,'0')}
+        function formatDateTimeTH(dt){
+            const d = new Date(dt);
+            if(isNaN(d)) return '-';
+            const dd = pad2(d.getDate());
+            const mm = pad2(d.getMonth()+1);
+            const yyyy = d.getFullYear()+543;
+            const hh = pad2(d.getHours());
+            const mi = pad2(d.getMinutes());
+            return `${dd}/${mm}/${yyyy} ${hh}:${mi} น.`;
+        }
+
+        // ===== Change Password =====
+        async function handlePasswordChange(e){
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            if (data.newPassword !== data.confirmPassword){
+                showToast('รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน','error');
+                return;
+            }
+            if (data.newPassword.length < 6){
+                showToast('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร','error');
+                return;
+            }
+
+            try{
+                showPasswordChangeLoading(true);
+                const res = await fetch('/admin/change-password', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if(res.ok && result.success){
+                    showToast('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่','success');
+                    closeChangePasswordModal(); form.reset();
+                    setTimeout(()=>{ window.location.href='/login'; }, 2000);
+                }else{
+                    throw new Error(result.message || 'เปลี่ยนรหัสผ่านไม่สำเร็จ');
+                }
+            }catch(err){
+                showToast(err.message || 'เปลี่ยนรหัสผ่านไม่สำเร็จ','error');
+            }finally{
+                showPasswordChangeLoading(false);
+            }
+        }
+
+        function showPasswordChangeLoading(show){
+            const btn = document.getElementById('submitPasswordBtn');
+            const form = document.getElementById('changePasswordForm');
+            if(show){ btn.innerHTML='<div class="spinner"></div> กำลังอัปเดต...'; btn.disabled=true; form.classList.add('loading'); }
+            else{ btn.innerHTML='<i class="fas fa-save"></i> อัปเดตรหัสผ่าน'; btn.disabled=false; form.classList.remove('loading'); }
+        }
+
+        function showLoading(show){
+            const card = document.querySelector('.profile-card');
+            if(show) card.classList.add('loading'); else card.classList.remove('loading');
+        }
+
+        function showChangePasswordModal(){
+            document.getElementById('changePasswordModal').classList.add('show');
+            document.getElementById('currentPassword').focus();
+        }
+        function closeChangePasswordModal(){
+            document.getElementById('changePasswordModal').classList.remove('show');
+            document.getElementById('changePasswordForm').reset();
+        }
+        function togglePasswordVisibility(id){
+            const input = document.getElementById(id);
+            const icon = input.nextElementSibling.querySelector('i');
+            if(input.type==='password'){ input.type='text'; icon.className='fas fa-eye-slash'; }
+            else{ input.type='password'; icon.className='fas fa-eye'; }
+        }
+
+        // ===== Notifications =====
+        async function loadNotifications(){
+            try{
+                const res = await fetch('/admin/api/notifications?limit=10');
+                if(res.ok){
+                    const data = await res.json();
+                    if(data.success){
+                        notificationData = data.notifications || [];
+                        renderNotifications();
+                        updateNotificationBadge();
+                    }
+                }
+            }catch(e){
+                showEmptyNotifications();
+            }
+        }
+
+        function renderNotifications(){
+            const box = document.getElementById('notificationContent');
+            if(!notificationData || notificationData.length===0){ showEmptyNotifications(); return; }
+            const sorted = notificationData.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
+            box.innerHTML = sorted.map(n=>`
+                <div class="notification-item" data-id="${n.id}">
+                    <div class="notification-title">${escapeHtml(n.title||'การแจ้งเตือน')}</div>
+                    <div class="notification-message">${escapeHtml(n.message||'')}</div>
+                    <div class="notification-time">${formatDateTimeTH(n.created_at)}</div>
+                </div>
+            `).join('');
+        }
+
+        function showEmptyNotifications(){
+            const box = document.getElementById('notificationContent');
+            box.innerHTML = `
+                <div style="text-align:center;color:#666;padding:20px;">
+                    <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+                    <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+                </div>`;
+        }
+
+        function updateNotificationBadge(){
+            const unread = notificationData.filter(n => !n.is_read).length;
+            const badge = document.getElementById('notificationBadge');
+            if(unread>0){ badge.textContent = unread>99?'99+':unread; badge.classList.add('show'); }
+            else{ badge.classList.remove('show'); }
+        }
+
+        function toggleNotifications(){
+            const dd = document.getElementById('notificationDropdown');
+            const isVisible = dd.classList.contains('show');
+            if(isVisible) dd.classList.remove('show'); else { dd.classList.add('show'); loadNotifications(); }
+        }
+
+        function toggleDropdown(){
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display==='block' ? 'none' : 'block';
+        }
+
+        // ===== Alerts/Toast/Utils =====
+        function showAlert(message,type='info'){
+            const con = document.getElementById('alertContainer');
+            const id = 'alert-'+Date.now();
+            const el = document.createElement('div');
+            el.id = id; el.className = `alert ${type}`;
+            const icon = {success:'check-circle',error:'exclamation-circle',info:'info-circle'}[type] || 'info-circle';
+            el.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>
+            <button onclick="closeAlert('${id}')" style="margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;padding:0;font-size:16px;">
+                <i class="fas fa-times"></i></button>`;
+            con.appendChild(el);
+            setTimeout(()=>closeAlert(id),5000);
+        }
+        function closeAlert(id){
+            const el = document.getElementById(id);
+            if(el){ el.style.animation='slideOutRight .3s ease'; setTimeout(()=>el.remove(),300); }
+        }
+
+        function showToast(message,type='info'){
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type} show`;
+            const icon = {success:'check-circle',error:'exclamation-circle',info:'info-circle'}[type] || 'info-circle';
+            toast.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+            setTimeout(()=>{ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>{ toast.classList.remove('show'); toast.style.animation=''; },300); },4000);
+        }
+
+        function escapeHtml(t){const d=document.createElement('div'); d.textContent=String(t); return d.innerHTML}
+
+        function checkUrlParameters(){
+            const p = new URLSearchParams(window.location.search);
+            const success = p.get('success'); const error = p.get('error');
+            if(success){ showAlert(decodeURIComponent(success),'success'); history.replaceState({}, document.title, location.pathname); }
+            if(error){ showAlert(decodeURIComponent(error),'error'); history.replaceState({}, document.title, location.pathname); }
+        }
+    </script>
+</body>
+</html>

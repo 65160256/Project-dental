@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - Smile Clinic</title>
+    <title>จองนัดหมาย - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
@@ -18,7 +18,6 @@
             margin: 0;
         }
 
-        /* Header */
         .header {
             background: white;
             padding: 15px 30px;
@@ -46,25 +45,6 @@
             font-size: 24px;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
         .nav-links {
             display: flex;
             gap: 15px;
@@ -85,14 +65,31 @@
             color: #4A90E2;
         }
 
-        /* Main Container */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
         }
 
-        /* Progress Steps */
         .progress-section {
             background: white;
             border-radius: 12px;
@@ -167,7 +164,6 @@
             background: #10b981;
         }
 
-        /* Content Sections */
         .step-content {
             display: none;
         }
@@ -182,7 +178,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Form Styles */
         .form-section {
             background: white;
             border-radius: 12px;
@@ -206,7 +201,6 @@
             font-size: 20px;
         }
 
-        /* Treatment Filter */
         .filter-grid {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -242,7 +236,6 @@
             box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
         }
 
-        /* Calendar Styles */
         .calendar-section {
             background: white;
             border-radius: 12px;
@@ -298,13 +291,22 @@
         }
 
         .calendar-day {
-            background: white;
-            min-height: 90px;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
+    background: white;
+    min-height: 120px; /* เพิ่มความสูง */
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-day:hover:not(.past):not(.unavailable):not(.other-month) {
+    background: #f0f9ff;
+    border: 2px solid #4A90E2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+}
 
         .calendar-day:hover {
             background: #f8f9fa;
@@ -383,19 +385,6 @@
             font-size: 9px;
         }
 
-        .doctor-status {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #10b981;
-            margin-left: auto;
-        }
-
-        .doctor-status.busy {
-            background: #ef4444;
-        }
-
-        /* Available Doctors */
         .doctors-section {
             background: white;
             border-radius: 12px;
@@ -482,28 +471,6 @@
             font-weight: 500;
         }
 
-        .doctor-availability {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .time-slot {
-            display: inline-block;
-            background: #e8f5e8;
-            color: #2e7d32;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .time-slot.busy {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        /* Time Selection */
         .time-section {
             background: white;
             border-radius: 12px;
@@ -591,15 +558,6 @@
             box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
-        .time-slot-btn.unavailable, .time-slot-btn.too-soon {
-            border-color: #ef4444;
-            background: #fee2e2;
-            color: #991b1b;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        /* Appointment Details */
         .appointment-details {
             background: white;
             border-radius: 12px;
@@ -620,7 +578,6 @@
             font-family: inherit;
         }
 
-        /* Confirmation */
         .confirmation-section {
             background: white;
             border-radius: 12px;
@@ -691,12 +648,6 @@
             color: #856404;
         }
 
-        .status-confirmed {
-            background: #d1f2eb;
-            color: #065f46;
-        }
-
-        /* Buttons */
         .btn {
             padding: 10px 20px;
             border: none;
@@ -751,7 +702,6 @@
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
         }
 
-        /* Navigation */
         .step-navigation {
             display: flex;
             justify-content: space-between;
@@ -760,7 +710,6 @@
             margin-top: 20px;
         }
 
-        /* Loading */
         .loading {
             display: flex;
             justify-content: center;
@@ -784,7 +733,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Toast Notifications */
         .toast {
             position: fixed;
             top: 20px;
@@ -828,7 +776,6 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Alert Messages */
         .alert {
             padding: 15px 18px;
             border-radius: 8px;
@@ -840,19 +787,12 @@
             font-size: 14px;
         }
 
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 2px solid #ffc107;
-        }
-
         .alert-info {
             background: #d1ecf1;
             color: #0c5460;
             border: 2px solid #17a2b8;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 padding: 20px 10px;
@@ -902,7 +842,6 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <div class="header-content">
             <div class="logo">
@@ -912,15 +851,15 @@
             
             <div class="nav-links">
                 <a href="/patient/dashboard">Dashboard</a>
-                <a href="/patient/appointment/schedule" class="active">Book Appointment</a>
-                <a href="/patient/history">My Appointments</a>
-                <a href="/patient/dentists">Our Dentists</a>
+                <a href="/patient/appointment/schedule" class="active">จองนัดหมาย</a>
+                <a href="/patient/history">นัดหมายของฉัน</a>
+                <a href="/patient/dentists">ทันตแพทย์</a>
             </div>
 
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">P</div>
                 <div style="text-align: right;">
-                    <div style="font-weight: 600; color: #333; font-size: 13px;" id="userName">Patient</div>
+                    <div style="font-weight: 600; color: #333; font-size: 13px;" id="userName">ผู้ป่วย</div>
                     <div style="font-size: 11px; color: #666;">Patient</div>
                 </div>
             </div>
@@ -928,62 +867,58 @@
     </div>
 
     <div class="container">
-        <!-- Progress Section -->
         <div class="progress-section">
             <div class="progress-steps">
                 <div class="step active" id="step1">
                     <div class="step-number">1</div>
-                    <div class="step-label">Select Date & Doctor</div>
+                    <div class="step-label">เลือกวันและหมอ</div>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step" id="step2">
                     <div class="step-number">2</div>
-                    <div class="step-label">Choose Time & Details</div>
+                    <div class="step-label">เลือกเวลาและรายละเอียด</div>
                 </div>
                 <div class="step-connector"></div>
                 <div class="step" id="step3">
                     <div class="step-number">3</div>
-                    <div class="step-label">Confirm Booking</div>
+                    <div class="step-label">ยืนยันการจอง</div>
                 </div>
             </div>
         </div>
 
-        <!-- Toast Messages -->
         <div class="toast" id="toastMessage">
             <i class="fas fa-check-circle"></i>
             <span></span>
         </div>
 
-        <!-- Step 1: Date and Doctor Selection -->
+        <!-- Step 1 -->
         <div class="step-content active" id="step1Content">
-            <!-- Treatment Filter -->
             <div class="form-section">
                 <h3 class="section-title">
                     <i class="fas fa-filter"></i>
-                    Filter by Treatment (Optional)
+                    กรองตามการรักษา (ถ้าต้องการ)
                 </h3>
                 <div class="filter-grid">
                     <div class="form-group">
-                        <label for="treatmentFilter">Select Treatment Type:</label>
+                        <label for="treatmentFilter">เลือกประเภทการรักษา:</label>
                         <select id="treatmentFilter" class="form-control">
-                            <option value="">All Treatments</option>
+                            <option value="">การรักษาทั้งหมด</option>
                         </select>
                     </div>
                     <div>
                         <button type="button" class="btn btn-primary" onclick="applyTreatmentFilter()">
-                            <i class="fas fa-filter"></i> Apply Filter
+                            <i class="fas fa-filter"></i> ใช้ตัวกรอง
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar -->
             <div class="calendar-section">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i>
                     <div>
-                        <strong>Booking Policy:</strong> You can book appointments up to 24 hours in advance. 
-                        Appointments cannot be booked within 24 hours of the appointment time.
+                        <strong>นโยบายการจอง:</strong> สามารถจองนัดหมายล่วงหน้าอย่างน้อย 24 ชั่วโมง 
+                        และคลินิกปิดวันอาทิตย์
                     </div>
                 </div>
 
@@ -991,170 +926,162 @@
                     <button type="button" class="calendar-nav" onclick="changeCalendarMonth(-1)">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <div class="calendar-title" id="calendarTitle">Loading...</div>
+                    <div class="calendar-title" id="calendarTitle">กำลังโหลด...</div>
                     <button type="button" class="calendar-nav" onclick="changeCalendarMonth(1)">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
                 
                 <div class="calendar-grid" id="calendarGrid">
-                    <div class="weekday">Sun</div>
-                    <div class="weekday">Mon</div>
-                    <div class="weekday">Tue</div>
-                    <div class="weekday">Wed</div>
-                    <div class="weekday">Thu</div>
-                    <div class="weekday">Fri</div>
-                    <div class="weekday">Sat</div>
+                    <div class="weekday">อา</div>
+                    <div class="weekday">จ</div>
+                    <div class="weekday">อ</div>
+                    <div class="weekday">พ</div>
+                    <div class="weekday">พฤ</div>
+                    <div class="weekday">ศ</div>
+                    <div class="weekday">ส</div>
                 </div>
             </div>
 
-            <!-- Available Doctors -->
             <div class="doctors-section" id="doctorsSection" style="display: none;">
                 <h3 class="section-title">
                     <i class="fas fa-user-md"></i>
-                    Available Doctors for <span id="selectedDateText"></span>
+                    ทันตแพทย์ที่ว่าง <span id="selectedDateText"></span>
                 </h3>
                 <div class="doctors-grid" id="doctorsGrid"></div>
             </div>
 
-            <!-- Navigation -->
             <div class="step-navigation">
                 <a href="/patient/dashboard" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    <i class="fas fa-arrow-left"></i> กลับ
                 </a>
                 <button type="button" class="btn btn-primary" onclick="nextStep(2)" id="step1Next" disabled>
-                    Next: Choose Time <i class="fas fa-arrow-right"></i>
+                    ต่อไป: เลือกเวลา <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Step 2: Time and Details -->
+        <!-- Step 2 -->
         <div class="step-content" id="step2Content">
-            <!-- Selected Doctor Info -->
             <div class="time-section">
                 <div class="selected-doctor-info" id="selectedDoctorInfo">
                     <div class="doctor-avatar" id="selectedDoctorAvatar">D</div>
                     <div class="doctor-details">
-                        <h3 id="selectedDoctorName">Dr. Name</h3>
-                        <p id="selectedDoctorSpecialty">Specialty</p>
+                        <h3 id="selectedDoctorName">ทพ. ชื่อ</h3>
+                        <p id="selectedDoctorSpecialty">ความเชี่ยวชาญ</p>
                     </div>
                 </div>
 
-                <!-- Date Navigation -->
                 <div class="date-selector">
                     <button type="button" class="date-nav" onclick="changeSelectedDate(-1)">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <div class="selected-date" id="selectedDateDisplay">Today</div>
+                    <div class="selected-date" id="selectedDateDisplay">วันนี้</div>
                     <button type="button" class="date-nav" onclick="changeSelectedDate(1)">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <!-- Time Slots -->
                 <h4 style="margin-bottom: 15px; color: #333; font-size: 16px; font-weight: 600;">
                     <i class="fas fa-clock" style="color: #4A90E2; margin-right: 8px;"></i>
-                    Available Time Slots
+                    ช่วงเวลาว่าง
                 </h4>
                 <div class="time-slots-grid" id="timeSlotsGrid">
                     <div class="loading" style="grid-column: 1 / -1;">
                         <div class="loading-spinner"></div>
-                        <span>Loading available time slots...</span>
+                        <span>กำลังโหลดช่วงเวลาว่าง...</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Appointment Details -->
             <div class="appointment-details">
                 <h3 class="section-title">
                     <i class="fas fa-clipboard-list"></i>
-                    Appointment Details
+                    รายละเอียดนัดหมาย
                 </h3>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="treatmentSelect">Treatment: *</label>
+                        <label for="treatmentSelect">การรักษา: *</label>
                         <select id="treatmentSelect" class="form-control" required>
-                            <option value="">Select Treatment</option>
+                            <option value="">เลือกการรักษา</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="symptoms">Symptoms/Additional Details:</label>
+                        <label for="symptoms">อาการ/รายละเอียดเพิ่มเติม:</label>
                         <textarea id="symptoms" 
                                 class="form-control" 
                                 rows="4" 
-                                placeholder="Please describe your symptoms, concerns, or any additional details..."
+                                placeholder="กรุณาอธิบายอาการ หรือความกังวลของคุณ..."
                                 style="resize: vertical; min-height: 100px;"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- Navigation -->
             <div class="step-navigation">
                 <button type="button" class="btn btn-secondary" onclick="previousStep(1)">
-                    <i class="fas fa-arrow-left"></i> Back
+                    <i class="fas fa-arrow-left"></i> กลับ
                 </button>
                 <button type="button" class="btn btn-primary" onclick="nextStep(3)" id="step2Next" disabled>
-                    Next: Confirm Booking <i class="fas fa-arrow-right"></i>
+                    ต่อไป: ยืนยันการจอง <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Step 3: Booking Confirmation -->
+        <!-- Step 3 -->
         <div class="step-content" id="step3Content">
             <div class="confirmation-section">
                 <div class="booking-success" id="bookingSuccess">
                     <i class="fas fa-calendar-check"></i>
-                    Ready to Book Your Appointment
+                    พร้อมจองนัดหมายของคุณ
                 </div>
 
                 <div class="booking-details">
-                    <h4><i class="fas fa-file-alt"></i> Appointment Summary</h4>
+                    <h4><i class="fas fa-file-alt"></i> สรุปนัดหมาย</h4>
                     <div class="detail-row">
-                        <span class="detail-label">Patient Name:</span>
+                        <span class="detail-label">ชื่อผู้ป่วย:</span>
                         <span class="detail-value" id="finalPatientName">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Treatment:</span>
+                        <span class="detail-label">การรักษา:</span>
                         <span class="detail-value" id="finalTreatment">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Doctor:</span>
+                        <span class="detail-label">ทันตแพทย์:</span>
                         <span class="detail-value" id="finalDoctor">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Date:</span>
+                        <span class="detail-label">วันที่:</span>
                         <span class="detail-value" id="finalDate">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Time:</span>
+                        <span class="detail-label">เวลา:</span>
                         <span class="detail-value" id="finalTime">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Notes:</span>
+                        <span class="detail-label">หมายเหตุ:</span>
                         <span class="detail-value" id="finalSymptoms">-</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Status:</span>
-                        <span class="status-badge status-pending">Pending Confirmation</span>
+                        <span class="detail-label">สถานะ:</span>
+                        <span class="status-badge status-pending">รอยืนยัน</span>
                     </div>
                 </div>
 
                 <div class="step-navigation">
                     <button type="button" class="btn btn-secondary" onclick="previousStep(2)">
-                        <i class="fas fa-edit"></i> Edit Details
+                        <i class="fas fa-edit"></i> แก้ไขข้อมูล
                     </button>
                     <button type="button" class="btn btn-success" onclick="confirmBooking()">
-                        <i class="fas fa-check"></i> Confirm Booking
+                        <i class="fas fa-check"></i> ยืนยันการจอง
                     </button>
                 </div>
 
-                <!-- Final Actions -->
                 <div class="step-navigation" style="margin-top: 30px;">
                     <button type="button" class="btn btn-secondary" onclick="startNewBooking()">
-                        <i class="fas fa-plus"></i> Book Another Appointment
+                        <i class="fas fa-plus"></i> จองอีกครั้ง
                     </button>
                     <a href="/patient/history" class="btn btn-primary">
-                        <i class="fas fa-list"></i> View My Appointments
+                        <i class="fas fa-list"></i> ดูนัดหมายของฉัน
                     </a>
                 </div>
             </div>
@@ -1162,7 +1089,6 @@
     </div>
 
     <script>
-        // Global variables
         let currentStep = 1;
         let selectedDoctor = null;
         let selectedDate = null;
@@ -1171,101 +1097,126 @@
         let doctorsData = [];
         let treatmentsData = [];
         let filteredTreatmentId = '';
+        let calendarData = {};
 
-        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 เริ่มต้นระบบจองนัดหมาย...');
             initializePage();
             setupFormValidation();
         });
 
         async function initializePage() {
             try {
-                showToast('Loading appointment booking system...', 'info');
+                showToast('กำลังโหลดระบบจองนัดหมาย...', 'info');
                 
-                await Promise.all([
-                    loadTreatments(),
-                    loadUserInfo()
-                ]);
+                await loadTreatments();
+                await loadCalendarData();
                 
                 generateCalendar();
-                showToast('Ready to book your appointment!', 'success');
+                showToast('พร้อมจองนัดหมายแล้ว!', 'success');
                 
             } catch (error) {
-                console.error('Error initializing page:', error);
-                showToast('Error loading booking system. Please refresh the page.', 'error');
-            }
-        }
-
-        async function loadUserInfo() {
-            try {
-                const patient = {
-                    fname: 'Patient',
-                    lname: 'User'
-                };
-                
-                if (patient.fname) {
-                    document.getElementById('userAvatar').textContent = patient.fname.charAt(0).toUpperCase();
-                }
-            } catch (error) {
-                console.error('Error loading user info:', error);
+                console.error('❌ เกิดข้อผิดพลาดในการเริ่มต้น:', error);
+                showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณารีเฟรชหน้าใหม่', 'error');
             }
         }
 
         async function loadTreatments() {
             try {
-                treatmentsData = [
-                    { treatment_id: 1, treatment_name: 'Dental Check-up', duration: 30 },
-                    { treatment_id: 2, treatment_name: 'Teeth Cleaning', duration: 45 },
-                    { treatment_id: 3, treatment_name: 'Tooth Extraction', duration: 60 },
-                    { treatment_id: 4, treatment_name: 'Dental Filling', duration: 45 },
-                    { treatment_id: 5, treatment_name: 'Teeth Whitening', duration: 90 }
-                ];
-                populateTreatmentFilter();
-                populateTreatmentSelect();
+                console.log('📋 กำลังโหลดการรักษา...');
+                const response = await fetch('/patient/api/treatments');
+                const data = await response.json();
+                
+                if (data.success) {
+                    treatmentsData = data.treatments;
+                    console.log('✅ โหลด', treatmentsData.length, 'การรักษา');
+                    populateTreatmentFilter();
+                    populateTreatmentSelect();
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถโหลดการรักษาได้');
+                }
             } catch (error) {
-                console.error('Error loading treatments:', error);
+                console.error('❌ เกิดข้อผิดพลาดในการโหลดการรักษา:', error);
+                showToast('ไม่สามารถโหลดข้อมูลการรักษาได้', 'error');
             }
         }
 
+        async function loadCalendarData() {
+    try {
+        const year = currentCalendarDate.getFullYear();
+        const month = currentCalendarDate.getMonth() + 1;
+        
+        console.log(`📅 Loading calendar data for ${year}-${month}...`);
+        
+        let url = `/patient/api/calendar-data?year=${year}&month=${month}`;
+        if (filteredTreatmentId) {
+            url += `&treatment_id=${filteredTreatmentId}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            // ✅ เคลียร์และเก็บข้อมูลใหม่
+            calendarData = {};
+            
+            data.calendar_data.forEach(day => {
+                calendarData[day.date] = {
+                    available_dentists: day.available_dentists,
+                    available_slots: day.available_slots,
+                    total_slots: day.total_slots,
+                    dentists: day.dentists || []
+                };
+            });
+            
+            console.log('✅ Loaded calendar data:', Object.keys(calendarData).length, 'days');
+            console.log('Sample data:', Object.values(calendarData)[0]);
+        } else {
+            console.error('❌ Failed to load calendar data:', data.error);
+        }
+    } catch (error) {
+        console.error('❌ Error loading calendar:', error);
+    }
+}
+
         function populateTreatmentFilter() {
             const select = document.getElementById('treatmentFilter');
-            select.innerHTML = '<option value="">All Treatments</option>';
+            select.innerHTML = '<option value="">การรักษาทั้งหมด</option>';
             
             treatmentsData.forEach(treatment => {
                 const option = document.createElement('option');
                 option.value = treatment.treatment_id;
-                option.textContent = treatment.treatment_name;
+                option.textContent = `${treatment.treatment_name} (${treatment.duration} นาที)`;
                 select.appendChild(option);
             });
         }
 
         function populateTreatmentSelect() {
             const select = document.getElementById('treatmentSelect');
-            select.innerHTML = '<option value="">Select Treatment</option>';
+            select.innerHTML = '<option value="">เลือกการรักษา</option>';
             
             treatmentsData.forEach(treatment => {
                 const option = document.createElement('option');
                 option.value = treatment.treatment_id;
-                option.textContent = `${treatment.treatment_name} (${treatment.duration} min)`;
+                option.textContent = `${treatment.treatment_name} (${treatment.duration} นาที)`;
                 select.appendChild(option);
             });
         }
 
         function changeCalendarMonth(direction) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
-            generateCalendar();
+            loadCalendarData().then(() => generateCalendar());
         }
 
         function generateCalendar() {
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                              'July', 'August', 'September', 'October', 'November', 'December'];
-            document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+            const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                              'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year + 543}`;
             
             const grid = document.getElementById('calendarGrid');
-            
             const weekdayHeaders = grid.querySelectorAll('.weekday');
             grid.innerHTML = '';
             weekdayHeaders.forEach(header => grid.appendChild(header));
@@ -1288,69 +1239,128 @@
         }
 
         function createDayElement(date, currentMonth, today, tomorrow) {
-            const day = document.createElement('div');
-            day.className = 'calendar-day';
+    const day = document.createElement('div');
+    day.className = 'calendar-day';
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${dayNum}`;
+    
+    day.dataset.date = dateString;
+    
+    const dayOfWeek = date.getDay();
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    const todayDate = new Date(today);
+    todayDate.setHours(0, 0, 0, 0);
+    const tomorrowDate = new Date(tomorrow);
+    tomorrowDate.setHours(0, 0, 0, 0);
+    
+    // ตรวจสอบเดือน
+    if (date.getMonth() !== currentMonth) {
+        day.classList.add('other-month');
+        day.style.opacity = '0.3';
+        day.style.pointerEvents = 'none';
+    }
+    
+    // ตรวจสอบวันที่ผ่านมา
+    const isPast = compareDate <= tomorrowDate;
+    if (isPast) {
+        day.classList.add('past');
+    }
+    
+    // ตรวจสอบวันอาทิตย์
+    if (dayOfWeek === 0) {
+        day.classList.add('unavailable');
+    }
+    
+    // แสดงหมายเลขวัน
+    const dayNumber = document.createElement('div');
+    dayNumber.className = 'day-number';
+    dayNumber.textContent = date.getDate();
+    day.appendChild(dayNumber);
+    
+    // แสดงข้อมูลทันตแพทย์
+    const dayData = calendarData[dateString];
+    
+    const isBookable = dayOfWeek !== 0 && 
+                       date.getMonth() === currentMonth && 
+                       compareDate > tomorrowDate;
+    
+    if (isBookable && dayData && dayData.dentists && dayData.dentists.length > 0) {
+        // เปลี่ยนสีพื้นหลัง
+        day.style.backgroundColor = '#fff9e6';
+        
+        // แสดงรายชื่อทันตแพทย์
+        const dentistsContainer = document.createElement('div');
+        dentistsContainer.style.cssText = 'margin-top: 5px; font-size: 11px;';
+        
+        dayData.dentists.slice(0, 2).forEach(dentist => {
+            const dentistItem = document.createElement('div');
+            dentistItem.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 3px;
+                margin: 2px 0;
+                background: rgba(74, 144, 226, 0.1);
+                border-radius: 4px;
+                color: #4A90E2;
+                font-weight: 500;
+            `;
             
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const dayNum = String(date.getDate()).padStart(2, '0');
-            const dateString = `${year}-${month}-${dayNum}`;
+            const initial = document.createElement('div');
+            initial.style.cssText = `
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #4A90E2;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                font-weight: 600;
+                flex-shrink: 0;
+            `;
+            initial.textContent = dentist.name.split(' ').map(n => n[0]).join('');
             
-            day.dataset.date = dateString;
+            const nameSpan = document.createElement('span');
+            nameSpan.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+            nameSpan.textContent = dentist.name;
             
-            const dayOfWeek = date.getDay();
-            const compareDate = new Date(date);
-            compareDate.setHours(0, 0, 0, 0);
-            const todayDate = new Date(today);
-            todayDate.setHours(0, 0, 0, 0);
-            const tomorrowDate = new Date(tomorrow);
-            tomorrowDate.setHours(0, 0, 0, 0);
-            
-            if (date.getMonth() !== currentMonth) {
-                day.classList.add('other-month');
-            }
-            
-            if (compareDate <= tomorrowDate) {
-                day.classList.add('past');
-                day.style.cursor = 'not-allowed';
-            }
-            
-            if (dayOfWeek === 0) {
-                day.classList.add('unavailable');
-                day.style.cursor = 'not-allowed';
-            }
-            
-            const dayNumber = document.createElement('div');
-            dayNumber.className = 'day-number';
-            dayNumber.textContent = date.getDate();
-            day.appendChild(dayNumber);
-            
-            if (compareDate < todayDate) {
-                dayNumber.innerHTML += '<br><small style="color: #dc3545; font-size: 10px;">Past</small>';
-            } else if (compareDate.getTime() === tomorrowDate.getTime()) {
-                dayNumber.innerHTML += '<br><small style="color: #ef4444; font-size: 10px;">Too Soon</small>';
-            }
-            
-            const doctorsContainer = document.createElement('div');
-            doctorsContainer.className = 'day-doctors';
-            day.appendChild(doctorsContainer);
-            
-            if (dayOfWeek !== 0 && date.getMonth() === currentMonth && compareDate > tomorrowDate) {
-                day.addEventListener('click', () => selectCalendarDate(dateString, day));
-                if (Math.random() > 0.3) {
-                    const doctorItem = document.createElement('div');
-                    doctorItem.className = 'doctor-item';
-                    doctorItem.innerHTML = `
-                        <div class="doctor-mini-avatar">D</div>
-                        <div class="doctor-name-mini">Available</div>
-                        <div class="doctor-status"></div>
-                    `;
-                    doctorsContainer.appendChild(doctorItem);
-                }
-            }
-            
-            return day;
+            dentistItem.appendChild(initial);
+            dentistItem.appendChild(nameSpan);
+            dentistsContainer.appendChild(dentistItem);
+        });
+        
+        if (dayData.dentists.length > 2) {
+            const moreInfo = document.createElement('div');
+            moreInfo.style.cssText = 'text-align: center; color: #666; font-size: 10px; margin-top: 2px;';
+            moreInfo.textContent = `+${dayData.dentists.length - 2} more`;
+            dentistsContainer.appendChild(moreInfo);
         }
+        
+        day.appendChild(dentistsContainer);
+        
+        // เพิ่ม event listener
+        day.addEventListener('click', () => selectCalendarDate(dateString, day));
+        day.style.cursor = 'pointer';
+        
+    } else if (isBookable && dayData && dayData.available_slots > 0) {
+        // มี slots แต่ไม่มีข้อมูลทันตแพทย์
+        const slotInfo = document.createElement('small');
+        slotInfo.style.cssText = 'display:block; color: #059669; font-size: 10px; margin-top: 5px;';
+        slotInfo.textContent = `${dayData.available_slots} ช่วงเวลาว่าง`;
+        day.appendChild(slotInfo);
+        
+        day.addEventListener('click', () => selectCalendarDate(dateString, day));
+        day.style.cursor = 'pointer';
+    }
+    
+    return day;
+}
 
         function selectCalendarDate(dateStr, dayElement) {
             const selectedDateObj = new Date(dateStr);
@@ -1358,8 +1368,8 @@
             const timeDiff = selectedDateObj.getTime() - now.getTime();
             const hoursDiff = timeDiff / (1000 * 3600);
             
-            if (hoursDiff < 48) {
-                showToast('Appointments must be booked at least 48 hours in advance', 'warning');
+            if (hoursDiff < 24) {
+                showToast('ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง', 'warning');
                 return;
             }
             
@@ -1370,66 +1380,132 @@
             dayElement.classList.add('selected');
             selectedDate = dateStr;
             
-            showAvailableDoctors(dateStr);
+            console.log('📅 เลือกวันที่:', selectedDate);
+            showAvailableDentists(dateStr);
         }
 
-        async function showAvailableDoctors(dateStr) {
-            const doctorsSection = document.getElementById('doctorsSection');
-            const doctorsGrid = document.getElementById('doctorsGrid');
-            const dateText = document.getElementById('selectedDateText');
+        async function showAvailableDentists(dateStr) {
+    const doctorsSection = document.getElementById('doctorsSection');
+    const doctorsGrid = document.getElementById('doctorsGrid');
+    const dateText = document.getElementById('selectedDateText');
+    
+    const date = new Date(dateStr);
+    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    dateText.textContent = `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
+    
+    doctorsGrid.innerHTML = `
+        <div class="loading" style="grid-column: 1 / -1;">
+            <div class="loading-spinner"></div>
+            <span>กำลังโหลดข้อมูลทันตแพทย์...</span>
+        </div>
+    `;
+    
+    doctorsSection.style.display = 'block';
+    
+    try {
+        let url = `/patient/api/available-dentists?date=${dateStr}`;
+        if (filteredTreatmentId) {
+            url += `&treatment_id=${filteredTreatmentId}`;
+        }
+        
+        console.log('👨‍⚕️ Fetching dentists from:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success && data.dentists && data.dentists.length > 0) {
+            doctorsData = data.dentists;
+            console.log('✅ Found', data.dentists.length, 'dentists');
             
-            const date = new Date(dateStr);
-            dateText.textContent = date.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            let doctorsHTML = '';
+            data.dentists.forEach(doctor => {
+                const initials = doctor.fname.charAt(0) + doctor.lname.charAt(0);
+                
+                let treatmentsHTML = '';
+                if (doctor.treatments && doctor.treatments.length > 0) {
+                    doctor.treatments.slice(0, 3).forEach(treatment => {
+                        treatmentsHTML += `<span class="treatment-tag">${treatment.treatment_name}</span>`;
+                    });
+                } else {
+                    treatmentsHTML = '<span class="treatment-tag">ทันตกรรมทั่วไป</span>';
+                }
+                
+                doctorsHTML += `
+                    <div class="doctor-card" onclick="selectDoctorFromCard(${doctor.dentist_id}, '${doctor.fname}', '${doctor.lname}', '${doctor.specialty || 'ทันตแพทย์ทั่วไป'}', this)">
+                        <div class="doctor-card-header">
+                            <div class="doctor-avatar">${initials}</div>
+                            <div class="doctor-details">
+                                <h5>ทพ. ${doctor.fname} ${doctor.lname}</h5>
+                                <p>${doctor.specialty || 'ทันตแพทย์ทั่วไป'}</p>
+                            </div>
+                        </div>
+                        <div class="doctor-treatments">
+                            ${treatmentsHTML}
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong style="color: #10b981; font-size: 14px;">
+                                <i class="fas fa-check-circle"></i> 
+                                ${doctor.available_slots} ช่วงเวลาว่าง
+                            </strong>
+                        </div>
+                    </div>
+                `;
             });
-            
+            doctorsGrid.innerHTML = doctorsHTML;
+        } else {
+            console.log('⚠️ No dentists available');
             doctorsGrid.innerHTML = `
-                <div class="loading" style="grid-column: 1 / -1;">
-                    <div class="loading-spinner"></div>
-                    <span>Loading available doctors...</span>
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                    <p style="color: #666; font-size: 16px;">ไม่มีทันตแพทย์ว่างในวันนี้</p>
+                    <p style="color: #999; font-size: 14px;">กรุณาเลือกวันอื่น</p>
                 </div>
             `;
-            
-            doctorsSection.style.display = 'block';
-            
-            setTimeout(() => {
-                const mockDoctors = [
-                    { dentist_id: 1, fname: 'John', lname: 'Smith', specialty: 'General Dentistry' },
-                    { dentist_id: 2, fname: 'Sarah', lname: 'Johnson', specialty: 'Orthodontics' }
-                ];
-                
-                let doctorsHTML = '';
-                mockDoctors.forEach(doctor => {
-                    doctorsHTML += createDoctorCard(doctor);
-                });
-                doctorsGrid.innerHTML = doctorsHTML;
-                
-                doctorsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 1000);
         }
+        
+        doctorsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+        console.error('❌ Error loading dentists:', error);
+        showToast('ไม่สามารถโหลดข้อมูลทันตแพทย์ได้', 'error');
+        doctorsGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #dc3545;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+            </div>
+        `;
+    }
+}
+
 
         function createDoctorCard(doctor) {
             const initials = doctor.fname.charAt(0) + doctor.lname.charAt(0);
             
+            let treatmentsHTML = '';
+            if (doctor.treatments && doctor.treatments.length > 0) {
+                doctor.treatments.slice(0, 3).forEach(treatment => {
+                    treatmentsHTML += `<span class="treatment-tag">${treatment.treatment_name}</span>`;
+                });
+            } else {
+                treatmentsHTML = '<span class="treatment-tag">ทันตกรรมทั่วไป</span>';
+            }
+            
             return `
-                <div class="doctor-card" onclick="selectDoctorFromCard(${doctor.dentist_id}, '${doctor.fname}', '${doctor.lname}', '${doctor.specialty}', this)">
+                <div class="doctor-card" onclick="selectDoctorFromCard(${doctor.dentist_id}, '${doctor.fname}', '${doctor.lname}', '${doctor.specialty || 'ทันตแพทย์ทั่วไป'}', this)">
                     <div class="doctor-card-header">
                         <div class="doctor-avatar">${initials}</div>
                         <div class="doctor-details">
-                            <h5>Dr. ${doctor.fname} ${doctor.lname}</h5>
-                            <p>${doctor.specialty}</p>
+                            <h5>ทพ. ${doctor.fname} ${doctor.lname}</h5>
+                            <p>${doctor.specialty || 'ทันตแพทย์ทั่วไป'}</p>
                         </div>
                     </div>
                     <div class="doctor-treatments">
-                        <span class="treatment-tag">General Dentistry</span>
-                        <span class="treatment-tag">Consultation</span>
+                        ${treatmentsHTML}
                     </div>
-                    <div class="doctor-availability">
-                        <strong>Available:</strong><br>
-                        <span class="time-slot">5 slots available</span>
+                    <div style="margin-top: 10px;">
+                        <strong style="color: #10b981; font-size: 14px;">
+                            <i class="fas fa-check-circle"></i> 
+                            ${doctor.available_slots} ช่วงเวลาว่าง
+                        </strong>
                     </div>
                 </div>
             `;
@@ -1450,8 +1526,9 @@
                 lname: lname
             };
             
+            console.log('👨‍⚕️ เลือกทันตแพทย์:', selectedDoctor);
             document.getElementById('step1Next').disabled = false;
-            showToast(`Dr. ${fname} ${lname} selected`, 'success');
+            showToast(`เลือก ทพ. ${fname} ${lname} แล้ว`, 'success');
             
             setTimeout(() => {
                 document.querySelector('.step-navigation').scrollIntoView({ 
@@ -1463,7 +1540,10 @@
 
         function setupFormValidation() {
             const treatmentSelect = document.getElementById('treatmentSelect');
-            treatmentSelect.addEventListener('change', validateStep2);
+            treatmentSelect.addEventListener('change', () => {
+                loadTimeSlots();
+                validateStep2();
+            });
         }
 
         function validateStep2() {
@@ -1474,33 +1554,37 @@
         }
 
         function nextStep(step) {
-            if (step === 2 && !selectedDoctor) {
-                showToast('Please select a doctor first', 'error');
-                return;
-            }
-            
-            if (step === 3) {
-                const hasTreatment = document.getElementById('treatmentSelect').value;
-                const hasTime = selectedTime;
-                
-                if (!hasTreatment || !hasTime) {
-                    showToast('Please fill in all required information', 'error');
-                    return;
-                }
-            }
-
-            currentStep = step;
-            updateStepDisplay();
-            
-            if (step === 2) {
-                initializeStep2();
-            } else if (step === 3) {
-                initializeStep3();
-            }
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (step === 2 && !selectedDoctor) {
+        showToast('กรุณาเลือกทันตแพทย์ก่อน', 'error');
+        return;
+    }
+    
+    if (step === 3) {
+        const hasTreatment = document.getElementById('treatmentSelect').value;
+        const hasTime = selectedTime;
+        
+        if (!hasTreatment || !hasTime) {
+            showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+            return;
         }
+        
+        // เพิ่มการตรวจสอบครบถ้วน
+        if (!validateBeforeConfirmation()) {
+            return;
+        }
+    }
 
+    currentStep = step;
+    updateStepDisplay();
+    
+    if (step === 2) {
+        initializeStep2();
+    } else if (step === 3) {
+        initializeStep3();
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
         function previousStep(step) {
             currentStep = step;
             updateStepDisplay();
@@ -1525,24 +1609,92 @@
         }
 
         function initializeStep2() {
-            document.getElementById('selectedDoctorName').textContent = `Dr. ${selectedDoctor.name}`;
+            document.getElementById('selectedDoctorName').textContent = `ทพ. ${selectedDoctor.name}`;
             document.getElementById('selectedDoctorSpecialty').textContent = selectedDoctor.specialty;
             document.getElementById('selectedDoctorAvatar').textContent = 
                 selectedDoctor.fname.charAt(0) + selectedDoctor.lname.charAt(0);
             
             updateSelectedDateDisplay();
-            loadTimeSlots();
+            
+            const treatmentId = document.getElementById('treatmentSelect').value;
+            if (treatmentId) {
+                loadTimeSlots();
+            }
         }
 
         function updateSelectedDateDisplay() {
             const date = new Date(selectedDate);
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            };
-            document.getElementById('selectedDateDisplay').textContent = date.toLocaleDateString('en-US', options);
+            const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            
+            document.getElementById('selectedDateDisplay').textContent = 
+                `วัน${dayNames[date.getDay()]}ที่ ${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
+        }
+
+        async function loadTimeSlots() {
+            const treatmentId = document.getElementById('treatmentSelect').value;
+            
+            if (!treatmentId) {
+                document.getElementById('timeSlotsGrid').innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-info-circle" style="font-size: 36px; margin-bottom: 10px;"></i>
+                        <p>กรุณาเลือกการรักษาก่อน</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const grid = document.getElementById('timeSlotsGrid');
+            
+            grid.innerHTML = `
+                <div class="loading" style="grid-column: 1 / -1;">
+                    <div class="loading-spinner"></div>
+                    <span>กำลังโหลดช่วงเวลาว่าง...</span>
+                </div>
+            `;
+
+            try {
+                const url = `/patient/api/available-slots?date=${selectedDate}&dentistId=${selectedDoctor.id}&treatmentId=${treatmentId}`;
+                console.log('⏰ กำลังดึงช่วงเวลาจาก:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.slots.length > 0) {
+                    console.log('✅ พบ', data.slots.length, 'ช่วงเวลาว่าง');
+                    let timeSlots = '';
+                    data.slots.forEach(slot => {
+                        timeSlots += `
+                            <div class="time-slot-btn available" 
+                                 onclick="selectTimeSlot('${slot.start_time}')"
+                                 data-time="${slot.start_time}">
+                                <strong>${slot.start_time}</strong><br>
+                                <small>${slot.duration} นาที</small>
+                            </div>
+                        `;
+                    });
+                    grid.innerHTML = timeSlots;
+                } else {
+                    console.log('⚠️ ไม่มีช่วงเวลาว่าง');
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <i class="fas fa-calendar-times" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                            <p style="color: #666; font-size: 16px;">ไม่มีช่วงเวลาว่างสำหรับการรักษานี้</p>
+                            <p style="color: #999; font-size: 14px;">กรุณาเลือกวันอื่นหรือเปลี่ยนการรักษา</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ เกิดข้อผิดพลาดในการโหลดช่วงเวลา:', error);
+                showToast('ไม่สามารถโหลดช่วงเวลาได้', 'error');
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #dc3545;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+                    </div>
+                `;
+            }
         }
 
         function changeSelectedDate(direction) {
@@ -1553,8 +1705,13 @@
             const timeDiff = date.getTime() - now.getTime();
             const hoursDiff = timeDiff / (1000 * 3600);
             
-            if (hoursDiff < 48) {
-                showToast('Cannot select dates within 48 hours', 'warning');
+            if (hoursDiff < 24) {
+                showToast('ไม่สามารถเลือกวันที่ภายใน 24 ชั่วโมงได้', 'warning');
+                return;
+            }
+            
+            if (date.getDay() === 0) {
+                showToast('คลินิกปิดวันอาทิตย์', 'warning');
                 return;
             }
             
@@ -1564,33 +1721,6 @@
             
             selectedTime = null;
             validateStep2();
-        }
-
-        async function loadTimeSlots() {
-            const grid = document.getElementById('timeSlotsGrid');
-            
-            grid.innerHTML = `
-                <div class="loading" style="grid-column: 1 / -1;">
-                    <div class="loading-spinner"></div>
-                    <span>Loading available time slots...</span>
-                </div>
-            `;
-
-            setTimeout(() => {
-                let timeSlots = '';
-                for (let hour = 10; hour <= 19; hour++) {
-                    const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-                    timeSlots += `
-                        <div class="time-slot-btn available" 
-                             onclick="selectTimeSlot('${timeStr}')"
-                             data-time="${timeStr}">
-                            <strong>${timeStr}</strong><br>
-                            <small>Available</small>
-                        </div>
-                    `;
-                }
-                grid.innerHTML = timeSlots;
-            }, 800);
         }
 
         function selectTimeSlot(time) {
@@ -1605,67 +1735,143 @@
                 button.classList.add('selected');
                 selectedTime = time;
                 
+                console.log('⏰ เลือกเวลา:', selectedTime);
                 validateStep2();
-                showToast('Time slot selected', 'success');
+                showToast('เลือกเวลาแล้ว', 'success');
             }
         }
-
+        
         function initializeStep3() {
             const treatmentId = document.getElementById('treatmentSelect').value;
             const symptoms = document.getElementById('symptoms').value;
             
             const selectedTreatment = treatmentsData.find(t => t.treatment_id == treatmentId);
             
-            document.getElementById('finalPatientName').textContent = 'Patient User';
+            document.getElementById('finalPatientName').textContent = 'คุณ (ผู้ป่วย)';
             document.getElementById('finalTreatment').textContent = 
-                selectedTreatment ? selectedTreatment.treatment_name : 'Unknown';
-            document.getElementById('finalDoctor').textContent = `Dr. ${selectedDoctor.name}`;
+                selectedTreatment ? `${selectedTreatment.treatment_name} (${selectedTreatment.duration} นาที)` : 'ไม่ทราบ';
+            document.getElementById('finalDoctor').textContent = `ทพ. ${selectedDoctor.name}`;
+            
+            const date = new Date(selectedDate);
+            const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            
             document.getElementById('finalDate').textContent = 
-                new Date(selectedDate).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
+                `วัน${dayNames[date.getDay()]}ที่ ${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
             document.getElementById('finalTime').textContent = selectedTime;
-            document.getElementById('finalSymptoms').textContent = symptoms || 'None specified';
+            document.getElementById('finalSymptoms').textContent = symptoms || 'ไม่ได้ระบุ';
         }
 
         async function confirmBooking() {
-            const confirmBtn = event.target;
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+    const confirmBtn = document.querySelector('.confirmation-section button.btn-success');
+    if (!confirmBtn) return;
+    
+    const originalHTML = confirmBtn.innerHTML;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังจอง...';
+    confirmBtn.disabled = true;
+    
+    try {
+        const treatmentId = document.getElementById('treatmentSelect').value;
+        const symptoms = document.getElementById('symptoms').value;
+        
+        // Validate
+        if (!selectedDoctor || !selectedDoctor.id) throw new Error('กรุณาเลือกทันตแพทย์');
+        if (!treatmentId) throw new Error('กรุณาเลือกการรักษา');
+        if (!selectedDate) throw new Error('กรุณาเลือกวันที่');
+        if (!selectedTime) throw new Error('กรุณาเลือกเวลา');
+        
+        const bookingData = {
+            dentist_id: selectedDoctor.id,
+            treatment_id: treatmentId,
+            date: selectedDate,
+            start_time: selectedTime,
+            note: symptoms || ''
+        };
+        
+        console.log('📤 Booking data:', bookingData);
+        
+        const response = await fetch('/patient/api/book-appointment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            console.log('✅ Booking successful:', data.booking);
+            showToast('จองนัดหมายสำเร็จ!', 'success');
+            
+            document.querySelector('.booking-success').innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                จองนัดหมายสำเร็จแล้ว!
+            `;
+            document.querySelector('.booking-success').style.background = 
+                'linear-gradient(135deg, #10b981, #059669)';
+            
+            confirmBtn.innerHTML = '<i class="fas fa-check"></i> จองสำเร็จแล้ว!';
             confirmBtn.disabled = true;
             
-            setTimeout(() => {
-                showToast('Appointment booked successfully!', 'success');
-                
-                document.querySelector('.booking-success').innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    Appointment Booked Successfully!
-                `;
-                document.querySelector('.booking-success').style.background = 
-                    'linear-gradient(135deg, #10b981, #059669)';
-                
-                document.querySelector('.status-pending').textContent = 'Confirmed';
-                document.querySelector('.status-pending').className = 'status-badge status-confirmed';
-                
-                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Booking Confirmed!';
-                confirmBtn.className = 'btn btn-success';
-            }, 1500);
+            // ซ่อนปุ่มแก้ไข
+            const editBtn = document.querySelector('.confirmation-section .btn-secondary');
+            if (editBtn) editBtn.style.display = 'none';
+            
+        } else {
+            throw new Error(data.error || 'เกิดข้อผิดพลาดในการจอง');
         }
+    } catch (error) {
+        console.error('❌ Booking error:', error);
+        showToast(error.message || 'ไม่สามารถจองนัดหมายได้', 'error');
+        confirmBtn.innerHTML = originalHTML;
+        confirmBtn.disabled = false;
+    }
+}
+
+        function validateBeforeConfirmation() {
+    const treatmentId = document.getElementById('treatmentSelect').value;
+    const symptoms = document.getElementById('symptoms').value;
+    
+    if (!selectedDoctor || !selectedDoctor.id) {
+        showToast('กรุณาเลือกทันตแพทย์', 'error');
+        return false;
+    }
+    
+    if (!treatmentId) {
+        showToast('กรุณาเลือกการรักษา', 'error');
+        return false;
+    }
+    
+    if (!selectedDate) {
+        showToast('กรุณาเลือกวันที่', 'error');
+        return false;
+    }
+    
+    if (!selectedTime) {
+        showToast('กรุณาเลือกเวลา', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
 
         function startNewBooking() {
             location.reload();
         }
 
-        function applyTreatmentFilter() {
+        async function applyTreatmentFilter() {
             filteredTreatmentId = document.getElementById('treatmentFilter').value;
+            
+            showToast('กำลังโหลดข้อมูลใหม่...', 'info');
+            await loadCalendarData();
+            generateCalendar();
             
             if (filteredTreatmentId) {
                 const selectedTreatment = treatmentsData.find(t => t.treatment_id == filteredTreatmentId);
-                showToast(`Filtered by: ${selectedTreatment.treatment_name}`, 'info');
+                showToast(`กรองตามการรักษา: ${selectedTreatment.treatment_name}`, 'success');
             } else {
-                showToast('Showing all treatments', 'info');
+                showToast('แสดงการรักษาทั้งหมด', 'success');
             }
         }
 

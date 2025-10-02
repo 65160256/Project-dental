@@ -1,0 +1,580 @@
+<!DOCTYPE html> 
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อมูลทันตแพทย์ - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+        body{background-color:#f5f7fa;margin:0}
+
+        /* Sidebar */
+        .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+        .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+        .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+        .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+        .sidebar ul{list-style:none;padding:10px 0;margin:0}
+        .sidebar ul li{margin:2px 0}
+        .sidebar ul li a{display:block;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px;display:flex;align-items:center;gap:8px}
+        .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+        /* Main Content */
+        .main{margin-left:180px;min-height:100vh}
+
+        /* Header */
+        .header{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+        .header h2{margin:0;font-size:24px;color:#333;font-weight:600}
+        .top-right{display:flex;align-items:center;gap:20px}
+
+        .notification-container{position:relative}
+        .notification-icon{position:relative;cursor:pointer;color:#666;transition:.3s;font-size:18px}
+        .notification-icon:hover{color:#4A90E2}
+        .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600;animation:pulse 2s infinite}
+        .notification-badge.show{display:flex}
+        @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+        .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:2000;display:none;max-height:400px;overflow:hidden}
+        .notification-dropdown.show{display:block;animation:slideDown .3s ease}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .notification-header{padding:15px 20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+        .mark-all-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;transition:.2s}
+        .mark-all-btn:hover{background:rgba(255,255,255,.3)}
+        .notification-content{max-height:300px;overflow-y:auto}
+        .notification-item{padding:12px 20px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:background .2s}
+        .notification-item:hover{background:#f8f9fa}
+        .notification-item.unread{background:#f0f8ff;border-left:4px solid #4A90E2}
+        .notification-title{font-weight:600;color:#333;font-size:13px;margin-bottom:3px}
+        .notification-message{color:#666;font-size:12px;margin-bottom:5px}
+        .notification-time{color:#999;font-size:11px}
+        .empty-notifications{padding:30px 20px;text-align:center;color:#666}
+        .empty-notifications i{font-size:24px;color:#ddd;margin-bottom:10px}
+
+        .admin-info{display:flex;align-items:center;gap:10px;cursor:pointer;position:relative}
+        .admin-avatar{width:35px;height:35px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+        .admin-details{color:#333}
+        .admin-details strong{display:block;font-size:13px}
+        .admin-details small{color:#666;font-size:11px}
+        .admin-dropdown{position:absolute;top:100%;right:0;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:150px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:1000;display:none}
+        .admin-dropdown a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px;transition:background .2s}
+        .admin-dropdown a:hover{background-color:#f8f9fa}
+
+        /* Content */
+        .content{padding:30px;display:grid;grid-template-columns:300px 1fr;gap:30px;max-width:1200px}
+
+        /* Left Panel */
+        .left-panel{background:#fff;border-radius:12px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,.08);height:fit-content;text-align:center}
+        .dentist-photo{width:200px;height:200px;border-radius:12px;object-fit:cover;margin-bottom:20px;border:3px solid #e1e5e9}
+        .dentist-id-badge{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:20px}
+        .status-badge{background:#10b981;color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:500;display:inline-block}
+
+        /* Right Panel */
+        .right-panel{display:flex;flex-direction:column;gap:25px}
+        .info-section{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        .section-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f1f3f4}
+        .section-icon{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));display:flex;align-items:center;justify-content:center;color:#4A90E2;font-size:16px}
+        .section-title{font-size:18px;font-weight:600;color:#333;margin:0}
+        .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+        .info-item{display:flex;flex-direction:column;gap:5px}
+        .info-label{font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.5px}
+        .info-value{font-size:14px;color:#333;font-weight:500}
+        .info-value.empty{color:#999;font-style:italic}
+
+        /* Actions */
+        .action-section{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        .action-buttons{display:flex;gap:15px;flex-wrap:wrap}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.3s}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,.3)}
+        .btn-warning{background:#ffc107;color:#212529}
+        .btn-warning:hover{background:#e0a800;transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,193,7,.3)}
+        .btn-danger{background:#dc3545;color:#fff}
+        .btn-danger:hover{background:#c82333;transform:translateY(-2px);box-shadow:0 4px 12px rgba(220,53,69,.3)}
+        .btn-secondary{background:#6c757d;color:#fff}
+        .btn-secondary:hover{background:#5a6268;transform:translateY(-2px);box-shadow:0 4px 12px rgba(108,117,125,.3)}
+
+        /* Toast */
+        .toast{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideInRight .3s ease;display:flex;align-items:center;gap:10px;min-width:300px}
+        .toast.success{background:#10b981}
+        .toast.error{background:#ef4444}
+        .toast.info{background:#3b82f6}
+        .toast.warning{background:#f59e0b}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        /* Modal */
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:3000;display:none;align-items:center;justify-content:center}
+        .modal-content{background:#fff;border-radius:12px;padding:30px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+        .modal-icon{width:60px;height:60px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:24px;margin:0 auto 20px}
+        .modal-title{font-size:18px;font-weight:600;color:#333;margin-bottom:10px}
+        .modal-message{color:#666;margin-bottom:25px;line-height:1.5}
+        .modal-actions{display:flex;gap:10px;justify-content:center}
+
+        /* Responsive */
+        @media (max-width:1024px){
+            .content{grid-template-columns:1fr}
+            .left-panel{order:-1}
+        }
+        @media (max-width:768px){
+            .sidebar{width:100%;height:auto;position:relative}
+            .main{margin-left:0}
+            .action-buttons{flex-direction:column}
+        }
+
+        .loading{color:#999;font-style:italic}
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Header -->
+        <div class="header">
+            <h2>ข้อมูลทันตแพทย์</h2>
+            <div class="top-right">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <span>การแจ้งเตือน</span>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">อ่านทั้งหมด</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>กำลังโหลดการแจ้งเตือน…</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-info" onclick="toggleAdminDropdown()">
+                    <div class="admin-avatar" id="adminAvatar">A</div>
+                    <div class="admin-details">
+                        <strong>สวัสดี แอดมิน</strong>
+                        <small>ผู้ดูแลระบบ</small>
+                    </div>
+                    <i class="fas fa-caret-down"></i>
+                    
+                    <div class="admin-dropdown" id="adminDropdown">
+                        <a href="/admin/profile">โปรไฟล์ของฉัน</a>
+                        <a href="/logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <img id="dentistPhoto" src="/uploads/default-avatar.png" alt="รูปทันตแพทย์" class="dentist-photo">
+                <div class="dentist-id-badge" id="dentistIdBadge">รหัส: 001</div>
+                <div class="status-badge">ปฏิบัติงาน</div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Personal -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-user"></i></div>
+                        <h3 class="section-title">ข้อมูลส่วนบุคคล</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ชื่อ-นามสกุล</div>
+                            <div class="info-value loading" id="fullName">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">วันเดือนปีเกิด</div>
+                            <div class="info-value loading" id="birthDate">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">เลขที่บัตรประชาชน</div>
+                            <div class="info-value loading" id="id_card">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม</div>
+                            <div class="info-value loading" id="licenseNumber">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">สาขา/ความชำนาญ</div>
+                            <div class="info-value loading" id="specialty">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">การศึกษา</div>
+                            <div class="info-value loading" id="education">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">เข้าสู่ระบบล่าสุด</div>
+                            <div class="info-value loading" id="lastLogin">กำลังโหลด…</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="info-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-address-book"></i></div>
+                        <h3 class="section-title">ข้อมูลการติดต่อ</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ที่อยู่</div>
+                            <div class="info-value loading" id="address">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">เบอร์โทรศัพท์</div>
+                            <div class="info-value loading" id="phone">กำลังโหลด…</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">อีเมล</div>
+                            <div class="info-value loading" id="email">กำลังโหลด…</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="info-section action-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-tools"></i></div>
+                        <h3 class="section-title">การทำรายการ</h3>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="#" class="btn btn-primary" id="scheduleBtn">
+                            <i class="fas fa-calendar-alt"></i>
+                            ตารางปฏิบัติงาน
+                        </a>
+                        <a href="#" class="btn btn-warning" id="editBtn">
+                            <i class="fas fa-edit"></i>
+                            แก้ไขข้อมูล
+                        </a>
+                        <button class="btn btn-secondary" onclick="goBack()">
+                            <i class="fas fa-arrow-left"></i>
+                            ย้อนกลับ
+                        </button>
+                        <button class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="fas fa-trash"></i>
+                            ลบข้อมูล
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 class="modal-title">ยืนยันการลบ</h3>
+            <div class="modal-message">
+                แน่ใจหรือไม่ว่าต้องการลบข้อมูลทันตแพทย์นี้<br>
+                การกระทำนี้ไม่สามารถย้อนกลับได้
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-danger" onclick="deleteDentist()">
+                    <i class="fas fa-trash"></i>
+                    ลบข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ ค่าทั่วไป ============
+        let dentistId = null;
+        let dentistData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            extractDentistId();
+            loadDentistData();
+            loadUserInfo();
+            loadNotifications();
+        });
+
+        // อ่าน ID จาก URL
+        function extractDentistId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/dentists\/(\d+)$/);
+            if (matches) {
+                dentistId = parseInt(matches[1]);
+                document.getElementById('dentistIdBadge').textContent = `รหัส: ${String(dentistId).padStart(3, '0')}`;
+            } else {
+                showToast('รหัสทันตแพทย์ไม่ถูกต้อง', 'error');
+                setTimeout(() => window.location.href = '/admin/dentists', 2000);
+            }
+        }
+
+        // โหลดข้อมูลทันตแพทย์
+        async function loadDentistData() {
+            if (!dentistId) return;
+            try {
+                const response = await fetch(`/admin/api/dentists/${dentistId}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.success) {
+                    dentistData = data.dentist;
+                    populateData(dentistData);
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลได้');
+                }
+            } catch (error) {
+                console.error('loadDentistData error:', error);
+                showToast('โหลดข้อมูลทันตแพทย์ล้มเหลว: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '/admin/dentists', 3000);
+            }
+        }
+
+        // แสดงข้อมูล
+        function populateData(dentist) {
+            const fullName = `ทันตแพทย์ ${dentist.fname || ''} ${dentist.lname || ''}`.trim();
+            setText('fullName', fullName);
+
+            // วันเกิด
+            if (dentist.dob) {
+                const date = new Date(dentist.dob);
+                setText('birthDate', date.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' }));
+            } else setEmpty('birthDate');
+
+            // บัตรประชาชน
+            setTextOrEmpty('id_card', dentist.id_card);
+
+            // เลขที่ใบอนุญาต (ลองหลายชื่อฟิลด์เพื่อรองรับแบ็กเอนด์)
+const licenseVal = dentist.license_no || dentist.license_number || dentist.licenseNo || dentist.license || dentist.dental_license;
+            setTextOrEmpty('licenseNumber', licenseVal);
+
+            // ความชำนาญ / การศึกษา
+            setTextOrEmpty('specialty', dentist.specialty);
+            setTextOrEmpty('education', dentist.education);
+
+            // ที่อยู่ / เบอร์ / อีเมล
+            setTextOrEmpty('address', dentist.address);
+            setTextOrEmpty('phone', dentist.phone);
+            setTextOrEmpty('email', dentist.email);
+
+            // เข้าสู่ระบบล่าสุด (24 ชม.)
+            if (dentist.last_login) {
+                const loginDate = new Date(dentist.last_login);
+                setText('lastLogin', formatDateTime(loginDate));
+            } else setHTML('lastLogin', '<span class="info-value empty">ไม่เคยเข้าสู่ระบบ</span>');
+
+            // รูป
+            displayDentistPhoto(dentist);
+
+            // ปุ่มลิงก์
+            document.getElementById('scheduleBtn').href = `/admin/dentists/${dentistId}/schedule`;
+            document.getElementById('editBtn').href = `/admin/dentists/${dentistId}/edit`;
+        }
+
+        function setText(id, text){
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.classList.remove('loading');
+        }
+        function setHTML(id, html){
+            const el = document.getElementById(id);
+            el.innerHTML = html;
+            el.classList.remove('loading');
+        }
+        function setTextOrEmpty(id, val){
+            if (val) setText(id, val);
+            else setHTML(id, '<span class="info-value empty">ไม่ได้ระบุ</span>');
+        }
+        function setEmpty(id){ setHTML(id, '<span class="info-value empty">ไม่ได้ระบุ</span>'); }
+
+        // รูปโปรไฟล์/อะวาตาร์
+        function displayDentistPhoto(dentist) {
+            const photoElement = document.getElementById('dentistPhoto');
+            if (dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null') {
+                const imagePath = `/uploads/${dentist.photo}`;
+                const test = new Image();
+                test.onload = () => { photoElement.src = imagePath; photoElement.onerror = null; };
+                test.onerror = () => showAvatarFallback(dentist);
+                test.src = imagePath;
+            } else {
+                showAvatarFallback(dentist);
+            }
+        }
+        function showAvatarFallback(dentist) {
+            const photoElement = document.getElementById('dentistPhoto');
+            const initials = (dentist.fname && dentist.lname)
+                ? (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 'DR';
+            const svg = `
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="200" fill="#4A90E2" rx="12"/>
+                    <text x="100" y="120" font-family="Arial, sans-serif" font-size="60" font-weight="600" fill="white" text-anchor="middle">${initials}</text>
+                </svg>`;
+            photoElement.src = 'data:image/svg+xml;base64,' + btoa(svg);
+        }
+
+        // ============ โปรไฟล์/แจ้งเตือน ============
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('adminAvatar').textContent = firstLetter;
+                    }
+                }
+            } catch {
+                document.getElementById('adminAvatar').textContent = 'A';
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                }
+            } catch {
+                showEmptyNotifications();
+            }
+        }
+
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge=document.getElementById('notificationBadge');
+            const content=document.getElementById('notificationContent');
+
+            if (unreadCount>0){ badge.textContent = unreadCount>99?'99+':unreadCount; badge.classList.add('show'); }
+            else{ badge.classList.remove('show'); }
+
+            if (!notifications.length){ showEmptyNotifications(); return; }
+
+            content.innerHTML = notifications.map(n=>{
+                const timeAgo = getTimeAgoTH(new Date(n.created_at));
+                return `<div class="notification-item ${!n.is_read?'unread':''}" onclick="markAsRead(${n.id})">
+                    <div class="notification-title">${n.title}</div>
+                    <div class="notification-message">${n.message}</div>
+                    <div class="notification-time">${timeAgo}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function showEmptyNotifications(){
+            document.getElementById('notificationContent').innerHTML =
+            `<div class="empty-notifications"><i class="fas fa-bell-slash"></i><p>ไม่มีการแจ้งเตือนใหม่</p></div>`;
+        }
+
+        function toggleNotifications(){
+            const dd=document.getElementById('notificationDropdown');
+            dd.classList.toggle('show');
+            if (dd.classList.contains('show')) loadNotifications();
+        }
+        function toggleAdminDropdown(){
+            const dd=document.getElementById('adminDropdown');
+            dd.style.display = dd.style.display==='block' ? 'none' : 'block';
+        }
+
+        async function markAsRead(notificationId){
+            try{
+                const res = await fetch(`/admin/api/notifications/${notificationId}/read`,{method:'POST'});
+                if (res.ok){ loadNotifications(); showToast('ทำเครื่องหมายว่าอ่านแล้ว','success'); }
+            }catch{}
+        }
+        async function markAllAsRead(){
+            try{
+                const res = await fetch('/admin/api/notifications/read-all',{method:'POST'});
+                if (res.ok){ loadNotifications(); showToast('อ่านการแจ้งเตือนทั้งหมดแล้ว','success'); }
+            }catch{ showToast('ไม่สามารถทำเครื่องหมายการแจ้งเตือนทั้งหมดได้','error'); }
+        }
+
+        // ============ การลบ ============
+        function confirmDelete(){
+            if (!dentistData){ showToast('ไม่สามารถลบได้: ยังไม่ได้โหลดข้อมูล', 'error'); return; }
+            const modal=document.getElementById('deleteModal');
+            const message=document.querySelector('.modal-message');
+            message.innerHTML=`ต้องการลบ<br><strong>ทันตแพทย์ ${dentistData.fname} ${dentistData.lname}</strong> ใช่หรือไม่?<br>การกระทำนี้ไม่สามารถย้อนกลับได้`;
+            modal.style.display='flex';
+        }
+        function closeModal(){ document.getElementById('deleteModal').style.display='none'; }
+
+        async function deleteDentist(){
+            if (!dentistId) return;
+            try{
+                showToast('กำลังลบข้อมูล…','info');
+                const res = await fetch(`/admin/api/dentists/${dentistId}`,{method:'DELETE'});
+                const data = await res.json();
+                if (data.success){
+                    closeModal(); showToast('ลบข้อมูลสำเร็จ','success');
+                    setTimeout(()=>{ window.location.href='/admin/dentists'; },1500);
+                } else throw new Error(data.error || 'ลบข้อมูลไม่สำเร็จ');
+            }catch(e){
+                showToast('เกิดข้อผิดพลาดในการลบ: '+e.message,'error');
+            }
+        }
+
+        function goBack(){ window.location.href='/admin/dentists'; }
+
+        // ============ ยูทิลิตี้ภาษาไทย/เวลา 24 ชม. ============
+        function showToast(message,type='info'){
+            const toast=document.createElement('div');
+            toast.className=`toast ${type}`;
+            const icon={success:'fas fa-check-circle',error:'fas fa-exclamation-triangle',warning:'fas fa-exclamation-circle',info:'fas fa-info-circle'};
+            toast.innerHTML=`<i class="${icon[type]}"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(()=>{ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>toast.remove(),300); },4000);
+        }
+
+        function getTimeAgoTH(date){
+            const now=new Date(); const diffSec=Math.floor((now-date)/1000);
+            if (diffSec<60) return 'เมื่อสักครู่';
+            if (diffSec<3600) return `${Math.floor(diffSec/60)} นาทีที่ผ่านมา`;
+            if (diffSec<86400) return `${Math.floor(diffSec/3600)} ชม.ที่ผ่านมา`;
+            if (diffSec<604800) return `${Math.floor(diffSec/86400)} วันที่แล้ว`;
+            // ถ้าเกิน 7 วัน แสดงวันที่ปกติ (24 ชม.)
+            return date.toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+        }
+
+        function formatDateTime(date){
+            return date.toLocaleString('th-TH',{
+                year:'numeric',month:'short',day:'numeric',
+                hour:'2-digit',minute:'2-digit',
+                hour12:false
+            });
+        }
+
+        // ปิด dropdown/modal เมื่อคลิกนอกพื้นที่ + คีย์ลัด
+        document.addEventListener('click', function(event){
+            const adminInfo=document.querySelector('.admin-info');
+            if (!adminInfo.contains(event.target)) document.getElementById('adminDropdown').style.display='none';
+            const notif=document.querySelector('.notification-container');
+            if (!notif.contains(event.target)) document.getElementById('notificationDropdown').classList.remove('show');
+            const modal=document.getElementById('deleteModal');
+            if (event.target===modal) closeModal();
+        });
+        document.addEventListener('keydown', function(event){
+            if (event.key==='Escape'){ document.getElementById('notificationDropdown').classList.remove('show'); document.getElementById('adminDropdown').style.display='none'; closeModal(); }
+            if ((event.key==='e'||event.key==='E') && dentistId && !event.ctrlKey && !event.metaKey){ window.location.href=`/admin/dentists/${dentistId}/edit`; }
+            if ((event.key==='s'||event.key==='S') && dentistId && !event.ctrlKey && !event.metaKey){ window.location.href=`/admin/dentists/${dentistId}/schedule`; }
+            if (event.key==='b'||event.key==='B'){ if (!event.ctrlKey && !event.metaKey) goBack(); }
+            if (event.key==='Enter' && document.getElementById('deleteModal').style.display==='flex'){ event.preventDefault(); deleteDentist(); }
+        });
+
+        setInterval(()=>{ loadNotifications(); },60000);
+
+        window.addEventListener('online', ()=>{ showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'); });
+        window.addEventListener('offline', ()=>{ showToast('การเชื่อมต่อขาดหาย','warning'); });
+    </script>
+</body>
+</html>

@@ -101,14 +101,14 @@ async function checkDuplicates(email, id_card) {
             [email]
         );
         
-        const [idCardExists] = await db.execute(
+        const [id_cardExists] = await db.execute(
             'SELECT patient_id FROM patient WHERE id_card = ?',
             [id_card]
         );
         
         return {
             emailExists: emailExists.length > 0,
-            idCardExists: idCardExists.length > 0
+            id_cardExists: id_cardExists.length > 0
         };
     } catch (error) {
         console.error('Database error checking duplicates:', error);
@@ -167,7 +167,7 @@ exports.registerPatient = async (req, res) => {
             return res.redirect('/register?error=duplicate_email');
         }
         
-        if (duplicates.idCardExists) {
+        if (duplicates.id_cardExists) {
             console.log('Duplicate ID card detected:', cleanData.id_card);
             return res.redirect('/register?error=duplicate_id');
         }
@@ -280,7 +280,7 @@ exports.checkEmailAvailability = async (req, res) => {
 };
 
 // API function for checking ID card availability
-exports.checkIdCardAvailability = async (req, res) => {
+exports.checkid_cardAvailability = async (req, res) => {
     try {
         const { id_card } = req.query;
         

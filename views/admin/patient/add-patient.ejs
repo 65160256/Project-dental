@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มผู้ป่วยใหม่ - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+        body{background-color:#f5f7fa;margin:0}
+
+        /* Sidebar */
+        .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,0.1);z-index:1000}
+        .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:white;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+        .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+        .sidebar ul{list-style:none;padding:10px 0;margin:0}
+        .sidebar ul li{margin:2px 0}
+        .sidebar ul li a{display:block;padding:12px 20px;color:rgba(255,255,255,0.9);text-decoration:none;transition:all .3s ease;font-size:14px;display:flex;align-items:center;gap:8px}
+        .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,0.2);color:#fff;border-radius:8px;margin:0 10px}
+
+        /* Main */
+        .main{margin-left:180px;min-height:100vh}
+        .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1);position:relative}
+        .page-info h1{margin:0 0 5px 0;font-size:24px;color:#333;font-weight:600}
+        .page-info p{margin:0;color:#666;font-size:13px}
+        .user-section{display:flex;align-items:center;gap:15px}
+
+        .notification-container{position:relative}
+        .notification-icon{width:20px;height:20px;cursor:pointer;color:#666;transition:color .3s ease;font-size:18px}
+        .notification-icon:hover{color:#4A90E2}
+        .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+        .notification-badge.show{display:flex;animation:pulse 2s infinite}
+        @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+        .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,0.15);z-index:2000;display:none;max-height:500px;overflow:hidden}
+        .notification-dropdown.show{display:block;animation:slideDown .3s ease}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;display:flex;justify-content:space-between;align-items:center}
+        .notification-header h3{margin:0;font-size:18px;font-weight:600}
+        .mark-all-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer}
+        .notification-content{max-height:400px;overflow-y:auto}
+        .notification-item{padding:15px 20px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:background .2s ease}
+        .notification-item:hover{background:#f8f9fa}
+        .notification-item.unread{background:#f0f8ff;border-left:4px solid #4A90E2}
+        .notification-title{font-weight:600;color:#333;font-size:14px;margin-bottom:4px}
+        .notification-message{color:#666;font-size:13px;margin-bottom:6px;line-height:1.4}
+        .notification-time{color:#999;font-size:11px}
+        .empty-notifications{padding:40px 20px;text-align:center;color:#666}
+        .empty-notifications i{font-size:32px;color:#ddd;margin-bottom:15px}
+
+        .profile-dropdown{position:relative}
+        .user-info{display:flex;align-items:center;cursor:pointer;gap:10px}
+        .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase}
+        .user-details strong{display:block;font-size:13px;color:#333}
+        .user-details small{color:#666;font-size:11px}
+        .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:1000}
+        .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+        .dropdown-menu a:hover{background:#f8f9fa}
+
+        /* Content */
+        .content{padding:30px}
+        .form-container{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden}
+        .form-header{background:linear-gradient(135deg,rgba(74,144,226,0.1),rgba(45,168,255,0.1));padding:25px 30px;border-bottom:1px solid #e1e5e9}
+        .form-header h2{margin:0 0 5px 0;font-size:20px;color:#333;font-weight:600}
+        .form-header p{margin:0;color:#666;font-size:14px}
+
+        .form-body{padding:30px}
+        .form-section{background:#f8f9fa;padding:25px;border-radius:8px;border-left:4px solid #4A90E2;margin-bottom:25px}
+        .section-title{margin:0 0 20px 0;font-size:16px;font-weight:600;color:#333;display:flex;align-items:center;gap:8px}
+        .section-title i{color:#4A90E2}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+        .form-row.single{grid-template-columns:1fr}
+        .form-group{display:flex;flex-direction:column}
+        .form-group label{margin-bottom:6px;font-weight:500;color:#333;font-size:14px}
+        .required{color:#e74c3c;margin-left:2px}
+        .form-control{padding:12px 15px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;transition:all .3s ease;background:#fff}
+        .form-control:focus{outline:none;border-color:#4A90E2;box-shadow:0 0 0 3px rgba(74,144,226,0.1)}
+        .form-control:invalid{border-color:#e74c3c}
+        textarea.form-control{resize:vertical;min-height:80px}
+        .field-help{font-size:12px;color:#666;margin-top:4px}
+
+        /* Password strength */
+        .password-strength{margin-top:8px}
+        .strength-bar{height:4px;background:#e1e5e9;border-radius:2px;overflow:hidden;margin-bottom:5px}
+        .strength-fill{height:100%;width:0%;transition:all .3s ease;border-radius:2px}
+        .strength-fill.weak{background:#e74c3c;width:25%}
+        .strength-fill.fair{background:#f39c12;width:50%}
+        .strength-fill.good{background:#f1c40f;width:75%}
+        .strength-fill.strong{background:#27ae60;width:100%}
+        .strength-text{font-size:12px;font-weight:500}
+        .strength-text.weak{color:#e74c3c}.strength-text.fair{color:#f39c12}.strength-text.good{color:#f1c40f}.strength-text.strong{color:#27ae60}
+
+        /* Actions */
+        .form-actions{background:#f8f9fa;padding:25px 30px;border-top:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+        .btn{padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .3s ease}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+        .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,0.3)}
+        .btn-primary:disabled{background:#ccc;cursor:not-allowed}
+        .btn-secondary{background:#f8f9fa;color:#666;border:1px solid #e1e5e9}
+        .btn-secondary:hover{background:#e9ecef}
+
+        /* Toast */
+        .toast{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:8px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideInRight .3s ease;display:flex;align-items:center;gap:10px;min-width:300px}
+        .toast.success{background:#10b981}.toast.error{background:#ef4444}.toast.info{background:#3b82f6}.toast.warning{background:#f59e0b}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+        /* Validation states */
+        .form-group.error .form-control{border-color:#e74c3c;background:#fdf2f2}
+        .form-group.success .form-control{border-color:#27ae60;background:#f0fff4}
+        .error-message{color:#e74c3c;font-size:12px;margin-top:4px;display:none}
+        .form-group.error .error-message{display:block}
+
+        /* Progress */
+        .form-progress{background:#fff;padding:15px 30px;border-bottom:1px solid #e1e5e9;display:flex;align-items:center;gap:15px}
+        .progress-step{display:flex;align-items:center;gap:8px;color:#666;font-size:13px}
+        .progress-step.active{color:#4A90E2;font-weight:500}
+        .progress-step i{width:20px;height:20px;border-radius:50%;background:#e1e5e9;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+        .progress-step.active i{background:#4A90E2}
+        .progress-step.completed i{background:#27ae60}
+
+        @media (max-width:768px){
+            .sidebar{width:100%;height:auto;position:relative}
+            .main{margin-left:0}
+            .form-row{grid-template-columns:1fr;gap:15px}
+            .form-actions{flex-direction:column;gap:15px}
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> ตารางนัด</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li class="active"><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>เพิ่มผู้ป่วยใหม่</h1>
+                <p>สร้างโปรไฟล์ผู้ป่วยใหม่ในระบบ</p>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>การแจ้งเตือน</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">ทำเครื่องหมายว่าอ่านทั้งหมด</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>กำลังโหลดการแจ้งเตือน...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="form-progress">
+            <div class="progress-step active" id="step1">
+                <i class="fas fa-user"></i>
+                <span>ข้อมูลส่วนตัว</span>
+            </div>
+            <div class="progress-step" id="step2">
+                <i class="fas fa-envelope"></i>
+                <span>บัญชีผู้ใช้</span>
+            </div>
+            <div class="progress-step" id="step3">
+                <i class="fas fa-phone"></i>
+                <span>การติดต่อ</span>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <form id="addPatientForm" class="form-container">
+                <div class="form-header">
+                    <h2>ข้อมูลผู้ป่วย</h2>
+                    <p>กรุณากรอกข้อมูลที่จำเป็นทั้งหมดที่มีเครื่องหมาย (*)</p>
+                </div>
+
+                <div class="form-body">
+                    <!-- Personal -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-user"></i> ข้อมูลส่วนตัว</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fname">ชื่อ <span class="required">*</span></label>
+                                <input type="text" id="fname" name="fname" class="form-control" required />
+                                <div class="error-message">กรุณากรอกชื่อ</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="lname">นามสกุล <span class="required">*</span></label>
+                                <input type="text" id="lname" name="lname" class="form-control" required />
+                                <div class="error-message">กรุณากรอกนามสกุล</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dob">วันเดือนปีเกิด <span class="required">*</span></label>
+                                <input type="date" id="dob" name="dob" class="form-control" required />
+                                <div class="error-message">กรุณาเลือกวันเดือนปีเกิดที่ถูกต้อง</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
+                                <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
+                                <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-key"></i> บัญชีผู้ใช้</h3>
+
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label for="email">อีเมล <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" class="form-control" required />
+                                <div class="field-help">ใช้งานสำหรับเข้าสู่ระบบและการแจ้งเตือน</div>
+                                <div class="error-message">กรุณากรอกอีเมลให้ถูกต้อง</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password">รหัสผ่าน <span class="required">*</span></label>
+                                <input type="password" id="password" name="password" class="form-control" required minlength="6" />
+                                <div class="password-strength">
+                                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                                    <div class="strength-text" id="strengthText">กรอกรหัสผ่าน</div>
+                                </div>
+                                <div class="error-message">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">ยืนยันรหัสผ่าน <span class="required">*</span></label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+                                <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fas fa-address-book"></i> ข้อมูลการติดต่อ</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                                <input type="tel" id="phone" name="phone" class="form-control" required />
+                                <div class="field-help">รูปแบบ: 08xxxxxxxx หรือ 02xxxxxxx</div>
+                                <div class="error-message">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">ที่อยู่</label>
+                                <textarea id="address" name="address" class="form-control" rows="3" placeholder="ที่อยู่รวมจังหวัด"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div>
+                        <a href="/admin/patients" class="btn btn-secondary"><i class="fas fa-times"></i> ยกเลิก</a>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()"><i class="fas fa-undo"></i> ล้างฟอร์ม</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-plus"></i> เพิ่มผู้ป่วย</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const TH_LOCALE = 'th-TH';
+        let isSubmitting = false;
+
+        document.addEventListener('DOMContentLoaded', function(){
+            initializeForm();
+            loadUserInfo();
+            loadNotifications();
+            setupPasswordValidation();
+            setupFormValidation();
+        });
+
+        function initializeForm(){
+            const form = document.getElementById('addPatientForm');
+            form.addEventListener('submit', handleFormSubmission);
+        }
+
+        async function loadUserInfo(){
+            try{
+                const res = await fetch('/admin/profile/api');
+                if(res.ok){
+                    const data = await res.json();
+                    if(data.success){
+                        const first = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = first;
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) userDetails.textContent = `สวัสดี ${data.role || 'แอดมิน'}`;
+                    }
+                }
+            }catch{ document.getElementById('userAvatar').textContent='A'; }
+        }
+
+        async function loadNotifications(){
+            try{
+                const res = await fetch('/admin/api/notifications?limit=10');
+                if(res.ok){
+                    const data = await res.json();
+                    if(data.success) updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                }
+            }catch{ showEmptyNotifications(); }
+        }
+
+        function updateNotificationDisplay(notifications, unread){
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+            if (unread > 0){ badge.textContent = unread > 99 ? '99+' : unread; badge.classList.add('show'); }
+            else { badge.classList.remove('show'); }
+
+            if(!notifications || notifications.length===0){ showEmptyNotifications(); return; }
+
+            content.innerHTML = notifications.map(n=>{
+                const timeAgo = getTimeAgo(new Date(n.created_at));
+                return `
+                    <div class="notification-item ${!n.is_read?'unread':''}" onclick="markAsRead(${n.id})">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-message">${n.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showEmptyNotifications(){
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+                </div>
+            `;
+        }
+
+        function setupPasswordValidation(){
+            const pw = document.getElementById('password');
+            const cpw = document.getElementById('confirmPassword');
+            const fill = document.getElementById('strengthFill');
+            const text = document.getElementById('strengthText');
+
+            pw.addEventListener('input', function(){
+                const s = calcStrength(this.value);
+                fill.className = `strength-fill ${s.level}`;
+                text.className = `strength-text ${s.level}`;
+                text.textContent = s.text;
+            });
+
+            cpw.addEventListener('input', validatePasswordMatch);
+            pw.addEventListener('input', ()=>{ if (cpw.value) validatePasswordMatch(); });
+
+            function calcStrength(p){
+                if(!p) return {level:'',text:'กรอกรหัสผ่าน'};
+                let score=0;
+                if(p.length>=6)score++; if(p.length>=8)score++;
+                if(/[A-Z]/.test(p))score++; if(/[a-z]/.test(p))score++;
+                if(/[0-9]/.test(p))score++; if(/[^A-Za-z0-9]/.test(p))score++;
+                if(score<3) return {level:'weak',text:'รหัสผ่านอ่อน'};
+                if(score<4) return {level:'fair',text:'รหัสผ่านพอใช้'};
+                if(score<5) return {level:'good',text:'รหัสผ่านดี'};
+                return {level:'strong',text:'รหัสผ่านแข็งแรง'};
+            }
+
+            function validatePasswordMatch(){
+                const g = cpw.parentElement;
+                if (cpw.value && pw.value !== cpw.value){ g.classList.add('error'); g.classList.remove('success'); }
+                else if (cpw.value){ g.classList.remove('error'); g.classList.add('success'); }
+                else { g.classList.remove('error','success'); }
+            }
+        }
+
+        function setupFormValidation(){
+            const form = document.getElementById('addPatientForm');
+            const inputs = form.querySelectorAll('.form-control[required]');
+
+            inputs.forEach(inp=>{
+                inp.addEventListener('blur', function(){ validateField(this); });
+                inp.addEventListener('input', function(){ if (this.parentElement.classList.contains('error')) validateField(this); });
+            });
+
+            const idCard = document.getElementById('id_card');
+            let idTimeout;
+            idCard.addEventListener('input', function(){
+                this.value = this.value.replace(/\D/g,'').substring(0,13);
+                if (idTimeout) clearTimeout(idTimeout);
+                this.parentElement.classList.remove('error','success');
+                if (this.value.length===13){
+                    idTimeout = setTimeout(()=>checkIdCardAvailability(this.value),700);
+                } else validateField(this);
+            });
+            idCard.addEventListener('blur', function(){ if (this.value.length===13) checkIdCardAvailability(this.value); });
+
+            const phone = document.getElementById('phone');
+            phone.addEventListener('input', function(){
+                this.value = this.value.replace(/\D/g,'').substring(0,10);
+                validateField(this);
+            });
+
+            const email = document.getElementById('email');
+            let emailTimeout;
+            email.addEventListener('input', function(){
+                if (emailTimeout) clearTimeout(emailTimeout);
+                this.parentElement.classList.remove('error','success');
+                if (this.value && isValidEmail(this.value)){
+                    emailTimeout = setTimeout(()=>checkEmailAvailability(this.value),700);
+                }
+            });
+            email.addEventListener('blur', function(){ if (this.value && isValidEmail(this.value)) checkEmailAvailability(this.value); });
+        }
+
+        function validateField(field){
+            const group = field.parentElement;
+            const value = field.value.trim();
+            group.classList.remove('error','success');
+
+            if (field.hasAttribute('required') && !value){ group.classList.add('error'); return false; }
+
+            if (field.type==='email' && value && !isValidEmail(value)){ group.classList.add('error'); return false; }
+
+            if (field.name==='id_card' && value){
+                if (value.length!==13 || !/^\d{13}$/.test(value)){ group.classList.add('error'); return false; }
+            }
+
+            if (field.name==='phone' && value){
+                if (value.length<9 || value.length>10 || !/^\d+$/.test(value)){ group.classList.add('error'); return false; }
+            }
+
+            if (field.name==='dob' && value){
+                const b = new Date(value), t = new Date();
+                let age = t.getFullYear()-b.getFullYear();
+                const m = t.getMonth()-b.getMonth();
+                if (m<0 || (m===0 && t.getDate()<b.getDate())) age--;
+                if (age < 1 || age > 120){ group.classList.add('error'); return false; }
+            }
+
+            if (field.name==='password' && value && value.length<6){ group.classList.add('error'); return false; }
+
+            group.classList.add('success'); return true;
+        }
+
+        function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+        async function checkIdCardAvailability(id){
+            const group = document.getElementById('id_card').parentElement;
+            group.classList.remove('error','success');
+            try{
+                const res = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(id)}`);
+                if(res.ok){
+                    const data = await res.json();
+                    if (!data.success || data.exists){ group.classList.add('error'); }
+                    else { group.classList.add('success'); }
+                } else group.classList.add('error');
+            }catch{ group.classList.add('error'); }
+        }
+
+        async function checkEmailAvailability(email){
+            const group = document.getElementById('email').parentElement;
+            try{
+                const res = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                if(res.ok){
+                    const data = await res.json();
+                    if (data.exists){
+                        group.classList.add('error');
+                        const msg = group.querySelector('.error-message');
+                        if (msg) msg.textContent = 'อีเมลนี้ถูกใช้แล้ว';
+                    } else {
+                        group.classList.add('success');
+                    }
+                }
+            }catch{}
+        }
+
+        async function handleFormSubmission(e){
+            e.preventDefault();
+            if (isSubmitting) return;
+
+            const form = e.target;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!validateAllFields()){ showToast('กรุณาแก้ไขข้อมูลให้ถูกต้องก่อนบันทึก','error'); return; }
+
+            const pw = document.getElementById('password').value;
+            const cpw = document.getElementById('confirmPassword').value;
+            if (pw !== cpw){ showToast('รหัสผ่านไม่ตรงกัน','error'); return; }
+
+            // ตรวจอีเมล/บัตร ปิดช่องโหว่ซ้ำ
+            const email = document.getElementById('email').value.trim();
+            const idCard = document.getElementById('id_card').value.trim();
+            try{
+                const [eRes,iRes] = await Promise.allSettled([
+                    fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`),
+                    fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(idCard)}`)
+                ]);
+                if (eRes.value?.ok && (await eRes.value.json()).exists){ showToast('อีเมลนี้ถูกใช้แล้ว','error'); return; }
+                if (iRes.value?.ok && (await iRes.value.json()).exists){ showToast('เลขบัตรประชาชนนี้ถูกใช้แล้ว','error'); return; }
+            }catch{}
+
+            isSubmitting = true; submitBtn.classList.add('btn-loading'); submitBtn.disabled = true;
+
+            try{
+                const payload = {};
+                ['fname','lname','dob','id_card','email','password','phone','address'].forEach(id=>{
+                    const el = document.getElementById(id); if (el) payload[id] = el.value.trim();
+                });
+
+                const res = await fetch('/admin/patients/add', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Accept':'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok){
+                    const result = await res.json().catch(()=>({success:true}));
+                    if (result.success){
+                        showToast('เพิ่มผู้ป่วยสำเร็จ!','success');
+                        clearDraft();
+                        setTimeout(()=>{ window.location.href = result.redirect || '/admin/patients'; }, 1000);
+                        return;
+                    }
+                }
+                const err = await res.json().catch(()=>({error:'ไม่สามารถเพิ่มผู้ป่วยได้'}));
+                throw new Error(err.error || 'ไม่สามารถเพิ่มผู้ป่วยได้');
+            }catch(error){
+                showToast(error.message || 'เกิดข้อผิดพลาด','error');
+            }finally{
+                isSubmitting = false; submitBtn.classList.remove('btn-loading'); submitBtn.disabled = false;
+            }
+        }
+
+        function validateAllFields(){
+            const form = document.getElementById('addPatientForm');
+            const required = form.querySelectorAll('.form-control[required]');
+            let ok = true; required.forEach(f=>{ if(!validateField(f)) ok=false; });
+            return ok;
+        }
+
+        function resetForm(){
+            const form = document.getElementById('addPatientForm');
+            form.reset();
+            form.querySelectorAll('.form-group').forEach(g=>g.classList.remove('error','success'));
+            document.getElementById('strengthFill').className='strength-fill';
+            document.getElementById('strengthText').textContent='กรอกรหัสผ่าน';
+            document.getElementById('strengthText').className='strength-text';
+            updateFormProgress();
+            showToast('ล้างฟอร์มเรียบร้อย','info');
+        }
+
+        function toggleNotifications(){
+            const dd = document.getElementById('notificationDropdown');
+            dd.classList.toggle('show');
+            if (dd.classList.contains('show')) loadNotifications();
+        }
+        async function markAsRead(id){ try{ const r=await fetch(`/admin/api/notifications/${id}/read`,{method:'POST'}); if (r.ok) loadNotifications(); }catch{} }
+        async function markAllAsRead(){ try{ const r=await fetch('/admin/api/notifications/read-all',{method:'POST'}); if (r.ok){ loadNotifications(); showToast('ทำเครื่องหมายว่าอ่านทั้งหมดแล้ว','success'); } }catch{ showToast('ไม่สามารถทำเครื่องหมายว่าอ่านทั้งหมดได้','error'); } }
+        function toggleDropdown(){ const m=document.getElementById('profileDropdown'); m.style.display = m.style.display==='block' ? 'none' : 'block'; }
+
+        function showToast(message,type='info'){
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = {success:'fas fa-check-circle',error:'fas fa-exclamation-triangle',warning:'fas fa-exclamation-circle',info:'fas fa-info-circle'}[type];
+            toast.innerHTML = `<i class="${icon}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(()=>{ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>toast.remove(),300); }, 4500);
+        }
+
+        // เวลา “ที่แล้ว” ภาษาไทย + แสดงวันที่แบบ 24 ชม. หากเกิน 7 วัน
+        function getTimeAgo(date){
+            const now = new Date();
+            const s = Math.floor((now - date)/1000);
+            if (s < 60) return 'เมื่อสักครู่';
+            if (s < 3600) return `${Math.floor(s/60)} นาทีที่แล้ว`;
+            if (s < 86400) return `${Math.floor(s/3600)} ชั่วโมงที่แล้ว`;
+            if (s < 604800) return `${Math.floor(s/86400)} วันที่แล้ว`;
+            return date.toLocaleString(TH_LOCALE,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+        }
+
+        function updateFormProgress(){
+            const personal=['fname','lname','dob','id_card'];
+            const account=['email','password','confirmPassword'];
+            const contact=['phone'];
+
+            const donePersonal = personal.every(id=> (document.getElementById(id)?.value || '').trim()!=='');
+            const doneAccount = account.every(id=> (document.getElementById(id)?.value || '').trim()!=='');
+            const doneContact = contact.some(id=> (document.getElementById(id)?.value || '').trim()!=='');
+
+            updateStepIndicator('step1', donePersonal);
+            updateStepIndicator('step2', doneAccount);
+            updateStepIndicator('step3', doneContact);
+        }
+        function updateStepIndicator(id, isComplete){
+            const step = document.getElementById(id), icon = step.querySelector('i');
+            if (isComplete){ step.classList.add('completed'); icon.className='fas fa-check'; }
+            else { step.classList.remove('completed'); if(id==='step1')icon.className='fas fa-user'; if(id==='step2')icon.className='fas fa-envelope'; if(id==='step3')icon.className='fas fa-phone'; }
+        }
+
+        // Draft
+        function saveDraft(){
+            const formData = new FormData(document.getElementById('addPatientForm'));
+            const draft = {};
+            for (let [k,v] of formData.entries()){
+                if (!['password','confirmPassword'].includes(k)) draft[k]=v;
+            }
+            try{ localStorage.setItem('patient_draft', JSON.stringify(draft)); }catch{}
+        }
+        function loadDraft(){
+            try{
+                const d = localStorage.getItem('patient_draft');
+                if (d){
+                    const data = JSON.parse(d);
+                    Object.keys(data).forEach(k=>{ const el=document.getElementById(k); if (el) el.value=data[k]; });
+                    updateFormProgress();
+                }
+            }catch{}
+        }
+        function clearDraft(){ try{ localStorage.removeItem('patient_draft'); }catch{} }
+
+        document.addEventListener('click', function(e){
+            const p = document.querySelector('.profile-dropdown');
+            if (!p.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+            const n = document.querySelector('.notification-container');
+            if (!n.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
+        });
+
+        document.addEventListener('keydown', function(e){
+            if (e.ctrlKey && e.key==='s'){ e.preventDefault(); saveDraft(); showToast('บันทึกแบบร่างแล้ว','info'); }
+            if (e.key==='Escape'){ document.getElementById('notificationDropdown').classList.remove('show'); document.getElementById('profileDropdown').style.display='none'; }
+        });
+
+        setInterval(()=>{ 
+            const form=document.getElementById('addPatientForm');
+            const hasData = Array.from(form.querySelectorAll('.form-control')).some(i=>i.value.trim()!=='');
+            if (hasData) saveDraft();
+        }, 30000);
+
+        document.addEventListener('input', function(e){ if (e.target.classList.contains('form-control')) updateFormProgress(); });
+        window.addEventListener('load', loadDraft);
+        window.addEventListener('beforeunload', function(){ if (isSubmitting) clearDraft(); });
+
+        setInterval(loadNotifications, 60000);
+    </script>
+</body>
+</html>

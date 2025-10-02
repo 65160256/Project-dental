@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controller/admin.controller');
-
+const db = require('../config/db'); 
 
 const upload = require('../middlewares/upload');
 
@@ -25,22 +25,23 @@ const checkAdminApiAuth = (req, res, next) => {
 // ==================== Dashboard Routes ====================
 router.get('/dashboard', checkAdminAuth, adminController.getReportsDashboard);
 
-router.get('/schedule', checkAdminAuth, adminController.getDashboard);
+router.get('/schedule', checkAdminAuth, adminController.getSchedulePage);
 
 router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
 
 // ==================== Dashboard API Routes ====================
-// Get appointment statistics for dashboard
+// รับสถิติการนัดหมายสำหรับแดชบอร์ด
 router.get('/api/dashboard/appointments', checkAdminApiAuth, adminController.getAppointmentStatsAPI);
-// Get treatment statistics for dashboard  
+// รับสถิติการรักษาสำหรับแดชบอร์ด
 router.get('/api/dashboard/treatments', checkAdminApiAuth, adminController.getTreatmentStatsAPI);
 
-// Get dashboard summary data
+
+// รับข้อมูลสรุปแดชบอร์ด
 router.get('/api/dashboard/summary', checkAdminApiAuth, async (req, res) => {
   try {
     const db = require('../config/db');
     
-    // Get counts for dashboard cards
+    // นับจำนวนสำหรับการ์ดแดชบอร์ด
     const [patientCount] = await db.execute('SELECT COUNT(*) as count FROM patient');
     const [dentistCount] = await db.execute('SELECT COUNT(*) as count FROM dentist');
     const [todayAppointments] = await db.execute(`
@@ -62,10 +63,10 @@ router.get('/api/dashboard/summary', checkAdminApiAuth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching dashboard summary:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลสรุปแดชบอร์ด:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch dashboard summary'
+      error: 'ไม่สามารถดึงข้อมูลสรุปแดชบอร์ดได้'
     });
   }
 });
@@ -566,8 +567,8 @@ router.get('/api/check-id-card', checkAdminApiAuth, async (req, res) => {
     let dentistExists = false;
     let patientExists = false;
 
-    // Check in dentist table (เปลี่ยนจาก id_card เป็น idcard ให้ตรงกับ database)
-    let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE idcard = ?';
+    // Check in dentist table (เปลี่ยนจาก id_card เป็น id_card ให้ตรงกับ database)
+let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE id_card = ?';
     let dentistParams = [id_card];
     
     if (exclude_dentist_id) {
@@ -624,12 +625,12 @@ router.get('/api/check-email-enhanced', checkAdminApiAuth, adminController.check
 // Specific routes for different entities
 router.get('/api/dentists/check-id-card', checkAdminApiAuth, async (req, res) => {
   req.query.exclude_patient_id = null; // Only check against dentists
-  adminController.checkIdCardAvailability(req, res);
+  adminController.checkid_cardAvailability(req, res);
 });
 
 router.get('/api/patients/check-id-card', checkAdminApiAuth, async (req, res) => {
   req.query.exclude_dentist_id = null; // Only check against patients  
-  adminController.checkIdCardAvailability(req, res);
+  adminController.checkid_cardAvailability(req, res);
 });
 
 // Existing check-email route with enhanced functionality
@@ -707,5 +708,6 @@ module.exports.passwordResetRoutes = {
 };
 
 
-
+// ตรวจสอบเลขใบประกอบวิชาชีพซ้ำ
+router.get('/api/check-license', checkAdminApiAuth, adminController.checkLicenseAvailability);
 module.exports = router;

@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เพิ่มทันตแพทย์ใหม่ - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f5f7fa; margin: 0; }
+
+        /* Sidebar */
+        .sidebar { width: 180px; background: linear-gradient(135deg, #4A90E2, #2DA8FF); position: fixed; height: 100vh; padding: 0; color: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .sidebar .logo { text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar .logo .logo-icon { width: 50px; height: 50px; border-radius: 8px; background: white; padding: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; color: #4A90E2; }
+        .sidebar .logo h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .sidebar ul { list-style: none; padding: 10px 0; margin: 0; }
+        .sidebar ul li { margin: 2px 0; }
+        .sidebar ul li a { display: block; padding: 12px 20px; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.3s ease; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .sidebar ul li.active a, .sidebar ul li:hover a { background-color: rgba(255,255,255,0.2); color: white; border-radius: 8px; margin: 0 10px; }
+
+        /* Main */
+        .main { margin-left: 180px; padding: 0; min-height: 100vh; }
+
+        /* Top Bar */
+        .top-bar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; }
+        .page-info h1 { margin: 0 0 5px 0; font-size: 24px; color: #333; font-weight: 600; }
+        .page-info p { margin: 0; color: #666; font-size: 13px; }
+        .user-section { display: flex; align-items: center; gap: 15px; }
+
+        .notification-container { position: relative; }
+        .notification-icon { position: relative; width: 20px; height: 20px; cursor: pointer; color: #666; transition: color 0.3s ease; font-size: 18px; }
+        .notification-icon:hover { color: #4A90E2; }
+        .notification-badge { position: absolute; top: -8px; right: -8px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; display: none; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+        .notification-badge.show { display: flex; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)} }
+
+        .notification-dropdown { position: absolute; top: 100%; right: -10px; background: white; border: 1px solid #e1e5e9; border-radius: 12px; min-width: 380px; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 2000; display: none; max-height: 500px; overflow: hidden; }
+        .notification-dropdown.show { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from {opacity:0; transform:translateY(-10px)} to {opacity:1; transform:translateY(0)} }
+        .notification-header { padding: 20px; border-bottom: 1px solid #e1e5e9; background: linear-gradient(135deg, #4A90E2, #2DA8FF); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .notification-header h3 { margin: 0; font-size: 18px; font-weight: 600; }
+        .mark-all-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s ease; }
+        .mark-all-btn:hover { background: rgba(255,255,255,0.3); }
+        .notification-content { max-height: 400px; overflow-y: auto; }
+        .notification-item { padding: 15px 20px; border-bottom: 1px solid #f1f3f4; cursor: pointer; transition: background 0.2s ease; }
+        .notification-item:hover { background: #f8f9fa; }
+        .notification-item.unread { background: #f0f8ff; border-left: 4px solid #4A90E2; }
+        .notification-title { font-weight: 600; color: #333; font-size: 14px; margin-bottom: 4px; }
+        .notification-message { color: #666; font-size: 13px; margin-bottom: 6px; line-height: 1.4; }
+        .notification-time { color: #999; font-size: 11px; }
+        .empty-notifications { padding: 40px 20px; text-align: center; color: #666; }
+        .empty-notifications i { font-size: 32px; color: #ddd; margin-bottom: 15px; }
+
+        .profile-dropdown { position: relative; }
+        .user-info { display: flex; align-items: center; cursor: pointer; gap: 10px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: #4A90E2; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600; text-transform: uppercase; }
+        .user-details strong { display: block; font-size: 13px; color: #333; }
+        .user-details small { color: #666; font-size: 11px; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e1e5e9; border-radius: 6px; min-width: 160px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; }
+        .dropdown-menu a { display: block; padding: 10px 15px; text-decoration: none; color: #333; font-size: 13px; }
+        .dropdown-menu a:hover { background-color: #f8f9fa; }
+
+        /* Form Content */
+        .content { padding: 30px; }
+        .form-container { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        .form-header { background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1)); padding: 25px 30px; border-bottom: 1px solid #e1e5e9; }
+        .form-header h2 { margin: 0 0 5px 0; font-size: 20px; color: #333; font-weight: 600; }
+        .form-header p { margin: 0; color: #666; font-size: 14px; }
+        .form-body { padding: 30px; display: grid; grid-template-columns: 300px 1fr; gap: 40px; }
+
+        /* Photo */
+        .photo-section { text-align: center; }
+        .photo-upload-container { position: relative; margin-bottom: 20px; }
+        .photo-preview { width: 200px; height: 200px; border-radius: 12px; border: 3px dashed #e1e5e9; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; background: #f8f9fa; overflow: hidden; transition: all 0.3s ease; cursor: pointer; }
+        .photo-preview:hover { border-color: #4A90E2; background: rgba(74,144,226,0.05); }
+        .photo-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .photo-placeholder { color: #999; text-align: center; }
+        .photo-placeholder i { font-size: 48px; margin-bottom: 10px; color: #ddd; }
+        .photo-placeholder p { margin: 0; font-size: 14px; }
+        .photo-input { display: none; }
+        .upload-btn { background: linear-gradient(135deg, #4A90E2, #2DA8FF); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74,144,226,0.3); }
+        .photo-info { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.4; }
+
+        /* Fields */
+        .form-fields { display: flex; flex-direction: column; gap: 25px; }
+        .form-section { background: #f8f9fa; padding: 25px; border-radius: 8px; border-left: 4px solid #4A90E2; }
+        .section-title { margin: 0 0 20px 0; font-size: 16px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; }
+        .section-title i { color: #4A90E2; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { margin-bottom: 6px; font-weight: 500; color: #333; font-size: 14px; }
+        .required { color: #e74c3c; margin-left: 2px; }
+        .form-control { padding: 12px 15px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; background: white; }
+        .form-control:focus { outline: none; border-color: #4A90E2; box-shadow: 0 0 0 3px rgba(74,144,226,0.1); background: white; }
+        .form-control:invalid { border-color: #e74c3c; }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        .field-help { font-size: 12px; color: #666; margin-top: 4px; }
+        .error-message { color: #e74c3c; font-size: 12px; margin-top: 4px; display: none; }
+        .form-group.error .error-message { display: block; }
+        /* states */
+        .form-group.checking .form-control { border-color: #3b82f6; background: #eff6ff; position: relative; }
+        .form-group.checking::after { content:''; position:absolute; right:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; border:2px solid #3b82f6; border-top:2px solid transparent; border-radius:50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+        .form-control.invalid-input { border-color:#e74c3c!important; background:#fdf2f2!important; animation: shake 0.5s ease-in-out; }
+        @keyframes shake { 0%,20%,40%,60%,80%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-3px)} }
+        .form-group.success .form-control { border-color:#27ae60; background:#f0fff4; }
+        .form-group.success::after { content:'✓'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#27ae60; font-weight:bold; font-size:16px; z-index:10; }
+        .form-group.error .form-control { border-color:#e74c3c; background:#fdf2f2; }
+        .form-group.error::after { content:'✕'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#e74c3c; font-weight:bold; font-size:16px; z-index:10; }
+        .form-group.error::after, .form-group.success::after { animation:none!important; border:none!important; background:none!important; }
+
+        /* Password strength */
+        .password-strength { margin-top: 8px; }
+        .strength-bar { height: 4px; background:#e1e5e9; border-radius:2px; overflow:hidden; margin-bottom:5px; }
+        .strength-fill { height:100%; width:0%; transition: all 0.3s ease; border-radius:2px; }
+        .strength-fill.weak { background:#e74c3c; width:25%; }
+        .strength-fill.fair { background:#f39c12; width:50%; }
+        .strength-fill.good { background:#f1c40f; width:75%; }
+        .strength-fill.strong { background:#27ae60; width:100%; }
+        .strength-text { font-size:12px; font-weight:500; }
+        .strength-text.weak { color:#e74c3c; } .strength-text.fair { color:#f39c12; } .strength-text.good { color:#f1c40f; } .strength-text.strong { color:#27ae60; }
+
+        /* Actions */
+        .form-actions { background:#f8f9fa; padding:25px 30px; border-top:1px solid #e1e5e9; display:flex; justify-content:space-between; align-items:center; }
+        .btn { padding:12px 24px; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition: all 0.3s ease; }
+        .btn-primary { background: linear-gradient(135deg, #4A90E2, #2DA8FF); color:white; }
+        .btn-primary:hover:not(:disabled){ transform: translateY(-2px); box-shadow:0 4px 12px rgba(74,144,226,0.3); }
+        .btn-primary:disabled { background:#ccc; cursor:not-allowed; }
+        .btn-secondary { background:#f8f9fa; color:#666; border:1px solid #e1e5e9; }
+        .btn-secondary:hover { background:#e9ecef; }
+        .btn-success { background:#28a745; color:white; }
+        .btn-success:hover { background:#218838; transform: translateY(-2px); box-shadow:0 4px 12px rgba(40,167,69,0.3); }
+
+        /* Loading btn */
+        .btn-loading { position:relative; color:transparent!important; }
+        .btn-loading::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:16px; height:16px; border:2px solid transparent; border-top:2px solid white; border-radius:50%; animation: spin 1s linear infinite; }
+
+        /* Toast */
+        .toast { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; font-size: 14px; font-weight: 500; z-index: 4000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideInRight 0.3s ease; display: flex; align-items: center; gap: 10px; min-width: 300px; }
+        .toast.success { background:#10b981; } .toast.error { background:#ef4444; } .toast.info { background:#3b82f6; } .toast.warning { background:#f59e0b; }
+        @keyframes slideInRight { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes slideOutRight { from{transform:translateX(0);opacity:1} to{transform:translateX(100%);opacity:0} }
+
+        /* Progress */
+        .form-progress { background:white; padding:15px 30px; border-bottom:1px solid #e1e5e9; display:flex; align-items:center; gap:15px; }
+        .progress-step { display:flex; align-items:center; gap:8px; color:#666; font-size:13px; }
+        .progress-step.active { color:#4A90E2; font-weight:500; }
+        .progress-step i { width:20px; height:20px; border-radius:50%; background:#e1e5e9; display:flex; align-items:center; justify-content:center; font-size:10px; color:white; }
+        .progress-step.active i { background:#4A90E2; }
+        .progress-step.completed i { background:#27ae60; }
+
+        /* Responsive */
+        @media (max-width:1024px){ .form-body{grid-template-columns:1fr; gap:30px;} .photo-section{order:-1;} }
+        @media (max-width:768px){ .sidebar{width:100%; height:auto; position:relative;} .main{margin-left:0;} .form-row{grid-template-columns:1fr; gap:15px;} .form-actions{flex-direction:column; gap:15px;} }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-calendar-alt"></i> ตารางนัด</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li class="active"><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>เพิ่มทันตแพทย์ใหม่</h1>
+                <p>สร้างโปรไฟล์ทันตแพทย์ใหม่ในระบบ</p>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>การแจ้งเตือน</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">ทำเครื่องหมายว่าอ่านทั้งหมด</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>กำลังโหลดการแจ้งเตือน...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี แอดมิน</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile">โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Progress -->
+        <div class="form-progress">
+            <div class="progress-step active" id="step1">
+                <i class="fas fa-user"></i>
+                <span>ข้อมูลส่วนตัว</span>
+            </div>
+            <div class="progress-step" id="step2">
+                <i class="fas fa-phone"></i>
+                <span>การติดต่อ</span>
+            </div>
+            <div class="progress-step" id="step3">
+                <i class="fas fa-key"></i>
+                <span>บัญชีผู้ใช้</span>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <form id="addDentistForm" class="form-container" enctype="multipart/form-data">
+                <div class="form-header">
+                    <h2>ข้อมูลทันตแพทย์</h2>
+                    <p>กรุณากรอกข้อมูลที่จำเป็นทั้งหมดที่มีเครื่องหมาย (*)</p>
+                </div>
+
+                <div class="form-body">
+                    <!-- Photo Section -->
+                    <div class="photo-section">
+                        <div class="photo-upload-container">
+                            <div class="photo-preview" onclick="document.getElementById('photoInput').click()">
+                                <div class="photo-placeholder" id="photoPlaceholder">
+                                    <i class="fas fa-camera"></i>
+                                    <p>คลิกเพื่ออัปโหลดรูปภาพ</p>
+                                </div>
+                                <img id="photoPreview" style="display: none;" alt="ตัวอย่างรูปภาพ"/>
+                            </div>
+                            <input type="file" id="photoInput" name="photo" class="photo-input" accept="image/*" />
+                            <button type="button" class="upload-btn" onclick="document.getElementById('photoInput').click()">
+                                <i class="fas fa-upload"></i>
+                                เลือกรูปภาพ
+                            </button>
+                        </div>
+                        <div class="photo-info">
+                            <p><strong>แนวทางรูปภาพ:</strong></p>
+                            <p>• ขนาดไฟล์ไม่เกิน 5MB</p>
+                            <p>• รองรับ: JPG, PNG, GIF</p>
+                            <p>• แนะนำ: 400x400 พิกเซล</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Fields -->
+                    <div class="form-fields">
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-user"></i>
+                                ข้อมูลส่วนตัว
+                            </h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fname">ชื่อ <span class="required">*</span></label>
+                                    <input type="text" id="fname" name="fname" class="form-control" required />
+                                    <div class="error-message">กรุณากรอกชื่อ</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lname">นามสกุล <span class="required">*</span></label>
+                                    <input type="text" id="lname" name="lname" class="form-control" required />
+                                    <div class="error-message">กรุณากรอกนามสกุล</div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="dob">วันเดือนปีเกิด <span class="required">*</span></label>
+                                    <input type="date" id="dob" name="dob" class="form-control" required />
+                                    <div class="error-message">กรุณาเลือกวันเดือนปีเกิดที่ถูกต้อง</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+                                    <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
+                                    <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
+                                    <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง</div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="license_no">เลขบัตรประกอบวิชาชีพ <span class="required">*</span></label>
+                                    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="10" />
+                                    <div class="field-help">ตัวอย่าง: 6–10 หลัก (ตัวเลขเท่านั้น)</div>
+                                    <div class="error-message">กรุณากรอกเลขบัตรประกอบวิชาชีพให้ถูกต้อง</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="specialty">สาขาเชี่ยวชาญ <span class="required">*</span></label>
+                                    <select id="specialty" name="specialty" class="form-control" required>
+                                        <option value="">เลือกสาขา</option>
+                                        <option value="General Dentistry">ทันตกรรมทั่วไป</option>
+                                        <option value="Orthodontics">จัดฟัน</option>
+                                        <option value="Oral Surgery">ศัลยกรรมช่องปาก</option>
+                                        <option value="Endodontics">รักษาคลองราก</option>
+                                        <option value="Periodontics">ปริทันตวิทยา</option>
+                                        <option value="Pediatric Dentistry">ทันตกรรมเด็ก</option>
+                                        <option value="Prosthodontics">บูรณะ/ฟันปลอม</option>
+                                        <option value="Oral Pathology">พยาธิวิทยาช่องปาก</option>
+                                        <option value="Tooth Extraction">ถอนฟัน</option>
+                                    </select>
+                                    <div class="error-message">กรุณาเลือกสาขาเชี่ยวชาญ</div>
+                                </div>
+                            </div>
+
+                            <div class="form-row single">
+                                <div class="form-group">
+                                    <label for="education">การศึกษา</label>
+                                    <textarea id="education" name="education" class="form-control" rows="3" placeholder="ประวัติการศึกษาและคุณวุฒิ"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-address-book"></i>
+                                ข้อมูลการติดต่อ
+                            </h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                                    <input type="tel" id="phone" name="phone" class="form-control" required />
+                                    <div class="field-help">รูปแบบ: 08xxxxxxxx หรือ 02xxxxxxx</div>
+                                    <div class="error-message">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="address">ที่อยู่</label>
+                                    <textarea id="address" name="address" class="form-control" rows="3" placeholder="ที่อยู่รวมจังหวัด"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Information -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-key"></i>
+                                ข้อมูลบัญชีผู้ใช้
+                            </h3>
+
+                            <div class="form-row single">
+                                <div class="form-group">
+                                    <label for="email">อีเมล <span class="required">*</span></label>
+                                    <input type="email" id="email" name="email" class="form-control" required />
+                                    <div class="field-help">ใช้งานสำหรับเข้าสู่ระบบและการแจ้งเตือน</div>
+                                    <div class="error-message">กรุณากรอกอีเมลให้ถูกต้อง</div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="password">รหัสผ่าน <span class="required">*</span></label>
+                                    <input type="password" id="password" name="password" class="form-control" required minlength="6" />
+                                    <div class="password-strength">
+                                        <div class="strength-bar">
+                                            <div class="strength-fill" id="strengthFill"></div>
+                                        </div>
+                                        <div class="strength-text" id="strengthText">กรอกรหัสผ่าน</div>
+                                    </div>
+                                    <div class="error-message">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">ยืนยันรหัสผ่าน <span class="required">*</span></label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+                                    <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div>
+                        <a href="/admin/dentists" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            ยกเลิก
+                        </a>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo"></i>
+                            ล้างฟอร์ม
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-plus"></i>
+                            เพิ่มทันตแพทย์
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ฟอร์แมตเวลา 24 ชั่วโมงเมื่อมีการแปลงเป็นข้อความ
+        const TH_LOCALE = 'th-TH';
+
+        // สถานะการส่ง
+        let isSubmitting = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            loadUserInfo();
+            loadNotifications();
+            setupPasswordValidation();
+            setupFormValidation();
+        });
+
+        function initializeForm() {
+            const form = document.getElementById('addDentistForm');
+            const photoInput = document.getElementById('photoInput');
+            const photoPreview = document.getElementById('photoPreview');
+            const photoPlaceholder = document.getElementById('photoPlaceholder');
+
+            photoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast('ขนาดไฟล์ต้องไม่เกิน 5MB', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        photoPreview.src = evt.target.result;
+                        photoPreview.style.display = 'block';
+                        photoPlaceholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            form.addEventListener('submit', handleFormSubmission);
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/admin/profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) userDetails.textContent = `สวัสดี ${data.role || 'แอดมิน'}`;
+                    }
+                }
+            } catch {
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/admin/api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch {
+                showEmptyNotifications();
+            }
+        }
+
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            if (!notifications || notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(n => {
+                const t = getTimeAgo(new Date(n.created_at));
+                return `
+                    <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead(${n.id})">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-message">${n.message}</div>
+                        <div class="notification-time">${t}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+                </div>
+            `;
+        }
+
+        function setupPasswordValidation() {
+            const passwordInput = document.getElementById('password');
+            const confirmInput = document.getElementById('confirmPassword');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            passwordInput.addEventListener('input', function() {
+                const strength = calculatePasswordStrength(this.value);
+                strengthFill.className = `strength-fill ${strength.level}`;
+                strengthText.className = `strength-text ${strength.level}`;
+                strengthText.textContent = strength.text;
+            });
+
+            function calculatePasswordStrength(pw) {
+                if (!pw) return { level: '', text: 'กรอกรหัสผ่าน' };
+                let score = 0;
+                if (pw.length >= 6) score++;
+                if (pw.length >= 8) score++;
+                if (/[A-Z]/.test(pw)) score++;
+                if (/[a-z]/.test(pw)) score++;
+                if (/[0-9]/.test(pw)) score++;
+                if (/[^A-Za-z0-9]/.test(pw)) score++;
+                if (score < 3) return { level: 'weak', text: 'รหัสผ่านอ่อน' };
+                if (score < 4) return { level: 'fair', text: 'รหัสผ่านพอใช้' };
+                if (score < 5) return { level: 'good', text: 'รหัสผ่านดี' };
+                return { level: 'strong', text: 'รหัสผ่านแข็งแรง' };
+            }
+
+            function validatePasswordMatch() {
+                const g = confirmInput.parentElement;
+                if (confirmInput.value && passwordInput.value !== confirmInput.value) {
+                    g.classList.add('error'); g.classList.remove('success');
+                } else if (confirmInput.value && passwordInput.value === confirmInput.value) {
+                    g.classList.remove('error'); g.classList.add('success');
+                } else {
+                    g.classList.remove('error','success');
+                }
+            }
+
+            confirmInput.addEventListener('input', validatePasswordMatch);
+            passwordInput.addEventListener('input', () => { if (confirmInput.value) validatePasswordMatch(); });
+        }
+
+        function setupFormValidation() {
+            const form = document.getElementById('addDentistForm');
+            const inputs = form.querySelectorAll('.form-control[required]');
+
+            inputs.forEach(input => {
+                input.addEventListener('blur', function(){ validateField(this); });
+                input.addEventListener('input', function(){
+                    if (!isSubmitting && this.parentElement.classList.contains('error')) {
+                        this.parentElement.classList.remove('error');
+                    }
+                });
+            });
+
+            // ชื่อ-นามสกุล (เฉพาะตัวอักษรไทย/อังกฤษ ช่องว่าง - ' .)
+            ['fname','lname'].forEach(id=>{
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('input', function(){
+                    const before = this.value;
+                    let clean = before.replace(/[^a-zA-Zก-๏\s\-'\.]/g,'').replace(/\s+/g,' ');
+                    if (before !== clean) {
+                        this.value = clean;
+                        showTemporaryTooltip(this,'อนุญาตเฉพาะตัวอักษร');
+                    }
+                    if (!isSubmitting) setTimeout(()=>validateNameField(this),100);
+                });
+                el.addEventListener('keypress', function(e){
+                    const ch = e.key;
+                    if (e.ctrlKey || e.metaKey || e.altKey) return;
+                    if (!/[a-zA-Zก-๏\s\-'\.]/.test(ch)) {
+                        e.preventDefault(); showTemporaryTooltip(this, `"${ch}" ไม่อนุญาต`);
+                        this.classList.add('invalid-input'); setTimeout(()=>this.classList.remove('invalid-input'),500);
+                    }
+                    if (ch===' ' && this.value.slice(-1)===' ') { e.preventDefault(); showTemporaryTooltip(this,'ไม่อนุญาตช่องว่างซ้ำ'); }
+                });
+                el.addEventListener('paste', function(e){
+                    e.preventDefault();
+                    let t = (e.clipboardData || window.clipboardData).getData('text');
+                    let clean = t.replace(/[^a-zA-Zก-๏\s\-'\.]/g,'').replace(/\s+/g,' ');
+                    document.execCommand('insertText', false, clean);
+                    if (t!==clean) showTemporaryTooltip(this,'ลบอักขระที่ไม่ถูกต้องออกแล้ว');
+                    if (!isSubmitting) setTimeout(()=>validateNameField(this),100);
+                });
+            });
+
+            // บัตรประชาชน
+            const id_card = document.getElementById('id_card');
+            let id_cardTimeout;
+            id_card.addEventListener('input', function(){
+                this.value = this.value.replace(/\D/g,'').substring(0,13);
+                if (id_cardTimeout) clearTimeout(id_cardTimeout);
+                if (isSubmitting) return;
+                this.parentElement.classList.remove('error','success');
+                if (this.value.length === 13) {
+                    id_cardTimeout = setTimeout(()=>checkid_cardAvailability(this.value),800);
+                } else if (this.value.length>0) {
+                    validateField(this);
+                }
+            });
+            id_card.addEventListener('blur', function(){
+                if (!isSubmitting && this.value) {
+                    if (this.value.length===13) checkid_cardAvailability(this.value);
+                    else validateField(this);
+                }
+            });
+
+            // เลขบัตรประกอบวิชาชีพ
+            const license = document.getElementById('license_no');
+            let licenseTimeout;
+            license.addEventListener('input', function(){
+                this.value = this.value.replace(/\D/g,'').substring(0,10);
+                if (licenseTimeout) clearTimeout(licenseTimeout);
+                if (isSubmitting) return;
+                this.parentElement.classList.remove('error','success');
+                if (this.value.length >= 6) {
+                    licenseTimeout = setTimeout(()=>checkLicenseAvailability(this.value),800);
+                }
+            });
+            license.addEventListener('blur', function(){
+                if (!isSubmitting && this.value) {
+                    checkLicenseAvailability(this.value);
+                }
+            });
+
+            // เบอร์โทร
+            const phone = document.getElementById('phone');
+            phone.addEventListener('input', function(){
+                this.value = this.value.replace(/\D/g,'').substring(0,10);
+                if (!isSubmitting) validateField(this);
+            });
+
+            // อีเมล
+            const email = document.getElementById('email');
+            let emailTimeout;
+            email.addEventListener('input', function(){
+                if (emailTimeout) clearTimeout(emailTimeout);
+                if (isSubmitting) return;
+                this.parentElement.classList.remove('error','success');
+                if (this.value && isValidEmail(this.value)) {
+                    emailTimeout = setTimeout(()=>checkEmailAvailability(this.value),800);
+                }
+            });
+            email.addEventListener('blur', function(){
+                if (!isSubmitting && this.value && isValidEmail(this.value)) checkEmailAvailability(this.value);
+            });
+        }
+
+        function validateNameField(field){
+            const group = field.parentElement;
+            const value = field.value.trim();
+            const errorMsg = group.querySelector('.error-message');
+            const label = (field.labels[0]?.textContent || 'ชื่อ').replace(' *','');
+
+            group.classList.remove('error','success');
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error'); errorMsg.textContent = `กรุณากรอก${label}`; return false;
+            }
+            if (value && value.length < 2) { group.classList.add('error'); errorMsg.textContent = `${label}ต้องมีอย่างน้อย 2 อักขระ`; return false; }
+            if (value && value.length > 50) { group.classList.add('error'); errorMsg.textContent = `${label}ต้องไม่เกิน 50 อักขระ`; return false; }
+            if (value && !/^[a-zA-Zก-๏\s\-'\.]+$/.test(value)) { group.classList.add('error'); errorMsg.textContent = `${label}อนุญาตเฉพาะตัวอักษร`; return false; }
+            if (value && /\s{2,}/.test(value)) { group.classList.add('error'); errorMsg.textContent = `${label}ห้ามมีช่องว่างติดกันหลายตัว`; return false; }
+            if (value && /^[\s\-'\.]+$/.test(value)) { group.classList.add('error'); errorMsg.textContent = `${label}ต้องมีตัวอักษรจริง`; return false; }
+
+            group.classList.add('success'); return true;
+        }
+
+        function validateField(field){
+            const group = field.parentElement;
+            const value = field.value.trim();
+            const errorMsg = group.querySelector('.error-message');
+            group.classList.remove('error','success');
+
+            if ((field.name==='fname'||field.name==='lname')) return validateNameField(field);
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                errorMsg.textContent = `${(field.labels[0]?.textContent || 'ช่องนี้').replace(' *','')} จำเป็นต้องกรอก`;
+                return false;
+            }
+
+            if (field.type==='email' && value && !isValidEmail(value)) {
+                group.classList.add('error'); errorMsg.textContent = 'กรุณากรอกอีเมลให้ถูกต้อง'; return false;
+            }
+
+            if (field.name==='id_card' && value){
+                if (value.length!==13 || !/^\d{13}$/.test(value)) {
+                    group.classList.add('error'); errorMsg.textContent = 'เลขบัตรประชาชนต้องมี 13 หลักและเป็นตัวเลขเท่านั้น'; return false;
+                }
+            }
+
+            if (field.name==='license_no' && value){
+                if (!/^\d{6,10}$/.test(value)) {
+                    group.classList.add('error'); errorMsg.textContent = 'เลขบัตรประกอบวิชาชีพต้องเป็นตัวเลข 6–10 หลัก'; return false;
+                }
+            }
+
+            if (field.name==='phone' && value){
+                if (value.length < 9 || value.length > 10 || !/^[0-9]+$/.test(value)) {
+                    group.classList.add('error'); errorMsg.textContent = 'เบอร์โทรต้องเป็นตัวเลข 9–10 หลัก'; return false;
+                }
+            }
+
+            if (field.name==='dob' && value){
+                const birth = new Date(value);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                if (age < 18) { group.classList.add('error'); errorMsg.textContent = 'อายุขั้นต่ำ 18 ปี'; return false; }
+                if (age > 80) { group.classList.add('error'); errorMsg.textContent = 'กรุณาตรวจสอบวันเกิดอีกครั้ง'; return false; }
+            }
+
+            if (field.name==='password' && value && value.length<6) {
+                group.classList.add('error'); errorMsg.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; return false;
+            }
+
+            group.classList.add('success'); return true;
+        }
+
+        function isValidEmail(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+        async function checkid_cardAvailability(id_card){
+            if (!id_card || id_card.length!==13 || isSubmitting) return;
+            const group = document.getElementById('id_card').parentElement;
+            const msg = group.querySelector('.error-message');
+            group.classList.add('checking'); group.classList.remove('error','success');
+            try{
+                const res = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(id_card)}`);
+                if (res.ok){
+                    const data = await res.json();
+                    if (!data.success) { group.classList.add('error'); msg.textContent = data.error || 'ตรวจสอบบัตรประชาชนไม่สำเร็จ'; }
+                    else if (!data.valid){ group.classList.add('error'); msg.textContent = data.message || 'รูปแบบบัตรประชาชนไม่ถูกต้อง'; }
+                    else if (data.exists){ group.classList.add('error'); msg.textContent = data.message || 'บัตรประชาชนนี้ถูกใช้แล้ว'; if (data.foundIn) showToast(`พบซ้ำใน ${data.foundIn}`,'warning'); }
+                    else { group.classList.add('success'); }
+                } else { group.classList.add('error'); msg.textContent = 'ไม่สามารถตรวจสอบบัตรประชาชนได้'; }
+            } catch { group.classList.add('error'); msg.textContent = 'เครือข่ายผิดพลาดระหว่างตรวจสอบบัตรประชาชน'; }
+            finally{ group.classList.remove('checking'); }
+        }
+
+        async function checkLicenseAvailability(licenseNo){
+            if (!licenseNo || isSubmitting) return;
+            const group = document.getElementById('license_no').parentElement;
+            const msg = group.querySelector('.error-message');
+            group.classList.add('checking'); group.classList.remove('error','success');
+            try{
+                const res = await fetch(`/admin/api/check-license?license=${encodeURIComponent(licenseNo)}`);
+                if (res.ok){
+                    const data = await res.json();
+                    if (!data.success) { group.classList.add('error'); msg.textContent = data.error || 'ตรวจสอบเลขบัตรประกอบวิชาชีพไม่สำเร็จ'; }
+                    else if (!/^\d{6,10}$/.test(licenseNo)) { group.classList.add('error'); msg.textContent = 'เลขบัตรประกอบวิชาชีพต้องเป็นตัวเลข 6–10 หลัก'; }
+                    else if (data.exists) { group.classList.add('error'); msg.textContent = data.message || 'เลขบัตรประกอบวิชาชีพนี้ถูกใช้แล้ว'; }
+                    else { group.classList.add('success'); }
+                } else { group.classList.add('error'); msg.textContent = 'ไม่สามารถตรวจสอบเลขบัตรประกอบวิชาชีพได้'; }
+            } catch { group.classList.add('error'); msg.textContent = 'เครือข่ายผิดพลาดระหว่างตรวจสอบเลขบัตรประกอบวิชาชีพ'; }
+            finally { group.classList.remove('checking'); }
+        }
+
+        async function checkEmailAvailability(email){
+            if (!email || !isValidEmail(email) || isSubmitting) return;
+            const group = document.getElementById('email').parentElement;
+            const msg = group.querySelector('.error-message');
+            group.classList.add('checking'); group.classList.remove('error','success');
+            try{
+                const res = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                if (res.ok){
+                    const data = await res.json();
+                    if (!data.success) { group.classList.add('error'); msg.textContent = data.error || 'ตรวจสอบอีเมลไม่สำเร็จ'; }
+                    else if (data.exists) { group.classList.add('error'); msg.textContent = data.message || 'อีเมลนี้ถูกใช้แล้ว'; }
+                    else { group.classList.add('success'); }
+                } else { group.classList.add('error'); msg.textContent = 'ไม่สามารถตรวจสอบอีเมลได้'; }
+            } catch { group.classList.add('error'); msg.textContent = 'เครือข่ายผิดพลาดระหว่างตรวจสอบอีเมล'; }
+            finally{ group.classList.remove('checking'); }
+        }
+
+        function showTemporaryTooltip(element, message){
+            document.querySelectorAll('.temp-tooltip').forEach(t=>t.remove());
+            const tip = document.createElement('div');
+            tip.className = 'temp-tooltip';
+            tip.textContent = message;
+            tip.style.cssText = `
+                position: absolute; background: #ff4757; color: white; padding: 8px 12px;
+                border-radius: 4px; font-size: 12px; white-space: nowrap; z-index: 1000;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2); pointer-events: none;
+                animation: fadeInOut 3s ease-in-out forwards;
+            `;
+            const rect = element.getBoundingClientRect();
+            tip.style.top = (rect.top - 35 + window.scrollY) + 'px';
+            tip.style.left = rect.left + 'px';
+            document.body.appendChild(tip);
+            setTimeout(()=>{ if (tip.parentNode) tip.remove(); }, 3000);
+        }
+        // tooltip anim
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut { 0%{opacity:0; transform: translateY(-5px)} 20%,80%{opacity:1; transform: translateY(0)} 100%{opacity:0; transform: translateY(-5px)} }
+        `;
+        document.head.appendChild(style);
+
+        async function handleFormSubmission(e){
+            e.preventDefault();
+            if (isSubmitting) return;
+            const form = e.target;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!validateAllFields()) { showToast('กรุณาแก้ไขข้อมูลให้ถูกต้องก่อนบันทึก','error'); highlightFirstError(); return; }
+
+            const errorFields = form.querySelectorAll('.form-group.error');
+            if (errorFields.length) { showToast('ยังมีข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง','error'); highlightFirstError(); return; }
+
+            const pw = document.getElementById('password').value;
+            const cpw = document.getElementById('confirmPassword').value;
+            if (pw !== cpw) { showToast('รหัสผ่านไม่ตรงกัน','error'); document.getElementById('confirmPassword').focus(); return; }
+
+            // final duplicate checks
+            const email = document.getElementById('email').value;
+            const id_card = document.getElementById('id_card').value;
+            const licenseNo = document.getElementById('license_no').value;
+
+            try {
+                const emailRes = await fetch(`/admin/api/check-email?email=${encodeURIComponent(email)}`);
+                if (emailRes.ok && (await emailRes.json()).exists){ showToast('อีเมลนี้ถูกใช้แล้ว','error'); document.getElementById('email').focus(); return; }
+
+                const idRes = await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(id_card)}`);
+                if (idRes.ok && (await idRes.json()).exists){ showToast('เลขบัตรประชาชนนี้ถูกใช้แล้ว','error'); document.getElementById('id_card').focus(); return; }
+
+                const licRes = await fetch(`/admin/api/check-license?license=${encodeURIComponent(licenseNo)}`);
+                if (licRes.ok && (await licRes.json()).exists){ showToast('เลขบัตรประกอบวิชาชีพนี้ถูกใช้แล้ว','error'); document.getElementById('license_no').focus(); return; }
+            } catch { /* ถ้าตรวจสอบไม่ได้ จะดำเนินการต่อ */ }
+
+            isSubmitting = true; submitBtn.classList.add('btn-loading'); submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/admin/dentists/add', { method: 'POST', body: formData });
+                const contentType = response.headers.get('content-type') || '';
+                if (response.ok) {
+                    let result = { success: true, message: 'เพิ่มทันตแพทย์สำเร็จ' };
+                    try { if (contentType.includes('application/json')) result = await response.json(); } catch {}
+                    if (result.success !== false) {
+                        showToast('เพิ่มทันตแพทย์สำเร็จ!','success');
+                        clearDraft();
+                        setTimeout(()=>{ window.location.href = result.redirect || '/admin/dentists'; },1500);
+                        return;
+                    }
+                }
+                let err; try { err = contentType.includes('application/json') ? await response.json() : { error: `เกิดข้อผิดพลาด (${response.status})` }; } catch { err = { error: `เกิดข้อผิดพลาด (${response.status})` }; }
+                if (err.field) {
+                    const el = document.getElementById(err.field);
+                    if (el) {
+                        const g = el.parentElement; g.classList.add('error'); g.classList.remove('success');
+                        const m = g.querySelector('.error-message'); if (m) m.textContent = err.error;
+                        el.scrollIntoView({ behavior:'smooth', block:'center' }); setTimeout(()=>el.focus(),500);
+                    }
+                }
+                showToast(err.error || 'ไม่สามารถเพิ่มทันตแพทย์ได้','error');
+            } catch {
+                showToast('เครือข่ายผิดพลาด กรุณาลองใหม่','error');
+            } finally {
+                isSubmitting = false; submitBtn.classList.remove('btn-loading'); submitBtn.disabled = false;
+            }
+        }
+
+        function highlightFirstError(){
+            const el = document.querySelector('.form-group.error .form-control');
+            if (el){
+                el.scrollIntoView({ behavior:'smooth', block:'center' });
+                el.classList.add('invalid-input'); setTimeout(()=>el.classList.remove('invalid-input'),500);
+                setTimeout(()=>el.focus(),500);
+            }
+        }
+
+        function validateAllFields(){
+            const form = document.getElementById('addDentistForm');
+            const req = form.querySelectorAll('.form-control[required]');
+            let ok = true; req.forEach(f=>{ if (!validateField(f)) ok=false; }); return ok;
+        }
+
+        function resetForm(){
+            const form = document.getElementById('addDentistForm');
+            form.reset();
+            const img = document.getElementById('photoPreview'); const ph = document.getElementById('photoPlaceholder');
+            img.style.display='none'; ph.style.display='block';
+            form.querySelectorAll('.form-group').forEach(g=>g.classList.remove('error','success'));
+            document.getElementById('strengthFill').className='strength-fill';
+            document.getElementById('strengthText').textContent='กรอกรหัสผ่าน';
+            document.getElementById('strengthText').className='strength-text';
+            showToast('ล้างฟอร์มเรียบร้อย','info');
+        }
+
+        function toggleNotifications(){
+            const dd = document.getElementById('notificationDropdown');
+            const visible = dd.classList.contains('show');
+            if (visible) dd.classList.remove('show'); else { dd.classList.add('show'); loadNotifications(); }
+        }
+        async function markAsRead(id){ try{ const r=await fetch(`/admin/api/notifications/${id}/read`,{method:'POST'}); if (r.ok) loadNotifications(); }catch{} }
+        async function markAllAsRead(){ try{ const r=await fetch('/admin/api/notifications/read-all',{method:'POST'}); if (r.ok){ loadNotifications(); showToast('ทำเครื่องหมายว่าอ่านทั้งหมดแล้ว','success'); } }catch{ showToast('ไม่สามารถทำเครื่องหมายว่าอ่านทั้งหมดได้','error'); } }
+        function toggleDropdown(){ const m=document.getElementById('profileDropdown'); m.style.display = m.style.display==='block' ? 'none' : 'block'; }
+
+        function showToast(message, type='info'){
+            document.querySelectorAll('.toast').forEach(t=>t.remove());
+            const toast = document.createElement('div'); toast.className = `toast ${type}`;
+            const icon = { success:'fas fa-check-circle', error:'fas fa-exclamation-triangle', warning:'fas fa-exclamation-circle', info:'fas fa-info-circle' }[type];
+            toast.innerHTML = `<i class="${icon}"></i><span>${message}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;margin-left:auto;cursor:pointer;font-size:18px;padding:0 5px;">&times;</button>`;
+            toast.style.cssText = `position:fixed; top:20px; right:20px; padding:15px 20px; border-radius:8px; color:white; font-size:14px; font-weight:500; z-index:5000; box-shadow:0 4px 12px rgba(0,0,0,0.15); animation: slideInRight 0.3s ease; display:flex; align-items:center; gap:12px; min-width:320px; max-width:500px; background:${{success:'#10b981',error:'#ef4444',warning:'#f59e0b',info:'#3b82f6'}[type]}; border-left:4px solid rgba(255,255,255,0.3);`;
+            document.body.appendChild(toast);
+            setTimeout(()=>{ if (toast.parentNode){ toast.style.animation='slideOutRight 0.3s ease'; setTimeout(()=>toast.remove(),300);} }, type==='error'?7000:5000);
+        }
+
+        // “เวลาที่แล้ว” ภาษาไทย
+        function getTimeAgo(date){
+            const now = new Date();
+            const sec = Math.floor((now - date) / 1000);
+            if (sec < 60) return 'เมื่อสักครู่';
+            if (sec < 3600) return `${Math.floor(sec/60)} นาทีที่แล้ว`;
+            if (sec < 86400) return `${Math.floor(sec/3600)} ชั่วโมงที่แล้ว`;
+            if (sec < 604800) return `${Math.floor(sec/86400)} วันที่แล้ว`;
+            // กรณีเกิน 7 วัน แสดงวันที่ด้วยรูปแบบไทย 24 ชม.
+            return date.toLocaleString(TH_LOCALE, { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+        }
+
+        // Draft
+        function saveDraft(){
+            const formData = new FormData(document.getElementById('addDentistForm'));
+            const draft = {};
+            for (let [k,v] of formData.entries()){
+                if (!['photo','password','confirmPassword'].includes(k)) draft[k]=v;
+            }
+            try { localStorage.setItem('dentist_draft', JSON.stringify(draft)); } catch{}
+        }
+        function loadDraft(){
+            try{
+                const d = localStorage.getItem('dentist_draft');
+                if (d){
+                    const data = JSON.parse(d);
+                    Object.keys(data).forEach(k=>{
+                        const el = document.getElementById(k); if (el) el.value = data[k];
+                    });
+                    updateFormProgress();
+                }
+            }catch{}
+        }
+        function clearDraft(){ try{ localStorage.removeItem('dentist_draft'); }catch{} }
+
+        function updateFormProgress(){
+            const personal = ['fname','lname','dob','id_card','license_no','specialty'];
+            const contact = ['phone','address'];
+            const account = ['email','password','confirmPassword'];
+            const donePersonal = personal.every(id => (document.getElementById(id)?.value || '').trim() !== '');
+            const doneContact = contact.some(id => (document.getElementById(id)?.value || '').trim() !== '');
+            const doneAccount = account.every(id => (document.getElementById(id)?.value || '').trim() !== '');
+            updateStepIndicator('step1', donePersonal);
+            updateStepIndicator('step2', doneContact);
+            updateStepIndicator('step3', doneAccount);
+        }
+        function updateStepIndicator(id, ok){
+            const step = document.getElementById(id); const ic = step.querySelector('i');
+            if (ok){ step.classList.add('completed'); ic.className='fas fa-check'; }
+            else { step.classList.remove('completed'); if (id==='step1') ic.className='fas fa-user'; if (id==='step2') ic.className='fas fa-phone'; if (id==='step3') ic.className='fas fa-key'; }
+        }
+
+        document.addEventListener('click', function(e){
+            const profile = document.querySelector('.profile-dropdown');
+            if (!profile.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+            const noti = document.querySelector('.notification-container');
+            if (!noti.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
+        });
+
+        document.addEventListener('keydown', function(e){
+            if (e.ctrlKey && e.key==='s'){ e.preventDefault(); saveDraft(); showToast('บันทึกแบบร่างแล้ว','info'); }
+            if (e.key==='Escape'){ document.getElementById('notificationDropdown').classList.remove('show'); document.getElementById('profileDropdown').style.display='none'; }
+        });
+
+        setInterval(()=>{ const form=document.getElementById('addDentistForm'); const hasData = Array.from(form.querySelectorAll('.form-control')).some(i=>i.value.trim()!==''); if (hasData) saveDraft(); }, 30000);
+        document.addEventListener('input', function(e){ if (e.target.classList.contains('form-control')) updateFormProgress(); });
+        window.addEventListener('load', loadDraft);
+        window.addEventListener('beforeunload', function(){ if (isSubmitting) clearDraft(); });
+
+        // Auto-refresh notifications
+        setInterval(loadNotifications, 60000);
+
+        // Debug (คงไว้ตามเดิม เฉพาะ localhost)
+        window.debugDentistForm = {
+            testEmailAPI: async function(email){ try{ const r=await fetch(`/admin/api/check-email?email=${encodeURIComponent(email||'test@example.com')}`); return await r.json(); }catch(e){ return {error:e.message}; } },
+            testid_cardAPI: async function(id){ try{ const r=await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(id||'1234567890123')}`); return await r.json(); }catch(e){ return {error:e.message}; } },
+            testLicenseAPI: async function(lic){ try{ const r=await fetch(`/admin/api/check-license?license=${encodeURIComponent(lic||'123456')}`); return await r.json(); }catch(e){ return {error:e.message}; } }
+        };
+        if (['localhost','127.0.0.1'].includes(window.location.hostname)){
+            document.addEventListener('DOMContentLoaded', function(){
+                setTimeout(()=>{
+                    const btn=document.createElement('button'); btn.textContent='🐛 Debug Tests';
+                    btn.style.cssText='position:fixed; top:10px; left:10px; z-index:9999; background:#ff6b6b; color:#fff; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer;';
+                    btn.onclick=async()=>{ await window.debugDentistForm.testEmailAPI('test@example.com'); await window.debugDentistForm.testid_cardAPI('1234567890123'); await window.debugDentistForm.testLicenseAPI('123456'); showToast('ทดสอบดีบักเสร็จสิ้น ดูผลได้ในคอนโซล','info'); };
+                    document.body.appendChild(btn);
+                },2000);
+            });
+        }
+    </script>
+</body>
+</html>
