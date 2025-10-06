@@ -1,7 +1,6 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
-
+const PasswordResetModel = require('../models/password-reset.model');
 const emailService = require('../services/email.service');
 
 // ==================== WEB CONTROLLERS ====================
@@ -28,12 +27,10 @@ exports.sendResetEmail = async (req, res) => {
       });
     }
 
-    const [users] = await db.execute(
-      'SELECT user_id, email FROM user WHERE email = ?', 
-      [email]
-    );
+    // ค้นหา user จาก email (ใช้ Model)
+    const user = await PasswordResetModel.getUserByEmail(email);
 
-    if (users.length === 0) {
+    if (!user) {
       console.log(`Password reset requested for non-existent email: ${email}`);
       return res.render('auth/forgot-password', { 
         error: null,
@@ -42,21 +39,22 @@ exports.sendResetEmail = async (req, res) => {
       });
     }
 
-    const user = users[0];
-
-    // ลบ token เดิมทั้งหมดของอีเมลนี้
-    await db.execute('DELETE FROM password_resets WHERE email = ?', [email]);
+    // ลบ token เดิมทั้งหมดของอีเมลนี้ (ใช้ Model)
+    await PasswordResetModel.deleteTokensByEmail(email);
 
     // สร้าง token ใหม่
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 ชั่วโมง
 
-    // บันทึก token พร้อม user_id
-    await db.execute(
-      'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)',
-      [user.user_id, email, token, expiresAt]
+    // บันทึก token พร้อม user_id (ใช้ Model)
+    await PasswordResetModel.createPasswordResetToken(
+      user.user_id, 
+      email, 
+      token, 
+      expiresAt
     );
 
+    // ส่งอีเมล
     const emailResult = await emailService.sendResetPasswordEmail(email, token);
 
     if (emailResult.success) {
@@ -93,15 +91,10 @@ exports.getResetPassword = async (req, res) => {
       });
     }
 
-    const [tokens] = await db.execute(
-      `SELECT pr.*, u.email as user_email 
-       FROM password_resets pr 
-       JOIN user u ON pr.user_id = u.user_id 
-       WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
-      [token]
-    );
+    // ตรวจสอบ token (ใช้ Model)
+    const tokenData = await PasswordResetModel.validateToken(token);
 
-    if (tokens.length === 0) {
+    if (!tokenData) {
       return res.render('auth/reset-password-error', { 
         message: 'ลิงก์รีเซ็ตรหัสผ่านนี้ไม่ถูกต้องหรือหมดอายุแล้ว',
         token: null
@@ -110,7 +103,7 @@ exports.getResetPassword = async (req, res) => {
 
     res.render('auth/reset-password', {
       token: token,
-      email: tokens[0].user_email,
+      email: tokenData.user_email,
       error: null,
       success: false
     });
@@ -131,6 +124,7 @@ exports.processResetPassword = async (req, res) => {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
+    // Validation
     if (!password || !confirmPassword) {
       return res.render('auth/reset-password', {
         token: token,
@@ -158,49 +152,34 @@ exports.processResetPassword = async (req, res) => {
       });
     }
 
-    const [tokens] = await db.execute(
-      `SELECT pr.*, u.user_id, u.email as user_email 
-       FROM password_resets pr 
-       JOIN user u ON pr.user_id = u.user_id 
-       WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
-      [token]
-    );
+    // ดึงข้อมูล token พร้อม user (ใช้ Model)
+    const resetData = await PasswordResetModel.getTokenWithUser(token);
 
-    if (tokens.length === 0) {
+    if (!resetData) {
       return res.render('auth/reset-password-error', { 
         message: 'ลิงก์รีเซ็ตรหัสผ่านนี้ไม่ถูกต้องหรือหมดอายุแล้ว',
         token: token
       });
     }
 
-    const resetData = tokens[0];
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.query('START TRANSACTION');
-    try {
-      await db.execute(
-        'UPDATE user SET password = ? WHERE user_id = ?',
-        [hashedPassword, resetData.user_id]
-      );
+    // อัพเดทรหัสผ่านด้วย Transaction (ใช้ Model)
+    await PasswordResetModel.resetPasswordWithToken(
+      resetData.user_id,
+      hashedPassword,
+      resetData.id
+    );
 
-      await db.execute(
-        'UPDATE password_resets SET used_at = NOW() WHERE id = ?',
-        [resetData.id]
-      );
+    console.log(`Password reset successful for user: ${resetData.user_email}`);
+    
+    // ส่งอีเมลแจ้งเตือน
+    await emailService.sendPasswordChangedEmail(resetData.user_email);
 
-      await db.query('COMMIT');
-
-      console.log(`Password reset successful for user: ${resetData.user_email}`);
-      await emailService.sendPasswordChangedEmail(resetData.user_email);
-
-      res.render('auth/reset-password-success', {
-        message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว สามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว'
-      });
-
-    } catch (dbError) {
-      await db.query('ROLLBACK');
-      throw dbError;
-    }
+    res.render('auth/reset-password-success', {
+      message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว สามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว'
+    });
 
   } catch (error) {
     console.error('Process reset password error:', error);
@@ -226,30 +205,32 @@ exports.apiForgotPassword = async (req, res) => {
       });
     }
 
-    const [users] = await db.execute(
-      'SELECT user_id, email FROM user WHERE email = ?', 
-      [email]
-    );
+    // ค้นหา user (ใช้ Model)
+    const user = await PasswordResetModel.getUserByEmail(email);
 
-    if (users.length === 0) {
+    if (!user) {
       return res.json({
         success: true,
         message: 'If this email exists in our system, we will send you a password reset link.'
       });
     }
 
-    const user = users[0];
+    // ลบ token เดิม (ใช้ Model)
+    await PasswordResetModel.deleteTokensByEmail(email);
 
-    await db.execute('DELETE FROM password_resets WHERE email = ?', [email]);
-
+    // สร้าง token ใหม่
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    await db.execute(
-      'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)',
-      [user.user_id, email, token, expiresAt]
+    // บันทึก token (ใช้ Model)
+    await PasswordResetModel.createPasswordResetToken(
+      user.user_id,
+      email,
+      token,
+      expiresAt
     );
 
+    // ส่งอีเมล
     const emailResult = await emailService.sendResetPasswordEmail(email, token);
 
     if (emailResult.success) {
@@ -281,14 +262,10 @@ exports.apiValidateToken = async (req, res) => {
       });
     }
 
-    const [tokens] = await db.execute(
-      `SELECT pr.email, pr.expires_at 
-       FROM password_resets pr 
-       WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
-      [token]
-    );
+    // ตรวจสอบ token (ใช้ Model)
+    const tokenData = await PasswordResetModel.validateTokenForApi(token);
 
-    if (tokens.length === 0) {
+    if (!tokenData) {
       return res.status(400).json({
         success: false,
         error: 'Invalid or expired token'
@@ -298,8 +275,8 @@ exports.apiValidateToken = async (req, res) => {
     res.json({
       success: true,
       valid: true,
-      email: tokens[0].email,
-      expires_at: tokens[0].expires_at
+      email: tokenData.email,
+      expires_at: tokenData.expires_at
     });
 
   } catch (error) {
@@ -316,6 +293,7 @@ exports.apiResetPassword = async (req, res) => {
     const { token } = req.params;
     const { password, confirmPassword } = req.body;
 
+    // Validation
     if (!password || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -337,49 +315,33 @@ exports.apiResetPassword = async (req, res) => {
       });
     }
 
-    const [tokens] = await db.execute(
-      `SELECT pr.id, pr.email, u.user_id 
-       FROM password_resets pr 
-       JOIN user u ON pr.user_id = u.user_id 
-       WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL`,
-      [token]
-    );
+    // ดึงข้อมูล token (ใช้ Model)
+    const resetData = await PasswordResetModel.getTokenForApiReset(token);
 
-    if (tokens.length === 0) {
+    if (!resetData) {
       return res.status(400).json({
         success: false,
         error: 'Invalid or expired token'
       });
     }
 
-    const resetData = tokens[0];
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.query('START TRANSACTION');
-    try {
-      await db.execute(
-        'UPDATE user SET password = ? WHERE user_id = ?',
-        [hashedPassword, resetData.user_id]
-      );
+    // Reset password ด้วย Transaction (ใช้ Model)
+    await PasswordResetModel.resetPasswordWithToken(
+      resetData.user_id,
+      hashedPassword,
+      resetData.id
+    );
 
-      await db.execute(
-        'UPDATE password_resets SET used_at = NOW() WHERE id = ?',
-        [resetData.id]
-      );
+    // ส่งอีเมลแจ้งเตือน
+    await emailService.sendPasswordChangedEmail(resetData.email);
 
-      await db.query('COMMIT');
-
-      await emailService.sendPasswordChangedEmail(resetData.email);
-
-      res.json({
-        success: true,
-        message: 'Password has been reset successfully'
-      });
-
-    } catch (dbError) {
-      await db.query('ROLLBACK');
-      throw dbError;
-    }
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully'
+    });
 
   } catch (error) {
     console.error('API reset password error:', error);
@@ -394,12 +356,9 @@ exports.apiResetPassword = async (req, res) => {
 
 exports.cleanupExpiredTokens = async () => {
   try {
-    const [result] = await db.execute(
-      'DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL'
-    );
-    
-    console.log(`Cleaned up ${result.affectedRows} expired/used password reset tokens`);
-    return result.affectedRows;
+    const affectedRows = await PasswordResetModel.cleanupExpiredTokens();
+    console.log(`Cleaned up ${affectedRows} expired/used password reset tokens`);
+    return affectedRows;
   } catch (error) {
     console.error('Cleanup expired tokens error:', error);
     return 0;
@@ -408,11 +367,7 @@ exports.cleanupExpiredTokens = async () => {
 
 exports.getActiveTokensCount = async () => {
   try {
-    const [result] = await db.execute(
-      'SELECT COUNT(*) as count FROM password_resets WHERE expires_at > NOW() AND used_at IS NULL'
-    );
-    
-    return result[0].count;
+    return await PasswordResetModel.getActiveTokensCount();
   } catch (error) {
     console.error('Get active tokens count error:', error);
     return 0;
@@ -421,19 +376,7 @@ exports.getActiveTokensCount = async () => {
 
 exports.getPasswordResetStats = async () => {
   try {
-    const [results] = await db.execute(`
-      SELECT 
-        DATE(created_at) as date,
-        COUNT(*) as total_requests,
-        SUM(CASE WHEN used_at IS NOT NULL THEN 1 ELSE 0 END) as successful_resets,
-        SUM(CASE WHEN expires_at < NOW() AND used_at IS NULL THEN 1 ELSE 0 END) as expired_tokens
-      FROM password_resets 
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-      GROUP BY DATE(created_at)
-      ORDER BY date DESC
-    `);
-    
-    return results;
+    return await PasswordResetModel.getPasswordResetStats();
   } catch (error) {
     console.error('Get password reset stats error:', error);
     return [];

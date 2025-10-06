@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
-const db = require('../config/db');
 const validator = require('validator');
+const RegisterModel = require('../models/register.model');
 
 // Enhanced validation function
 function validateInput(data) {
@@ -11,7 +11,7 @@ function validateInput(data) {
         errors.fname = 'First name is required';
     } else if (data.fname.trim().length < 2) {
         errors.fname = 'First name must be at least 2 characters';
-    } else if (!/^[a-zA-Z]+(\s[a-zA-Z]+)*$/.test(data.fname.trim())) {
+    } else if (!/^[a-zA-Zก-๙]+(\s[a-zA-Zก-๙]+)*$/.test(data.fname.trim())) {
         errors.fname = 'First name must contain only letters and single spaces';
     }
     
@@ -20,7 +20,7 @@ function validateInput(data) {
         errors.lname = 'Last name is required';
     } else if (data.lname.trim().length < 2) {
         errors.lname = 'Last name must be at least 2 characters';
-    } else if (!/^[a-zA-Z]+(\s[a-zA-Z]+)*$/.test(data.lname.trim())) {
+    } else if (!/^[a-zA-Zก-๙]+(\s[a-zA-Zก-๙]+)*$/.test(data.lname.trim())) {
         errors.lname = 'Last name must contain only letters and single spaces';
     }
     
@@ -93,33 +93,8 @@ function validateInput(data) {
     };
 }
 
-// Check for duplicates
-async function checkDuplicates(email, id_card) {
-    try {
-        const [emailExists] = await db.execute(
-            'SELECT user_id FROM user WHERE LOWER(email) = LOWER(?)',
-            [email]
-        );
-        
-        const [id_cardExists] = await db.execute(
-            'SELECT patient_id FROM patient WHERE id_card = ?',
-            [id_card]
-        );
-        
-        return {
-            emailExists: emailExists.length > 0,
-            id_cardExists: id_cardExists.length > 0
-        };
-    } catch (error) {
-        console.error('Database error checking duplicates:', error);
-        throw new Error('Database error occurred');
-    }
-}
-
 // Main registration function
 exports.registerPatient = async (req, res) => {
-    let connection = null;
-    
     try {
         console.log('Registration request received:', {
             email: req.body.email,
@@ -159,15 +134,18 @@ exports.registerPatient = async (req, res) => {
             id_card: rawData.id_card.trim()
         };
         
-        // Check for duplicates
-        const duplicates = await checkDuplicates(cleanData.email, cleanData.id_card);
+        // Check for duplicates (ใช้ Model)
+        const duplicates = await RegisterModel.checkDuplicates(
+            cleanData.email,
+            cleanData.id_card
+        );
         
         if (duplicates.emailExists) {
             console.log('Duplicate email detected:', cleanData.email);
             return res.redirect('/register?error=duplicate_email');
         }
         
-        if (duplicates.id_cardExists) {
+        if (duplicates.idCardExists) {
             console.log('Duplicate ID card detected:', cleanData.id_card);
             return res.redirect('/register?error=duplicate_id');
         }
@@ -175,58 +153,31 @@ exports.registerPatient = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(cleanData.password, 12);
         
-        // ✅ Fixed: Get connection and use proper transaction handling
-        connection = await db.getConnection();
-        await connection.beginTransaction();
-        
         console.log('Starting database transaction...');
         
-        // Create user (role_id = 3 for patient)
-        const [userResult] = await connection.execute(
-            'INSERT INTO user (role_id, email, password, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())',
-            [3, cleanData.email, hashedPassword]
+        // สร้าง user และ patient ด้วย Transaction (ใช้ Model)
+        const patientData = {
+            fname: cleanData.fname,
+            lname: cleanData.lname,
+            dob: cleanData.dob,
+            id_card: cleanData.id_card,
+            address: cleanData.address,
+            phone: cleanData.phone
+        };
+
+        const userId = await RegisterModel.registerPatientWithTransaction(
+            cleanData.email,
+            hashedPassword,
+            patientData
         );
         
-        const userId = userResult.insertId;
-        console.log('User created with ID:', userId);
-        
-        // Create patient
-        await connection.execute(`
-            INSERT INTO patient (
-                user_id, fname, lname, dob, id_card, address, phone,
-                created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        `, [
-            userId,
-            cleanData.fname,
-            cleanData.lname,
-            cleanData.dob,
-            cleanData.id_card,
-            cleanData.address,
-            cleanData.phone
-        ]);
-        
-        console.log('Patient record created for user ID:', userId);
-        
-        // Commit transaction
-        await connection.commit();
         console.log('Transaction committed successfully');
-        
         console.log(`✅ New patient registered successfully: ${cleanData.email} (User ID: ${userId})`);
+        
         return res.redirect('/login?message=' + encodeURIComponent('Registration successful! Please log in with your credentials.'));
         
     } catch (error) {
         console.error('Registration error:', error);
-        
-        // Rollback transaction if connection exists
-        if (connection) {
-            try {
-                await connection.rollback();
-                console.log('Transaction rolled back');
-            } catch (rollbackError) {
-                console.error('Rollback error:', rollbackError);
-            }
-        }
         
         // Handle duplicate entry errors from database level
         if (error.code === 'ER_DUP_ENTRY') {
@@ -238,13 +189,6 @@ exports.registerPatient = async (req, res) => {
         }
         
         return res.redirect('/register?error=server_error&message=' + encodeURIComponent('Registration failed. Please try again later.'));
-        
-    } finally {
-        // Release connection back to pool
-        if (connection) {
-            connection.release();
-            console.log('Database connection released');
-        }
     }
 };
 
@@ -260,14 +204,12 @@ exports.checkEmailAvailability = async (req, res) => {
             });
         }
         
-        const [existing] = await db.execute(
-            'SELECT user_id FROM user WHERE LOWER(email) = LOWER(?)',
-            [email]
-        );
+        // ใช้ Model
+        const exists = await RegisterModel.checkEmailExists(email);
         
         return res.json({
             success: true,
-            available: existing.length === 0
+            available: !exists
         });
         
     } catch (error) {
@@ -280,7 +222,7 @@ exports.checkEmailAvailability = async (req, res) => {
 };
 
 // API function for checking ID card availability
-exports.checkid_cardAvailability = async (req, res) => {
+exports.checkIdCardAvailability = async (req, res) => {
     try {
         const { id_card } = req.query;
         
@@ -291,14 +233,12 @@ exports.checkid_cardAvailability = async (req, res) => {
             });
         }
         
-        const [existing] = await db.execute(
-            'SELECT patient_id FROM patient WHERE id_card = ?',
-            [id_card]
-        );
+        // ใช้ Model
+        const exists = await RegisterModel.checkIdCardExists(id_card);
         
         return res.json({
             success: true,
-            available: existing.length === 0
+            available: !exists
         });
         
     } catch (error) {
@@ -306,6 +246,28 @@ exports.checkid_cardAvailability = async (req, res) => {
         return res.status(500).json({
             success: false,
             error: 'Server error'
+        });
+    }
+};
+
+// Get patient statistics (สำหรับ Admin)
+exports.getPatientStats = async (req, res) => {
+    try {
+        const totalPatients = await RegisterModel.getTotalPatientsCount();
+        const recentPatients = await RegisterModel.getRecentPatients(10);
+        
+        res.json({
+            success: true,
+            data: {
+                total: totalPatients,
+                recent: recentPatients
+            }
+        });
+    } catch (error) {
+        console.error('Get patient stats error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch patient statistics'
         });
     }
 };
