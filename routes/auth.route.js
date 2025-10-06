@@ -1,70 +1,9 @@
-// แทนที่ใน routes/auth.route.js หรือไฟล์ routes หลักของคุณ
-
 const express = require('express');
 const router = express.Router();
 const authController = require('../controller/auth.controller');
-const registerController = require('../controller/register.controller'); // ใช้ controller เดิม
+const registerController = require('../controller/register.controller');
 const loginController = require('../controller/login.controller');
 const passwordResetController = require('../controller/password-reset.controller');
-
-// Middleware สำหรับตรวจสอบ session และ rate limiting
-const rateLimit = require('express-rate-limit');
-
-// Rate limiting สำหรับการ login
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 นาที
-    max: 5, // จำกัด 5 ครั้งต่อ IP
-    message: {
-        error: 'Too many login attempts, please try again after 15 minutes'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Rate limiting สำหรับการ register (เข้มงวดขึ้น)
-const registerLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 ชั่วโมง
-    max: 3, // จำกัด 3 ครั้งต่อ IP
-    message: {
-        error: 'Too many registration attempts, please try again after 1 hour'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Rate limiting สำหรับ API calls
-const apiLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 นาที
-    max: 20, // จำกัด 20 ครั้งต่อนาที
-    message: {
-        success: false,
-        error: 'Too many requests, please slow down'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Rate limiting สำหรับ forgot password
-const forgotPasswordLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 นาที
-    max: 3, // จำกัด 3 ครั้งต่อ IP
-    message: {
-        error: 'Too many reset attempts, please try again after 15 minutes'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-// Rate limiting สำหรับ reset password
-const resetPasswordLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 ชั่วโมง
-    max: 10, // จำกัด 10 ครั้งต่อ IP
-    message: {
-        error: 'Too many password reset attempts, please try again after 1 hour'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
 
 // Middleware สำหรับตรวจสอบว่าล็อกอินแล้วหรือยัง
 const requireGuest = (req, res, next) => {
@@ -87,16 +26,16 @@ const requireAuth = (req, res, next) => {
 // เข้าหน้า login (ต้องยังไม่ล็อกอิน)
 router.get('/login', requireGuest, authController.getLogin);
 
-// กดปุ่ม login (มี rate limiting)
-router.post('/login', loginLimiter, authController.postLogin);
+// กดปุ่ม login
+router.post('/login', authController.postLogin);
 
 // สำหรับผู้ป่วยลงทะเบียน (ต้องยังไม่ล็อกอิน)
 router.get('/register', requireGuest, authController.getRegister);
-router.post('/register', registerLimiter, registerController.registerPatient); // ใช้ controller เดิม
+router.post('/register', registerController.registerPatient);
 
 // ออกจากระบบ (ต้องล็อกอินแล้ว)
 router.get('/logout', requireAuth, authController.logout);
-router.post('/logout', requireAuth, authController.logout); // รองรับทั้ง GET และ POST
+router.post('/logout', requireAuth, authController.logout);
 
 // =========== Password Reset Routes ===========
 
@@ -104,18 +43,18 @@ router.post('/logout', requireAuth, authController.logout); // รองรั�
 router.get('/forgot-password', requireGuest, passwordResetController.getForgotPassword);
 
 // ส่ง Reset Password Email
-router.post('/forgot-password', forgotPasswordLimiter, passwordResetController.sendResetEmail);
+router.post('/forgot-password', passwordResetController.sendResetEmail);
 
 // หน้า Reset Password (with token)
 router.get('/reset-password/:token', requireGuest, passwordResetController.getResetPassword);
 
 // ประมวลผล Reset Password
-router.post('/reset-password/:token', resetPasswordLimiter, passwordResetController.processResetPassword);
+router.post('/reset-password/:token', passwordResetController.processResetPassword);
 
 // =========== API Routes สำหรับการตรวจสอบข้อมูลซ้ำ ===========
 
 // ตรวจสอบอีเมลซ้ำแบบ Real-time
-router.get('/api/check-email', apiLimiter, async (req, res) => {
+router.get('/api/check-email', async (req, res) => {
     try {
         const { email } = req.query;
         const validator = require('validator');
@@ -148,7 +87,7 @@ router.get('/api/check-email', apiLimiter, async (req, res) => {
 });
 
 // ตรวจสอบบัตรประชาชนซ้ำแบบ Real-time
-router.get('/api/check-id-card', apiLimiter, async (req, res) => {
+router.get('/api/check-id-card', async (req, res) => {
     try {
         const { id_card } = req.query;
         const db = require('../config/db');
@@ -218,9 +157,8 @@ router.get('/api/auth/status', (req, res) => {
 });
 
 // API สำหรับล็อกอิน (สำหรับ AJAX requests)
-router.post('/api/login', loginLimiter, async (req, res) => {
+router.post('/api/login', async (req, res) => {
     try {
-        // ใช้ loginController.login แต่ส่งผลลัพธ์เป็น JSON
         const originalRender = res.render;
         const originalRedirect = res.redirect;
         
@@ -251,7 +189,6 @@ router.post('/api/login', loginLimiter, async (req, res) => {
         
         await loginController.login(req, res);
         
-        // คืนค่า methods เดิม
         res.render = originalRender;
         res.redirect = originalRedirect;
         
@@ -285,13 +222,13 @@ router.post('/api/logout', requireAuth, (req, res) => {
 });
 
 // API สำหรับ forgot password
-router.post('/api/forgot-password', forgotPasswordLimiter, passwordResetController.apiForgotPassword);
+router.post('/api/forgot-password', passwordResetController.apiForgotPassword);
 
 // API สำหรับตรวจสอบ reset token
 router.get('/api/reset-password/:token/validate', passwordResetController.apiValidateToken);
 
 // API สำหรับ reset password
-router.post('/api/reset-password/:token', resetPasswordLimiter, passwordResetController.apiResetPassword);
+router.post('/api/reset-password/:token', passwordResetController.apiResetPassword);
 
 // API สำหรับตรวจสอบ session validity
 router.get('/api/auth/validate', (req, res) => {
@@ -320,7 +257,6 @@ router.post('/api/auth/refresh', async (req, res) => {
             });
         }
         
-        // ใช้ loginController.refreshSession
         await loginController.refreshSession(req, res, () => {
             res.json({
                 success: true,

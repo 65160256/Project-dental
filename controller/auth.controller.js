@@ -1,6 +1,5 @@
-const db = require('../config/db');
-
 const bcrypt = require('bcryptjs');
+const AuthModel = require('../models/auth.model');
 const loginController = require('./login.controller');
 
 exports.getLogin = (req, res) => {
@@ -48,13 +47,9 @@ exports.postRegister = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่าอีเมลมีอยู่แล้วหรือไม่
-    const [existingUsers] = await db.execute(
-      'SELECT user_id FROM user WHERE email = ?',
-      [email]
-    );
-
-    if (existingUsers.length > 0) {
+    // ตรวจสอบว่าอีเมลมีอยู่แล้วหรือไม่ (ใช้ Model)
+    const emailExists = await AuthModel.checkEmailExists(email);
+    if (emailExists) {
       return res.render('register', { 
         error: 'อีเมลนี้มีอยู่ในระบบแล้ว',
         message: null 
@@ -67,28 +62,17 @@ exports.postRegister = async (req, res) => {
     // กำหนด role_id (ถ้าไม่ระบุจะเป็น patient)
     const roleId = role === 'dentist' ? 2 : 3;
 
-    // สร้าง user ใหม่
-    const [userResult] = await db.execute(
-      'INSERT INTO user (role_id, email, password) VALUES (?, ?, ?)', 
-      [roleId, email, hash]
-    );
+    // สร้าง user และ profile ด้วย Transaction (ใช้ Model)
+    const profileData = {
+      fname,
+      lname,
+      phone,
+      dob,
+      address,
+      id_card
+    };
 
-    const user_id = userResult.insertId;
-
-    // สร้างข้อมูลตาม role
-    if (roleId === 2) {
-      // สร้างข้อมูล dentist
-      await db.execute(
-        'INSERT INTO dentist (user_id, fname, lname, phone, dob, address, id_card) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [user_id, fname, lname, phone, dob, address, id_card]
-      );
-    } else {
-      // สร้างข้อมูล patient (เดิม)
-      await db.execute(
-        'INSERT INTO patient (user_id, fname, lname, phone, dob, address, id_card) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [user_id, fname, lname, phone, dob, address, id_card]
-      );
-    }
+    await AuthModel.createUserWithProfile(roleId, email, hash, profileData);
 
     res.redirect('/login?message=สมัครสมาชิกเรียบร้อยแล้ว กรุณาเข้าสู่ระบบ');
 
@@ -145,32 +129,27 @@ exports.requireAuth = (req, res, next) => {
   next();
 };
 
-// Middleware สำหรับ current user (ถ้าต้องการ)
+// Middleware สำหรับ current user
 exports.getCurrentUser = async (req, res, next) => {
   if (req.session.user || req.session.userId) {
     try {
       const userId = req.session.user?.user_id || req.session.userId;
       
-      // ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูล
-      const [users] = await db.execute(`
-        SELECT u.*, r.rname as role_name 
-        FROM user u 
-        JOIN role r ON u.role_id = r.role_id 
-        WHERE u.user_id = ?
-      `, [userId]);
+      // ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูล (ใช้ Model)
+      const user = await AuthModel.getUserById(userId);
 
-      if (users.length > 0) {
-        req.currentUser = users[0];
-        res.locals.currentUser = users[0]; // สำหรับใช้ใน views
+      if (user) {
+        req.currentUser = user;
+        res.locals.currentUser = user; // สำหรับใช้ใน views
         
         // อัพเดท session ถ้าไม่มี user object
         if (!req.session.user) {
           req.session.user = {
-            user_id: users[0].user_id,
-            email: users[0].email,
-            username: users[0].username,
-            role_id: users[0].role_id,
-            role_name: users[0].role_name
+            user_id: user.user_id,
+            email: user.email,
+            username: user.username,
+            role_id: user.role_id,
+            role_name: user.role_name
           };
         }
       }

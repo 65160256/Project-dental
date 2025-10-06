@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
-const db = require('../config/db');
-
+const LoginModel = require('../models/login.model');
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -14,23 +13,15 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ดึงข้อมูล user พร้อมกับ role name
-    const [rows] = await db.execute(
-      `SELECT u.*, r.rname as role_name 
-       FROM user u 
-       JOIN role r ON u.role_id = r.role_id 
-       WHERE u.email = ?`,
-      [email]
-    );
+    // ดึงข้อมูล user พร้อมกับ role name (ใช้ Model)
+    const user = await LoginModel.getUserByEmail(email);
 
-    if (rows.length === 0) {
+    if (!user) {
       return res.render('login', { 
         error: 'ไม่พบผู้ใช้งานนี้ในระบบ',
         message: null 
       });
     }
-
-    const user = rows[0];
     
     // ตรวจสอบรหัสผ่าน
     const match = await bcrypt.compare(password, user.password);
@@ -55,8 +46,8 @@ exports.login = async (req, res) => {
     req.session.userId = user.user_id;
     req.session.role = user.role_id;
 
-    // ✅ อัปเดตเวลา last_login
-    await db.execute('UPDATE user SET last_login = NOW() WHERE user_id = ?', [user.user_id]);
+    // ✅ อัปเดตเวลา last_login (ใช้ Model)
+    await LoginModel.updateLastLogin(user.user_id);
 
     // ✅ redirect ตาม role พร้อมดึงข้อมูลเพิ่มเติม
     switch(user.role_id) {
@@ -64,27 +55,21 @@ exports.login = async (req, res) => {
         return res.redirect('/admin/dashboard');
         
       case 2: // Dentist
-        // ดึงข้อมูลหมอฟันเพิ่มเติม
-        const [dentistData] = await db.execute(
-          'SELECT * FROM dentist WHERE user_id = ?',
-          [user.user_id]
-        );
+        // ดึงข้อมูลหมอฟันเพิ่มเติม (ใช้ Model)
+        const dentistData = await LoginModel.getDentistByUserId(user.user_id);
         
-        if (dentistData.length > 0) {
-          req.session.dentist = dentistData[0];
+        if (dentistData) {
+          req.session.dentist = dentistData;
         }
         
-        return res.redirect('/dentist/dashboard'); // เปลี่ยนจาก /schedule เป็น /dashboard
+        return res.redirect('/dentist/dashboard');
         
       case 3: // Patient
-        // ดึงข้อมูลผู้ป่วยเพิ่มเติม
-        const [patientData] = await db.execute(
-          'SELECT * FROM patient WHERE user_id = ?',
-          [user.user_id]
-        );
+        // ดึงข้อมูลผู้ป่วยเพิ่มเติม (ใช้ Model)
+        const patientData = await LoginModel.getPatientByUserId(user.user_id);
         
-        if (patientData.length > 0) {
-          req.session.patient = patientData[0];
+        if (patientData) {
+          req.session.patient = patientData;
         }
         
         return res.redirect('/patient/dashboard');
@@ -127,20 +112,13 @@ exports.refreshSession = async (req, res, next) => {
       return res.redirect('/login');
     }
 
-    const [rows] = await db.execute(
-      `SELECT u.*, r.rname as role_name 
-       FROM user u 
-       JOIN role r ON u.role_id = r.role_id 
-       WHERE u.user_id = ?`,
-      [req.session.userId]
-    );
+    // ดึงข้อมูล user (ใช้ Model)
+    const user = await LoginModel.getUserById(req.session.userId);
 
-    if (rows.length === 0) {
+    if (!user) {
       req.session.destroy();
       return res.redirect('/login?message=ไม่พบข้อมูลผู้ใช้');
     }
-
-    const user = rows[0];
 
     // อัพเดท session
     req.session.user = {
@@ -151,22 +129,16 @@ exports.refreshSession = async (req, res, next) => {
       role_name: user.role_name
     };
 
-    // ดึงข้อมูลเพิ่มเติมตาม role
+    // ดึงข้อมูลเพิ่มเติมตาม role (ใช้ Model)
     if (user.role_id === 2) {
-      const [dentistData] = await db.execute(
-        'SELECT * FROM dentist WHERE user_id = ?',
-        [user.user_id]
-      );
-      if (dentistData.length > 0) {
-        req.session.dentist = dentistData[0];
+      const dentistData = await LoginModel.getDentistByUserId(user.user_id);
+      if (dentistData) {
+        req.session.dentist = dentistData;
       }
     } else if (user.role_id === 3) {
-      const [patientData] = await db.execute(
-        'SELECT * FROM patient WHERE user_id = ?',
-        [user.user_id]
-      );
-      if (patientData.length > 0) {
-        req.session.patient = patientData[0];
+      const patientData = await LoginModel.getPatientByUserId(user.user_id);
+      if (patientData) {
+        req.session.patient = patientData;
       }
     }
 
@@ -227,40 +199,19 @@ exports.getCurrentUserData = async (req, res) => {
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const [rows] = await db.execute(
-      `SELECT u.user_id, u.email, u.username, u.role_id, r.rname as role_name, u.last_login
-       FROM user u 
-       JOIN role r ON u.role_id = r.role_id 
-       WHERE u.user_id = ?`,
-      [userId]
-    );
+    // ดึงข้อมูล user สำหรับ API (ใช้ Model)
+    const user = await LoginModel.getUserDataForApi(userId);
 
-    if (rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const user = rows[0];
-
-    // ดึงข้อมูลเพิ่มเติมตาม role
-    let additionalData = null;
-    
-    if (user.role_id === 2) {
-      const [dentistData] = await db.execute(
-        'SELECT * FROM dentist WHERE user_id = ?',
-        [userId]
-      );
-      additionalData = dentistData[0] || null;
-    } else if (user.role_id === 3) {
-      const [patientData] = await db.execute(
-        'SELECT * FROM patient WHERE user_id = ?',
-        [userId]
-      );
-      additionalData = patientData[0] || null;
-    }
+    // ดึงข้อมูลเพิ่มเติมตาม role (ใช้ Model)
+    const profile = await LoginModel.getProfileByRole(userId, user.role_id);
 
     res.json({
       user: user,
-      profile: additionalData
+      profile: profile
     });
 
   } catch (error) {
