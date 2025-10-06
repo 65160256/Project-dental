@@ -1,106 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><%= title %></title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
-    body {
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
       background-color: #f5f7fa;
     }
 
+    /* Sidebar */
     .sidebar {
-      width: 180px;
+      width: 220px;
       background: linear-gradient(135deg, #4A90E2, #2DA8FF);
       position: fixed;
       height: 100vh;
       padding: 0;
       color: #fff;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+      z-index: 1000;
     }
 
     .sidebar .logo {
       text-align: center;
-      padding: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
     }
 
     .sidebar .logo img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
+      width: 55px;
+      height: 55px;
+      border-radius: 10px;
       background: white;
       padding: 8px;
+      margin-bottom: 10px;
     }
 
     .sidebar .logo h3 {
-      margin: 10px 0 0 0;
-      font-size: 16px;
+      margin: 0;
+      font-size: 18px;
       font-weight: 600;
-      color: white;
     }
 
     .sidebar ul {
       list-style: none;
-      padding: 10px 0;
+      padding: 15px 0;
       margin: 0;
     }
 
     .sidebar ul li {
-      margin: 2px 0;
+      margin: 3px 0;
     }
 
     .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
       color: rgba(255,255,255,0.9);
       text-decoration: none;
       transition: all 0.3s ease;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 500;
     }
 
+    .sidebar ul li.active a,
     .sidebar ul li:hover a {
       background-color: rgba(255,255,255,0.2);
       color: white;
-      border-radius: 8px;
-      margin: 0 10px;
+      border-radius: 10px;
+      margin: 0 15px;
+      transform: translateX(5px);
     }
 
+    .sidebar ul li a i {
+      margin-right: 12px;
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    /* Main Content */
     .main {
-      margin-left: 180px;
+      margin-left: 220px;
       min-height: 100vh;
-      background-color: #f5f7fa;
     }
 
+    /* Top Bar */
     .top-bar {
       background: white;
-      padding: 15px 30px;
+      padding: 20px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 999;
     }
 
     .top-bar h1 {
       margin: 0;
       font-size: 24px;
       color: #333;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .user-section {
       display: flex;
       align-items: center;
-      gap: 15px;
-    }
-
-    .notification-icon {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
+      gap: 25px;
     }
 
     .profile-dropdown {
@@ -111,130 +127,214 @@
       display: flex;
       align-items: center;
       cursor: pointer;
-      gap: 10px;
+      gap: 15px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .user-info:hover {
+      background-color: #f8f9fa;
     }
 
     .avatar {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+      color: white;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .user-details strong {
       display: block;
-      font-size: 13px;
+      font-size: 15px;
       color: #333;
+      font-weight: 600;
     }
 
     .user-details small {
       color: #666;
-      font-size: 11px;
+      font-size: 13px;
     }
 
     .dropdown-menu {
       display: none;
       position: absolute;
       right: 0;
-      top: 100%;
+      top: 110%;
       background: white;
       border: 1px solid #e1e5e9;
-      border-radius: 6px;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      min-width: 200px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       z-index: 1000;
+      overflow: hidden;
     }
 
     .dropdown-menu a {
-      display: block;
-      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
       text-decoration: none;
       color: #333;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+    }
+
+    .dropdown-menu a i {
+      margin-right: 12px;
+      width: 18px;
+      color: #666;
     }
 
     .dropdown-menu a:hover {
       background-color: #f8f9fa;
     }
 
+    .dropdown-menu hr {
+      margin: 0;
+      border: none;
+      border-top: 1px solid #e1e5e9;
+    }
+
+    /* Content */
     .content {
-      padding: 0;
-      max-width: 800px;
+      padding: 30px;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     .back-button {
-      background: none;
-      border: none;
+      background: #f8f9fa;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 20px;
-      color: #333;
-      padding: 20px 30px 10px 30px;
-      display: flex;
+      font-size: 14px;
+      color: #666;
+      padding: 12px 20px;
+      display: inline-flex;
       align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+      font-weight: 600;
     }
 
     .back-button:hover {
+      background: white;
+      border-color: #4A90E2;
       color: #4A90E2;
+      transform: translateY(-2px);
     }
 
+    .back-button i {
+      font-size: 16px;
+    }
+
+    /* Profile Container */
     .profile-container {
       background: white;
-      margin: 0 30px 30px 30px;
-      border-radius: 8px;
+      border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    .profile-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
     }
 
     .profile-header {
-      padding: 40px;
+      padding: 50px 40px 40px;
       text-align: center;
-      background: white;
+      background: linear-gradient(135deg, #f8f9fa, #ffffff);
+      border-bottom: 2px solid #e1e5e9;
     }
 
     .profile-avatar {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
-      background: #6c757d;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
       margin: 0 auto 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 40px;
+      font-size: 48px;
       color: white;
+      border: 4px solid white;
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
     }
 
     .profile-name {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 24px;
+      font-weight: 700;
       color: #333;
-      margin: 0 0 5px 0;
+      margin: 0 0 8px 0;
     }
 
     .profile-subtitle {
       font-size: 14px;
       color: #666;
       margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
+    .profile-subtitle i {
+      color: #4A90E2;
+    }
+
+    /* Form */
     .profile-form {
       padding: 0;
     }
 
     .form-section {
-      padding: 30px 40px;
+      padding: 35px 40px;
       border-bottom: 1px solid #f1f3f4;
     }
 
-    .form-section:last-child {
+    .form-section:last-of-type {
       border-bottom: none;
     }
 
     .form-section h3 {
       color: #333;
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 20px 0;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 25px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-section h3 i {
+      color: #4A90E2;
+      font-size: 20px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
     }
 
     .form-group {
@@ -248,26 +348,28 @@
     .form-label {
       display: block;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       color: #333;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
 
     .form-input {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 12px 16px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
       font-size: 14px;
       color: #333;
       background-color: #f8f9fa;
-      box-sizing: border-box;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
 
     .form-input:focus {
       outline: none;
       border-color: #4A90E2;
       background-color: white;
+      box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
     }
 
     .form-input:disabled {
@@ -276,61 +378,109 @@
       cursor: not-allowed;
     }
 
+    textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    /* Action Buttons */
     .action-buttons {
       display: flex;
       gap: 15px;
       justify-content: center;
-      padding: 30px 40px;
+      padding: 35px 40px;
+      background: #f8f9fa;
     }
 
     .btn {
-      padding: 10px 20px;
+      padding: 12px 28px;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       transition: all 0.3s ease;
     }
 
+    .btn i {
+      font-size: 16px;
+    }
+
     .btn-secondary {
-      background: #6c757d;
-      color: white;
+      background: #f8f9fa;
+      color: #666;
+      border: 2px solid #e1e5e9;
     }
 
     .btn-secondary:hover {
-      background: #545b62;
+      background: white;
+      border-color: #4A90E2;
+      color: #4A90E2;
+      transform: translateY(-2px);
     }
 
     .btn-primary {
-      background: #ffc107;
-      color: #212529;
+      background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+      color: white;
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
     }
 
     .btn-primary:hover {
-      background: #e0a800;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
     }
 
+    /* Messages */
     .error-message {
-      background: #f8d7da;
+      background: linear-gradient(135deg, #f8d7da, #f5c6cb);
       color: #721c24;
-      padding: 10px 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
       font-size: 14px;
+      border: 2px solid #f1aeb5;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+
+    .error-message i {
+      font-size: 18px;
     }
 
     .success-message {
-      background: #d1edff;
+      background: linear-gradient(135deg, #d1ecf1, #c3e6cb);
       color: #0c5460;
-      padding: 10px 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
       font-size: 14px;
+      border: 2px solid #17a2b8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+
+    .success-message i {
+      font-size: 18px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 200px;
+      }
+      
+      .main {
+        margin-left: 200px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -343,54 +493,93 @@
       .main {
         margin-left: 0;
       }
-      
+
+      .content {
+        padding: 20px;
+      }
+
+      .form-section {
+        padding: 25px 20px;
+      }
+
       .action-buttons {
         flex-direction: column;
+        padding: 25px 20px;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header {
+        padding: 40px 20px 30px;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+      }
+
+      .top-bar h1 {
+        text-align: center;
       }
     }
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
-      <img src="/img/logo.png" alt="Smile Clinic" />
-      <h3>Smile Clinic</h3>
+      <img src="/img/logo.png" alt="คลินิกยิ้มสดใส" />
+      <h3>คลินิกยิ้มสดใส</h3>
     </div>
     <ul>
-      <li><a href="/patient/dashboard">Dashboard</a></li>
-      <li><a href="/patient/appointments">Appointment</a></li>
-      <li><a href="/patient/history">History</a></li>
-      <li><a href="/patient/my-treatments">My Treatments</a></li>
-      <li><a href="/patient/dentists">Dentists</a></li>
+      <li><a href="/patient/dashboard"><i class="fas fa-tachometer-alt"></i>หน้าหลัก</a></li>
+      <li><a href="/patient/appointment/schedule"><i class="fas fa-calendar-check"></i>จองนัดหมาย</a></li>
+      <li><a href="/patient/history"><i class="fas fa-history"></i>ประวัตินัดหมาย</a></li>
+      <li><a href="/patient/my-treatments"><i class="fas fa-stethoscope"></i>ประวัติการรักษา</a></li>
+      <li><a href="/patient/dentists"><i class="fas fa-user-md"></i>ทันตแพทย์</a></li>
     </ul>
   </div>
 
+  <!-- Main Content -->
   <div class="main">
+    <!-- Top Bar -->
     <div class="top-bar">
-      <h1>Edit My Profile</h1>
+      <h1>แก้ไขโปรไฟล์</h1>
       <div class="user-section">
-        <img src="/img/notification-bell.png" class="notification-icon" onclick="toggleNotifications()" />
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()">
-            <img src="/img/user-icon.png" class="avatar"/>
+            <div class="avatar">
+              <%= patient.fname.charAt(0) %>
+            </div>
             <div class="user-details">
-              <strong>Hello Mrs. <%= patient.lname %></strong>
-              <small>patient</small>
+              <strong><%= patient.fname %> <%= patient.lname %></strong>
+              <small>ผู้ป่วย</small>
             </div>
             <i class="fas fa-caret-down"></i>
           </div>
           <div class="dropdown-menu" id="profileDropdown">
-            <a href="/patient/profile">My Profile</a>
+            <a href="/patient/profile"><i class="fas fa-user"></i>โปรไฟล์ของฉัน</a>
+            <a href="/patient/profile/change-password"><i class="fas fa-key"></i>เปลี่ยนรหัสผ่าน</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i>ออกจากระบบ</a>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Content -->
     <div class="content">
-      <button class="back-button" onclick="history.back()">
+      <button class="back-button" onclick="window.location.href='/patient/profile'">
         <i class="fas fa-arrow-left"></i>
+        กลับ
       </button>
 
       <div class="profile-container">
@@ -398,79 +587,116 @@
           <div class="profile-avatar">
             <i class="fas fa-user"></i>
           </div>
-          <h2 class="profile-name">Mrs. <%= patient.full_name %></h2>
-          <p class="profile-subtitle">Last Login: <%= patient.last_login_formatted %></p>
+          <h2 class="profile-name"><%= patient.full_name %></h2>
+          <p class="profile-subtitle">
+            <i class="fas fa-clock"></i>
+            เข้าสู่ระบบครั้งล่าสุด: <%= patient.last_login_formatted %>
+          </p>
         </div>
 
         <form action="/patient/profile/edit" method="POST" class="profile-form">
+          <!-- Login Information -->
           <div class="form-section">
-            <h3>Login Information</h3>
+            <h3>
+              <i class="fas fa-lock"></i>
+              ข้อมูลการเข้าสู่ระบบ
+            </h3>
             
             <% if (typeof query !== 'undefined' && query.error) { %>
               <% if (query.error === 'missing_required') { %>
-                <div class="error-message">Please fill in all required fields.</div>
+                <div class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน
+                </div>
               <% } else if (query.error === 'email_exists') { %>
-                <div class="error-message">This email is already in use by another account.</div>
+                <div class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  อีเมลนี้ถูกใช้งานแล้ว
+                </div>
               <% } else if (query.error === 'update_failed') { %>
-                <div class="error-message">Failed to update profile. Please try again.</div>
+                <div class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  ไม่สามารถอัพเดทข้อมูลได้ กรุณาลองใหม่อีกครั้ง
+                </div>
               <% } %>
             <% } %>
 
             <div class="form-group">
-              <label class="form-label">Email:</label>
+              <label class="form-label">อีเมล: *</label>
               <input type="email" name="email" class="form-input" value="<%= patient.email %>" required>
             </div>
             
             <div class="form-group">
-              <label class="form-label">Password:</label>
+              <label class="form-label">รหัสผ่าน:</label>
               <input type="password" class="form-input" value="******" disabled>
+              <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                <i class="fas fa-info-circle"></i> 
+                หากต้องการเปลี่ยนรหัสผ่าน กรุณาใช้ปุ่ม "เปลี่ยนรหัสผ่าน" ด้านล่าง
+              </small>
             </div>
           </div>
 
+          <!-- Personal Information -->
           <div class="form-section">
-            <h3>Personal Information</h3>
+            <h3>
+              <i class="fas fa-user-circle"></i>
+              ข้อมูลส่วนตัว
+            </h3>
             
-            <div class="form-group">
-              <label class="form-label">Firstname:</label>
-              <input type="text" name="fname" class="form-input" value="<%= patient.fname %>" required>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">ชื่อ: *</label>
+                <input type="text" name="fname" class="form-input" value="<%= patient.fname %>" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">นามสกุล: *</label>
+                <input type="text" name="lname" class="form-input" value="<%= patient.lname %>" required>
+              </div>
             </div>
             
-            <div class="form-group">
-              <label class="form-label">Lastname:</label>
-              <input type="text" name="lname" class="form-input" value="<%= patient.lname %>" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Date of Birth:</label>
-              <input type="date" name="dob" class="form-input" value="<%= patient.dob_formatted %>">
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">ID Card Number:</label>
-              <input type="text" name="id_card" class="form-input" value="<%= patient.id_card || '' %>" maxlength="13">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">วันเกิด:</label>
+                <input type="date" name="dob" class="form-input" value="<%= patient.dob_formatted %>">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">เลขบัตรประชาชน:</label>
+                <input type="text" name="id_card" class="form-input" value="<%= patient.id_card || '' %>" 
+                       maxlength="13" pattern="[0-9]{13}" placeholder="1234567890123">
+              </div>
             </div>
           </div>
 
+          <!-- Contact Information -->
           <div class="form-section">
-            <h3>Contact Information</h3>
+            <h3>
+              <i class="fas fa-address-book"></i>
+              ข้อมูลติดต่อ
+            </h3>
             
             <div class="form-group">
-              <label class="form-label">Address:</label>
-              <textarea name="address" class="form-input" rows="3" style="resize: vertical;"><%= patient.address || '' %></textarea>
+              <label class="form-label">ที่อยู่:</label>
+              <textarea name="address" class="form-input" rows="3" placeholder="กรอกที่อยู่ของคุณ"><%= patient.address || '' %></textarea>
             </div>
             
             <div class="form-group">
-              <label class="form-label">Phone:</label>
-              <input type="tel" name="phone" class="form-input" value="<%= patient.phone || '' %>">
+              <label class="form-label">เบอร์โทรศัพท์:</label>
+              <input type="tel" name="phone" class="form-input" value="<%= patient.phone || '' %>" 
+                     placeholder="0812345678" pattern="[0-9]{10}">
             </div>
           </div>
 
+          <!-- Action Buttons -->
           <div class="action-buttons">
             <a href="/patient/profile/change-password" class="btn btn-secondary">
-              Change Password
+              <i class="fas fa-key"></i>
+              เปลี่ยนรหัสผ่าน
             </a>
             <button type="submit" class="btn btn-primary">
-              Edit
+              <i class="fas fa-save"></i>
+              บันทึกการเปลี่ยนแปลง
             </button>
           </div>
         </form>
@@ -484,13 +710,9 @@
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
     
-    function toggleNotifications() {
-      console.log('Notifications clicked');
-    }
-    
     document.addEventListener('click', function (e) {
       const prof = document.querySelector('.profile-dropdown');
-      if (!prof.contains(e.target)) {
+      if (prof && !prof.contains(e.target)) {
         document.getElementById('profileDropdown').style.display = 'none';
       }
     });
@@ -503,7 +725,7 @@
       
       if (!fname || !lname || !email) {
         e.preventDefault();
-        alert('Please fill in all required fields (First name, Last name, and Email).');
+        alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ชื่อ, นามสกุล และอีเมล)');
         return false;
       }
       
@@ -511,7 +733,7 @@
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         e.preventDefault();
-        alert('Please enter a valid email address.');
+        alert('กรุณากรอกอีเมลที่ถูกต้อง');
         return false;
       }
       
@@ -519,7 +741,15 @@
       const id_card = document.querySelector('input[name="id_card"]').value.trim();
       if (id_card && id_card.length !== 13) {
         e.preventDefault();
-        alert('ID Card number must be exactly 13 digits.');
+        alert('เลขบัตรประชาชนต้องมี 13 หลักเท่านั้น');
+        return false;
+      }
+
+      // Phone validation (if provided)
+      const phone = document.querySelector('input[name="phone"]').value.trim();
+      if (phone && phone.length !== 10) {
+        e.preventDefault();
+        alert('เบอร์โทรศัพท์ต้องมี 10 หลักเท่านั้น');
         return false;
       }
     });

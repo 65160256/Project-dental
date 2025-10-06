@@ -2432,3 +2432,61 @@ exports.getTreatmentsAPI = async (req, res) => {
     });
   }
 };
+
+// เพิ่มฟังก์ชันนี้
+exports.getMyProfile = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    
+    const [patientRows] = await db.execute(
+      'SELECT fname, lname, phone, email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?',
+      [userId]
+    );
+    
+    if (patientRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลผู้ป่วย'
+      });
+    }
+    
+    res.json({
+      success: true,
+      patient: patientRows[0]
+    });
+    
+  } catch (error) {
+    console.error('Error getting profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'เกิดข้อผิดพลาด'
+    });
+  }
+};
+
+
+exports.getDentistTreatments = async (req, res) => {
+  try {
+    const { dentistId } = req.params;
+    
+    const [treatments] = await db.execute(`
+      SELECT t.treatment_id, t.treatment_name, t.duration
+      FROM dentist_treatment dt
+      JOIN treatment t ON dt.treatment_id = t.treatment_id
+      WHERE dt.dentist_id = ?
+      ORDER BY t.treatment_name
+    `, [dentistId]);
+    
+    res.json({
+      success: true,
+      treatments: treatments
+    });
+    
+  } catch (error) {
+    console.error('Error getting dentist treatments:', error);
+    res.status(500).json({
+      success: false,
+      error: 'เกิดข้อผิดพลาด'
+    });
+  }
+};

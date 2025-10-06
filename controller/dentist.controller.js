@@ -1561,28 +1561,7 @@ searchPatientHistory: async (req, res) => {
     res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน' });
   }
 },
-getChangeEmail: async (req, res) => {
-  try {
-    const userId = req.session.user?.user_id || req.session.userId;
 
-    const [dentistResult] = await db.execute(`
-      SELECT d.*, u.email, u.username 
-      FROM dentist d 
-      JOIN user u ON d.user_id = u.user_id 
-      WHERE d.user_id = ?
-    `, [userId]);
-
-    if (dentistResult.length === 0) return res.redirect('/login');
-
-    res.render('dentist/change-email', { dentist: dentistResult[0] });
-  } catch (error) {
-    console.error('Error in getChangeEmail:', error);
-    res.status(500).render('error', { 
-      message: 'เกิดข้อผิดพลาดในการโหลดหน้าเปลี่ยนอีเมล',
-      error 
-    });
-  }
-},
 
 getChangePassword: async (req, res) => {
   try {

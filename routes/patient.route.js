@@ -318,5 +318,7 @@ router.get('/api/my-appointment-stats', requirePatient, async (req, res) => {
     }
 });
 
+router.get('/api/my-profile', requirePatient, patientController.getMyProfile);
+router.get('/api/dentist-treatments/:dentistId', requirePatient, patientController.getDentistTreatments);
 
 module.exports = router;

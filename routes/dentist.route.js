@@ -86,7 +86,6 @@ router.post('/profile/update', requireAuth, requireDentist, dentistController.up
 router.post('/profile/update-password', requireAuth, requireDentist, dentistController.updatePassword);
 router.get('/profile/edit', requireAuth, requireDentist, dentistController.getEditProfile);
 router.get('/profile/change-password', requireAuth, requireDentist, dentistController.getChangePassword);
-router.get('/profile/change-email', requireAuth, requireDentist, dentistController.getChangeEmail);
 router.post('/profile/update-email', requireAuth, requireDentist, dentistController.updateEmail);
 
 // =================
