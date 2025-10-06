@@ -270,12 +270,12 @@
               </div>
 
               <div class="form-row">
-               <div class="form-group">
-    <label for="license_no">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม <span class="required">*</span></label>
-    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20"/>
-    <div class="field-help">กรอกตามที่ปรากฏในใบอนุญาต</div>
-    <div class="error-message">กรุณากรอกเลขที่ใบอนุญาต</div>
-</div>
+                <div class="form-group">
+                  <label for="license_no">เลขที่ใบอนุญาตประกอบวิชาชีพ <span class="required">*</span></label>
+                  <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20"/>
+                  <div class="field-help">กรอกตามที่ปรากฏในใบอนุญาต</div>
+                  <div class="error-message">กรุณากรอกเลขที่ใบอนุญาต</div>
+                </div>
                 <div class="form-group">
                   <label for="specialty">สาขา/ความชำนาญ <span class="required">*</span></label>
                   <select id="specialty" name="specialty" class="form-control" required>
@@ -382,13 +382,14 @@
   </div>
 
   <script>
-    // ------- ตัวแปร -------
+    // ตัวแปรหลัก
     let originalData = {};
     let currentData = {};
     let dentistId = null;
     let isSubmitting = false;
     let hasChanges = false;
 
+    // เริ่มต้นเมื่อโหลดหน้า
     document.addEventListener('DOMContentLoaded', () => {
       extractDentistId();
       loadDentistData();
@@ -402,8 +403,13 @@
     // อ่าน ID จาก URL
     function extractDentistId(){
       const m = window.location.pathname.match(/\/dentists\/(\d+)\/edit/);
-      if (m){ dentistId = parseInt(m[1]); document.getElementById('dentistIdBadge').textContent = `รหัส: ${dentistId}`; }
-      else { showToast('รหัสทันตแพทย์ไม่ถูกต้อง','error'); setTimeout(()=>location.href='../../dentists',2000); }
+      if (m){ 
+        dentistId = parseInt(m[1]); 
+        document.getElementById('dentistIdBadge').textContent = `รหัส: ${dentistId}`; 
+      } else { 
+        showToast('รหัสทันตแพทย์ไม่ถูกต้อง','error'); 
+        setTimeout(()=>location.href='../../dentists',2000); 
+      }
     }
 
     // โหลดข้อมูลทันตแพทย์
@@ -424,7 +430,7 @@
       }
     }
 
-    // ใส่ข้อมูลลงฟอร์ม (รวม license number)
+    // ใส่ข้อมูลลงฟอร์ม
     function populateForm(d){
       document.getElementById('fname').value = d.fname || '';
       document.getElementById('lname').value = d.lname || '';
@@ -434,7 +440,10 @@
       document.getElementById('address').value = d.address || '';
       document.getElementById('email').value = d.email || '';
       document.getElementById('id_card').value = d.id_card || '';
-      document.getElementById('license_no').value = d.license_number || d.licenseNo || d.license || d.dental_license || '';
+      
+      // รองรับชื่อฟิลด์ต่างๆ ของ license number
+      const licenseValue = d.license_no || d.license_number || d.licenseNo || d.license || '';
+      document.getElementById('license_no').value = licenseValue;
 
       if (d.dob){
         const date = new Date(d.dob);
@@ -450,7 +459,7 @@
       }
     }
 
-    // รูป/Avatar
+    // แสดงรูป/Avatar
     function displayDentistAvatar(d){
       const prev = document.getElementById('photoPreview');
       const ph   = document.getElementById('photoPlaceholder');
@@ -459,13 +468,19 @@
       if (d.photo && d.photo!=='default-avatar.png' && d.photo!=='null' && d.photo!==''){
         const path = `/uploads/${d.photo}`;
         const t = new Image();
-        t.onload = ()=>{ prev.src = path; prev.style.display='block'; ph.style.display='none'; rm.style.display='inline-block'; };
+        t.onload = ()=>{ 
+          prev.src = path; 
+          prev.style.display='block'; 
+          ph.style.display='none'; 
+          rm.style.display='inline-block'; 
+        };
         t.onerror= ()=> showAvatarFallback(d);
         t.src = path;
       } else {
         showAvatarFallback(d);
       }
     }
+
     function showAvatarFallback(d){
       const prev = document.getElementById('photoPreview');
       const ph   = document.getElementById('photoPlaceholder');
@@ -473,10 +488,12 @@
       const initials = (d.fname && d.lname) ? (d.fname[0]+d.lname[0]).toUpperCase() : 'DR';
       const svg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" rx="12" fill="#4A90E2"/><text x="100" y="120" font-family="Arial" font-size="60" font-weight="600" fill="#fff" text-anchor="middle">${initials}</text></svg>`;
       prev.src = 'data:image/svg+xml;base64,'+btoa(svg);
-      prev.style.display='block'; ph.style.display='none'; rm.style.display='none';
+      prev.style.display='block'; 
+      ph.style.display='none'; 
+      rm.style.display='none';
     }
 
-    // จัดการฟอร์ม/อัปโหลดรูป
+    // ตั้งค่าการจัดการฟอร์ม
     function setupFormHandlers(){
       const form = document.getElementById('editDentistForm');
       const photoInput = document.getElementById('photoInput');
@@ -484,58 +501,208 @@
       const ph   = document.getElementById('photoPlaceholder');
       const rm   = document.getElementById('removePhotoBtn');
 
+      // อัปโหลดรูป
       photoInput.addEventListener('change', e=>{
         const file = e.target.files[0];
         if(!file) return;
-        if(file.size > 5*1024*1024){ showToast('ขนาดไฟล์ต้องไม่เกิน 5MB','error'); return; }
+        if(file.size > 5*1024*1024){ 
+          showToast('ขนาดไฟล์ต้องไม่เกิน 5MB','error'); 
+          photoInput.value = '';
+          return; 
+        }
         const reader = new FileReader();
-        reader.onload = ev=>{ prev.src = ev.target.result; prev.style.display='block'; ph.style.display='none'; rm.style.display='inline-block'; trackChange('photo', file.name); };
+        reader.onload = ev=>{ 
+          prev.src = ev.target.result; 
+          prev.style.display='block'; 
+          ph.style.display='none'; 
+          rm.style.display='inline-block'; 
+          trackChange('photo', file.name); 
+        };
         reader.readAsDataURL(file);
       });
 
-      // validate เบื้องต้น
+      // Validate บัตรประชาชน
       const idInput = document.getElementById('id_card');
-      idInput.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').substring(0,13); validateField(this); });
+      idInput.addEventListener('input', function(){ 
+        this.value=this.value.replace(/\D/g,'').substring(0,13); 
+        validateField(this); 
+      });
+      idInput.addEventListener('blur', async function(){
+        if (this.value && this.value.length === 13) {
+          await checkDuplicateIdCard(this.value, dentistId);
+        }
+      });
+
+      // Validate เบอร์โทร
       const phoneInput = document.getElementById('phone');
-      phoneInput.addEventListener('input', function(){ this.value=this.value.replace(/\D/g,'').substring(0,10); validateField(this); });
+      phoneInput.addEventListener('input', function(){ 
+        this.value=this.value.replace(/\D/g,'').substring(0,10); 
+        validateField(this); 
+      });
+
+      // Validate เลขใบอนุญาต
+      const licenseInput = document.getElementById('license_no');
+      licenseInput.addEventListener('input', function(){ 
+        this.value = this.value.replace(/[^0-9]/g, '').substring(0, 20);
+        validateField(this); 
+      });
+      licenseInput.addEventListener('blur', async function(){
+        if (this.value) {
+          await checkDuplicateLicense(this.value, dentistId);
+        }
+      });
+
+      // Validate อีเมล
+      const emailInput = document.getElementById('email');
+      emailInput.addEventListener('blur', async function(){
+        if (this.value) {
+          await checkDuplicateEmail(this.value, dentistId);
+        }
+      });
 
       form.addEventListener('submit', handleFormSubmission);
     }
 
-    // Tracking การเปลี่ยนแปลง (รวม license_number)
+    // ตรวจสอบข้อมูลซ้ำ
+    async function checkDuplicateIdCard(idCard, excludeId) {
+      try {
+        const res = await fetch(`../../api/check-id-card?id_card=${idCard}&exclude_dentist_id=${excludeId}`);
+        const data = await res.json();
+        
+        const field = document.getElementById('id_card');
+        const group = field.parentElement;
+        
+        if (data.exists) {
+          group.classList.add('error');
+          group.querySelector('.error-message').textContent = 'เลขบัตรประชาชนนี้มีในระบบแล้ว';
+          return false;
+        } else {
+          group.classList.remove('error');
+        }
+        
+        return true;
+      } catch(e) {
+        console.error('Error checking ID card:', e);
+        return true;
+      }
+    }
+
+    async function checkDuplicateLicense(license, excludeId) {
+      try {
+        const res = await fetch(`../../api/check-license?license=${license}&exclude_dentist_id=${excludeId}`);
+        const data = await res.json();
+        
+        const field = document.getElementById('license_no');
+        const group = field.parentElement;
+        
+        if (data.exists) {
+          group.classList.add('error');
+          group.querySelector('.error-message').textContent = 'เลขใบอนุญาตนี้มีในระบบแล้ว';
+          return false;
+        } else {
+          group.classList.remove('error');
+        }
+        
+        return true;
+      } catch(e) {
+        console.error('Error checking license:', e);
+        return true;
+      }
+    }
+
+    async function checkDuplicateEmail(email, excludeId) {
+      try {
+        const res = await fetch(`../../api/check-email?email=${email}&exclude_dentist_id=${excludeId}`);
+        const data = await res.json();
+        
+        const field = document.getElementById('email');
+        const group = field.parentElement;
+        
+        if (data.exists) {
+          group.classList.add('error');
+          group.querySelector('.error-message').textContent = 'อีเมลนี้มีในระบบแล้ว';
+          return false;
+        } else {
+          group.classList.remove('error');
+        }
+        
+        return true;
+      } catch(e) {
+        console.error('Error checking email:', e);
+        return true;
+      }
+    }
+
+    // Tracking การเปลี่ยนแปลง
     function setupChangeTracking(){
       const form = document.getElementById('editDentistForm');
       const inputs = form.querySelectorAll('.form-control');
-      const allowed = ['fname','lname','dob','id_card','license_number','specialty','education','address','phone','email','password','confirmPassword'];
+      
+      const allowed = [
+        'fname', 'lname', 'dob', 'id_card', 'license_no',
+        'specialty', 'education', 'address', 'phone', 'email', 
+        'password', 'confirmPassword'
+      ];
+      
       inputs.forEach(inp=>{
         if(!allowed.includes(inp.name)) return;
         inp.addEventListener('input', function(){
           const k = this.name;
           const cur = this.value;
           const orig = (originalData[k] || '');
-          if (cur !== orig){ trackChange(k, cur); this.classList.add('field-changed'); }
-          else { untrackChange(k); this.classList.remove('field-changed'); }
+          
+          if (cur !== orig){ 
+            trackChange(k, cur); 
+            this.classList.add('field-changed'); 
+          } else { 
+            untrackChange(k); 
+            this.classList.remove('field-changed'); 
+          }
         });
       });
     }
-    function trackChange(k,v){ currentData[k]=v; updateChangesDisplay(); }
-    function untrackChange(k){ currentData[k]=originalData[k]||''; updateChangesDisplay(); }
+
+    function trackChange(k,v){ 
+      currentData[k]=v; 
+      updateChangesDisplay(); 
+    }
+
+    function untrackChange(k){ 
+      currentData[k]=originalData[k]||''; 
+      updateChangesDisplay(); 
+    }
+
     function updateChangesDisplay(){
-      const changed = Object.keys(currentData).filter(k=> currentData[k] !== (originalData[k]||''));
-      hasChanges = changed.length>0;
+      const changed = Object.keys(currentData).filter(k=> {
+        const current = currentData[k];
+        const original = originalData[k] || '';
+        return current !== original;
+      });
+      
+      hasChanges = changed.length > 0;
+      
       const txt = document.getElementById('changesText');
       const submit = document.getElementById('submitBtn');
       const reset = document.getElementById('resetBtn');
-      if(hasChanges){ txt.innerHTML = `<span class="changes-count">${changed.length}</span> รายการมีการเปลี่ยนแปลง`; submit.disabled=false; reset.disabled=false; }
-      else { txt.textContent='ยังไม่มีการเปลี่ยนแปลง'; submit.disabled=true; reset.disabled=true; }
+      
+      if(hasChanges){ 
+        txt.innerHTML = `<span class="changes-count">${changed.length}</span> รายการมีการเปลี่ยนแปลง`; 
+        submit.disabled=false; 
+        reset.disabled=false; 
+      } else { 
+        txt.textContent='ยังไม่มีการเปลี่ยนแปลง'; 
+        submit.disabled=true; 
+        reset.disabled=true; 
+      }
     }
 
-    // รีเซ็ต
+    // รีเซ็ตการเปลี่ยนแปลง
     function resetChanges(){
       populateForm(originalData);
       currentData = {...originalData};
       document.getElementById('photoInput').value='';
       document.querySelectorAll('.field-changed').forEach(el=>el.classList.remove('field-changed'));
+      document.querySelectorAll('.form-group.error').forEach(el=>el.classList.remove('error'));
       updateChangesDisplay();
       showToast('ล้างการเปลี่ยนแปลงแล้ว','info');
     }
@@ -550,36 +717,77 @@
       showToast('ระบบจะลบรูปเมื่อบันทึก','warning');
     }
 
-    // Validate field รายตัว
+    // Validate ฟิลด์
     function validateField(field){
       const group = field.parentElement;
       const val = field.value.trim();
       group.classList.remove('error','success');
 
-      if(field.hasAttribute('required') && !val){ group.classList.add('error'); return false; }
-      if(field.type==='email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ group.classList.add('error'); return false; }
-      if(field.name==='id_card' && val && val.length!==13){ group.classList.add('error'); return false; }
-      if(field.name==='phone' && val && (val.length<9 || val.length>10)){ group.classList.add('error'); return false; }
-      if(field.name==='dob' && val){
-        const birth = new Date(val); const today=new Date(); const age=today.getFullYear()-birth.getFullYear();
-        if(age<18 || age>80){ group.classList.add('error'); return false; }
+      if(field.hasAttribute('required') && !val){ 
+        group.classList.add('error'); 
+        return false; 
       }
-      group.classList.add('success'); return true;
+      
+      if(field.type==='email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ 
+        group.classList.add('error'); 
+        return false; 
+      }
+      
+      if(field.name==='id_card' && val && val.length!==13){ 
+        group.classList.add('error'); 
+        return false; 
+      }
+      
+      if(field.name==='phone' && val && (val.length<9 || val.length>10)){ 
+        group.classList.add('error'); 
+        return false; 
+      }
+      
+      if(field.name==='license_no' && val && val.length<6){ 
+        group.classList.add('error'); 
+        return false; 
+      }
+      
+      if(field.name==='dob' && val){
+        const birth = new Date(val); 
+        const today=new Date(); 
+        const age=today.getFullYear()-birth.getFullYear();
+        if(age<18 || age>80){ 
+          group.classList.add('error'); 
+          return false; 
+        }
+      }
+      
+      group.classList.add('success'); 
+      return true;
     }
 
     function validateAllFields(){
       const req = document.querySelectorAll('.form-control[required]');
-      let ok = true; req.forEach(f=>{ if(!validateField(f)) ok=false; }); return ok;
+      let ok = true; 
+      req.forEach(f=>{ 
+        if(!validateField(f)) ok=false; 
+      }); 
+      return ok;
     }
 
-    // Submit
+    // Submit ฟอร์ม
     async function handleFormSubmission(e){
       e.preventDefault();
       if(isSubmitting || !hasChanges) return;
-      if(!validateAllFields()){ showToast('กรุณาแก้ไขข้อผิดพลาดในแบบฟอร์ม','error'); return; }
+      
+      if(!validateAllFields()){ 
+        showToast('กรุณาแก้ไขข้อผิดพลาดในแบบฟอร์ม','error'); 
+        return; 
+      }
+      
       const pw = document.getElementById('password').value;
       const cf = document.getElementById('confirmPassword').value;
-      if(pw && pw!==cf){ showToast('รหัสผ่านไม่ตรงกัน','error'); return; }
+      if(pw && pw!==cf){ 
+        showToast('รหัสผ่านไม่ตรงกัน','error'); 
+        return; 
+      }
+      
       showConfirmationModal();
     }
 
@@ -587,15 +795,26 @@
       const modal = document.getElementById('confirmModal');
       const msg = document.getElementById('modalMessage');
       const changed = Object.keys(currentData).filter(k=> currentData[k] !== (originalData[k]||''));
+      
       msg.innerHTML = `
         <p>คุณกำลังบันทึกการเปลี่ยนแปลงในฟิลด์ต่อไปนี้:</p>
-        <ul style="margin:10px 0;padding-left:20px;">${changed.map(f=>`<li><strong>${formatFieldName(f)}</strong></li>`).join('')}</ul>
+        <ul style="margin:10px 0;padding-left:20px;">
+          ${changed.map(f=>`<li><strong>${formatFieldName(f)}</strong></li>`).join('')}
+        </ul>
         <p>ยืนยันที่จะบันทึกหรือไม่?</p>`;
       modal.style.display='flex';
     }
-    function closeModal(){ document.getElementById('confirmModal').style.display='none'; }
-    document.getElementById('confirmSaveBtn').addEventListener('click', async ()=>{ closeModal(); await saveChanges(); });
 
+    function closeModal(){ 
+      document.getElementById('confirmModal').style.display='none'; 
+    }
+
+    document.getElementById('confirmSaveBtn').addEventListener('click', async ()=>{ 
+      closeModal(); 
+      await saveChanges(); 
+    });
+
+    // บันทึกการเปลี่ยนแปลง
     async function saveChanges(){
       isSubmitting = true;
       const submitBtn = document.getElementById('submitBtn');
@@ -603,38 +822,68 @@
 
       try{
         const fd = new FormData();
-        Object.keys(currentData).forEach(k=>{
+        
+        // รายการฟิลด์ทั้งหมดที่ต้องส่ง
+        const fieldsToSend = [
+          'fname', 'lname', 'dob', 'id_card', 'license_no',
+          'specialty', 'education', 'address', 'phone', 'email', 'password'
+        ];
+        
+        fieldsToSend.forEach(k => {
           let v = currentData[k];
-          if (k==='dob' && (!v || v==='')) v = null;
-          if (v !== (originalData[k]||'')) fd.append(k, v ?? '');
+          
+          // จัดการค่าพิเศษ
+          if (k === 'dob' && (!v || v === '')) v = null;
+          if (k === 'education' && (!v || v === '')) v = null;
+          if (k === 'address' && (!v || v === '')) v = null;
+          if (k === 'password' && (!v || v === '')) return;
+          
+          // ส่งเฉพาะที่มีการเปลี่ยนแปลง
+          if (v !== (originalData[k] || '')) {
+            fd.append(k, v ?? '');
+          }
         });
+        
+        // รูปภาพ
         const photoInput = document.getElementById('photoInput');
-        if(photoInput.files.length>0) fd.append('photo', photoInput.files[0]);
+        if(photoInput.files.length > 0) {
+          fd.append('photo', photoInput.files[0]);
+        }
 
-        const res = await fetch(`/admin/dentists/${dentistId}/edit`, { method:'POST', body:fd });
-        if(!res.ok) throw new Error(await res.text() || 'บันทึกไม่สำเร็จ');
+        const res = await fetch(`/admin/dentists/${dentistId}/edit`, { 
+          method: 'POST', 
+          body: fd 
+        });
+        
+        if(!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'บันทึกไม่สำเร็จ');
+        }
 
-        showToast('อัปเดตข้อมูลทันตแพทย์สำเร็จ!','success');
-        setTimeout(()=>{ location.href='../../dentists'; },1000);
-      }catch(e){
-        showToast('เกิดข้อผิดพลาดในการอัปเดต: '+e.message,'error');
-      }finally{
-        isSubmitting=false;
-        submitBtn.disabled=false;
+        showToast('อัปเดตข้อมูลทันตแพทย์สำเร็จ!', 'success');
+        setTimeout(() => { location.href = '../../dentists'; }, 1500);
+        
+      } catch(e) {
+        showToast('เกิดข้อผิดพลาดในการอัปเดต: ' + e.message, 'error');
+      } finally {
+        isSubmitting = false;
+        submitBtn.disabled = false;
       }
     }
 
-    // แปลงชื่อฟิลด์ (แสดงใน modal)
+    // แปลงชื่อฟิลด์
     function formatFieldName(n){
       const map = {
-        fname:'ชื่อ', lname:'นามสกุล', phone:'เบอร์โทรศัพท์', specialty:'สาขา/ความชำนาญ',
-        education:'การศึกษา', address:'ที่อยู่', email:'อีเมล', id_card:'เลขบัตรประชาชน',
-        dob:'วันเดือนปีเกิด', photo:'รูปโปรไฟล์', password:'รหัสผ่าน', license_number:'เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม'
+        fname:'ชื่อ', lname:'นามสกุล', phone:'เบอร์โทรศัพท์', 
+        specialty:'สาขา/ความชำนาญ', education:'การศึกษา', address:'ที่อยู่', 
+        email:'อีเมล', id_card:'เลขบัตรประชาชน', dob:'วันเดือนปีเกิด', 
+        photo:'รูปโปรไฟล์', password:'รหัสผ่าน', 
+        license_no:'เลขที่ใบอนุญาตประกอบวิชาชีพ'
       };
       return map[n] || n;
     }
 
-    // โปรไฟล์/แจ้งเตือน/เวลาไทย 24 ชม.
+    // โหลดข้อมูลผู้ใช้
     async function loadUserInfo(){
       try{
         const r = await fetch('../../profile/api');
@@ -642,11 +891,16 @@
           const d = await r.json();
           if(d.success){
             document.getElementById('userAvatar').textContent = (d.email||'A')[0].toUpperCase();
-            const u = document.querySelector('.user-details strong'); if(u) u.textContent = `สวัสดี ${d.role||'แอดมิน'}`;
+            const u = document.querySelector('.user-details strong'); 
+            if(u) u.textContent = `สวัสดี ${d.role||'แอดมิน'}`;
           }
         }
-      }catch{ document.getElementById('userAvatar').textContent='A'; }
+      }catch{ 
+        document.getElementById('userAvatar').textContent='A'; 
+      }
     }
+
+    // โหลดการแจ้งเตือน
     async function loadNotifications(){
       try{
         const r = await fetch('../../api/notifications?limit=10');
@@ -654,13 +908,27 @@
           const d = await r.json();
           if(d.success) updateNotificationDisplay(d.notifications, d.pagination.unread_count);
         }
-      }catch{ showEmptyNotifications(); }
+      }catch{ 
+        showEmptyNotifications(); 
+      }
     }
+
     function updateNotificationDisplay(list, unread){
       const badge = document.getElementById('notificationBadge');
       const content = document.getElementById('notificationContent');
-      if (unread>0){ badge.textContent = unread>99?'99+':unread; badge.classList.add('show'); } else { badge.classList.remove('show'); }
-      if (!list.length){ showEmptyNotifications(); return; }
+      
+      if (unread>0){ 
+        badge.textContent = unread>99?'99+':unread; 
+        badge.classList.add('show'); 
+      } else { 
+        badge.classList.remove('show'); 
+      }
+      
+      if (!list.length){ 
+        showEmptyNotifications(); 
+        return; 
+      }
+      
       content.innerHTML = list.map(n=>{
         const t = getTimeAgoTH(new Date(n.created_at));
         return `<div class="notification-item ${!n.is_read?'unread':''}" onclick="markAsRead(${n.id})">
@@ -670,54 +938,133 @@
         </div>`;
       }).join('');
     }
-    function showEmptyNotifications(){ document.getElementById('notificationContent').innerHTML = `<div class="empty-notifications"><i class="fas fa-bell-slash"></i><p>ไม่มีการแจ้งเตือนใหม่</p></div>`; }
-    function toggleNotifications(){ const d=document.getElementById('notificationDropdown'); d.classList.toggle('show'); if(d.classList.contains('show')) loadNotifications(); }
-    async function markAllAsRead(){ try{ const r=await fetch('../../api/notifications/read-all',{method:'POST'}); if(r.ok){ loadNotifications(); showToast('ทำเป็นอ่านทั้งหมดแล้ว','success'); } }catch{ showToast('ทำเครื่องหมายไม่สำเร็จ','error'); } }
-    async function markAsRead(id){ try{ const r=await fetch(`../../api/notifications/${id}/read`,{method:'POST'}); if(r.ok) loadNotifications(); }catch{} }
-    function toggleDropdown(){ const m=document.getElementById('profileDropdown'); m.style.display = m.style.display==='block'?'none':'block'; }
 
-    function showToast(msg,type='info'){
-      const t=document.createElement('div'); t.className=`toast ${type}`;
-      const icon={success:'fas fa-check-circle',error:'fas fa-exclamation-triangle',warning:'fas fa-exclamation-circle',info:'fas fa-info-circle'};
-      t.innerHTML = `<i class="${icon[type]}"></i>${msg}`;
-      document.body.appendChild(t);
-      setTimeout(()=>{ t.style.animation='slideOutRight .3s ease'; setTimeout(()=>t.remove(),300); },4000);
+    function showEmptyNotifications(){ 
+      document.getElementById('notificationContent').innerHTML = `
+        <div class="empty-notifications">
+          <i class="fas fa-bell-slash"></i>
+          <p>ไม่มีการแจ้งเตือนใหม่</p>
+        </div>`; 
     }
 
-    // เวลาไทย 24 ชม.
+    function toggleNotifications(){ 
+      const d=document.getElementById('notificationDropdown'); 
+      d.classList.toggle('show'); 
+      if(d.classList.contains('show')) loadNotifications(); 
+    }
+
+    async function markAllAsRead(){ 
+      try{ 
+        const r=await fetch('../../api/notifications/read-all',{method:'POST'}); 
+        if(r.ok){ 
+          loadNotifications(); 
+          showToast('ทำเป็นอ่านทั้งหมดแล้ว','success'); 
+        } 
+      }catch{ 
+        showToast('ทำเครื่องหมายไม่สำเร็จ','error'); 
+      } 
+    }
+
+    async function markAsRead(id){ 
+      try{ 
+        const r=await fetch(`../../api/notifications/${id}/read`,{method:'POST'}); 
+        if(r.ok) loadNotifications(); 
+      }catch{} 
+    }
+
+    function toggleDropdown(){ 
+      const m=document.getElementById('profileDropdown'); 
+      m.style.display = m.style.display==='block'?'none':'block'; 
+    }
+
+    // Toast notification
+    function showToast(msg,type='info'){
+      const t=document.createElement('div'); 
+      t.className=`toast ${type}`;
+      const icon={
+        success:'fas fa-check-circle',
+        error:'fas fa-exclamation-triangle',
+        warning:'fas fa-exclamation-circle',
+        info:'fas fa-info-circle'
+      };
+      t.innerHTML = `<i class="${icon[type]}"></i>${msg}`;
+      document.body.appendChild(t);
+      setTimeout(()=>{ 
+        t.style.animation='slideOutRight .3s ease'; 
+        setTimeout(()=>t.remove(),300); 
+      },4000);
+    }
+
+    // ฟอร์แมตเวลา
     function getTimeAgoTH(date){
-      const now=new Date(); const s=Math.floor((now-date)/1000);
+      const now=new Date(); 
+      const s=Math.floor((now-date)/1000);
       if(s<60) return 'เมื่อสักครู่';
       if(s<3600) return `${Math.floor(s/60)} นาทีที่ผ่านมา`;
       if(s<86400) return `${Math.floor(s/3600)} ชม.ที่ผ่านมา`;
       if(s<604800) return `${Math.floor(s/86400)} วันที่แล้ว`;
       return formatDateTime(date);
     }
-    function formatDateTime(date){
-      return date.toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
-    }
 
-    // อื่น ๆ
-    function setupUnsavedChangesWarning(){
-      window.addEventListener('beforeunload', e=>{
-        if(hasChanges && !isSubmitting){ e.preventDefault(); e.returnValue='คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก'; return 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก';}
+    function formatDateTime(date){
+      return date.toLocaleString('th-TH',{
+        year:'numeric',
+        month:'short',
+        day:'numeric',
+        hour:'2-digit',
+        minute:'2-digit',
+        hour12:false
       });
     }
+
+    // ป้องกันการออกโดยไม่บันทึก
+    function setupUnsavedChangesWarning(){
+      window.addEventListener('beforeunload', e=>{
+        if(hasChanges && !isSubmitting){ 
+          e.preventDefault(); 
+          e.returnValue='คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก'; 
+          return 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก';
+        }
+      });
+    }
+
+    // Event listeners
     document.addEventListener('click', e=>{
-      const pd=document.querySelector('.profile-dropdown'); if(pd && !pd.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
-      const nc=document.querySelector('.notification-container'); if(nc && !nc.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
-      const modal=document.getElementById('confirmModal'); if(e.target===modal) closeModal();
-    });
-    document.addEventListener('keydown', e=>{
-      if(e.key==='Escape'){ document.getElementById('notificationDropdown').classList.remove('show'); document.getElementById('profileDropdown').style.display='none'; closeModal(); }
-      if(e.ctrlKey && e.key==='s'){ e.preventDefault(); if(hasChanges) showConfirmationModal(); }
-      if(e.ctrlKey && e.key==='r'){ e.preventDefault(); if(hasChanges) resetChanges(); }
-      if(e.key==='Enter' && document.getElementById('confirmModal').style.display==='flex'){ e.preventDefault(); document.getElementById('confirmSaveBtn').click(); }
+      const pd=document.querySelector('.profile-dropdown'); 
+      if(pd && !pd.contains(e.target)) document.getElementById('profileDropdown').style.display='none';
+      
+      const nc=document.querySelector('.notification-container'); 
+      if(nc && !nc.contains(e.target)) document.getElementById('notificationDropdown').classList.remove('show');
+      
+      const modal=document.getElementById('confirmModal'); 
+      if(e.target===modal) closeModal();
     });
 
-    // เครือข่าย
+    document.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ 
+        document.getElementById('notificationDropdown').classList.remove('show'); 
+        document.getElementById('profileDropdown').style.display='none'; 
+        closeModal(); 
+      }
+      if(e.ctrlKey && e.key==='s'){ 
+        e.preventDefault(); 
+        if(hasChanges) showConfirmationModal(); 
+      }
+      if(e.ctrlKey && e.key==='r'){ 
+        e.preventDefault(); 
+        if(hasChanges) resetChanges(); 
+      }
+      if(e.key==='Enter' && document.getElementById('confirmModal').style.display==='flex'){ 
+        e.preventDefault(); 
+        document.getElementById('confirmSaveBtn').click(); 
+      }
+    });
+
+    // ตรวจสอบการเชื่อมต่อ
     window.addEventListener('online', ()=>showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว','success'));
     window.addEventListener('offline', ()=>showToast('การเชื่อมต่อขาดหาย การเปลี่ยนแปลงจะถูกบันทึกเมื่อเชื่อมต่ออีกครั้ง','warning'));
+    
+    // Auto-refresh notifications
     setInterval(()=>loadNotifications(),60000);
   </script>
 </body>

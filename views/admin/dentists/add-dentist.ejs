@@ -305,11 +305,11 @@
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="license_no">เลขบัตรประกอบวิชาชีพ <span class="required">*</span></label>
-                                    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="10" />
-                                    <div class="field-help">ตัวอย่าง: 6–10 หลัก (ตัวเลขเท่านั้น)</div>
-                                    <div class="error-message">กรุณากรอกเลขบัตรประกอบวิชาชีพให้ถูกต้อง</div>
-                                </div>
+    <label for="license_no">เลขใบอนุญาตประกอบวิชาชีพ <span class="required">*</span></label>
+    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20" />
+    <div class="field-help">ตัวเลข 6-20 หลัก</div>
+    <div class="error-message">กรุณากรอกเลขใบอนุญาตให้ถูกต้อง</div>
+</div>
                                 <div class="form-group">
                                     <label for="specialty">สาขาเชี่ยวชาญ <span class="required">*</span></label>
                                     <select id="specialty" name="specialty" class="form-control" required>
@@ -636,22 +636,23 @@
             });
 
             // เลขบัตรประกอบวิชาชีพ
-            const license = document.getElementById('license_no');
-            let licenseTimeout;
-            license.addEventListener('input', function(){
-                this.value = this.value.replace(/\D/g,'').substring(0,10);
-                if (licenseTimeout) clearTimeout(licenseTimeout);
-                if (isSubmitting) return;
-                this.parentElement.classList.remove('error','success');
-                if (this.value.length >= 6) {
-                    licenseTimeout = setTimeout(()=>checkLicenseAvailability(this.value),800);
-                }
-            });
-            license.addEventListener('blur', function(){
-                if (!isSubmitting && this.value) {
-                    checkLicenseAvailability(this.value);
-                }
-            });
+            // เลขใบอนุญาต - แก้ไขให้รองรับ 6-20 หลัก
+const license = document.getElementById('license_no');
+let licenseTimeout;
+license.addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g,'').substring(0,20); // เปลี่ยนจาก 10 เป็น 20
+    if (licenseTimeout) clearTimeout(licenseTimeout);
+    if (isSubmitting) return;
+    this.parentElement.classList.remove('error','success');
+    if (this.value.length >= 6) {
+        licenseTimeout = setTimeout(()=>checkLicenseAvailability(this.value),800);
+    }
+});
+license.addEventListener('blur', function(){
+    if (!isSubmitting && this.value) {
+        checkLicenseAvailability(this.value);
+    }
+});
 
             // เบอร์โทร
             const phone = document.getElementById('phone');
@@ -721,10 +722,12 @@
             }
 
             if (field.name==='license_no' && value){
-                if (!/^\d{6,10}$/.test(value)) {
-                    group.classList.add('error'); errorMsg.textContent = 'เลขบัตรประกอบวิชาชีพต้องเป็นตัวเลข 6–10 หลัก'; return false;
-                }
-            }
+    if (!/^\d{6,20}$/.test(value)) { // เปลี่ยนจาก 6-10 เป็น 6-20
+        group.classList.add('error'); 
+        errorMsg.textContent = 'เลขใบอนุญาตต้องเป็นตัวเลข 6–20 หลัก'; 
+        return false;
+    }
+}
 
             if (field.name==='phone' && value){
                 if (value.length < 9 || value.length > 10 || !/^[0-9]+$/.test(value)) {
@@ -770,23 +773,43 @@
         }
 
         async function checkLicenseAvailability(licenseNo){
-            if (!licenseNo || isSubmitting) return;
-            const group = document.getElementById('license_no').parentElement;
-            const msg = group.querySelector('.error-message');
-            group.classList.add('checking'); group.classList.remove('error','success');
-            try{
-                const res = await fetch(`/admin/api/check-license?license=${encodeURIComponent(licenseNo)}`);
-                if (res.ok){
-                    const data = await res.json();
-                    if (!data.success) { group.classList.add('error'); msg.textContent = data.error || 'ตรวจสอบเลขบัตรประกอบวิชาชีพไม่สำเร็จ'; }
-                    else if (!/^\d{6,10}$/.test(licenseNo)) { group.classList.add('error'); msg.textContent = 'เลขบัตรประกอบวิชาชีพต้องเป็นตัวเลข 6–10 หลัก'; }
-                    else if (data.exists) { group.classList.add('error'); msg.textContent = data.message || 'เลขบัตรประกอบวิชาชีพนี้ถูกใช้แล้ว'; }
-                    else { group.classList.add('success'); }
-                } else { group.classList.add('error'); msg.textContent = 'ไม่สามารถตรวจสอบเลขบัตรประกอบวิชาชีพได้'; }
-            } catch { group.classList.add('error'); msg.textContent = 'เครือข่ายผิดพลาดระหว่างตรวจสอบเลขบัตรประกอบวิชาชีพ'; }
-            finally { group.classList.remove('checking'); }
+    if (!licenseNo || isSubmitting) return;
+    const group = document.getElementById('license_no').parentElement;
+    const msg = group.querySelector('.error-message');
+    group.classList.add('checking'); 
+    group.classList.remove('error','success');
+    
+    try{
+        const res = await fetch(`/admin/api/check-license?license=${encodeURIComponent(licenseNo)}`);
+        if (res.ok){
+            const data = await res.json();
+            if (!data.success) { 
+                group.classList.add('error'); 
+                msg.textContent = data.error || 'ตรวจสอบเลขใบอนุญาตไม่สำเร็จ'; 
+            }
+            else if (!/^\d{6,20}$/.test(licenseNo)) { 
+                group.classList.add('error'); 
+                msg.textContent = 'เลขใบอนุญาตต้องเป็นตัวเลข 6–20 หลัก'; 
+            }
+            else if (data.exists) { 
+                group.classList.add('error'); 
+                msg.textContent = data.message || 'เลขใบอนุญาตนี้ถูกใช้แล้ว'; 
+            }
+            else { 
+                group.classList.add('success'); 
+            }
+        } else { 
+            group.classList.add('error'); 
+            msg.textContent = 'ไม่สามารถตรวจสอบเลขใบอนุญาตได้'; 
         }
-
+    } catch { 
+        group.classList.add('error'); 
+        msg.textContent = 'เครือข่ายผิดพลาดระหว่างตรวจสอบเลขใบอนุญาต'; 
+    }
+    finally { 
+        group.classList.remove('checking'); 
+    }
+}
         async function checkEmailAvailability(email){
             if (!email || !isValidEmail(email) || isSubmitting) return;
             const group = document.getElementById('email').parentElement;

@@ -427,7 +427,7 @@ exports.viewAppointments = async (req, res) => {
       ORDER BY qd.date DESC
     `, [selectedDate]);
 
-    res.render('admin-appointments', {
+    res.render('admin/appointment/admin-appointments', {
       appointments,
       weekOffset,
       selectedDate
@@ -715,10 +715,14 @@ exports.editDentistForm = async (req, res) => {
 
 
 
+// ส่วนของ editDentist function - แก้ไขให้รองรับ license_no
 exports.editDentist = async (req, res) => {
   const id = req.params.id;
 
-  if (!req.body) return res.status(400).send('No form data submitted.');
+  if (!req.body) return res.status(400).json({
+    success: false,
+    error: 'No form data submitted.'
+  });
 
   console.log('📋 Edit form data received:', req.body);
   console.log('📁 New file uploaded:', req.file);
@@ -732,14 +736,17 @@ exports.editDentist = async (req, res) => {
     `, [id]);
     
     if (dentistRow.length === 0) {
-      return res.status(404).send('Dentist not found');
+      return res.status(404).json({
+        success: false,
+        error: 'Dentist not found'
+      });
     }
 
     const currentDentist = dentistRow[0];
     const userId = currentDentist.user_id;
     const oldPhoto = currentDentist.photo;
 
-    // ✅ ปรับปรุงการจัดการข้อมูล - รองรับทั้ง string และ Date object
+    // รับค่าจากฟอร์ม
     const email = req.body.email || currentDentist.current_email;
     const password = req.body.password || '';
     const fname = req.body.fname || currentDentist.fname;
@@ -749,24 +756,17 @@ exports.editDentist = async (req, res) => {
     const address = req.body.address || currentDentist.address;
     const phone = req.body.phone || currentDentist.phone;
     const id_card = req.body.id_card || currentDentist.id_card;
+    const license_no = req.body.license_no || currentDentist.license_no; // ✅ เพิ่มบรรทัดนี้
     
-    // ✅ จัดการ dob อย่างปลอดภัย
+    // จัดการ dob
     let dob = req.body.dob || currentDentist.dob;
     if (dob instanceof Date) {
-      // ถ้าเป็น Date object แปลงเป็น string
-      dob = dob.toISOString().split('T')[0]; // YYYY-MM-DD format
+      dob = dob.toISOString().split('T')[0];
     } else if (typeof dob === 'string') {
-      // ถ้าเป็น string ทำความสะอาด
       dob = dob.trim();
     }
 
-    console.log('📝 Processing update with data:', {
-      email, fname, lname, dob, id_card, specialty, education, address, phone,
-      hasPassword: !!password,
-      hasNewPhoto: !!req.file
-    });
-
-    // ตรวจสอบอีเมลซ้ำ (ถ้ามีการเปลี่ยนแปลง)
+    // ตรวจสอบอีเมลซ้ำ
     if (email && email !== currentDentist.current_email) {
       const [existingUser] = await db.execute(
         'SELECT COUNT(*) as count FROM user WHERE email = ? AND user_id != ?', 
@@ -774,14 +774,9 @@ exports.editDentist = async (req, res) => {
       );
       
       if (existingUser[0].count > 0) {
-        console.log('❌ Email already exists:', email);
-        
-        // ลบไฟล์ที่อัพโหลด
         if (req.file) {
           const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
-          fs.unlink(filePath, (err) => {
-            if (err) console.error('Error deleting file:', err);
-          });
+          fs.unlink(filePath, () => {});
         }
         
         return res.status(400).json({
@@ -792,7 +787,49 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // อัปเดต user table (เฉพาะเมื่อมีการเปลี่ยนแปลง)
+    // ✅ ตรวจสอบเลขบัตรประชาชนซ้ำ
+    if (id_card && id_card !== currentDentist.id_card) {
+      const [existingIdCard] = await db.execute(
+        'SELECT COUNT(*) as count FROM dentist WHERE id_card = ? AND dentist_id != ?',
+        [id_card, id]
+      );
+      
+      if (existingIdCard[0].count > 0) {
+        if (req.file) {
+          const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+          fs.unlink(filePath, () => {});
+        }
+        
+        return res.status(400).json({
+          success: false,
+          error: 'ID card number is already in use',
+          field: 'id_card'
+        });
+      }
+    }
+
+    // ✅ ตรวจสอบเลขใบอนุญาตซ้ำ
+    if (license_no && license_no !== currentDentist.license_no) {
+      const [existingLicense] = await db.execute(
+        'SELECT COUNT(*) as count FROM dentist WHERE license_no = ? AND dentist_id != ?',
+        [license_no, id]
+      );
+      
+      if (existingLicense[0].count > 0) {
+        if (req.file) {
+          const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
+          fs.unlink(filePath, () => {});
+        }
+        
+        return res.status(400).json({
+          success: false,
+          error: 'License number is already in use',
+          field: 'license_no'
+        });
+      }
+    }
+
+    // อัปเดต user table
     let shouldUpdateUser = false;
     let userUpdateQuery = 'UPDATE user SET ';
     let userUpdateParams = [];
@@ -827,7 +864,7 @@ exports.editDentist = async (req, res) => {
       photoFilename = req.file.filename;
       console.log('✅ New photo uploaded:', photoFilename);
       
-      // ลบรูปเก่า (ถ้าไม่ใช่ default)
+      // ลบรูปเก่า
       if (oldPhoto && oldPhoto !== 'default-avatar.png') {
         const oldPhotoPath = path.join(__dirname, '../public/uploads/', oldPhoto);
         fs.unlink(oldPhotoPath, (err) => {
@@ -837,65 +874,46 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // ✅ แปลงค่าให้เหมาะสมสำหรับฐานข้อมูล
     const dobValue = dob && dob !== '' && dob !== 'null' ? dob : null;
     const educationValue = education && education.trim() !== '' ? education : null;
     const addressValue = address && address.trim() !== '' ? address : null;
 
-    // อัปเดต dentist table
+    // ✅ อัปเดต dentist table พร้อม license_no
     console.log('🦷 Updating dentist table...');
     await db.execute(`
       UPDATE dentist SET
-        fname = ?, lname = ?, dob = ?, id_card = ?,
+        fname = ?, lname = ?, dob = ?, id_card = ?, license_no = ?,
         specialty = ?, education = ?, address = ?, phone = ?, photo = ?
       WHERE dentist_id = ?
-    `, [fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename, id]);
+    `, [fname, lname, dobValue, id_card, license_no, specialty, educationValue, addressValue, phone, photoFilename, id]);
 
     console.log('✅ Dentist updated successfully');
     
-    // ส่ง JSON response หากเป็น API request
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      res.json({
-        success: true,
-        message: 'Dentist updated successfully'
-      });
-    } else {
-      res.redirect('/admin/dentists');
-    }
+    res.json({
+      success: true,
+      message: 'Dentist updated successfully'
+    });
     
   } catch (err) {
     console.error('❌ Edit dentist error:', err);
     
-    // ลบไฟล์ใหม่หากเกิดข้อผิดพลาด
     if (req.file) {
       const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
-      fs.unlink(filePath, (deleteErr) => {
-        if (deleteErr) console.error('Error deleting file:', deleteErr);
-      });
+      fs.unlink(filePath, () => {});
     }
     
-    // จัดการ error responses
     if (err.code === 'ER_DUP_ENTRY') {
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(400).json({
-          success: false,
-          error: 'Email address is already in use',
-          field: 'email'
-        });
-      } else {
-        req.flash('error', 'Email address is already in use');
-        return res.redirect(`/admin/dentists/${id}/edit`);
-      }
+      return res.status(400).json({
+        success: false,
+        error: 'Duplicate entry detected',
+        field: 'unknown'
+      });
     }
     
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update dentist: ' + err.message
-      });
-    } else {
-      res.status(500).send('Server error during update: ' + err.message);
-    }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update dentist: ' + err.message
+    });
   }
 };
 
@@ -1782,7 +1800,7 @@ exports.addTreatment = async (req, res) => {
 //       return res.status(404).send('Treatment not found');
 //     }
 
-//     res.render('edit-treatment', {
+//     res.render('admin/treatment/edit-treatment', {
 //       treatment: treatmentRows[0],
 //       dentists: dentistRows
 //     });
@@ -1809,7 +1827,7 @@ exports.showEditTreatmentForm = async (req, res) => {
     const treatment = treatmentRows[0];
     treatment.dentist_ids = dentistIds;
 
-    res.render('edit-treatment', {
+    res.render('admin/treatment/edit-treatment', {
       treatment,
       dentists: dentistRows
     });

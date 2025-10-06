@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขข้อมูลผู้ป่วย - คลินิกยิ้มสดใส</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .page-info h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            font-size: 18px;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: flex;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -10px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 380px;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 2000;
+            display: none;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .mark-all-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f8ff;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .empty-notifications {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-notifications i {
+            font-size: 32px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .form-container.loaded {
+            opacity: 1;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            padding: 25px 30px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-header-left h2 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .patient-id-badge {
+            background: #4A90E2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #4A90E2;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-control:invalid {
+            border-color: #e74c3c;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .field-changed {
+            border-color: #f39c12 !important;
+            background: #fef9e7 !important;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message {
+            display: block;
+        }
+
+        .form-group.error .form-control {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+        }
+
+        .form-group.success .form-control {
+            border-color: #27ae60;
+            background: #f0fff4;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e1e5e9;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-fill.weak { background: #e74c3c; width: 25%; }
+        .strength-fill.fair { background: #f39c12; width: 50%; }
+        .strength-fill.good { background: #f1c40f; width: 75%; }
+        .strength-fill.strong { background: #27ae60; width: 100%; }
+
+        .strength-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .strength-text.weak { color: #e74c3c; }
+        .strength-text.fair { color: #f39c12; }
+        .strength-text.good { color: #f1c40f; }
+        .strength-text.strong { color: #27ae60; }
+
+        .form-actions {
+            background: #f8f9fa;
+            padding: 25px 30px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .changes-summary {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .changes-count {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .last-updated {
+            background: rgba(74, 144, 226, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .last-updated i {
+            color: #4A90E2;
+            margin-right: 8px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff3cd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #856404;
+            font-size: 18px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-message {
+            margin-bottom: 25px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .email-check {
+            position: relative;
+        }
+
+        .email-status {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .email-status.checking {
+            color: #f39c12;
+            animation: spin 1s linear infinite;
+        }
+
+        .email-status.available {
+            color: #27ae60;
+        }
+
+        .email-status.taken {
+            color: #e74c3c;
+        }
+
+        .data-loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .data-loading i {
+            font-size: 32px;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <span>กำลังโหลดข้อมูลผู้ป่วย...</span>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>คลินิกยิ้มสดใส</h3>
+        </div>
+        <ul>
+            <li><a href="../../dashboard"><i class="fas fa-calendar-alt"></i> ตารางนัด</a></li>
+            <li><a href="../../appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="../../dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li class="active"><a href="../../patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="../../treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="page-info">
+                <h1>แก้ไขข้อมูลผู้ป่วย</h1>
+                <p>แก้ไขข้อมูลโปรไฟล์และบัญชีผู้ใช้</p>
+            </div>
+            <div class="user-section">
+                <div class="notification-container">
+                    <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                    <div class="notification-badge" id="notificationBadge">0</div>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>การแจ้งเตือน</h3>
+                            <button class="mark-all-btn" onclick="markAllAsRead()">อ่านทั้งหมด</button>
+                        </div>
+                        <div class="notification-content" id="notificationContent">
+                            <div class="empty-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>กำลังโหลดการแจ้งเตือน...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี ผู้ดูแลระบบ</strong>
+                            <small>ผู้ดูแลระบบ</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="../../profile">โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="../../../logout">ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <form id="editPatientForm" class="form-container">
+                <div class="form-header">
+                    <div class="form-header-left">
+                        <h2>ข้อมูลผู้ป่วย</h2>
+                        <p>อัปเดตข้อมูลโปรไฟล์และการตั้งค่าบัญชี</p>
+                    </div>
+                    <div class="patient-id-badge" id="patientIdBadge">
+                        กำลังโหลด...
+                    </div>
+                </div>
+
+                <div class="form-body">
+                    <div class="last-updated" id="lastUpdated" style="display: none;">
+                        <i class="fas fa-clock"></i>
+                        <span id="lastUpdatedText">อัปเดตล่าสุด: ไม่เคย</span>
+                    </div>
+
+                    <div id="dataLoading" class="data-loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>กำลังโหลดข้อมูลผู้ป่วย...</p>
+                    </div>
+
+                    <div class="form-section" id="personalSection" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-user"></i>
+                            ข้อมูลส่วนตัว
+                        </h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fname">ชื่อ <span class="required">*</span></label>
+                                <input type="text" id="fname" name="fname" class="form-control" required />
+                                <div class="error-message">กรุณากรอกชื่อ</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="lname">นามสกุล <span class="required">*</span></label>
+                                <input type="text" id="lname" name="lname" class="form-control" required />
+                                <div class="error-message">กรุณากรอกนามสกุล</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dob">วันเกิด <span class="required">*</span></label>
+                                <input type="date" id="dob" name="dob" class="form-control" required />
+                                <div class="error-message">กรุณาเลือกวันเกิดที่ถูกต้อง</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
+                                <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
+                                <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลัก</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="accountSection" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-key"></i>
+                            ข้อมูลการเข้าสู่ระบบ
+                        </h3>
+
+                        <div class="form-row single">
+                            <div class="form-group email-check">
+                                <label for="email">อีเมล <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" class="form-control" required />
+                                <div class="email-status" id="emailStatus"></div>
+                                <div class="field-help">ใช้สำหรับเข้าสู่ระบบและรับการแจ้งเตือน</div>
+                                <div class="error-message">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password">รหัสผ่านใหม่</label>
+                                <input type="password" id="password" name="password" class="form-control" minlength="6" />
+                                <div class="field-help">เว้นว่างไว้หากไม่ต้องการเปลี่ยน</div>
+                                <div class="password-strength" id="passwordStrength" style="display: none;">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="strengthFill"></div>
+                                    </div>
+                                    <div class="strength-text" id="strengthText">กรอกรหัสผ่าน</div>
+                                </div>
+                                <div class="error-message">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" />
+                                <div class="field-help">จำเป็นเฉพาะเมื่อต้องการเปลี่ยนรหัสผ่าน</div>
+                                <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="contactSection" style="display: none;">
+                        <h3 class="section-title">
+                            <i class="fas fa-address-book"></i>
+                            ข้อมูลติดต่อ
+                        </h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                                <input type="tel" id="phone" name="phone" class="form-control" required />
+                                <div class="field-help">รูปแบบ: 08xxxxxxxx หรือ 02xxxxxxx</div>
+                                <div class="error-message">กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label for="address">ที่อยู่</label>
+                                <textarea id="address" name="address" class="form-control" rows="3" placeholder="ที่อยู่เต็มรวมถึงจังหวัด"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions" id="formActions" style="display: none;">
+                    <div class="changes-summary">
+                        <span id="changesText">ไม่มีการเปลี่ยนแปลง</span>
+                    </div>
+                    <div>
+                        <a href="../../patients" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            ยกเลิก
+                        </a>
+                        <button type="button" class="btn btn-warning" onclick="resetChanges()" id="resetBtn" disabled>
+                            <i class="fas fa-undo"></i>
+                            รีเซ็ตการเปลี่ยนแปลง
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                            <i class="fas fa-save"></i>
+                            บันทึกการเปลี่ยนแปลง
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">ยืนยันการเปลี่ยนแปลง</h3>
+            </div>
+            <div class="modal-message" id="modalMessage">
+                คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงเหล่านี้? ข้อมูลโปรไฟล์และบัญชีผู้ป่วยจะถูกอัปเดต
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-success" id="confirmSaveBtn">
+                    <i class="fas fa-check"></i>
+                    บันทึกการเปลี่ยนแปลง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalData = {};
+        let currentData = {};
+        let patientId = null;
+        let isSubmitting = false;
+        let hasChanges = false;
+        let emailCheckTimeout = null;
+        let isDataLoaded = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 โหลดหน้าเสร็จสิ้น กำลังเริ่มต้น...');
+            showLoadingOverlay();
+            
+            extractPatientId();
+            if (patientId) {
+                initializePage();
+            } else {
+                hideLoadingOverlay();
+                showToast('รหัสผู้ป่วยไม่ถูกต้อง', 'error');
+                setTimeout(() => window.location.href = '../../patients', 2000);
+            }
+        });
+
+        async function initializePage() {
+            try {
+                console.log('📋 กำลังเริ่มต้นหน้าสำหรับผู้ป่วยรหัส:', patientId);
+                
+                await Promise.all([
+                    loadPatientData(),
+                    loadUserInfo(),
+                    loadNotifications()
+                ]);
+                
+                if (isDataLoaded) {
+                    setupFormHandlers();
+                    setupPasswordValidation();
+                    setupChangeTracking();
+                    setupEmailValidation();
+                    showFormSections();
+                }
+                
+                hideLoadingOverlay();
+                
+            } catch (error) {
+                console.error('❌ เกิดข้อผิดพลาดในการเริ่มต้นหน้า:', error);
+                hideLoadingOverlay();
+                showToast('ไม่สามารถโหลดหน้าได้: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '../../patients', 3000);
+            }
+        }
+
+        function showLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.querySelector('.form-container').classList.add('loaded');
+        }
+
+        function showFormSections() {
+            console.log('👁️ กำลังแสดงส่วนของฟอร์ม...');
+            
+            document.getElementById('dataLoading').style.display = 'none';
+            document.getElementById('personalSection').style.display = 'block';
+            document.getElementById('accountSection').style.display = 'block';
+            document.getElementById('contactSection').style.display = 'block';
+            document.getElementById('formActions').style.display = 'flex';
+        }
+
+        function extractPatientId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/patients\/(\d+)\/edit/);
+            if (matches) {
+                patientId = parseInt(matches[1]);
+                document.getElementById('patientIdBadge').textContent = `รหัสผู้ป่วย: ${patientId}`;
+                console.log('✅ ดึงรหัสผู้ป่วยได้:', patientId);
+            } else {
+                console.error('❌ ไม่สามารถดึงรหัสผู้ป่วยจาก URL:', path);
+            }
+        }
+
+        async function loadPatientData() {
+            if (!patientId) {
+                throw new Error('ต้องระบุรหัสผู้ป่วย');
+            }
+
+            console.log('📡 กำลังโหลดข้อมูลผู้ป่วยรหัส:', patientId);
+
+            try {
+                const response = await fetch(`../../api/patients/${patientId}`);
+                
+                console.log('📡 สถานะการตอบกลับจาก API:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ การตอบกลับข้อผิดพลาดจาก API:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📦 ข้อมูลการตอบกลับจาก API:', data);
+                
+                if (data.success && data.patient) {
+                    console.log('✅ โหลดข้อมูลผู้ป่วยสำเร็จ:', data.patient);
+                    
+                    originalData = { ...data.patient };
+                    currentData = { ...data.patient };
+                    
+                    populateForm(data.patient);
+                    isDataLoaded = true;
+                    
+                    console.log('✅ กรอกฟอร์มด้วยข้อมูลผู้ป่วยแล้ว');
+                } else {
+                    throw new Error(data.error || 'รูปแบบการตอบกลับไม่ถูกต้อง');
+                }
+                
+            } catch (error) {
+                console.error('❌ เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ป่วย:', error);
+                throw new Error('ไม่สามารถโหลดข้อมูลผู้ป่วยได้: ' + error.message);
+            }
+        }
+
+        function populateForm(patient) {
+            console.log('📝 กำลังกรอกฟอร์มด้วยข้อมูลผู้ป่วย:', patient);
+            
+            try {
+                setFieldValue('fname', patient.fname || '');
+                setFieldValue('lname', patient.lname || '');
+                setFieldValue('phone', patient.phone || '');
+                setFieldValue('address', patient.address || '');
+                setFieldValue('email', patient.email || '');
+                
+                const id_card = patient.id_card || patient.id_card || '';
+                setFieldValue('id_card', id_card);
+                console.log('📋 ตั้งค่าเลขบัตรประชาชนเป็น:', id_card);
+                
+                if (patient.dob) {
+                    try {
+                        let dateValue;
+                        if (typeof patient.dob === 'string') {
+                            if (patient.dob.includes('T')) {
+                                dateValue = patient.dob.split('T')[0];
+                            } else {
+                                dateValue = patient.dob;
+                            }
+                        } else if (patient.dob instanceof Date) {
+                            dateValue = patient.dob.toISOString().split('T')[0];
+                        } else {
+                            dateValue = new Date(patient.dob).toISOString().split('T')[0];
+                        }
+                        
+                        setFieldValue('dob', dateValue);
+                        console.log('📅 ตั้งค่าวันเกิดเป็น:', dateValue);
+                    } catch (dateError) {
+                        console.warn('⚠️ เกิดข้อผิดพลาดในการตั้งค่าวันเกิด:', dateError);
+                        setFieldValue('dob', '');
+                    }
+                } else {
+                    setFieldValue('dob', '');
+                }
+
+                if (patient.updated_at || patient.created_at) {
+                    const lastUpdatedElement = document.getElementById('lastUpdated');
+                    const lastUpdatedText = document.getElementById('lastUpdatedText');
+                    const updateDate = new Date(patient.updated_at || patient.created_at);
+                    
+                    lastUpdatedText.textContent = `อัปเดตล่าสุด: ${formatDateTime(updateDate)}`;
+                    lastUpdatedElement.style.display = 'block';
+                }
+
+                clearAllValidationStates();
+                
+                console.log('✅ กรอกข้อมูลในฟอร์มทั้งหมดสำเร็จ');
+                
+            } catch (error) {
+                console.error('❌ เกิดข้อผิดพลาดในการกรอกฟอร์ม:', error);
+                throw error;
+            }
+        }
+
+        function setFieldValue(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = value || '';
+                console.log(`🏷️ ตั้งค่าฟิลด์ ${fieldId} เป็น: "${value}"`);
+            } else {
+                console.warn(`⚠️ ไม่พบฟิลด์ ${fieldId}`);
+            }
+        }
+
+        function clearAllValidationStates() {
+            const formGroups = document.querySelectorAll('.form-group');
+            formGroups.forEach(group => {
+                group.classList.remove('error', 'success');
+            });
+        }
+
+        function setupFormHandlers() {
+            console.log('🎛️ กำลังตั้งค่าตัวจัดการฟอร์ม...');
+            
+            const form = document.getElementById('editPatientForm');
+            form.addEventListener('submit', handleFormSubmission);
+
+            const inputs = form.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.parentElement.classList.contains('error')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            const id_cardInput = document.getElementById('id_card');
+            if (id_cardInput) {
+                id_cardInput.addEventListener('input', function() {
+                    let value = this.value.replace(/\D/g, '');
+                    value = value.substring(0, 13);
+                    this.value = value;
+                    
+                    console.log('🆔 เปลี่ยนเลขบัตรประชาชนเป็น:', value);
+                    validateField(this);
+                });
+            }
+
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').substring(0, 10);
+                    validateField(this);
+                });
+            }
+
+            console.log('✅ ตั้งค่าตัวจัดการฟอร์มสำเร็จ');
+        }
+
+        function setupPasswordValidation() {
+            const passwordInput = document.getElementById('password');
+            const confirmInput = document.getElementById('confirmPassword');
+            const strengthContainer = document.getElementById('passwordStrength');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            if (!passwordInput || !confirmInput) return;
+
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                
+                if (password.length > 0) {
+                    strengthContainer.style.display = 'block';
+                    const strength = calculatePasswordStrength(password);
+                    
+                    strengthFill.className = `strength-fill ${strength.level}`;
+                    strengthText.className = `strength-text ${strength.level}`;
+                    strengthText.textContent = strength.text;
+                } else {
+                    strengthContainer.style.display = 'none';
+                }
+
+                if (confirmInput.value) {
+                    validatePasswordMatch();
+                }
+            });
+
+            confirmInput.addEventListener('input', function() {
+                validatePasswordMatch();
+            });
+        }
+
+        function setupEmailValidation() {
+            const emailInput = document.getElementById('email');
+            const emailStatus = document.getElementById('emailStatus');
+
+            if (!emailInput || !emailStatus) return;
+
+            emailInput.addEventListener('input', function() {
+                const email = this.value.trim();
+                
+                if (emailCheckTimeout) {
+                    clearTimeout(emailCheckTimeout);
+                }
+
+                if (!email) {
+                    emailStatus.className = 'email-status';
+                    emailStatus.innerHTML = '';
+                    return;
+                }
+
+                if (!isValidEmail(email)) {
+                    emailStatus.className = 'email-status';
+                    emailStatus.innerHTML = '';
+                    return;
+                }
+
+                if (email === originalData.email) {
+                    emailStatus.className = 'email-status available';
+                    emailStatus.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    return;
+                }
+
+                emailStatus.className = 'email-status checking';
+                emailStatus.innerHTML = '<i class="fas fa-spinner"></i>';
+
+                emailCheckTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`../../api/check-email?email=${encodeURIComponent(email)}&exclude_patient_id=${patientId}`);
+                        const result = await response.json();
+
+                        if (result.success) {
+                            if (result.exists) {
+                                emailStatus.className = 'email-status taken';
+                                emailStatus.innerHTML = '<i class="fas fa-times-circle"></i>';
+                                emailInput.parentElement.classList.add('error');
+                                emailInput.parentElement.querySelector('.error-message').textContent = 'อีเมลนี้ถูกใช้งานแล้ว';
+                            } else {
+                                emailStatus.className = 'email-status available';
+                                emailStatus.innerHTML = '<i class="fas fa-check-circle"></i>';
+                                emailInput.parentElement.classList.remove('error');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('เกิดข้อผิดพลาดในการตรวจสอบอีเมล:', error);
+                        emailStatus.className = 'email-status';
+                        emailStatus.innerHTML = '';
+                    }
+                }, 500);
+            });
+        }
+
+        function setupChangeTracking() {
+            const form = document.getElementById('editPatientForm');
+            const inputs = form.querySelectorAll('.form-control');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const fieldName = this.name;
+                    const currentValue = this.value;
+                    const originalValue = originalData[fieldName] || originalData[fieldName === 'id_card' ? 'id_card' : fieldName] || '';
+                    
+                    console.log(`🔄 ฟิลด์ ${fieldName} เปลี่ยนแปลง:`, {
+                        current: currentValue,
+                        original: originalValue,
+                        different: currentValue !== originalValue
+                    });
+                    
+                    if (currentValue !== originalValue) {
+                        trackChange(fieldName, currentValue);
+                        this.classList.add('field-changed');
+                    } else {
+                        untrackChange(fieldName);
+                        this.classList.remove('field-changed');
+                    }
+                });
+            });
+        }
+
+        function trackChange(fieldName, value) {
+            const dataKey = fieldName === 'id_card' ? 'id_card' : fieldName;
+            currentData[dataKey] = value;
+            updateChangesDisplay();
+        }
+
+        function untrackChange(fieldName) {
+            const dataKey = fieldName === 'id_card' ? 'id_card' : fieldName;
+            const originalKey = dataKey === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : dataKey;
+            currentData[dataKey] = originalData[originalKey] || '';
+            updateChangesDisplay();
+        }
+
+        function updateChangesDisplay() {
+            const changedFields = [];
+            
+            Object.keys(currentData).forEach(key => {
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
+                const originalValue = originalData[originalKey] || '';
+                const currentValue = currentData[key] || '';
+                
+                if (currentValue !== originalValue) {
+                    changedFields.push(key);
+                }
+            });
+
+            hasChanges = changedFields.length > 0;
+            
+            const changesText = document.getElementById('changesText');
+            const submitBtn = document.getElementById('submitBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            if (hasChanges) {
+                changesText.innerHTML = `มีการเปลี่ยนแปลง <span class="changes-count">${changedFields.length}</span> ฟิลด์`;
+                submitBtn.disabled = false;
+                resetBtn.disabled = false;
+            } else {
+                changesText.textContent = 'ไม่มีการเปลี่ยนแปลง';
+                submitBtn.disabled = true;
+                resetBtn.disabled = true;
+            }
+        }
+
+        function resetChanges() {
+            console.log('🔄 กำลังรีเซ็ตการเปลี่ยนแปลง...');
+            populateForm(originalData);
+            currentData = { ...originalData };
+            
+            const changedFields = document.querySelectorAll('.field-changed');
+            changedFields.forEach(field => field.classList.remove('field-changed'));
+            
+            updateChangesDisplay();
+            showToast('รีเซ็ตการเปลี่ยนแปลงสำเร็จ', 'info');
+        }
+
+        function calculatePasswordStrength(password) {
+            if (password.length === 0) {
+                return { level: '', text: 'กรอกรหัสผ่าน' };
+            }
+            
+            let score = 0;
+            
+            if (password.length >= 6) score++;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            if (score < 3) return { level: 'weak', text: 'รหัสผ่านอ่อนแอ' };
+            if (score < 4) return { level: 'fair', text: 'รหัสผ่านพอใช้' };
+            if (score < 5) return { level: 'good', text: 'รหัสผ่านดี' };
+            return { level: 'strong', text: 'รหัสผ่านแข็งแรง' };
+        }
+
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const confirmGroup = document.getElementById('confirmPassword').parentElement;
+
+            if (confirm && password !== confirm) {
+                confirmGroup.classList.add('error');
+                confirmGroup.classList.remove('success');
+            } else if (confirm && password === confirm) {
+                confirmGroup.classList.remove('error');
+                confirmGroup.classList.add('success');
+            } else {
+                confirmGroup.classList.remove('error', 'success');
+            }
+        }
+
+        function validateField(field) {
+            const group = field.parentElement;
+            const value = field.value.trim();
+
+            group.classList.remove('error', 'success');
+
+            if (field.hasAttribute('required') && !value) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.type === 'email' && value && !isValidEmail(value)) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'id_card' && value && value.length !== 13) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'phone' && value && (value.length < 9 || value.length > 10)) {
+                group.classList.add('error');
+                return false;
+            }
+
+            if (field.name === 'dob' && value) {
+                const birthDate = new Date(value);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                if (age < 0 || age > 120) {
+                    group.classList.add('error');
+                    return false;
+                }
+            }
+
+            group.classList.add('success');
+            return true;
+        }
+
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        async function handleFormSubmission(e) {
+            e.preventDefault();
+            
+            if (isSubmitting || !hasChanges) return;
+
+            if (!validateAllFields()) {
+                showToast('กรุณาแก้ไขข้อผิดพลาดในฟอร์ม', 'error');
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password && password !== confirmPassword) {
+                showToast('รหัสผ่านไม่ตรงกัน', 'error');
+                return;
+            }
+
+            const emailGroup = document.getElementById('email').parentElement;
+            if (emailGroup.classList.contains('error')) {
+                showToast('กรุณาแก้ไขที่อยู่อีเมล', 'error');
+                return;
+            }
+
+            showConfirmationModal();
+        }
+
+        function showConfirmationModal() {
+            const modal = document.getElementById('confirmModal');
+            const message = document.getElementById('modalMessage');
+            
+            const changedFields = Object.keys(currentData).filter(key => {
+                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
+                return currentData[key] !== (originalData[originalKey] || '');
+            });
+            
+            message.innerHTML = `
+                <p>คุณกำลังจะบันทึกการเปลี่ยนแปลงในฟิลด์ต่อไปนี้:</p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    ${changedFields.map(field => `<li><strong>${formatFieldName(field)}</strong></li>`).join('')}
+                </ul>
+                <p>ข้อมูลของ ${originalData.fname} ${originalData.lname} จะถูกอัปเดต คุณแน่ใจหรือไม่?</p>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function formatFieldName(fieldName) {
+            const fieldNames = {
+                fname: 'ชื่อ',
+                lname: 'นามสกุล',
+                phone: 'เบอร์โทรศัพท์',
+                address: 'ที่อยู่',
+                email: 'อีเมล',
+                id_card: 'เลขบัตรประชาชน',
+                dob: 'วันเกิด',
+                password: 'รหัสผ่าน'
+            };
+            
+            return fieldNames[fieldName] || fieldName;
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'none';
+        }
+
+        document.getElementById('confirmSaveBtn').addEventListener('click', async function() {
+            closeModal();
+            await saveChanges();
+        });
+
+        async function saveChanges() {
+            isSubmitting = true;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            try {
+                const updateData = {};
+                Object.keys(currentData).forEach(key => {
+                    let value = currentData[key];
+                    
+                    if ((key === 'dob') && (!value || value === '' || value === 'null')) {
+                        value = null;
+                    }
+                    
+                    const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
+                    const originalValue = originalData[originalKey] || '';
+                    
+                    if (value !== originalValue) {
+                        const apiKey = key === 'id_card' ? 'id_card' : key;
+                        updateData[apiKey] = value || '';
+                    }
+                });
+
+                console.log('💾 กำลังบันทึกข้อมูลการอัปเดต:', updateData);
+
+                const response = await fetch(`../../api/patients/${patientId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast('อัปเดตข้อมูลผู้ป่วยสำเร็จ!', 'success');
+                    
+                    Object.assign(originalData, currentData);
+                    
+                    hasChanges = false;
+                    updateChangesDisplay();
+                    
+                    const changedFields = document.querySelectorAll('.field-changed');
+                    changedFields.forEach(field => field.classList.remove('field-changed'));
+                    
+                    setTimeout(() => {
+                        window.location.href = '../../patients';
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'ไม่สามารถอัปเดตผู้ป่วยได้');
+                }
+
+            } catch (error) {
+                console.error('❌ เกิดข้อผิดพลาดในการอัปเดตผู้ป่วย:', error);
+                showToast('ไม่สามารถอัปเดตผู้ป่วยได้: ' + error.message, 'error');
+            } finally {
+                isSubmitting = false;
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = !hasChanges;
+            }
+        }
+
+        function validateAllFields() {
+            const form = document.getElementById('editPatientForm');
+            const requiredFields = form.querySelectorAll('.form-control[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('../../profile/api');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const firstLetter = data.email ? data.email.charAt(0).toUpperCase() : 'A';
+                        document.getElementById('userAvatar').textContent = firstLetter;
+                        
+                        const userDetails = document.querySelector('.user-details strong');
+                        if (userDetails) {
+                            userDetails.textContent = `สวัสดี ${data.role === 'admin' ? 'ผู้ดูแลระบบ' : data.role || 'ผู้ใช้'}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้:', error);
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const response = await fetch('../../api/notifications?limit=10');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateNotificationDisplay(data.notifications, data.pagination.unread_count);
+                    }
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน:', error);
+                showEmptyNotifications();
+            }
+        }
+
+        function updateNotificationDisplay(notifications, unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const content = document.getElementById('notificationContent');
+
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+
+            if (notifications.length === 0) {
+                showEmptyNotifications();
+                return;
+            }
+
+            content.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(new Date(notification.created_at));
+                return `
+                    <div class="notification-item ${!notification.is_read ? 'unread' : ''}" 
+                         onclick="markAsRead(${notification.id})">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showEmptyNotifications() {
+            document.getElementById('notificationContent').innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>ไม่มีการแจ้งเตือนใหม่</p>
+                </div>
+            `;
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (isVisible) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+                loadNotifications();
+            }
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`../../api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('../../api/notifications/read-all', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadNotifications();
+                    showToast('ทำเครื่องหมายว่าอ่านทั้งหมดแล้ว', 'success');
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
+                showToast('ไม่สามารถทำเครื่องหมายว่าอ่านได้', 'error');
+            }
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) return 'เมื่อสักครู่';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} นาทีที่แล้ว`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ชั่วโมงที่แล้ว`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} วันที่แล้ว`;
+            
+            return formatDate(date);
+        }
+
+        function formatDate(date) {
+            const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                               'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth()];
+            const year = date.getFullYear() + 543;
+            
+            return `${day} ${month} ${year}`;
+        }
+
+        function formatDateTime(date) {
+            const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+                               'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            
+            const day = date.getDate();
+            const month = thaiMonths[date.getMonth()];
+            const year = date.getFullYear() + 543;
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${day} ${month} ${year} ${hours}:${minutes} น.`;
+        }
+
+        document.addEventListener('click', function(event) {
+            const profileDropdown = document.querySelector('.profile-dropdown');
+            if (!profileDropdown.contains(event.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+            
+            const notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer.contains(event.target)) {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            }
+
+            const modal = document.getElementById('confirmModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                if (hasChanges) {
+                    showConfirmationModal();
+                }
+            }
+            
+            if (event.ctrlKey && event.key === 'r') {
+                event.preventDefault();
+                if (hasChanges) {
+                    resetChanges();
+                }
+            }
+            
+            if (event.key === 'Escape') {
+                document.getElementById('notificationDropdown').classList.remove('show');
+                document.getElementById('profileDropdown').style.display = 'none';
+                closeModal();
+            }
+
+            if (event.key === 'Enter' && document.getElementById('confirmModal').style.display === 'flex') {
+                event.preventDefault();
+                document.getElementById('confirmSaveBtn').click();
+            }
+        });
+
+        window.addEventListener('beforeunload', function(e) {
+            if (hasChanges && !isSubmitting) {
+                e.preventDefault();
+                e.returnValue = 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการออก?';
+                return 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการออก?';
+            }
+        });
+
+        setInterval(() => {
+            loadNotifications();
+        }, 60000);
+
+    </script>
+</body>
+</html>
