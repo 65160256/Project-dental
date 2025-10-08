@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Profile - Smile Clinic</title>
+  <title>โปรไฟล์ของฉัน - Smile Clinic</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -56,17 +56,15 @@
     .info-section{margin-bottom:30px}
     .section-title{font-size:16px;font-weight:600;color:#333;margin-bottom:15px;padding-bottom:8px;border-bottom:2px solid #f8f9fa}
     .info-row{display:flex;margin-bottom:12px;align-items:flex-start}
-    .info-label{font-weight:500;color:#555;width:180px;flex-shrink:0;font-size:14px}
+    .info-label{font-weight:500;color:#555;width:200px;flex-shrink:0;font-size:14px}
     .info-value{color:#333;flex:1;font-size:14px;line-height:1.4}
     .password-value{color:#666;font-family:monospace;font-size:16px}
 
-    .action-buttons{display:flex;gap:15px;margin-top:30px}
-    .btn-edit{background:#FFA726;color:#fff;border:none;padding:12px 30px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
+    .action-buttons{display:flex;gap:15px;margin-top:30px;flex-wrap:wrap}
+    .btn-edit{background:#FFA726;color:#fff;border:none;padding:12px 30px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px}
     .btn-edit:hover{background:#FF9800}
     .btn-password{background:#E0E0E0;color:#666;border:none;padding:12px 30px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
     .btn-password:hover{background:#BDBDBD}
-    .btn-email{background:#17a2b8;color:#fff;border:none;padding:12px 30px;border-radius:6px;font-size:14px;font-weight:500;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-    .btn-email:hover{background:#138496}
 
     /* Responsive */
     @media (max-width:768px){
@@ -76,6 +74,7 @@
       .info-row{flex-direction:column;gap:5px}
       .info-label{width:auto;font-weight:600}
       .action-buttons{flex-direction:column}
+      .action-buttons button, .action-buttons a{width:100%}
     }
   </style>
 </head>
@@ -87,11 +86,10 @@
       <h3>Smile Clinic</h3>
     </div>
     <ul>
-      <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-      <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-      <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-      <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <!-- <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li> -->
+      <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+      <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
     </ul>
   </div>
 
@@ -106,22 +104,22 @@
           <div class="user-info" onclick="toggleDropdown()">
             <div class="avatar" id="navAvatar">
               <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+                <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
                      onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
               <% } else { %>
                 <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
               <% } %>
             </div>
             <div class="user-details">
-              <strong>Hello Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
-              <small>dentist</small>
+              <strong>สวัสดี ทพ. <%= dentist.fname %> <%= dentist.lname %></strong>
+              <small>ทันตแพทย์</small>
             </div>
             <i class="fas fa-caret-down"></i>
           </div>
           <div class="dropdown-menu" id="profileDropdown">
-            <a href="/dentist/profile">My Profile</a>
+            <a href="/dentist/profile">โปรไฟล์ของฉัน</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout">ออกจากระบบ</a>
           </div>
         </div>
       </div>
@@ -131,16 +129,16 @@
     <div class="profile-content">
       <div class="profile-header">
         <a href="/dentist/dashboard" class="back-button">
-          <i class="fas fa-arrow-left"></i> Back
+          <i class="fas fa-arrow-left"></i> ย้อนกลับ
         </a>
-        <h1 class="profile-title">My Profile</h1>
+        <h1 class="profile-title">โปรไฟล์ของฉัน</h1>
       </div>
 
       <div class="profile-container">
         <div class="profile-main">
           <div class="profile-avatar" id="profileAvatar">
             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-              <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+              <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
                    onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
             <% } else { %>
               <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
@@ -148,83 +146,105 @@
           </div>
 
           <div class="profile-info">
-            <h2 class="dentist-name">Dr. <%= dentist.fname %> <%= dentist.lname %></h2>
+            <h2 class="dentist-name">ทพ. <%= dentist.fname %> <%= dentist.lname %></h2>
             <p class="last-login">
-              Last Login:
+              เข้าสู่ระบบล่าสุด:
               <% if (dentist && dentist.last_login) { %>
-                <%= new Date(dentist.last_login).toLocaleString('en-GB', {
-                      day:'2-digit', month:'short', year:'numeric',
-                      hour:'2-digit', minute:'2-digit', hour12:true
+                <%= new Date(dentist.last_login).toLocaleDateString('th-TH', {
+                      day:'2-digit', month:'short', year:'numeric'
                     }) %>
+                เวลา <%= new Date(dentist.last_login).toLocaleTimeString('th-TH', {
+                      hour:'2-digit', minute:'2-digit', hour12:false
+                    }) %> น.
               <% } else { %>
-                Never
+                ยังไม่เคยเข้าสู่ระบบ
               <% } %>
             </p>
 
-            <!-- Login Information -->
+            <!-- ข้อมูลการเข้าสู่ระบบ -->
             <div class="info-section">
-              <h3 class="section-title">Login Information</h3>
+              <h3 class="section-title">ข้อมูลการเข้าสู่ระบบ</h3>
               <div class="info-row">
-                <div class="info-label">Email:</div>
-                <div class="info-value"><%= dentist.email || 'Not provided' %></div>
+                <div class="info-label">อีเมล:</div>
+                <div class="info-value"><%= dentist.email || 'ไม่ได้ระบุ' %></div>
               </div>
               <div class="info-row">
-                <div class="info-label">Password:</div>
+                <div class="info-label">รหัสผ่าน:</div>
                 <div class="info-value password-value">••••••</div>
               </div>
             </div>
 
-            <!-- Personal Information -->
+            <!-- ข้อมูลส่วนตัว -->
             <div class="info-section">
-              <h3 class="section-title">Personal Information</h3>
+              <h3 class="section-title">ข้อมูลส่วนตัว</h3>
               <div class="info-row">
-                <div class="info-label">Name:</div>
-                <div class="info-value">Dr. <%= dentist.fname %> <%= dentist.lname %></div>
+                <div class="info-label">ชื่อ-นามสกุล:</div>
+                <div class="info-value">ทพ. <%= dentist.fname %> <%= dentist.lname %></div>
               </div>
               <div class="info-row">
-                <div class="info-label">Date of Birth:</div>
+                <div class="info-label">วันเดือนปีเกิด:</div>
                 <div class="info-value">
                   <%= dentist.dob ?
-                      new Date(dentist.dob).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) :
-                      'Not provided' %>
+                      new Date(dentist.dob).toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'}) :
+                      'ไม่ได้ระบุ' %>
                 </div>
               </div>
               <div class="info-row">
-                <div class="info-label">ID Card Number:</div>
-                <div class="info-value"><%= dentist.id_card || 'Not provided' %></div>
+                <div class="info-label">เลขบัตรประชาชน:</div>
+                <div class="info-value"><%= dentist.id_card || 'ไม่ได้ระบุ' %></div>
               </div>
               <div class="info-row">
-                <div class="info-label">Specialist:</div>
-                <div class="info-value"><%= dentist.specialty || 'General Dentistry' %></div>
+                <div class="info-label">เลขที่ใบอนุญาตประกอบวิชาชีพ:</div>
+                <div class="info-value"><%= dentist.license_no || 'ไม่ได้ระบุ' %></div>
               </div>
               <div class="info-row">
-                <div class="info-label">Educational Background:</div>
+                <div class="info-label">ความเชี่ยวชาญ:</div>
                 <div class="info-value">
-                  <%= dentist.education || 'Bachelor of Dental Surgery with Honors, Mahidol University<br>Graduate Diploma, Mahidol University' %>
+                  <% if (dentist.specialty === 'General Dentistry') { %>
+                    ทันตกรรมทั่วไป
+                  <% } else if (dentist.specialty === 'Tooth Extraction') { %>
+                    ถอนฟัน
+                  <% } else if (dentist.specialty === 'Orthodontics') { %>
+                    จัดฟัน
+                  <% } else if (dentist.specialty === 'Endodontics') { %>
+                    รักษารากฟัน
+                  <% } else if (dentist.specialty === 'Periodontics') { %>
+                    ปริทันต์
+                  <% } else if (dentist.specialty === 'Oral Surgery') { %>
+                    ศัลยกรรมช่องปาก
+                  <% } else { %>
+                    <%= dentist.specialty || 'ทันตกรรมทั่วไป' %>
+                  <% } %>
+                </div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">วุฒิการศึกษา:</div>
+                <div class="info-value">
+                  <%= dentist.education || 'ไม่ได้ระบุ' %>
                 </div>
               </div>
             </div>
 
-            <!-- Contact Information -->
+            <!-- ข้อมูลติดต่อ -->
             <div class="info-section">
-              <h3 class="section-title">Contact Information</h3>
+              <h3 class="section-title">ข้อมูลติดต่อ</h3>
               <div class="info-row">
-                <div class="info-label">Address:</div>
-                <div class="info-value"><%= dentist.address || 'Not provided' %></div>
+                <div class="info-label">ที่อยู่:</div>
+                <div class="info-value"><%= dentist.address || 'ไม่ได้ระบุ' %></div>
               </div>
               <div class="info-row">
-                <div class="info-label">Phone:</div>
-                <div class="info-value"><%= dentist.phone || 'Not provided' %></div>
+                <div class="info-label">เบอร์โทรศัพท์:</div>
+                <div class="info-value"><%= dentist.phone || 'ไม่ได้ระบุ' %></div>
               </div>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- ปุ่มดำเนินการ -->
             <div class="action-buttons">
-              <button class="btn-edit" onclick="editProfile()">Edit</button>
+              <button class="btn-edit" onclick="editProfile()">
+                <i class="fas fa-edit"></i> แก้ไขโปรไฟล์
+              </button>
               <a href="/dentist/profile/change-password" class="btn-password">
-                <i class="fas fa-key"></i> Change Password
-              </a>
-              
+                <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
               </a>
             </div>
           </div>
@@ -238,7 +258,9 @@
       const menu=document.getElementById('profileDropdown');
       menu.style.display = (menu.style.display==='block') ? 'none':'block';
     }
-    function toggleNotifications(){ alert('Notifications feature coming soon!'); }
+    function toggleNotifications(){ 
+      alert('ฟีเจอร์การแจ้งเตือนกำลังพัฒนา!'); 
+    }
     document.addEventListener('click',function(e){
       const prof=document.querySelector('.profile-dropdown');
       if(prof && !prof.contains(e.target)){
@@ -246,7 +268,9 @@
         if(dd) dd.style.display='none';
       }
     });
-    function editProfile(){ window.location.href='/dentist/profile/edit'; }
+    function editProfile(){ 
+      window.location.href='/dentist/profile/edit'; 
+    }
   </script>
 </body>
 </html>

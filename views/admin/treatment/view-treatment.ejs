@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ดูรายละเอียดการรักษา - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .back-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .page-info h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .breadcrumb {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #4A90E2;
+            text-decoration: none;
+        }
+
+        .breadcrumb .separator {
+            color: #ccc;
+        }
+
+        .breadcrumb .current {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(74, 144, 226, 0.1);
+            border-top: 4px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: none;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(45, 168, 255, 0.1));
+            padding: 30px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .treatment-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .header-info h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .header-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .treatment-id-badge {
+            background: #4A90E2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .duration-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dentist-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+            border-left-color: #10b981;
+        }
+
+        .dentist-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .dentist-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #d1fae5;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dentist-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .dentist-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .dentist-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .no-dentists {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f3f4;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 4000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main {
+                margin-left: 0;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .card-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+            <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li class="active"><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="back-section">
+                <a href="/admin/treatments" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> กลับ
+                </a>
+                <div class="page-info">
+                    <h1>รายละเอียดการรักษา</h1>
+                    <p>ข้อมูลการรักษาและทันตแพทย์ที่รับผิดชอบ</p>
+                </div>
+            </div>
+            <div class="user-section">
+                <div class="avatar" id="userAvatar">A</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="breadcrumb">
+                <a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a>
+                <span class="separator"><i class="fas fa-chevron-right"></i></span>
+                <span class="current">รายละเอียดการรักษา</span>
+            </div>
+
+            <div class="loading" id="loadingState">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <div class="detail-card" id="detailCard">
+                <div class="card-header">
+                    <div class="header-left">
+                        <div class="treatment-icon">
+                            <i class="fas fa-tooth"></i>
+                        </div>
+                        <div class="header-info">
+                            <h2 id="treatmentName">กำลังโหลด...</h2>
+                            <p>รายละเอียดการรักษาและทันตแพทย์</p>
+                        </div>
+                    </div>
+                    <div class="treatment-id-badge" id="treatmentIdBadge">
+                        รหัส: กำลังโหลด...
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-info-circle"></i>
+                                ข้อมูลทั่วไป
+                            </h3>
+                            <div class="info-item">
+                                <span class="info-label">ชื่อการรักษา:</span>
+                                <span class="info-value" id="treatmentNameInfo">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ระยะเวลา:</span>
+                                <span class="info-value">
+                                    <span class="duration-badge" id="durationInfo">- นาที</span>
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">จำนวนทันตแพทย์:</span>
+                                <span class="info-value" id="dentistCountInfo">0 คน</span>
+                            </div>
+                        </div>
+
+                        <div class="info-section dentist-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-user-md"></i>
+                                ทันตแพทย์ที่รับผิดชอบ
+                            </h3>
+                            <div class="dentist-list" id="dentistList">
+                                <div class="no-dentists">กำลังโหลดข้อมูล...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="/admin/treatments" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> กลับไปรายการ
+                        </a>
+                        <a href="#" class="btn btn-primary" id="editBtn">
+                            <i class="fas fa-edit"></i> แก้ไข
+                        </a>
+                        <button class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="fas fa-trash"></i> ลบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let treatmentId = null;
+        let treatmentData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            extractTreatmentId();
+            loadTreatmentData();
+        });
+
+        function extractTreatmentId() {
+            const path = window.location.pathname;
+            const matches = path.match(/\/treatments\/(\d+)/);
+            if (matches) {
+                treatmentId = parseInt(matches[1]);
+                document.getElementById('treatmentIdBadge').textContent = `รหัส: ${treatmentId}`;
+                document.getElementById('editBtn').href = `/admin/treatments/${treatmentId}/edit`;
+            } else {
+                showToast('รหัสการรักษาไม่ถูกต้อง', 'error');
+                setTimeout(() => window.location.href = '/admin/treatments', 2000);
+            }
+        }
+
+        async function loadTreatmentData() {
+            if (!treatmentId) return;
+
+            try {
+                showLoading(true);
+                
+                const treatmentResponse = await fetch(`/admin/api/treatments/${treatmentId}`);
+                if (!treatmentResponse.ok) throw new Error('ไม่สามารถโหลดข้อมูลได้');
+                
+                const treatmentResult = await treatmentResponse.json();
+                if (!treatmentResult.success) throw new Error(treatmentResult.error);
+
+                treatmentData = treatmentResult.treatment;
+
+                const dentistsResponse = await fetch(`/admin/api/treatments/${treatmentId}/dentists`);
+                let dentists = [];
+                if (dentistsResponse.ok) {
+                    const dentistsResult = await dentistsResponse.json();
+                    if (dentistsResult.success) {
+                        dentists = dentistsResult.dentists;
+                    }
+                }
+
+                populateDetails(treatmentData, dentists);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('ไม่สามารถโหลดข้อมูลได้: ' + error.message, 'error');
+                setTimeout(() => window.location.href = '/admin/treatments', 3000);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function populateDetails(treatment, dentists) {
+            document.getElementById('treatmentName').textContent = treatment.treatment_name;
+            document.getElementById('treatmentNameInfo').textContent = treatment.treatment_name;
+            document.getElementById('durationInfo').textContent = `${treatment.duration} นาที`;
+            document.getElementById('dentistCountInfo').textContent = `${dentists.length} คน`;
+
+            const dentistList = document.getElementById('dentistList');
+            
+            if (dentists.length === 0) {
+                dentistList.innerHTML = '<div class="no-dentists">ยังไม่มีทันตแพทย์ที่รับผิดชอบ</div>';
+            } else {
+                dentistList.innerHTML = dentists.map(dentist => {
+                    const initial = dentist.fname ? dentist.fname.charAt(0).toUpperCase() : 'D';
+                    return `
+                        <div class="dentist-card">
+                            <div class="dentist-avatar">${initial}</div>
+                            <div class="dentist-info">
+                                <h4>ทพ. ${dentist.fname} ${dentist.lname}</h4>
+                                <p>${dentist.specialty || 'ทันตกรรมทั่วไป'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('detailCard').style.display = 'block';
+        }
+
+        function showLoading(show) {
+            const loadingState = document.getElementById('loadingState');
+            const detailCard = document.getElementById('detailCard');
+
+            if (show) {
+                loadingState.style.display = 'block';
+                detailCard.style.display = 'none';
+            } else {
+                loadingState.style.display = 'none';
+            }
+        }
+
+        async function confirmDelete() {
+            if (!confirm(`คุณแน่ใจหรือไม่ที่จะลบการรักษา "${treatmentData.treatment_name}"?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/treatments/${treatmentId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showToast('ลบการรักษาสำเร็จ', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin/treatments';
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'ไม่สามารถลบได้');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('ไม่สามารถลบการรักษาได้: ' + error.message, 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="${icon[type]}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 4000);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.location.href = '/admin/treatments';
+            }
+        });
+    </script>
+</body>
+</html>

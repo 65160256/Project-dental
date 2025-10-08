@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Schedule - Smile Clinic</title>
+    <title>ตารางงาน - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
-            background-color: #f5f7fa;
-            margin: 0;
+            background: #f5f7fa;
+            color: #333;
         }
 
         /* Sidebar */
@@ -24,7 +24,6 @@
             background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             position: fixed;
             height: 100vh;
-            padding: 0;
             color: #fff;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             z-index: 100;
@@ -41,7 +40,6 @@
             height: 50px;
             border-radius: 8px;
             background: white;
-            padding: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -51,7 +49,6 @@
         }
 
         .sidebar .logo h3 {
-            margin: 0;
             font-size: 16px;
             font-weight: 600;
         }
@@ -59,28 +56,22 @@
         .sidebar ul {
             list-style: none;
             padding: 10px 0;
-            margin: 0;
-        }
-
-        .sidebar ul li {
-            margin: 2px 0;
         }
 
         .sidebar ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 14px;
         }
 
         .sidebar ul li.active a,
         .sidebar ul li:hover a {
-            background-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.2);
             color: white;
             border-radius: 8px;
             margin: 0 10px;
@@ -89,8 +80,6 @@
         /* Main Content */
         .main {
             margin-left: 180px;
-            padding: 0;
-            min-height: 100vh;
         }
 
         /* Top Bar */
@@ -100,52 +89,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
             z-index: 50;
-        }
-
-        .search-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .search-section label {
-            font-weight: 500;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .search-box {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 20px;
-            padding: 8px 15px;
-            display: flex;
-            align-items: center;
-            width: 250px;
-            transition: all 0.3s ease;
-        }
-
-        .search-box:focus-within {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-        }
-
-        .search-box i {
-            color: #666;
-            margin-right: 8px;
-            font-size: 14px;
-        }
-
-        .search-box input {
-            border: none;
-            background: transparent;
-            outline: none;
-            width: 100%;
-            font-size: 13px;
         }
 
         .user-section {
@@ -154,36 +101,6 @@
             gap: 15px;
         }
 
-        .notification-icon {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            color: #666;
-            position: relative;
-            transition: color 0.3s ease;
-        }
-
-        .notification-icon:hover {
-            color: #4A90E2;
-        }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            gap: 10px;
-            transition: opacity 0.3s ease;
-        }
-
-        .user-info:hover {
-            opacity: 0.8;
-        }
-
-        /* Gmail-style Avatar */
         .avatar {
             width: 32px;
             height: 32px;
@@ -195,475 +112,238 @@
             color: white;
             font-size: 14px;
             font-weight: 500;
-            text-transform: uppercase;
-            border: 2px solid rgba(74, 144, 226, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
-        .avatar:hover {
-            transform: scale(1.05);
-            border-color: #4A90E2;
+        /* Calendar Container */
+        .calendar-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .avatar.no-photo {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-        }
-
-        .user-details strong {
-            display: block;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .user-details small {
-            color: #666;
-            font-size: 11px;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
+        .calendar-card {
             background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            min-width: 180px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            z-index: 1000;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 12px 15px;
-            text-decoration: none;
-            color: #333;
-            font-size: 13px;
-            transition: background 0.2s ease;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: #f8f9fa;
-        }
-
-        .dropdown-menu hr {
-            margin: 5px 0;
-            border: none;
-            height: 1px;
-            background: #e1e5e9;
-        }
-
-        /* Content */
-        .content {
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             padding: 30px;
-        }
-
-        .welcome-section {
-            margin-bottom: 30px;
-        }
-
-        .welcome-section h1 {
-            font-size: 28px;
-            color: #333;
-            margin: 0 0 8px 0;
-            font-weight: 600;
-        }
-
-        .welcome-section p {
-            color: #666;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        /* Calendar Section */
-        .calendar-section {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        /* Search Results */
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e1e5e9;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .search-result-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f3f4;
-            font-size: 13px;
-        }
-
-        .search-result-item:hover {
-            background: #f8f9fa;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        /* Month View Specific */
-        .month-day-cell {
-            height: 80px !important;
-            vertical-align: top !important;
-            padding: 8px !important;
-            position: relative;
-            border: 1px solid #e1e5e9 !important;
-        }
-
-        .month-day-number {
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .month-other-month {
-            color: #ccc !important;
-            background: #f9f9f9 !important;
-        }
-
-        .month-today {
-            background: #e3f2fd !important;
-            font-weight: bold;
-        }
-
-        .month-has-schedule {
-            position: relative;
-        }
-
-        .month-schedule-indicator {
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            width: 8px;
-            height: 8px;
-            background: #4A90E2;
-            border-radius: 50%;
-        }
-
-        .month-schedule-count {
-            position: absolute;
-            bottom: 2px;
-            left: 2px;
-            background: #28a745;
-            color: white;
-            font-size: 10px;
-            padding: 1px 4px;
-            border-radius: 8px;
-            min-width: 16px;
-            text-align: center;
         }
 
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f1f3f4;
-        }
-
-        .calendar-nav {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-
-        .calendar-nav:hover {
-            background: #f3f4f6;
-            color: #4A90E2;
-            transform: scale(1.1);
-        }
-
-        .calendar-nav:active {
-            transform: scale(0.95);
+            margin-bottom: 30px;
         }
 
         .calendar-title {
-            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .month-year {
+            font-size: 24px;
             font-weight: 600;
             color: #333;
         }
 
-        .view-controls {
-            display: flex;
-            gap: 5px;
-            background: #f8f9fa;
-            padding: 3px;
-            border-radius: 8px;
-        }
-
-        .view-btn {
-            padding: 8px 16px;
+        .nav-btn {
+            width: 36px;
+            height: 36px;
             border: none;
-            background: transparent;
-            color: #666;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .view-btn.active {
-            background: #4A90E2;
-            color: white;
-            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
-        }
-
-        .view-btn:hover:not(.active) {
-            background: #e9ecef;
-        }
-
-        /* Schedule Table */
-        .schedule-container {
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            position: relative;
-        }
-
-        .schedule-table th {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 15px 12px;
-            text-align: center;
-            font-weight: 600;
-            color: #555;
-            font-size: 13px;
-            border-bottom: 2px solid #e1e5e9;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .schedule-table td {
-            padding: 8px;
-            border-bottom: 1px solid #f1f3f4;
-            border-right: 1px solid #f1f3f4;
-            text-align: center;
-            font-size: 12px;
-            height: 45px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #555;
-        }
-
-        .schedule-table td:hover:not(.disabled) {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            transform: scale(1.02);
-        }
-
-        .schedule-table .time-column {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            font-weight: 500;
-            color: #666;
-            cursor: default;
-            border-right: 2px solid #e1e5e9;
-        }
-
-        .schedule-table .time-column:hover {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            transform: none;
-        }
-
-        /* Disabled cells */
-        .schedule-table td.disabled {
-            background: #f5f5f5 !important;
-            color: #ccc !important;
-            cursor: not-allowed !important;
-            position: relative;
-        }
-
-        .schedule-table td.disabled:hover {
-            background: #f5f5f5 !important;
-            transform: none !important;
-        }
-
-        .schedule-table td.disabled::after {
-            content: "✕";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #ccc;
-            font-size: 16px;
-        }
-
-        /* Schedule Block Overlay */
-        .schedule-block {
-            position: absolute;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #e8f5e8, #d4edda);
-            border: 2px solid #2e7d32;
+            background: #f0f2f5;
             border-radius: 8px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #2e7d32;
+            transition: all 0.2s;
+            color: #666;
+        }
+
+        .nav-btn:hover {
+            background: #e4e6eb;
+            color: #4A90E2;
+        }
+
+        .bulk-schedule-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 500;
-            font-size: 11px;
-            z-index: 10;
-            pointer-events: auto;
-            overflow: hidden;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
         }
 
-        .schedule-block:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
+        .bulk-schedule-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
-        .schedule-block.appointment {
-            background: linear-gradient(135deg, #fce4ec, #f8bbd9);
-            border-color: #c2185b;
-            color: #c2185b;
-            box-shadow: 0 2px 8px rgba(194, 24, 91, 0.2);
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
-        .schedule-block.appointment:hover {
-            box-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
+        .calendar-day-header {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
         }
 
-        .schedule-block.day-off {
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-            border-color: #999;
-            color: #999;
-            box-shadow: 0 2px 8px rgba(153, 153, 153, 0.2);
+        .calendar-day {
+            background: white;
+            min-height: 100px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
         }
 
-        /* Modal */
+        .calendar-day:hover:not(.disabled):not(.other-month) {
+            background: #f8f9fa;
+        }
+
+        .calendar-day.disabled {
+            background: #fafafa;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .calendar-day.other-month {
+            background: #fafafa;
+            color: #ccc;
+        }
+
+        .calendar-day.today {
+            background: #e3f2fd;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .calendar-day.other-month .day-number {
+            color: #ccc;
+        }
+
+        .day-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-top: 5px;
+        }
+
+        .day-indicator.has-appointments {
+            background: #ffc107;
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
         }
 
         .modal-content {
-            background-color: white;
-            margin: 3% auto;
-            padding: 30px;
-            border-radius: 15px;
+            background: white;
+            border-radius: 16px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: modalSlideIn 0.3s ease;
             max-height: 90vh;
             overflow-y: auto;
-        }
-
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-50px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
         .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e1e5e9;
         }
 
         .modal-title {
             font-size: 18px;
             font-weight: 600;
             color: #333;
-            flex: 1;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
 
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-            transition: color 0.3s ease;
-        }
-
-        .close:hover {
+        .modal-close:hover {
+            background: #f0f0f0;
             color: #333;
-            transform: scale(1.1);
         }
 
-        /* Form */
+        .modal-body {
+            padding: 24px;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
+            font-size: 14px;
             font-weight: 500;
             color: #333;
-            font-size: 14px;
+            margin-bottom: 8px;
         }
 
         .form-control {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e1e5e9;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 14px;
-            background: white;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }
 
         .form-control:focus {
@@ -683,170 +363,127 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .radio-item:hover {
-            color: #4A90E2;
         }
 
         .radio-item input[type="radio"] {
-            margin: 0;
-            accent-color: #4A90E2;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
-        .time-controls {
+        .time-inputs {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
-        .note-textarea {
-            min-height: 100px;
+        textarea.form-control {
+            min-height: 80px;
             resize: vertical;
-            font-family: inherit;
         }
 
-        /* Buttons */
-        .btn-group {
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 10px;
             justify-content: flex-end;
-            margin-top: 25px;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: #28a745;
             color: white;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #dc3545, #e74c3c);
+        .btn-danger {
+            background: #dc3545;
             color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
         .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+            background: #5a6268;
         }
 
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        /* Legend */
-        .schedule-legend {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            font-size: 12px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
+        /* Date Range Picker */
+        .date-range-display {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            gap: 10px;
+            padding: 12px;
             background: #f8f9fa;
-            border-radius: 20px;
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
-        .legend-item:hover {
-            background: #e9ecef;
-            transform: translateY(-1px);
+        .date-range-display input {
+            flex: 1;
+            border: none;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
         }
 
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .legend-working {
-            background: linear-gradient(135deg, #e8f5e8, #d4edda);
-            border: 1px solid #2e7d32;
-        }
-
-        .legend-appointment {
-            background: linear-gradient(135deg, #fce4ec, #f8bbd9);
-            border: 1px solid #c2185b;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #666;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e0e0e0;
-            border-top: 4px solid #4A90E2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Toast Notifications */
+        /* Toast Notification */
         .toast {
             position: fixed;
             top: 20px;
             right: 20px;
             background: white;
-            padding: 15px 20px;
+            padding: 16px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 1001;
-            max-width: 400px;
-            font-size: 14px;
-            animation: slideInRight 0.3s ease;
-            border-left: 4px solid #4A90E2;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
         }
 
-        .toast.success { border-left-color: #28a745; }
-        .toast.error { border-left-color: #dc3545; }
-        .toast.warning { border-left-color: #ffc107; }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .toast.success {
+            border-left: 4px solid #28a745;
         }
-        
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
+
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         /* Responsive */
@@ -856,67 +493,19 @@
                 height: auto;
                 position: relative;
             }
-            
+
             .main {
                 margin-left: 0;
             }
-            
-            .top-bar {
-                padding: 10px 15px;
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .search-box {
-                width: 200px;
-            }
-            
-            .content {
-                padding: 20px 15px;
-            }
-            
-            .welcome-section h1 {
-                font-size: 24px;
-            }
-            
-            .schedule-table {
-                font-size: 10px;
-            }
-            
-            .schedule-table td {
-                padding: 4px;
-                height: 35px;
-            }
-            
-            .modal-content {
-                margin: 10% auto;
-                padding: 20px;
-            }
-        }
 
-        /* Accessibility improvements */
-        .schedule-table td:focus {
-            outline: 2px solid #4A90E2;
-            outline-offset: -2px;
-        }
+            .calendar-day {
+                min-height: 80px;
+                padding: 8px;
+            }
 
-        .btn:focus {
-            outline: 2px solid #4A90E2;
-            outline-offset: 2px;
-        }
-
-        .form-control:focus {
-            outline: 2px solid #4A90E2;
-            outline-offset: 2px;
-        }
-
-        /* Performance optimization */
-        .schedule-table {
-            will-change: transform;
-        }
-
-        .schedule-block {
-            will-change: transform;
+            .time-inputs {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -929,10 +518,9 @@
         </div>
         <ul>
             <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li class="active"><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <!-- <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li> -->
+            <li class="active"><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
         </ul>
     </div>
 
@@ -940,204 +528,167 @@
     <div class="main">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="search-section">
-                <label>Search:</label>
-                <div class="search-box" style="position: relative;">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search schedules, dates, notes..." id="searchInput" autocomplete="off" />
-                    <div class="search-results" id="searchResults"></div>
-                </div>
-            </div>
+            <h2 style="font-size: 20px; font-weight: 600; color: #333;">ตารางงาน</h2>
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="Notifications"></i>
-                <div class="profile-dropdown">
-                    <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar no-photo" id="userAvatar">
-                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
-                            <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
-                            <% } %>
-                        </div>
-                        <div class="user-details">
-                            <strong>Hello Dr. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'Doctor' %></strong>
-                            <small>dentist</small>
-                        </div>
-                        <i class="fas fa-caret-down"></i>
-                    </div>
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/dentist/profile"><i class="fas fa-user"></i> My Profile</a>
-                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> Edit Profile</a>
-                        <hr />
-                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-                    </div>
+                <div class="avatar">
+                    <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                        <img src="/uploads/<%= dentist.photo %>" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    <% } else { %>
+                        <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() : 'D' %>
+                    <% } %>
                 </div>
+                <span style="font-size: 14px; font-weight: 500;">Dr. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'Doctor' %></span>
             </div>
         </div>
 
-        <!-- Content -->
-        <div class="content">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h1>Work Schedule</h1>
-                <p>Manage your working hours and availability - Clinic Hours: 10:00-20:00</p>
-            </div>
-
-            <!-- Loading -->
-            <div class="loading" id="loading" style="display: none;">
-                <div class="loading-spinner"></div>
-                <p>Loading schedule...</p>
-            </div>
-
-            <!-- Calendar Section -->
-            <div class="calendar-section">
+        <!-- Calendar Container -->
+        <div class="calendar-container">
+            <div class="calendar-card">
                 <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeWeek(-1)" title="Previous">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <h2 class="calendar-title" id="currentWeekTitle">Loading...</h2>
-                    <button class="calendar-nav" onclick="changeWeek(1)" title="Next">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    <div class="view-controls">
-                        <button class="view-btn" onclick="setView('day')" title="Day View">Day</button>
-                        <button class="view-btn active" onclick="setView('week')" title="Week View">Week</button>
-                        <button class="view-btn" onclick="setView('month')" title="Month View">Month</button>
+                    <div class="calendar-title">
+                        <button class="nav-btn" onclick="changeMonth(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="month-year" id="monthYear">เมษายน 2025</span>
+                        <button class="nav-btn" onclick="changeMonth(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
+                    <button class="bulk-schedule-btn" onclick="openBulkScheduleModal()">
+                        <i class="fas fa-calendar-plus"></i>
+                        เปิดใช้งานทั้งหมด
+                    </button>
                 </div>
 
-                <!-- Schedule Table -->
-                <div class="schedule-container">
-                    <table class="schedule-table" id="scheduleTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">Time</th>
-                                <th>Sun</th>
-                                <th>Mon</th>
-                                <th>Tue</th>
-                                <th>Wed</th>
-                                <th>Thu</th>
-                                <th>Fri</th>
-                                <th>Sat</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scheduleTableBody">
-                            <!-- Table rows will be generated by JavaScript -->
-                        </tbody>
-                    </table>
-                    <!-- Schedule blocks will be positioned here -->
-                    <div id="scheduleOverlay"></div>
-                </div>
-
-                <!-- Legend -->
-                <div class="schedule-legend">
-                    <div class="legend-item">
-                        <div class="legend-color legend-working"></div>
-                        <span>Working Hours</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color legend-appointment"></div>
-                        <span>Has Appointments</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: linear-gradient(135deg, #f5f5f5, #e0e0e0); border: 1px solid #ccc;"></div>
-                        <span>Unavailable</span>
-                    </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be generated here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal for Schedule Setting -->
-    <div id="scheduleModal" class="modal">
+    <!-- Single Day Schedule Modal -->
+    <div class="modal" id="scheduleModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">
-                    <i class="fas fa-calendar-plus"></i>
-                    <span id="modalDate">Select Date</span>
-                </h3>
-                <span class="close" onclick="closeModal()">&times;</span>
+                <h3 class="modal-title" id="modalTitle">ตั้งค่าตารางงาน</h3>
+                <button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button>
             </div>
-
             <form id="scheduleForm">
-                <input type="hidden" id="selectedDate" name="date">
-                <input type="hidden" id="selectedDay" name="day">
-                <input type="hidden" id="selectedHour" name="hour">
+                <div class="modal-body">
+                    <input type="hidden" id="selectedDate" name="date">
+                    <input type="hidden" id="selectedDay" name="day">
 
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-clock"></i>
-                        Status:
-                    </label>
-                    <div class="radio-group">
-                        <div class="radio-item">
-                            <input type="radio" id="working" name="status" value="working" checked onchange="toggleTimeControls()">
-                            <label for="working">Working</label>
-                        </div>
-                        <div class="radio-item">
-                            <input type="radio" id="dayoff" name="status" value="dayoff" onchange="toggleTimeControls()">
-                            <label for="dayoff">Day Off</label>
+                    <div class="form-group">
+                        <label class="form-label">สถานะ:</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="status" value="working" checked onchange="toggleTimeInputs()">
+                                <span>Working</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="status" value="dayoff" onchange="toggleTimeInputs()">
+                                <span>Day Off</span>
+                            </label>
                         </div>
                     </div>
-                </div>
 
-                <div class="time-controls" id="timeControls">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-play"></i>
-                            Start Time:
-                        </label>
-                        <select class="form-control" id="startTime" name="startTime">
-                            <option value="10:00" selected>10:00</option>
-                            <option value="11:00">11:00</option>
-                            <option value="12:00">12:00</option>
-                            <option value="13:00">13:00</option>
-                            <option value="14:00">14:00</option>
-                            <option value="15:00">15:00</option>
-                            <option value="16:00">16:00</option>
-                            <option value="17:00">17:00</option>
-                            <option value="18:00">18:00</option>
-                            <option value="19:00">19:00</option>
-                        </select>
+                    <div class="form-group" id="dateDisplay">
+                        <label class="form-label">วันที่:</label>
+                        <div class="date-range-display">
+                            <input type="text" id="displayDate" readonly>
+                        </div>
+                    </div>
+
+                    <div id="timeInputsContainer">
+                        <div class="time-inputs">
+                            <div class="form-group">
+                                <label class="form-label">เวลาเริ่มต้น:</label>
+                                <input type="time" class="form-control" id="startTime" name="startTime" value="10:00">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">เวลาสิ้นสุด:</label>
+                                <input type="time" class="form-control" id="endTime" name="endTime" value="20:00">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-stop"></i>
-                            End Time:
-                        </label>
-                        <select class="form-control" id="endTime" name="endTime">
-                            <option value="11:00">11:00</option>
-                            <option value="12:00">12:00</option>
-                            <option value="13:00">13:00</option>
-                            <option value="14:00">14:00</option>
-                            <option value="15:00">15:00</option>
-                            <option value="16:00">16:00</option>
-                            <option value="17:00">17:00</option>
-                            <option value="18:00">18:00</option>
-                            <option value="19:00">19:00</option>
-                            <option value="20:00" selected>20:00</option>
-                        </select>
+                        <label class="form-label">หมายเหตุ (ถ้ามี):</label>
+                        <textarea class="form-control" id="note" name="note" placeholder="ใส่หมายเหตุเพิ่มเติม..."></textarea>
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-sticky-note"></i>
-                        Note (optional):
-                    </label>
-                    <textarea class="form-control note-textarea" id="note" name="note" placeholder="Enter any additional notes or special instructions..."></textarea>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="saveSchedule()">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn" style="display: none;" onclick="deleteSchedule()">
+                        <i class="fas fa-trash"></i> ลบ
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('scheduleModal')">
+                        Cancel
+                    </button>
                 </div>
+            </form>
+        </div>
+    </div>
 
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary" onclick="saveSchedule()" id="saveBtn">
-                        <i class="fas fa-check"></i> Save Schedule
+    <!-- Bulk Schedule Modal -->
+    <div class="modal" id="bulkScheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">ตั้งค่าตารางงานหลายวัน</h3>
+                <button class="modal-close" onclick="closeModal('bulkScheduleModal')">&times;</button>
+            </div>
+            <form id="bulkScheduleForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">ช่วงวันที่:</label>
+                        <div class="date-range-display">
+                            <input type="date" class="form-control" id="bulkStartDate" required>
+                            <span>-</span>
+                            <input type="date" class="form-control" id="bulkEndDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">สถานะ:</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="bulkStatus" value="working" checked onchange="toggleBulkTimeInputs()">
+                                <span>Working</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="bulkStatus" value="dayoff" onchange="toggleBulkTimeInputs()">
+                                <span>Day Off</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="bulkTimeInputsContainer">
+                        <div class="time-inputs">
+                            <div class="form-group">
+                                <label class="form-label">เวลาเริ่มต้น:</label>
+                                <input type="time" class="form-control" id="bulkStartTime" value="10:00">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">เวลาสิ้นสุด:</label>
+                                <input type="time" class="form-control" id="bulkEndTime" value="20:00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">หมายเหตุ (ถ้ามี):</label>
+                        <textarea class="form-control" id="bulkNote" placeholder="ใส่หมายเหตุเพิ่มเติม..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="saveBulkSchedule()">
+                        <i class="fas fa-check"></i> Confirm
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="deleteSchedule()" id="deleteBtn" style="display: none;">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                    <button type="button" class="btn" onclick="closeModal()" style="background: #6c757d; color: white;">
-                        <i class="fas fa-times"></i> Cancel
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('bulkScheduleModal')">
+                        Cancel
                     </button>
                 </div>
             </form>
@@ -1146,1053 +697,349 @@
 
     <script>
         let currentDate = new Date();
-        let currentView = 'week';
-        let selectedCell = null;
         let scheduleData = {};
-        let allScheduleData = {}; // Store all loaded data for search
-        let isLoading = false;
-        let searchResults = [];
+        let selectedDateForSchedule = null;
 
-        // Initialize schedule table
-        function initializeSchedule() {
-            generateScheduleTable();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCalendar();
             loadScheduleData();
-            
-            // Set initial title based on view
-            if (currentView === 'day') {
-                updateDayTitle();
-            } else if (currentView === 'week') {
-                updateWeekTitle();
-                updateTableHeaders();
-            } else if (currentView === 'month') {
-                updateMonthTitle();
-            }
-        }
-
-        // Enhanced search functionality
-        document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            if (searchTerm.length > 0) {
-                performSearch(searchTerm);
-            } else {
-                hideSearchResults();
-                clearSearchHighlights();
-            }
-        }, 300));
-
-        // Hide search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.search-box')) {
-                hideSearchResults();
-            }
         });
 
-        // Perform search through schedule data
-        async function performSearch(searchTerm) {
-            try {
-                // Load more comprehensive data for search if needed
-                await loadSearchData();
-                
-                const results = [];
-                
-                Object.values(allScheduleData).forEach(schedule => {
-                    const searchText = [
-                        schedule.date,
-                        schedule.startTime,
-                        schedule.endTime,
-                        schedule.status,
-                        schedule.note || '',
-                        formatDate(schedule.date),
-                        getDayName(schedule.date)
-                    ].join(' ').toLowerCase();
-                    
-                    if (searchText.includes(searchTerm)) {
-                        results.push({
-                            ...schedule,
-                            highlight: highlightSearchTerm(searchText, searchTerm)
-                        });
-                    }
-                });
-                
-                searchResults = results;
-                displaySearchResults(results, searchTerm);
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                showToast('Search failed', 'error');
-            }
-        }
-
-        // Load comprehensive search data
-        async function loadSearchData() {
-            try {
-                const startDate = new Date();
-                startDate.setMonth(startDate.getMonth() - 3); // 3 months back
-                
-                const endDate = new Date();
-                endDate.setMonth(endDate.getMonth() + 3); // 3 months forward
-                
-                const response = await fetch(`/dentist/api/schedule/load?startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    allScheduleData = {};
-                    result.schedules.forEach(schedule => {
-                        const key = `${schedule.date}-${schedule.hour}`;
-                        allScheduleData[key] = schedule;
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading search data:', error);
-            }
-        }
-
-        // Display search results dropdown
-        function displaySearchResults(results, searchTerm) {
-            const searchResultsDiv = document.getElementById('searchResults');
-            searchResultsDiv.innerHTML = '';
-            
-            if (results.length === 0) {
-                searchResultsDiv.innerHTML = '<div class="search-result-item">No schedules found</div>';
-                searchResultsDiv.style.display = 'block';
-                return;
-            }
-            
-            results.slice(0, 5).forEach(schedule => {
-                const item = document.createElement('div');
-                item.className = 'search-result-item';
-                
-                const date = new Date(schedule.date);
-                const dateStr = date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric'
-                });
-                
-                const statusText = schedule.status === 'working' ? 'Working' : 'Day Off';
-                const timeText = schedule.status === 'working' ? 
-                    `${schedule.startTime} - ${schedule.endTime}` : 'All day';
-                
-                item.innerHTML = `
-                    <div style="font-weight: 500;">${highlightText(dateStr, searchTerm)}</div>
-                    <div style="font-size: 12px; color: #666;">
-                        ${highlightText(statusText, searchTerm)} • ${highlightText(timeText, searchTerm)}
-                        ${schedule.note ? `• ${highlightText(schedule.note, searchTerm)}` : ''}
-                    </div>
-                `;
-                
-                item.onclick = () => {
-                    navigateToSchedule(schedule);
-                    hideSearchResults();
-                };
-                
-                searchResultsDiv.appendChild(item);
-            });
-            
-            searchResultsDiv.style.display = 'block';
-        }
-
-        // Navigate to specific schedule
-        function navigateToSchedule(schedule) {
-            const scheduleDate = new Date(schedule.date);
-            currentDate = scheduleDate;
-            
-            // Switch to day view for precise navigation
-            setView('day');
-            
-            // Highlight the specific schedule
-            setTimeout(() => {
-                highlightScheduleInView(schedule);
-            }, 500);
-        }
-
-        // Highlight specific schedule in current view
-        function highlightScheduleInView(schedule) {
-            const scheduleBlocks = document.querySelectorAll('.schedule-block');
-            scheduleBlocks.forEach(block => {
-                block.style.border = '2px solid #4A90E2';
-                setTimeout(() => {
-                    block.style.border = '';
-                }, 3000);
-            });
-        }
-
-        // Highlight search term in text
-        function highlightText(text, searchTerm) {
-            if (!searchTerm) return text;
-            
-            const regex = new RegExp(`(${searchTerm})`, 'gi');
-            return text.replace(regex, '<span class="search-highlight">$1</span>');
-        }
-
-        // Hide search results
-        function hideSearchResults() {
-            document.getElementById('searchResults').style.display = 'none';
-        }
-
-        // Clear search highlights
-        function clearSearchHighlights() {
-            const highlights = document.querySelectorAll('.search-highlight');
-            highlights.forEach(highlight => {
-                highlight.outerHTML = highlight.innerHTML;
-            });
-        }
-
-        // Get day name from date string
-        function getDayName(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { weekday: 'long' });
-        }
-
-        // Format date for display
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        }
-
-        // Show initials if image fails to load
-        function showInitials() {
-            const avatar = document.getElementById('userAvatar');
-            const img = avatar.querySelector('img');
-            if (img) {
-                img.remove();
-                avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
-            }
-        }
-
-        // Top bar functions
-        function toggleDropdown() {
-            const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-        
-        function toggleNotifications() {
-            showToast('Notifications feature coming soon!', 'info');
-        }
-        
-        document.addEventListener('click', function (e) {
-            const prof = document.querySelector('.profile-dropdown');
-            if (!prof.contains(e.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
-            }
-        });
-
-        // Debounce function for performance
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Toggle time controls based on status selection
-        function toggleTimeControls() {
-            const workingRadio = document.getElementById('working');
-            const timeControls = document.getElementById('timeControls');
-            
-            if (workingRadio.checked) {
-                timeControls.style.display = 'grid';
-            } else {
-                timeControls.style.display = 'none';
-            }
-        }
-
-        // Check if a time slot is within working hours
-        function isWithinWorkingHours(dayOfWeek, hour) {
-            if (dayOfWeek === 0) return false; // Sunday closed
-            return hour >= 10 && hour < 20; // 10:00 - 20:00
-        }
-
-        // Format hour for display (24-hour format)
-        function formatHour(hour) {
-            return `${hour.toString().padStart(2, '0')}:00`;
-        }
-
-        // Check if a cell should be disabled
-        function shouldDisableCell(day, hour) {
-            return day === 0 || hour < 10 || hour >= 20;
-        }
-
-        // View-specific functions
-        function generateDayView() {
-            const tbody = document.getElementById('scheduleTableBody');
-            const fragment = document.createDocumentFragment();
-            tbody.innerHTML = '';
-
-            // Update headers for day view
-            const headers = document.querySelectorAll('.schedule-table th');
-            const today = new Date(currentDate);
-            const dayName = today.toLocaleDateString('en-US', { weekday: 'short' });
-            
-            // Show only time column and selected day column
-            headers[0].style.display = 'table-cell'; // Time column
-            for (let i = 1; i < headers.length; i++) {
-                if (i === today.getDay() + 1) {
-                    headers[i].textContent = `${dayName} ${today.getMonth() + 1}/${today.getDate()}`;
-                    headers[i].style.display = 'table-cell';
-                } else {
-                    headers[i].style.display = 'none';
-                }
-            }
-
-            // Generate time slots
-            for (let hour = 8; hour <= 22; hour++) {
-                const row = document.createElement('tr');
-                
-                // Time column
-                const timeCell = document.createElement('td');
-                timeCell.className = 'time-column';
-                timeCell.textContent = formatHour(hour);
-                row.appendChild(timeCell);
-
-                // Day columns (show only selected day)
-                for (let day = 0; day < 7; day++) {
-                    const cell = document.createElement('td');
-                    cell.dataset.day = day;
-                    cell.dataset.hour = hour;
-                    cell.setAttribute('tabindex', '0');
-                    
-                    if (day === today.getDay()) {
-                        if (shouldDisableCell(day, hour)) {
-                            cell.classList.add('disabled');
-                            cell.setAttribute('aria-disabled', 'true');
-                        } else {
-                            cell.onclick = () => openScheduleModal(day, hour, cell);
-                            cell.onkeydown = (e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    openScheduleModal(day, hour, cell);
-                                }
-                            };
-                        }
-                        cell.style.display = 'table-cell';
-                    } else {
-                        cell.style.display = 'none';
-                    }
-                    
-                    row.appendChild(cell);
-                }
-
-                fragment.appendChild(row);
-            }
-
-            tbody.appendChild(fragment);
-        }
-
-        function generateWeekView() {
-            const tbody = document.getElementById('scheduleTableBody');
-            const fragment = document.createDocumentFragment();
-            tbody.innerHTML = '';
-
-            // Reset headers for week view
-            const headers = document.querySelectorAll('.schedule-table th');
-            for (let i = 0; i < headers.length; i++) {
-                headers[i].style.display = 'table-cell';
-            }
-
-            // Generate time slots for full week
-            for (let hour = 8; hour <= 22; hour++) {
-                const row = document.createElement('tr');
-                
-                // Time column
-                const timeCell = document.createElement('td');
-                timeCell.className = 'time-column';
-                timeCell.textContent = formatHour(hour);
-                row.appendChild(timeCell);
-
-                // Day columns
-                for (let day = 0; day < 7; day++) {
-                    const cell = document.createElement('td');
-                    cell.dataset.day = day;
-                    cell.dataset.hour = hour;
-                    cell.setAttribute('tabindex', '0');
-                    
-                    if (shouldDisableCell(day, hour)) {
-                        cell.classList.add('disabled');
-                        cell.setAttribute('aria-disabled', 'true');
-                    } else {
-                        cell.onclick = () => openScheduleModal(day, hour, cell);
-                        cell.onkeydown = (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                openScheduleModal(day, hour, cell);
-                            }
-                        };
-                    }
-                    
-                    row.appendChild(cell);
-                }
-
-                fragment.appendChild(row);
-            }
-
-            tbody.appendChild(fragment);
-        }
-
-        function generateMonthView() {
-            const tbody = document.getElementById('scheduleTableBody');
-            tbody.innerHTML = '';
-
-            // Update headers for month view
-            const headers = document.querySelectorAll('.schedule-table th');
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            
-            headers[0].textContent = 'Week';
-            for (let i = 1; i < headers.length; i++) {
-                headers[i].textContent = dayNames[i - 1];
-                headers[i].style.display = 'table-cell';
-            }
-
+        // Render Calendar
+        function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
+            
+            // Update month/year display
+            const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                               'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            document.getElementById('monthYear').textContent = `${monthNames[month]} ${year + 543}`;
+
+            // Get first day of month and number of days
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
-            
-            // Calculate first Sunday of the month view
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - startDate.getDay());
-            
-            // Calculate last Saturday of the month view
-            const endDate = new Date(lastDay);
-            endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
-            
-            // Generate calendar weeks
-            let currentWeekStart = new Date(startDate);
-            let weekNumber = 1;
-            
-            while (currentWeekStart <= endDate) {
-                const row = document.createElement('tr');
-                
-                // Week number column
-                const weekCell = document.createElement('td');
-                weekCell.className = 'time-column';
-                weekCell.textContent = `W${weekNumber}`;
-                row.appendChild(weekCell);
-                
-                // Day cells for the week
-                for (let day = 0; day < 7; day++) {
-                    const cellDate = new Date(currentWeekStart);
-                    cellDate.setDate(currentWeekStart.getDate() + day);
-                    
-                    const cell = document.createElement('td');
-                    cell.className = 'month-day-cell';
-                    
-                    // Style based on month
-                    if (cellDate.getMonth() === month) {
-                        cell.innerHTML = `<div class="month-day-number">${cellDate.getDate()}</div>`;
-                        cell.style.cursor = 'pointer';
-                        
-                        // Click handler to switch to day view
-                        cell.onclick = () => {
-                            currentDate = new Date(cellDate);
-                            setView('day');
-                        };
-                        
-                        // Check if it's today
-                        const today = new Date();
-                        if (cellDate.toDateString() === today.toDateString()) {
-                            cell.classList.add('month-today');
-                        }
-                        
-                        // Check for schedules on this day
-                        const dateStr = cellDate.toISOString().split('T')[0];
-                        const daySchedules = Object.values(scheduleData).filter(s => s.date === dateStr);
-                        
-                        if (daySchedules.length > 0) {
-                            cell.classList.add('month-has-schedule');
-                            
-                            // Add schedule indicator
-                            const indicator = document.createElement('div');
-                            indicator.className = 'month-schedule-indicator';
-                            cell.appendChild(indicator);
-                            
-                            // Add schedule count
-                            if (daySchedules.length > 1) {
-                                const count = document.createElement('div');
-                                count.className = 'month-schedule-count';
-                                count.textContent = daySchedules.length;
-                                cell.appendChild(count);
-                            }
-                        }
-                        
-                    } else {
-                        // Other month dates
-                        cell.innerHTML = `<div class="month-day-number" style="color: #ccc;">${cellDate.getDate()}</div>`;
-                        cell.classList.add('month-other-month');
-                    }
-                    
-                    row.appendChild(cell);
-                }
-                
-                tbody.appendChild(row);
-                currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-                weekNumber++;
-                
-                // Safety check
-                if (weekNumber > 6) break;
-            }
-        }
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
 
-        // View switching function
-        function setView(view) {
-            // Update active button
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick="setView('${view}')"]`).classList.add('active');
-            
-            currentView = view;
-            
-            // Generate appropriate view
-            switch (view) {
-                case 'day':
-                    generateDayView();
-                    updateDayTitle();
-                    break;
-                case 'week':
-                    generateWeekView();
-                    updateWeekTitle();
-                    updateTableHeaders();
-                    break;
-                case 'month':
-                    generateMonthView();
-                    updateMonthTitle();
-                    break;
-            }
-            
-            // Load data and update display
-            loadScheduleData();
-        }
+            // Get previous month's last days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-        // Title update functions
-        function updateDayTitle() {
-            const dayDate = new Date(currentDate);
-            const dayName = dayDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric' 
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
             });
-            document.getElementById('currentWeekTitle').textContent = dayName;
-        }
 
-        function updateMonthTitle() {
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
-            document.getElementById('currentWeekTitle').textContent = 
-                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-        }
-
-        // Navigation function (arrows)
-        function changeWeek(direction) {
-            if (currentView === 'day') {
-                currentDate.setDate(currentDate.getDate() + direction);
-                updateDayTitle();
-                generateDayView();
-            } else if (currentView === 'week') {
-                currentDate.setDate(currentDate.getDate() + (direction * 7));
-                updateWeekTitle();
-                updateTableHeaders();
-                generateWeekView();
-            } else if (currentView === 'month') {
-                currentDate.setMonth(currentDate.getMonth() + direction);
-                updateMonthTitle();
-                generateMonthView();
+            // Previous month days
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const dayCell = createDayCell(prevMonthLastDay - i, true, false);
+                grid.appendChild(dayCell);
             }
-            
+
+            // Current month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = isCurrentDay(year, month, day);
+                const dayCell = createDayCell(day, false, isToday);
+                grid.appendChild(dayCell);
+            }
+
+            // Next month days
+            const totalCells = grid.children.length - 7; // Subtract headers
+            const remainingCells = 42 - totalCells; // 6 rows * 7 days
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayCell = createDayCell(day, true, false);
+                grid.appendChild(dayCell);
+            }
+        }
+
+        function createDayCell(day, isOtherMonth, isToday) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            if (isOtherMonth) cell.classList.add('other-month');
+            if (isToday) cell.classList.add('today');
+
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            cell.appendChild(dayNumber);
+
+            if (!isOtherMonth) {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month, day).getDay();
+
+                // Check if Sunday (closed)
+                if (dayOfWeek === 0) {
+                    cell.classList.add('disabled');
+                } else {
+                    // Check if has schedule
+                    const hasSchedule = Object.values(scheduleData).some(s => s.date === dateStr);
+                    if (hasSchedule) {
+                        const indicator = document.createElement('div');
+                        indicator.className = 'day-indicator';
+                        cell.appendChild(indicator);
+                    }
+
+                    cell.onclick = () => openScheduleModal(dateStr, dayOfWeek);
+                }
+            }
+
+            return cell;
+        }
+
+        function isCurrentDay(year, month, day) {
+            const today = new Date();
+            return today.getFullYear() === year && 
+                   today.getMonth() === month && 
+                   today.getDate() === day;
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
             loadScheduleData();
         }
 
-        // Generate schedule table based on current view
-        function generateScheduleTable() {
-            switch (currentView) {
-                case 'day':
-                    generateDayView();
-                    break;
-                case 'week':
-                    generateWeekView();
-                    break;
-                case 'month':
-                    generateMonthView();
-                    break;
-                default:
-                    generateWeekView();
-            }
-        }
-
-        // Enhanced data loading with view awareness
+        // Load Schedule Data
         async function loadScheduleData() {
-            if (isLoading) return;
-            
             try {
-                isLoading = true;
-                document.getElementById('loading').style.display = 'block';
-                
-                let startDate, endDate;
-                
-                if (currentView === 'day') {
-                    startDate = new Date(currentDate);
-                    endDate = new Date(currentDate);
-                } else if (currentView === 'week') {
-                    const weekStart = getWeekStart(currentDate);
-                    startDate = weekStart;
-                    endDate = new Date(weekStart);
-                    endDate.setDate(weekStart.getDate() + 6);
-                } else if (currentView === 'month') {
-                    startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                    endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-                }
-                
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const startDate = new Date(year, month, 1);
+                const endDate = new Date(year, month + 1, 0);
+
                 const response = await fetch(`/dentist/api/schedule/load?startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`);
                 const result = await response.json();
-                
+
                 if (result.success) {
                     scheduleData = {};
                     result.schedules.forEach(schedule => {
                         const key = `${schedule.date}-${schedule.hour}`;
                         scheduleData[key] = schedule;
                     });
-                    
-                    // Only update display for day and week views
-                    if (currentView !== 'month') {
-                        updateScheduleDisplay();
-                    }
-                } else {
-                    showToast('Failed to load schedule: ' + result.error, 'error');
+                    renderCalendar();
                 }
-                
             } catch (error) {
                 console.error('Error loading schedule:', error);
-                showToast('Failed to load schedule', 'error');
-            } finally {
-                isLoading = false;
-                document.getElementById('loading').style.display = 'none';
+                showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล', 'error');
             }
         }
 
-        // Enhanced schedule block calculation
-        function calculateBlockPosition(day, startTime, endTime) {
-            const table = document.getElementById('scheduleTable');
-            const tbody = table.querySelector('tbody');
-            
-            const startHour = parseInt(startTime.split(':')[0]);
-            const endHour = parseInt(endTime.split(':')[0]);
-            const startMinute = parseInt(startTime.split(':')[1]);
-            const endMinute = parseInt(endTime.split(':')[1]);
-            
-            const startCell = tbody.querySelector(`td[data-day="${day}"][data-hour="${startHour}"]`);
-            if (!startCell) return null;
-            
-            const tableRect = table.getBoundingClientRect();
-            const startRect = startCell.getBoundingClientRect();
-            
-            const left = startRect.left - tableRect.left;
-            const width = startRect.width;
-            const top = startRect.top - tableRect.top;
-            
-            const totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
-            const cellHeight = startRect.height;
-            const height = (totalMinutes / 60) * cellHeight;
-            const minuteOffset = (startMinute / 60) * cellHeight;
-            
-            return {
-                left: left,
-                width: width,
-                top: top + minuteOffset,
-                height: height
-            };
-        }
-
-        // Create enhanced schedule block
-        function createScheduleBlock(day, schedule) {
-            const position = calculateBlockPosition(day, schedule.startTime, schedule.endTime);
-            if (!position) return null;
-            
-            const block = document.createElement('div');
-            block.className = 'schedule-block';
-            
-            if (schedule.status === 'dayoff') {
-                block.classList.add('day-off');
-                block.innerHTML = '<i class="fas fa-ban"></i> Day Off';
-            } else if (schedule.hasAppointment) {
-                block.classList.add('appointment');
-                block.innerHTML = `<i class="fas fa-calendar-check"></i> ${schedule.startTime}-${schedule.endTime} (${schedule.appointmentCount || 1})`;
-            } else {
-                block.innerHTML = `<i class="fas fa-clock"></i> ${schedule.startTime}-${schedule.endTime}`;
-            }
-            
-            // Set position
-            Object.assign(block.style, {
-                left: position.left + 'px',
-                width: position.width + 'px',
-                top: position.top + 'px',
-                height: position.height + 'px'
-            });
-            
-            // Add enhanced click handler
-            block.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const hour = parseInt(schedule.startTime.split(':')[0]);
-                const cell = document.querySelector(`td[data-day="${day}"][data-hour="${hour}"]`);
-                if (cell) openScheduleModal(day, hour, cell);
-            });
-            
-            return block;
-        }
-
-        // Update schedule display with performance optimization
-        function updateScheduleDisplay() {
-            const overlay = document.getElementById('scheduleOverlay');
-            overlay.innerHTML = '';
-            
-            requestAnimationFrame(() => {
-                const fragment = document.createDocumentFragment();
-                const daySchedules = {};
-                
-                Object.values(scheduleData).forEach(schedule => {
-                    const day = schedule.day;
-                    if (!daySchedules[day]) daySchedules[day] = [];
-                    daySchedules[day].push(schedule);
-                });
-                
-                Object.keys(daySchedules).forEach(day => {
-                    const schedules = daySchedules[day];
-                    schedules.sort((a, b) => {
-                        const aTime = parseInt(a.startTime.replace(':', ''));
-                        const bTime = parseInt(b.startTime.replace(':', ''));
-                        return aTime - bTime;
-                    });
-                    
-                    const mergedSchedules = mergeContiguousSchedules(schedules);
-                    
-                    mergedSchedules.forEach(schedule => {
-                        const block = createScheduleBlock(parseInt(day), schedule);
-                        if (block) fragment.appendChild(block);
-                    });
-                });
-                
-                overlay.appendChild(fragment);
-            });
-        }
-
-        // Merge contiguous schedules for better display
-        function mergeContiguousSchedules(schedules) {
-            const merged = [];
-            let current = null;
-            
-            schedules.forEach(schedule => {
-                if (!current) {
-                    current = { ...schedule };
-                } else if (current.endTime === schedule.startTime && 
-                          current.status === schedule.status) {
-                    current.endTime = schedule.endTime;
-                    if (schedule.hasAppointment) {
-                        current.hasAppointment = true;
-                        current.appointmentCount = (current.appointmentCount || 0) + (schedule.appointmentCount || 1);
-                    }
-                } else {
-                    merged.push(current);
-                    current = { ...schedule };
-                }
-            });
-            
-            if (current) merged.push(current);
-            return merged;
-        }
-
-        // Enhanced modal opening
-        function openScheduleModal(day, hour, cell) {
-            if (shouldDisableCell(day, hour)) {
-                showToast('Cannot schedule during this time - Clinic Hours: 10:00-20:00', 'error');
-                return;
-            }
-            
-            selectedCell = cell;
+        // Open Schedule Modal
+        function openScheduleModal(dateStr, dayOfWeek) {
+            selectedDateForSchedule = dateStr;
             const modal = document.getElementById('scheduleModal');
-            const modalDate = document.getElementById('modalDate');
             
-            const weekStart = getWeekStart(currentDate);
-            const targetDate = new Date(weekStart);
-            targetDate.setDate(weekStart.getDate() + day);
-            
-            const dateStr = targetDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
-            
-            modalDate.textContent = dateStr;
-            
-            // Set form values
-            document.getElementById('selectedDate').value = targetDate.toISOString().split('T')[0];
-            document.getElementById('selectedDay').value = day;
-            document.getElementById('selectedHour').value = hour;
-            
-            resetForm();
-            
-            // Set start time to the clicked hour
-            const clickedTime = `${hour.toString().padStart(2, '0')}:00`;
-            document.getElementById('startTime').value = clickedTime;
-            
-            // Set end time to 1 hour after start time or clinic closing time
-            let endHour = hour + 1;
-            if (endHour > 20) endHour = 20; // Don't go beyond clinic closing time
-            const endTime = `${endHour.toString().padStart(2, '0')}:00`;
-            document.getElementById('endTime').value = endTime;
-            
-            const existingSchedule = findExistingSchedule(targetDate, hour);
+            document.getElementById('selectedDate').value = dateStr;
+            document.getElementById('selectedDay').value = dayOfWeek;
+            document.getElementById('displayDate').value = formatDateThai(dateStr);
+
+            // Check existing schedule
+            const existingSchedule = Object.values(scheduleData).find(s => s.date === dateStr);
             if (existingSchedule) {
-                populateForm(existingSchedule);
+                document.querySelector(`input[name="status"][value="${existingSchedule.status}"]`).checked = true;
+                document.getElementById('startTime').value = existingSchedule.startTime;
+                document.getElementById('endTime').value = existingSchedule.endTime;
+                document.getElementById('note').value = existingSchedule.note || '';
                 document.getElementById('deleteBtn').style.display = 'inline-block';
+            } else {
+                document.querySelector('input[name="status"][value="working"]').checked = true;
+                document.getElementById('startTime').value = '10:00';
+                document.getElementById('endTime').value = '20:00';
+                document.getElementById('note').value = '';
+                document.getElementById('deleteBtn').style.display = 'none';
             }
-            
-            toggleTimeControls();
-            modal.style.display = 'block';
-            
-            // Focus management for accessibility
-            setTimeout(() => {
-                document.getElementById('working').focus();
-            }, 100);
+
+            toggleTimeInputs();
+            modal.classList.add('active');
         }
 
-        // Reset form to default values
-        function resetForm() {
-            document.getElementById('working').checked = true;
-            document.getElementById('dayoff').checked = false;
-            document.getElementById('startTime').value = '10:00';  // Clinic opening time
-            document.getElementById('endTime').value = '20:00';    // Clinic closing time
-            document.getElementById('note').value = '';
-            document.getElementById('deleteBtn').style.display = 'none';
+        function openBulkScheduleModal() {
+            const modal = document.getElementById('bulkScheduleModal');
+            const today = new Date();
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+
+            document.getElementById('bulkStartDate').value = today.toISOString().split('T')[0];
+            document.getElementById('bulkEndDate').value = nextWeek.toISOString().split('T')[0];
+            document.querySelector('input[name="bulkStatus"][value="working"]').checked = true;
+            document.getElementById('bulkStartTime').value = '10:00';
+            document.getElementById('bulkEndTime').value = '20:00';
+            document.getElementById('bulkNote').value = '';
+
+            toggleBulkTimeInputs();
+            modal.classList.add('active');
         }
 
-        // Populate form with existing data
-        function populateForm(schedule) {
-            document.querySelector(`input[name="status"][value="${schedule.status}"]`).checked = true;
-            document.getElementById('startTime').value = schedule.startTime;
-            document.getElementById('endTime').value = schedule.endTime;
-            document.getElementById('note').value = schedule.note || '';
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
         }
 
-        // Find existing schedule
-        function findExistingSchedule(date, hour) {
-            const dateStr = date.toISOString().split('T')[0];
-            return Object.values(scheduleData).find(schedule => 
-                schedule.date === dateStr && 
-                (schedule.hour === hour || schedule.status === 'dayoff')
-            );
+        function toggleTimeInputs() {
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const container = document.getElementById('timeInputsContainer');
+            container.style.display = status === 'working' ? 'block' : 'none';
         }
 
-        // Enhanced modal closing
-        function closeModal() {
-            const modal = document.getElementById('scheduleModal');
-            modal.style.animation = 'modalSlideOut 0.3s ease';
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.style.animation = '';
-                selectedCell = null;
-            }, 300);
+        function toggleBulkTimeInputs() {
+            const status = document.querySelector('input[name="bulkStatus"]:checked').value;
+            const container = document.getElementById('bulkTimeInputsContainer');
+            container.style.display = status === 'working' ? 'block' : 'none';
         }
 
-        // Enhanced save function with validation
+        // Save Schedule
         async function saveSchedule() {
-            if (isLoading) return;
-            
-            const form = document.getElementById('scheduleForm');
-            const formData = new FormData(form);
-            const saveBtn = document.getElementById('saveBtn');
-            
-            // Validation
-            const startTime = formData.get('startTime');
-            const endTime = formData.get('endTime');
-            
-            if (startTime >= endTime) {
-                showToast('End time must be after start time', 'error');
+            const date = document.getElementById('selectedDate').value;
+            const day = parseInt(document.getElementById('selectedDay').value);
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const note = document.getElementById('note').value;
+
+            if (status === 'working' && startTime >= endTime) {
+                showToast('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
                 return;
             }
-            
+
             try {
-                isLoading = true;
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                
-                const scheduleData = {
-                    date: formData.get('date'),
-                    day: parseInt(formData.get('day')),
-                    status: formData.get('status'),
-                    startTime: formData.get('startTime'),
-                    endTime: formData.get('endTime'),
-                    note: formData.get('note')
-                };
-                
                 const response = await fetch('/dentist/api/schedule/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(scheduleData)
+                    body: JSON.stringify({ date, day, status, startTime, endTime, note })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
-                    showToast(result.message, 'success');
-                    closeModal();
+                    showToast('บันทึกตารางงานเรียบร้อยแล้ว', 'success');
+                    closeModal('scheduleModal');
                     await loadScheduleData();
                 } else {
                     showToast(result.error, 'error');
                 }
-                
             } catch (error) {
                 console.error('Error saving schedule:', error);
-                showToast('Failed to save schedule', 'error');
-            } finally {
-                isLoading = false;
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Schedule';
+                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
             }
         }
 
-        // Enhanced delete function
-        async function deleteSchedule() {
-            if (!confirm('Are you sure you want to delete this schedule?')) return;
-            
-            const deleteBtn = document.getElementById('deleteBtn');
-            
+        async function saveBulkSchedule() {
+            const startDate = document.getElementById('bulkStartDate').value;
+            const endDate = document.getElementById('bulkEndDate').value;
+            const status = document.querySelector('input[name="bulkStatus"]:checked').value;
+            const startTime = document.getElementById('bulkStartTime').value;
+            const endTime = document.getElementById('bulkEndTime').value;
+            const note = document.getElementById('bulkNote').value;
+
+            if (!startDate || !endDate) {
+                showToast('กรุณาเลือกช่วงวันที่', 'error');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                showToast('วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด', 'error');
+                return;
+            }
+
+            if (status === 'working' && startTime >= endTime) {
+                showToast('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
+                return;
+            }
+
             try {
-                deleteBtn.disabled = true;
-                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-                
+                // Generate dates in range
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const promises = [];
+
+                for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                    const dayOfWeek = date.getDay();
+                    if (dayOfWeek === 0) continue; // Skip Sundays
+
+                    const dateStr = date.toISOString().split('T')[0];
+                    promises.push(
+                        fetch('/dentist/api/schedule/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                date: dateStr, 
+                                day: dayOfWeek, 
+                                status, 
+                                startTime, 
+                                endTime, 
+                                note 
+                            })
+                        })
+                    );
+                }
+
+                await Promise.all(promises);
+                showToast('บันทึกตารางงานทั้งหมดเรียบร้อยแล้ว', 'success');
+                closeModal('bulkScheduleModal');
+                await loadScheduleData();
+            } catch (error) {
+                console.error('Error saving bulk schedule:', error);
+                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+        }
+
+        async function deleteSchedule() {
+            if (!confirm('คุณต้องการลบตารางงานนี้หรือไม่?')) return;
+
+            try {
+                const date = document.getElementById('selectedDate').value;
                 const response = await fetch('/dentist/api/schedule/delete', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        date: document.getElementById('selectedDate').value,
-                        hour: parseInt(document.getElementById('selectedHour').value)
-                    })
+                    body: JSON.stringify({ date, hour: 10 })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
-                    showToast(result.message, 'success');
-                    closeModal();
+                    showToast('ลบตารางงานเรียบร้อยแล้ว', 'success');
+                    closeModal('scheduleModal');
                     await loadScheduleData();
                 } else {
                     showToast(result.error, 'error');
                 }
-                
             } catch (error) {
                 console.error('Error deleting schedule:', error);
-                showToast('Failed to delete schedule', 'error');
-            } finally {
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                showToast('เกิดข้อผิดพลาดในการลบ', 'error');
             }
         }
 
-        // Utility functions
-        function getWeekStart(date) {
-            const result = new Date(date);
-            result.setDate(result.getDate() - result.getDay());
-            return result;
+        // Utility Functions
+        function formatDateThai(dateStr) {
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear() + 543;
+            return `${day}/${month}/${year}`;
         }
 
-        function updateWeekTitle() {
-            const weekStart = getWeekStart(currentDate);
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
-            
-            document.getElementById('currentWeekTitle').textContent = 
-                `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}, ${weekStart.getFullYear()}`;
-        }
-
-        function updateTableHeaders() {
-            const weekStart = getWeekStart(currentDate);
-            const headers = document.querySelectorAll('.schedule-table th');
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            for (let i = 1; i < headers.length; i++) {
-                const date = new Date(weekStart);
-                date.setDate(weekStart.getDate() + (i - 1));
-                headers[i].textContent = `${dayNames[i - 1]} ${date.getMonth() + 1}/${date.getDate()}`;
-            }
-        }
-
-        // Enhanced toast notification system
-        function showToast(message, type = 'info') {
+        function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
-            const icon = {
-                success: 'fas fa-check-circle',
-                error: 'fas fa-exclamation-circle',
-                warning: 'fas fa-exclamation-triangle',
-                info: 'fas fa-info-circle'
-            }[type] || 'fas fa-info-circle';
-            
             toast.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="${icon}"></i>
-                    <span>${message}</span>
-                </div>
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
             `;
-            
+
             document.body.appendChild(toast);
-            
+
             setTimeout(() => {
-                toast.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+                toast.remove();
+            }, 3000);
         }
-
-        // Event listeners
-        window.addEventListener('resize', debounce(() => {
-            updateScheduleDisplay();
-        }, 250));
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('scheduleModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('scheduleModal');
-                if (modal.style.display === 'block') {
-                    closeModal();
-                }
-            }
-        });
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Enhanced schedule page loaded');
-            initializeSchedule();
-            
-            // Re-calculate positions after DOM is fully rendered
-            setTimeout(() => {
-                updateScheduleDisplay();
-            }, 500);
-        });
-
-        // Add CSS keyframes for modal animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes modalSlideOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-50px) scale(0.95); }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>

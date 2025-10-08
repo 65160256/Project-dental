@@ -3,7 +3,35 @@ const router = express.Router();
 
 // ตรวจสอบ path ให้ถูกต้อง - เปลี่ยนตาม folder structure ของคุณ
 const dentistController = require('../controller/dentist.controller'); // หรือ ../controllers/
+const multer = require('multer');
+const path = require('path');
 
+// ตั้งค่า multer สำหรับอัพโหลดรูป
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'photo-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, GIF, WEBP)'));
+    }
+  }
+});
 // Middleware สำหรับตรวจสอบการล็อกอิน
 const requireAuth = (req, res, next) => {
     if (!req.session.user) {
@@ -72,17 +100,17 @@ router.get('/patients/:id', requireAuth, requireDentist, dentistController.getPa
 // =================
 // History Routes  
 // =================
-router.get('/history', requireAuth, requireDentist, dentistController.getHistory);
-router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
-router.get('/api/patient-history', requireAuth, requireDentist, dentistController.getPatientHistoryAPI);
-router.get('/api/patient-history/search', requireAuth, requireDentist, dentistController.searchPatientHistory);
-router.get('/api/patient-history/:patientId', requireAuth, requireDentist, dentistController.getPatientDetailedHistory);
+// router.get('/history', requireAuth, requireDentist, dentistController.getHistory);
+// router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
+// router.get('/api/patient-history', requireAuth, requireDentist, dentistController.getPatientHistoryAPI);
+// router.get('/api/patient-history/search', requireAuth, requireDentist, dentistController.searchPatientHistory);
+// router.get('/api/patient-history/:patientId', requireAuth, requireDentist, dentistController.getPatientDetailedHistory);
 
 // =================
 // Profile Routes
 // =================
 router.get('/profile', requireAuth, requireDentist, dentistController.getProfile);
-router.post('/profile/update', requireAuth, requireDentist, dentistController.updateProfile);
+router.post('/profile/update', requireAuth, requireDentist, upload.single('photo'), dentistController.updateProfile);
 router.post('/profile/update-password', requireAuth, requireDentist, dentistController.updatePassword);
 router.get('/profile/edit', requireAuth, requireDentist, dentistController.getEditProfile);
 router.get('/profile/change-password', requireAuth, requireDentist, dentistController.getChangePassword);
@@ -92,7 +120,7 @@ router.post('/profile/update-email', requireAuth, requireDentist, dentistControl
 // Treatment Routes
 // =================
 router.get('/history', requireAuth, requireDentist, dentistController.getHistory);
-router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
+// router.get('/patient-history', requireAuth, requireDentist, dentistController.getPatientHistory);
 router.put('/treatments/:id', requireAuth, requireDentist, dentistController.updateTreatment);
 router.delete('/treatments/:id', requireAuth, requireDentist, dentistController.deleteTreatment);
 
@@ -101,7 +129,7 @@ router.delete('/treatments/:id', requireAuth, requireDentist, dentistController.
 // =================
 router.get('/reports', requireAuth, requireDentist, dentistController.getReports);
 router.get('/reports/monthly', requireAuth, requireDentist, dentistController.getMonthlyReport);
-router.get('/reports/patient-history/:id', requireAuth, requireDentist, dentistController.getPatientHistoryReport);
+// router.get('/reports/patient-history/:id', requireAuth, requireDentist, dentistController.getPatientHistoryReport);
 
 // =================
 // API Routes - เฉพาะที่จำเป็น
@@ -157,6 +185,9 @@ router.use((err, req, res, next) => {
 
 // หน้าเพิ่มประวัติการรักษา
 router.get('/add-history', requireAuth, requireDentist, dentistController.getAddHistoryPage);
+router.get('/api/appointment/:queueId/for-history', requireAuth, requireDentist, dentistController.getAppointmentForAddHistory);
+router.post('/api/add-history/save', requireAuth, requireDentist, dentistController.saveAddHistory);
+
 router.get('/add-history/:queueId', requireAuth, requireDentist, dentistController.getAddHistoryPage);
 // API สำหรับดึงข้อมูลการจองของผู้ป่วย
 router.get('/api/patients/:patientId/appointments-for-history', requireAuth, requireDentist, dentistController.getAppointmentForHistory);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดประวัติการรักษา - คลินิกยิ้มสวย</title>
+    <title>Treatment History - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
@@ -16,6 +16,7 @@
         body {
             background-color: #f5f7fa;
             margin: 0;
+            display: flex;
         }
 
         /* Sidebar */
@@ -24,9 +25,9 @@
             background: linear-gradient(135deg, #4A90E2, #2DA8FF);
             position: fixed;
             height: 100vh;
-            padding: 0;
             color: #fff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 100;
         }
 
         .sidebar .logo {
@@ -66,15 +67,14 @@
         }
 
         .sidebar ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: background 0.2s;
+            font-size: 14px;
         }
 
         .sidebar ul li.active a,
@@ -85,10 +85,10 @@
             margin: 0 10px;
         }
 
-        /* Main Content */
+        /* Main */
         .main {
             margin-left: 180px;
-            padding: 0;
+            flex: 1;
             min-height: 100vh;
         }
 
@@ -99,38 +99,28 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .header-left {
+        .page-title-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
-        .back-btn {
-            background: #4A90E2;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .back-btn:hover {
-            background: #357abd;
-        }
-
-        .page-title {
-            font-size: 24px;
+        .page-title-section h1 {
+            font-size: 20px;
             color: #333;
-            font-weight: 600;
             margin: 0;
+            font-weight: 600;
+        }
+
+        .page-title-section i {
+            color: #4A90E2;
+            font-size: 22px;
         }
 
         .user-section {
@@ -144,6 +134,11 @@
             height: 20px;
             cursor: pointer;
             color: #666;
+            transition: color 0.3s;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
         }
 
         .profile-dropdown {
@@ -155,6 +150,11 @@
             align-items: center;
             cursor: pointer;
             gap: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .user-info:hover {
+            opacity: 0.8;
         }
 
         .avatar {
@@ -169,26 +169,13 @@
             font-size: 14px;
             font-weight: 500;
             text-transform: uppercase;
-            border: 2px solid rgba(74, 144, 226, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
             overflow: hidden;
-        }
-
-        .avatar:hover {
-            transform: scale(1.05);
-            border-color: #4A90E2;
         }
 
         .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .avatar.no-photo {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
         }
 
         .user-details strong {
@@ -208,26 +195,20 @@
             right: 0;
             top: 100%;
             background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             min-width: 180px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            margin-top: 5px;
         }
 
         .dropdown-menu a {
             display: block;
-            padding: 12px 15px;
+            padding: 10px 15px;
             text-decoration: none;
             color: #333;
             font-size: 13px;
-            transition: background 0.2s ease;
         }
 
         .dropdown-menu a:hover {
@@ -248,93 +229,144 @@
 
         /* Date Header */
         .date-header {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .back-btn:hover {
+            background: #f0f7ff;
+        }
+
+        .date-badge {
             display: flex;
             align-items: center;
             gap: 10px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .date-header i {
-            color: #e74c3c;
+        .date-badge i {
+            color: #ef4444;
             font-size: 18px;
         }
 
-        .date-header span {
-            font-size: 16px;
+        .date-badge strong {
             color: #333;
+            font-size: 14px;
             font-weight: 600;
         }
 
-        /* Treatment Card */
-        .treatment-card {
+        .date-badge span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Content Card */
+        .content-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 800px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            max-width: 900px;
             margin: 0 auto;
         }
 
         .booking-id {
-            background: #333;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
             font-size: 14px;
-            font-weight: 600;
+            color: #333;
             margin-bottom: 25px;
-            display: inline-block;
+            font-weight: 600;
         }
 
-        .detail-row {
-            margin-bottom: 20px;
-            padding: 15px 0;
-            border-bottom: 1px solid #f1f3f4;
+        /* Section */
+        .section {
+            margin-bottom: 35px;
         }
 
-        .detail-row:last-child {
+        .section:last-child {
             margin-bottom: 0;
-            border-bottom: none;
         }
 
-        .detail-label {
+        .section-title {
+            font-size: 16px;
             font-weight: 600;
             color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .info-value {
             font-size: 14px;
-            margin-bottom: 8px;
+            color: #333;
         }
 
-        .detail-value {
-            color: #555;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .diagnosis-box {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #ffc107;
-            margin-top: 8px;
-            color: #856404;
-        }
-
-        .next-treatment-box {
-            background: #e8f5e8;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-            margin-top: 8px;
-            color: #155724;
-        }
-
-        .no-data {
+        .info-value.empty {
             color: #999;
             font-style: italic;
+        }
+
+        /* Treatment Result Box */
+        .result-box {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .next-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #2e7d32;
+            line-height: 1.6;
         }
 
         /* Loading */
@@ -345,9 +377,6 @@
             min-height: 400px;
             flex-direction: column;
             gap: 15px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .loading-spinner {
@@ -366,15 +395,15 @@
 
         .loading-text {
             color: #666;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         /* Error */
         .error-message {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             text-align: center;
             max-width: 500px;
             margin: 0 auto;
@@ -397,17 +426,17 @@
             color: #991b1b;
             font-size: 14px;
             line-height: 1.5;
+            margin-bottom: 20px;
         }
 
         .retry-btn {
             background: #4A90E2;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 10px 24px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            margin-top: 15px;
+            font-size: 13px;
             transition: background 0.3s;
         }
 
@@ -428,26 +457,24 @@
             }
 
             .content {
+                padding: 20px 15px;
+            }
+
+            .content-card {
                 padding: 20px;
             }
 
-            .treatment-card {
-                padding: 20px;
-                max-width: none;
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .date-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
 
             .top-bar {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .header-left {
-                gap: 10px;
-            }
-
-            .page-title {
-                font-size: 20px;
+                padding: 10px 15px;
             }
         }
     </style>
@@ -457,41 +484,38 @@
     <div class="sidebar">
         <div class="logo">
             <div class="logo-icon">🦷</div>
-            <h3>คลินิกยิ้มสวย</h3>
+            <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
-            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
-            <!-- <li class="active"><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li> -->
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
         </ul>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <div class="main">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="header-left">
-                <button class="back-btn" onclick="goBack()">
-                    <i class="fas fa-arrow-left"></i> กลับ
-                </button>
-                <h1 class="page-title">ประวัติการรักษา</h1>
+            <div class="page-title-section">
+                <i class="fas fa-history"></i>
+                <h1>Treatment History</h1>
             </div>
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
                 <div class="profile-dropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar no-photo" id="userAvatar">
+                        <div class="avatar" id="userAvatar">
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                                <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="showInitials()">
                             <% } else { %>
                                 <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
                             <% } %>
                         </div>
                         <div class="user-details">
-                            <strong>สวัสดี ดร. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'หมอ' %></strong>
-                            <small>ทันตแพทย์</small>
+                            <strong>Hello Dr. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'Doctor' %></strong>
+                            <small>Dentist</small>
                         </div>
                         <i class="fas fa-caret-down"></i>
                     </div>
@@ -510,7 +534,7 @@
             <!-- Loading -->
             <div id="loading" class="loading">
                 <div class="loading-spinner"></div>
-                <div class="loading-text">กำลังโหลดข้อมูลการรักษา...</div>
+                <div class="loading-text">กำลังโหลดข้อมูล...</div>
             </div>
 
             <!-- Error -->
@@ -518,7 +542,7 @@
                 <div class="error-icon">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="error-title">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>
+                <div class="error-title">เกิดข้อผิดพลาด</div>
                 <div class="error-text" id="error-text"></div>
                 <button class="retry-btn" onclick="retryLoad()">
                     <i class="fas fa-redo"></i> ลองใหม่
@@ -527,41 +551,97 @@
 
             <!-- Content Area -->
             <div id="content-area" style="display: none;">
-                <!-- Date Header -->
+                <!-- Date Header with Back Button -->
                 <div class="date-header">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>วันที่รักษา: <span id="treatment-date"></span></span>
+                    <button class="back-btn" onclick="goBack()" title="กลับ">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="date-badge">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>Date of Treatment:</strong>
+                        <span id="treatment-date"></span>
+                    </div>
                 </div>
 
-                <!-- Treatment Details -->
-                <div class="treatment-card">
-                    <div class="booking-id" id="booking-id"></div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">วันที่และเวลา:</div>
-                        <div class="detail-value" id="appointment-date"></div>
+                <!-- Content Card -->
+                <div class="content-card">
+                    <!-- Booking ID -->
+                    <div class="booking-id">
+                        <strong>Booking Request ID :</strong> <span id="booking-id"></span>
                     </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">การรักษา:</div>
-                        <div class="detail-value" id="treatment-name"></div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">ทันตแพทย์:</div>
-                        <div class="detail-value" id="dentist-name"></div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">การวินิจฉัย:</div>
-                        <div class="detail-value">
-                            <div id="diagnosis-text"></div>
+
+                    <!-- ข้อมูลส่วนตัว -->
+                    <div class="section">
+                        <div class="section-title">ข้อมูลส่วนตัว</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">ชื่อ - นามสกุล:</div>
+                                <div class="info-value" id="patient-name"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">เพศ:</div>
+                                <div class="info-value" id="patient-gender"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">วันเกิด:</div>
+                                <div class="info-value" id="patient-dob"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">อายุ:</div>
+                                <div class="info-value" id="patient-age"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">เลขบัตรประชาชน/พาสปอร์ต:</div>
+                                <div class="info-value" id="patient-idcard"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">เบอร์โทรศัพท์:</div>
+                                <div class="info-value" id="patient-phone"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ที่อยู่:</div>
+                                <div class="info-value" id="patient-address"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">โรคประจำตัว:</div>
+                                <div class="info-value" id="chronic-disease"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ประวัติการแพ้ยา:</div>
+                                <div class="info-value" id="allergy-history"></div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="detail-row">
-                        <div class="detail-label">สิ่งที่ต้องทำต่อ / ปัญหาที่เหลืออยู่:</div>
-                        <div class="detail-value" id="next-treatment"></div>
+
+                    <!-- ข้อมูลการรักษา -->
+                    <div class="section">
+                        <div class="section-title">ข้อมูลการรักษา</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">วันที่:</div>
+                                <div class="info-value" id="appointment-date"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">เวลา:</div>
+                                <div class="info-value" id="appointment-time"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">การรักษา:</div>
+                                <div class="info-value" id="treatment-name"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">ทันตแพทย์:</div>
+                                <div class="info-value" id="dentist-name"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ผลการรักษา:</div>
+                                <div class="info-value" id="diagnosis-result"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ค่าแนะ / การนัดหมายครั้งต่อไป:</div>
+                                <div class="info-value" id="next-appointment"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -570,21 +650,21 @@
 
     <script>
         let currentQueueId = null;
+        let currentPatientId = null;
+
 
         // โหลดข้อมูลเมื่อหน้าโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
             currentQueueId = '<%= typeof queueId !== "undefined" ? queueId : "" %>' || window.location.pathname.split('/').pop();
             
-            console.log('กำลังโหลดประวัติการรักษาสำหรับ queue ID:', currentQueueId);
-            
             if (currentQueueId && currentQueueId !== 'undefined' && currentQueueId !== '') {
                 loadTreatmentHistory(currentQueueId);
             } else {
-                showError('ไม่พบ ID การรักษา กรุณาตรวจสอบ URL');
+                showError('ไม่พบ ID การรักษา');
             }
         });
 
-        // ฟังก์ชันโหลดข้อมูลประวัติการรักษา
+        // โหลดข้อมูลประวัติการรักษา
         async function loadTreatmentHistory(queueId) {
             try {
                 showLoading();
@@ -592,7 +672,7 @@
                 const response = await fetch(`/dentist/api/treatment-history/${queueId}`);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
                 const data = await response.json();
@@ -600,112 +680,219 @@
                 if (data.success && data.treatment) {
                     displayTreatmentHistory(data.treatment);
                 } else {
-                    showError(data.error || 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+                    showError(data.error || 'ไม่สามารถโหลดข้อมูลได้');
                 }
                 
             } catch (error) {
-                console.error('เกิดข้อผิดพลาดในการโหลดประวัติการรักษา:', error);
-                let errorMessage = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
-                
-                if (error.message.includes('404')) {
-                    errorMessage = 'ไม่พบข้อมูลประวัติการรักษานี้';
-                } else if (error.message.includes('403')) {
-                    errorMessage = 'ไม่มีสิทธิ์เข้าถึงข้อมูลนี้';
-                } else if (error.message.includes('500')) {
-                    errorMessage = 'เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่ภายหลัง';
-                }
-                
-                showError(errorMessage);
+                console.error('Error:', error);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
             }
         }
 
-        // ฟังก์ชันแสดงผลข้อมูล
+
+        // แสดงผลข้อมูล
         function displayTreatmentHistory(treatment) {
-            hideLoading();
-            
-            try {
-                // Format วันที่และเวลา
-                const treatmentDate = new Date(treatment.time);
-                const formattedDate = treatmentDate.toLocaleDateString('th-TH');
-                const formattedDateTime = treatmentDate.toLocaleDateString('th-TH') + ', ' + 
-                                        treatmentDate.toLocaleTimeString('th-TH', { 
-                                            hour: '2-digit', 
-                                            minute: '2-digit',
-                                            hour12: false 
-                                        });
+             currentPatientId = treatment.patient_id;
+    hideLoading();
+    
+    try {
+        // Format dates
+        const treatmentDate = new Date(treatment.time);
+        
+        // Date of Treatment
+        document.getElementById('treatment-date').textContent = 
+            treatmentDate.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
 
-                // อัพเดทข้อมูลในหน้าเว็บ
-                document.getElementById('treatment-date').textContent = formattedDate;
-                document.getElementById('booking-id').textContent = `Booking Request ID: #Y-${treatment.queue_id.toString().padStart(6, '0')}`;
-                document.getElementById('appointment-date').textContent = formattedDateTime;
-                document.getElementById('treatment-name').textContent = treatment.treatment_name || 'ไม่ระบุ';
-                document.getElementById('dentist-name').textContent = `ดร. ${treatment.dentist_fname || ''} ${treatment.dentist_lname || ''}`.trim();
+        // Booking ID
+        document.getElementById('booking-id').textContent = `#Y-${treatment.queue_id.toString().padStart(6, '0')}`;
 
-                // แสดง diagnosis
-                const diagnosisElement = document.getElementById('diagnosis-text');
-                if (treatment.diagnosis && treatment.diagnosis.trim()) {
-                    diagnosisElement.innerHTML = `<div class="diagnosis-box">${treatment.diagnosis}</div>`;
-                } else {
-                    diagnosisElement.innerHTML = '<span class="no-data">ไม่มีการบันทึกการวินิจฉัย</span>';
-                }
-                
-                // แสดงสิ่งที่ต้องทำต่อ (ใช้ next_appointment field แต่เปลี่ยนความหมาย)
-                const nextTreatmentElement = document.getElementById('next-treatment');
-                if (treatment.next_appointment && treatment.next_appointment.trim()) {
-                    nextTreatmentElement.innerHTML = `<div class="next-treatment-box">${treatment.next_appointment}</div>`;
-                } else {
-                    nextTreatmentElement.innerHTML = '<span class="no-data">ไม่มีสิ่งที่ต้องทำต่อ การรักษาเสร็จสมบูรณ์</span>';
-                }
-                
-                // แสดงเนื้อหา
-                document.getElementById('content-area').style.display = 'block';
-                
-            } catch (displayError) {
-                console.error('เกิดข้อผิดพลาดในการแสดงผลข้อมูล:', displayError);
-                showError('เกิดข้อผิดพลาดในการแสดงผลข้อมูล');
-            }
+        // Patient Info
+        document.getElementById('patient-name').textContent = 
+            `${treatment.patient_fname || ''} ${treatment.patient_lname || ''}`.trim() || '-';
+
+        // Gender
+        const genderMap = {
+            'male': 'ชาย',
+            'female': 'หญิง',
+            'other': 'อื่นๆ'
+        };
+        const genderElement = document.getElementById('patient-gender');
+        genderElement.textContent = genderMap[treatment.gender] || '-';
+        if (!treatment.gender) genderElement.classList.add('empty');
+
+        // DOB
+        const dobElement = document.getElementById('patient-dob');
+        if (treatment.dob) {
+            const dob = new Date(treatment.dob);
+            dobElement.textContent = dob.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        } else {
+            dobElement.textContent = '-';
+            dobElement.classList.add('empty');
         }
 
-        // ฟังก์ชันแสดง loading
+        // Age - คำนวณอายุ
+        const ageElement = document.getElementById('patient-age');
+        if (treatment.dob) {
+            const age = calculateAge(new Date(treatment.dob));
+            ageElement.textContent = `${age} ปี`;
+        } else {
+            ageElement.textContent = '-';
+            ageElement.classList.add('empty');
+        }
+
+
+        // ID Card
+        const idCardElement = document.getElementById('patient-idcard');
+        idCardElement.textContent = treatment.id_card || '-';
+        if (!treatment.id_card) idCardElement.classList.add('empty');
+
+        // Phone
+        const phoneElement = document.getElementById('patient-phone');
+        phoneElement.textContent = treatment.phone || '-';
+        if (!treatment.phone) phoneElement.classList.add('empty');
+
+        // Address
+        const addressElement = document.getElementById('patient-address');
+        addressElement.textContent = treatment.address || '-';
+        if (!treatment.address) addressElement.classList.add('empty');
+
+        // Chronic Disease
+        const chronicElement = document.getElementById('chronic-disease');
+        chronicElement.textContent = treatment.chronic_disease || '-';
+        if (!treatment.chronic_disease) chronicElement.classList.add('empty');
+
+        // Allergy History
+        const allergyElement = document.getElementById('allergy-history');
+        allergyElement.textContent = treatment.allergy_history || '-';
+        if (!treatment.allergy_history) allergyElement.classList.add('empty');
+
+        // Appointment Date
+        document.getElementById('appointment-date').textContent = 
+            treatmentDate.toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+        // Appointment Time - แสดงช่วงเวลา (24hr format)
+        const timeElement = document.getElementById('appointment-time');
+        if (treatment.duration) {
+            const startTime = treatmentDate.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            // คำนวณเวลาสิ้นสุด
+            const endDate = new Date(treatmentDate.getTime() + treatment.duration * 60000);
+            const endTime = endDate.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            timeElement.textContent = `${startTime} - ${endTime}`;
+        } else {
+            // ถ้าไม่มี duration แสดงแค่เวลาเริ่มต้น
+            timeElement.textContent = treatmentDate.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        // Treatment Name
+        document.getElementById('treatment-name').textContent = treatment.treatment_name || '-';
+
+        // Dentist Name
+        document.getElementById('dentist-name').textContent = 
+            `Dr. ${treatment.dentist_fname || ''} ${treatment.dentist_lname || ''}`.trim();
+
+        // Diagnosis/Result
+        const diagnosisElement = document.getElementById('diagnosis-result');
+        if (treatment.diagnosis && treatment.diagnosis.trim()) {
+            diagnosisElement.innerHTML = `<div class="result-box">${treatment.diagnosis}</div>`;
+        } else {
+            diagnosisElement.textContent = '-';
+            diagnosisElement.classList.add('empty');
+        }
+
+        // Next Appointment/Follow-up
+        const nextElement = document.getElementById('next-appointment');
+        if (treatment.next_appointment && treatment.next_appointment.trim()) {
+            nextElement.innerHTML = `<div class="next-box">${treatment.next_appointment}</div>`;
+        } else {
+            nextElement.textContent = '-';
+            nextElement.classList.add('empty');
+        }
+        
+        // แสดงเนื้อหา
+        document.getElementById('content-area').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error displaying data:', error);
+        showError('เกิดข้อผิดพลาดในการแสดงผลข้อมูล');
+    }
+}
+
+function calculateAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // ถ้ายังไม่ถึงวันเกิดในปีนี้ ให้ลบอายุ 1 ปี
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+        // Show/Hide functions
         function showLoading() {
             document.getElementById('loading').style.display = 'flex';
             document.getElementById('error').style.display = 'none';
             document.getElementById('content-area').style.display = 'none';
         }
 
-        // ฟังก์ชันซ่อน loading
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
         }
 
-        // ฟังก์ชันแสดงข้อผิดพลาด
         function showError(message) {
             hideLoading();
-            
             document.getElementById('error-text').textContent = message;
             document.getElementById('error').style.display = 'block';
             document.getElementById('content-area').style.display = 'none';
         }
 
-        // ฟังก์ชันลองใหม่
         function retryLoad() {
             if (currentQueueId) {
                 loadTreatmentHistory(currentQueueId);
-            } else {
-                showError('ไม่พบ ID การรักษา ไม่สามารถลองใหม่ได้');
             }
         }
 
-        // ฟังก์ชันย้อนกลับ
-       function goBack() {
-    // เปลี่ยนหน้าโดยตรงทันที ไม่รอ history
-    window.location.href = '/dentist/appointments';
+       // 3. ใช้ patient_id ในการกลับหน้า
+function goBack() {
+    if (currentPatientId) {
+        window.location.href = `/dentist/patients/${currentPatientId}`; // ← กลับหน้านี้
+    } else {
+        window.location.href = '/dentist/history';
+    }
 }
 
-        // ฟังก์ชันสำหรับโปรไฟล์
+        // UI Functions
         function showInitials() {
             const avatar = document.getElementById('userAvatar');
-            const img = avatar.querySelector('img');
+            const img = avatar?.querySelector('img');
             if (img) {
                 img.remove();
                 avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
@@ -714,39 +901,38 @@
 
         function toggleDropdown() {
             const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            if (menu) {
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
         }
         
         function toggleNotifications() {
-            // แสดงการแจ้งเตือน
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: #f3f4f6;
-                color: #374151;
+                background: white;
+                color: #333;
                 padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-radius: 6px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 z-index: 1001;
-                border-left: 4px solid #6b7280;
-                max-width: 400px;
-                font-size: 14px;
+                border-left: 4px solid #4A90E2;
+                font-size: 13px;
             `;
-            notification.textContent = 'ฟีเจอร์การแจ้งเตือนจะเปิดใช้งานเร็วๆ นี้!';
+            notification.textContent = 'ฟีเจอร์การแจ้งเตือนกำลังพัฒนา!';
             document.body.appendChild(notification);
             
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            setTimeout(() => notification.remove(), 3000);
         }
 
-        // ปิด dropdown เมื่อคลิกที่อื่น
+        // Close dropdown when clicking outside
         document.addEventListener('click', function (e) {
             const prof = document.querySelector('.profile-dropdown');
-            if (prof && !prof.contains(e.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
+            const dropdown = document.getElementById('profileDropdown');
+            if (prof && !prof.contains(e.target) && dropdown) {
+                dropdown.style.display = 'none';
             }
         });
 
@@ -754,13 +940,6 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 goBack();
-            }
-            
-            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
-                e.preventDefault();
-                if (currentQueueId) {
-                    loadTreatmentHistory(currentQueueId);
-                }
             }
         });
     </script>

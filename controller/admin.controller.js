@@ -1702,7 +1702,7 @@ exports.viewTreatmentDetails = async (req, res) => {
     detail.formattedDate = `${day} ${month} ${year}`;
     detail.formattedTime = `${hours}:${minutes} น.`;
 
-    res.render('admin/patient/treatment-history/admin/treatment/treatment-detail', { 
+    res.render('admin/patient/treatment-history/treatment-detail', { 
       detail, 
       patientId: id 
     });

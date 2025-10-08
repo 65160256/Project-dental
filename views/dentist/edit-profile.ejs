@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Edit My Profile - Smile Clinic</title>
+  <title>แก้ไขโปรไฟล์ - Smile Clinic</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -30,7 +30,7 @@
     .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;overflow:hidden}
     .avatar img{width:100%;height:100%;object-fit:cover;display:block}
     .user-details strong{display:block;font-size:13px;color:#333}
-    .user-details small{color:#666;font-size:11px;text-transform:capitalize}
+    .user-details small{color:#666;font-size:11px}
     .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:10}
     .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
     .dropdown-menu a:hover{background:#f8f9fa}
@@ -70,8 +70,6 @@
     .btn-save:hover{background:#3f9443}
     .btn-password{background:#E0E0E0;color:#555}
     .btn-password:hover{background:#cfcfcf}
-    .btn-email{background:#17a2b8;color:#fff}
-    .btn-email:hover{background:#138496}
     .btn-cancel{background:#666;color:#fff}
     .btn-cancel:hover{background:#555}
 
@@ -102,41 +100,40 @@
       <h3>Smile Clinic</h3>
     </div>
     <ul>
-      <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-      <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-      <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-      <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-      <!-- <li><a href="/dentist/history"><i class="fas fa-history"></i> History</a></li> -->
+      <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+      <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
     </ul>
   </div>
 
   <!-- Main Content -->
   <div class="main">
     <!-- Top Bar -->
-    <div class="top-bar" role="navigation" aria-label="Top bar">
-      <h1 class="page-title">Edit My Profile</h1>
+    <div class="top-bar" role="navigation" aria-label="แถบด้านบน">
+      <h1 class="page-title">แก้ไขโปรไฟล์</h1>
       <div class="user-section">
-        <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" aria-label="Notifications"></i>
+        <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" aria-label="การแจ้งเตือน"></i>
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()" aria-haspopup="true" aria-expanded="false">
             <div class="avatar" id="navAvatar">
               <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+                <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
                      onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
               <% } else { %>
                 <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
               <% } %>
             </div>
             <div class="user-details">
-              <strong>Hello Dr. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></strong>
-              <small>dentist</small>
+              <strong>สวัสดี ทพ. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></strong>
+              <small>ทันตแพทย์</small>
             </div>
             <i class="fas fa-caret-down" aria-hidden="true"></i>
           </div>
           <div class="dropdown-menu" id="profileDropdown">
-            <a href="/dentist/profile">My Profile</a>
+            <a href="/dentist/profile">โปรไฟล์ของฉัน</a>
             <hr />
-            <a href="/logout">Log Out</a>
+            <a href="/logout">ออกจากระบบ</a>
           </div>
         </div>
       </div>
@@ -145,8 +142,8 @@
     <!-- Profile Content -->
     <div class="profile-content">
       <div class="profile-header">
-        <a href="/dentist/profile" class="back-button"><i class="fas fa-arrow-left"></i> Back</a>
-        <h1 class="profile-title">Edit My Profile</h1>
+        <a href="/dentist/profile" class="back-button"><i class="fas fa-arrow-left"></i> ย้อนกลับ</a>
+        <h1 class="profile-title">แก้ไขโปรไฟล์</h1>
       </div>
 
       <% if (typeof message !== 'undefined' && message) { %>
@@ -157,9 +154,9 @@
 
       <div class="profile-container">
         <div class="profile-left">
-          <div class="profile-avatar" id="profileAvatar" title="Click to change photo">
+          <div class="profile-avatar" id="profileAvatar" title="คลิกเพื่อเปลี่ยนรูปภาพ">
             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-              <img src="/uploads/<%= dentist.photo %>" alt="Profile"
+              <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
                    onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
             <% } else { %>
               <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
@@ -168,134 +165,150 @@
 
           <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none">
 
-          <h2 class="dentist-name">Dr. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></h2>
+          <h2 class="dentist-name">ทพ. <%= (dentist && dentist.fname) ? dentist.fname : '' %> <%= (dentist && dentist.lname) ? dentist.lname : '' %></h2>
           <p class="last-login">
-            Last Login:
+            เข้าสู่ระบบล่าสุด:
             <% if (dentist && dentist.last_login) { %>
-              <%= new Date(dentist.last_login).toLocaleString('en-GB', {
-                    day:'2-digit', month:'short', year:'numeric',
-                    hour:'2-digit', minute:'2-digit', hour12:true
+              <%= new Date(dentist.last_login).toLocaleDateString('th-TH', {
+                    day:'2-digit', month:'short', year:'numeric'
                   }) %>
-            <% } else { %> Never <% } %>
+              เวลา <%= new Date(dentist.last_login).toLocaleTimeString('th-TH', {
+                    hour:'2-digit', minute:'2-digit', hour12:false
+                  }) %> น.
+            <% } else { %> ยังไม่เคยเข้าสู่ระบบ <% } %>
           </p>
         </div>
 
         <div class="profile-right">
           <form class="edit-form" id="editProfileForm" novalidate>
-            <!-- CSRF (ถ้ามีให้ server ใส่มา) -->
             <% if (typeof csrfToken !== 'undefined') { %>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <% } %>
 
-            <!-- System Information (Read-Only) -->
+            <!-- ข้อมูลส่วนตัว -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-lock" style="color:#dc3545"></i> System Information</h3>
-              <div class="readonly-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                ข้อมูลในส่วนนี้ไม่สามารถแก้ไขได้ กรุณาติดต่อแอดมินหากต้องการเปลี่ยนแปลง
+              <h3 class="section-title"><i class="fas fa-user" style="color:#4A90E2"></i> ข้อมูลส่วนตัว</h3>
+
+              <div class="form-row">
+                <label class="form-label">ชื่อ: <span style="color:red">*</span></label>
+                <input type="text" name="fname" class="form-input" 
+                       value="<%= dentist?.fname || '' %>" 
+                       required
+                       placeholder="กรอกชื่อจริง">
+                <small class="field-help">ชื่อจริงของคุณ (ภาษาไทยหรืออังกฤษ)</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Doctor ID:</label>
-                <input type="text" class="form-input" value="<%= dentist?.dentist_id || 'N/A' %>" readonly>
-                <small class="field-help">รหัสประจำตัวในระบบ</small>
+                <label class="form-label">นามสกุล: <span style="color:red">*</span></label>
+                <input type="text" name="lname" class="form-input" 
+                       value="<%= dentist?.lname || '' %>" 
+                       required
+                       placeholder="กรอกนามสกุล">
+                <small class="field-help">นามสกุลของคุณ (ภาษาไทยหรืออังกฤษ)</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Full Name (Official):</label>
-                <input type="text" class="form-input" value="Dr. <%= dentist?.fname || '' %> <%= dentist?.lname || '' %>" readonly>
-                <small class="field-help">ชื่อ-นามสกุลทางการ ใช้ในเวชระเบียนและเอกสารราชการ</small>
+                <label class="form-label">เลขบัตรประชาชน: <span style="color:red">*</span></label>
+                <input type="text" name="id_card" id="id_card" class="form-input" 
+                       value="<%= dentist?.id_card || '' %>" 
+                       required
+                       maxlength="13"
+                       pattern="^\d{13}$"
+                       placeholder="กรอก 13 หลัก">
+                <small class="field-help">เลขบัตรประชาชน 13 หลัก (ตัวเลขเท่านั้น)</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Login Email:</label>
-                <input type="email" class="form-input" value="<%= dentist?.email || '' %>" readonly>
-                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบ - ติดต่อแอดมินเพื่อเปลี่ยนแปลง</small>
+                <label class="form-label">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม:</label>
+                <input type="text" name="license_no" class="form-input" 
+                       value="<%= dentist?.license_no || '' %>" 
+                       placeholder="กรอกเลขที่ใบอนุญาต">
+                <small class="field-help">เลขที่ใบอนุญาตจากทันตแพทยสภา</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">ID Card Number:</label>
-                <input type="text" class="form-input" value="<%= dentist?.id_card || 'Not provided' %>" readonly>
-                <small class="field-help">เลขบัตรประชาชน ใช้เป็นตัวระบุตัวตนทางการ</small>
+                <label class="form-label">อีเมล: <span style="color:red">*</span></label>
+                <input type="email" name="email" id="email" class="form-input" 
+                       value="<%= dentist?.email || '' %>" 
+                       required
+                       placeholder="example@email.com">
+                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบและติดต่อ</small>
               </div>
-            </div>
-
-            <!-- Editable Personal Information -->
+            <!-- ข้อมูลวิชาชีพ -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-edit" style="color:#28a745"></i> Editable Information</h3>
+              <h3 class="section-title"><i class="fas fa-briefcase-medical" style="color:#28a745"></i> ข้อมูลวิชาชีพ</h3>
 
               <div class="form-row">
-                <label class="form-label">Date of Birth:</label>
+                <label class="form-label">วันเดือนปีเกิด:</label>
                 <input type="date" name="dob" class="form-input"
                        value="<%= (dentist && dentist.dob) ? new Date(dentist.dob).toISOString().split('T')[0] : '' %>">
                 <small class="field-help">ใช้สำหรับคำนวณอายุและรายงานสถิติ</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Primary Specialty:</label>
+                <label class="form-label">ความเชี่ยวชาญหลัก:</label>
                 <select name="specialty" class="form-select">
-                  <option value="">Select Primary Specialty</option>
-                  <option value="General Dentistry" <%= dentist?.specialty === 'General Dentistry' ? 'selected' : '' %>>General Dentistry</option>
-                  <option value="Tooth Extraction" <%= dentist?.specialty === 'Tooth Extraction' ? 'selected' : '' %>>Tooth Extraction</option>
-                  <option value="Orthodontics" <%= dentist?.specialty === 'Orthodontics' ? 'selected' : '' %>>Orthodontics</option>
-                  <option value="Endodontics" <%= dentist?.specialty === 'Endodontics' ? 'selected' : '' %>>Endodontics</option>
-                  <option value="Periodontics" <%= dentist?.specialty === 'Periodontics' ? 'selected' : '' %>>Periodontics</option>
-                  <option value="Oral Surgery" <%= dentist?.specialty === 'Oral Surgery' ? 'selected' : '' %>>Oral Surgery</option>
+                  <option value="">เลือกความเชี่ยวชาญหลัก</option>
+                  <option value="General Dentistry" <%= dentist?.specialty === 'General Dentistry' ? 'selected' : '' %>>ทันตกรรมทั่วไป</option>
+                  <option value="Tooth Extraction" <%= dentist?.specialty === 'Tooth Extraction' ? 'selected' : '' %>>ถอนฟัน</option>
+                  <option value="Orthodontics" <%= dentist?.specialty === 'Orthodontics' ? 'selected' : '' %>>จัดฟัน</option>
+                  <option value="Endodontics" <%= dentist?.specialty === 'Endodontics' ? 'selected' : '' %>>รักษารากฟัน</option>
+                  <option value="Periodontics" <%= dentist?.specialty === 'Periodontics' ? 'selected' : '' %>>ปริทันต์</option>
+                  <option value="Oral Surgery" <%= dentist?.specialty === 'Oral Surgery' ? 'selected' : '' %>>ศัลยกรรมช่องปาก</option>
                 </select>
                 <small class="field-help">ความเชี่ยวชาญหลัก แสดงให้ผู้ป่วยเห็นในการจองนัด</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Additional Qualifications:</label>
+                <label class="form-label">วุฒิการศึกษาและใบรับรองเพิ่มเติม:</label>
                 <textarea name="education" id="education" maxlength="800" class="form-textarea"
-                          placeholder="Enter additional qualifications, certifications, or training..."><%= dentist?.education || '' %></textarea>
+                          placeholder="กรอกวุฒิการศึกษา ใบรับรอง หรือการอบรมเพิ่มเติม..."><%= dentist?.education || '' %></textarea>
                 <div class="char-counter"><span id="eduCount">0</span>/800</div>
-                <small class="field-help">ใบรับรองเพิ่มเติม, หลักสูตรอบรม, หรือความเชี่ยวชาญพิเศษ</small>
+                <small class="field-help">ใบรับรองเพิ่มเติม หลักสูตรอบรม หรือความเชี่ยวชาญพิเศษ</small>
               </div>
             </div>
 
-            <!-- Contact Information -->
+            <!-- ข้อมูลติดต่อ -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-phone" style="color:#17a2b8"></i> Contact Information</h3>
+              <h3 class="section-title"><i class="fas fa-phone" style="color:#17a2b8"></i> ข้อมูลติดต่อ</h3>
 
               <div class="form-row">
-                <label class="form-label">Address:</label>
-                <textarea name="address" class="form-textarea" placeholder="Enter your current address..."><%= dentist?.address || '' %></textarea>
+                <label class="form-label">ที่อยู่:</label>
+                <textarea name="address" class="form-textarea" placeholder="กรอกที่อยู่ปัจจุบันของคุณ..."><%= dentist?.address || '' %></textarea>
                 <small class="field-help">ที่อยู่ปัจจุบันหรือที่อยู่คลินิก</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">Phone Number:</label>
+                <label class="form-label">เบอร์โทรศัพท์:</label>
                 <input type="tel" name="phone" id="phone" class="form-input"
                        value="<%= dentist?.phone || '' %>"
                        placeholder="08xxxxxxxx" inputmode="numeric"
-                       pattern="^0\\d{8,9}$">
+                       pattern="^0\d{8,9}$">
                 <small class="field-help">กรอกเฉพาะตัวเลข 9–10 หลัก เริ่มด้วย 0</small>
               </div>
             </div>
 
-            <!-- Security Settings -->
+            <!-- การตั้งค่าความปลอดภัย -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-shield-alt" style="color:#6f42c1"></i> Security Settings</h3>
+              <h3 class="section-title"><i class="fas fa-shield-alt" style="color:#6f42c1"></i> การตั้งค่าความปลอดภัย</h3>
               <div class="security-section">
                 <div class="security-header">
                   <i class="fas fa-info-circle" style="color:#0d6efd"></i>
-                  <strong>Manage your security</strong>
+                  <strong>จัดการความปลอดภัยของคุณ</strong>
                 </div>
                 <p class="security-description">คุณสามารถเปลี่ยนรหัสผ่านหรืออีเมลเข้าสู่ระบบได้จากปุ่มด้านล่าง</p>
               </div>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <a href="/dentist/profile/change-password" class="btn btn-password"><i class="fas fa-key"></i> Change Password</a>
-                
+                <a href="/dentist/profile/change-password" class="btn btn-password"><i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน</a>
               </div>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- ปุ่มดำเนินการ -->
             <div class="action-buttons">
               <button type="submit" class="btn btn-save" id="saveBtn">
-                <i class="fas fa-save"></i> Save Changes
+                <i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง
               </button>
-              <a href="/dentist/profile" class="btn btn-cancel"><i class="fas fa-times"></i> Cancel</a>
+              <a href="/dentist/profile" class="btn btn-cancel"><i class="fas fa-times"></i> ยกเลิก</a>
             </div>
           </form>
         </div>
@@ -312,7 +325,7 @@
       const ui=document.querySelector('.user-info');
       if(ui) ui.setAttribute('aria-expanded',(!expanded).toString());
     }
-    function toggleNotifications(){ alert('Notifications feature coming soon!'); }
+    function toggleNotifications(){ alert('ฟีเจอร์การแจ้งเตือนกำลังพัฒนา!'); }
     document.addEventListener('click',function(e){
       const prof=document.querySelector('.profile-dropdown');
       if(prof && !prof.contains(e.target)){
@@ -337,7 +350,7 @@
       }
     });
 
-    // Count characters for education
+    // นับตัวอักษรสำหรับวุฒิการศึกษา
     const edu = document.getElementById('education');
     if(edu){
       const count = document.getElementById('eduCount');
@@ -346,7 +359,7 @@
       updateCount();
     }
 
-    // Force numeric only phone & mark dirty
+    // บังคับให้เบอร์โทรเป็นตัวเลขเท่านั้น
     const phone = document.getElementById('phone');
     if(phone){
       phone.addEventListener('input', ()=>{
@@ -357,7 +370,18 @@
       });
     }
 
-    // Avatar: click to open file chooser
+    // บังคับให้เลขบัตรประชาชนเป็นตัวเลขเท่านั้น
+    const idCard = document.getElementById('id_card');
+    if(idCard){
+      idCard.addEventListener('input', ()=>{
+        const caret = idCard.selectionStart;
+        idCard.value = idCard.value.replace(/[^0-9]/g,'').slice(0, 13);
+        idCard.setSelectionRange(caret, caret);
+        setDirty(true);
+      });
+    }
+
+    // Avatar: คลิกเพื่อเปลี่ยนรูป
     const avatar = document.getElementById('profileAvatar');
     const photoInput = document.getElementById('photoInput');
     if(avatar && photoInput){
@@ -368,13 +392,12 @@
         const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
         if(!allowed.includes(file.type)){ showAlert('รูปต้องเป็น JPG/PNG/WEBP/GIF เท่านั้น','danger'); photoInput.value=''; return; }
         if(file.size > 3*1024*1024){ showAlert('ขนาดไฟล์ต้องไม่เกิน 3MB','danger'); photoInput.value=''; return; }
-        // Preview
+        // แสดงภาพตัวอย่าง
         const reader = new FileReader();
         reader.onload = e=>{
-          // clear fallback text then show preview
           avatar.textContent='';
           const img = new Image();
-          img.alt='Profile Preview';
+          img.alt='ตัวอย่างรูปโปรไฟล์';
           img.onload = ()=>{ avatar.innerHTML=''; avatar.appendChild(img); };
           img.src = e.target.result;
           img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
@@ -384,7 +407,7 @@
       });
     }
 
-    // Mark dirty on all editable inputs
+    // ทำเครื่องหมาย dirty สำหรับ input ทั้งหมด
     document.querySelectorAll('input[name],textarea[name],select[name]').forEach(el=>{
       if(el.name === '_csrf') return;
       el.addEventListener('change', ()=>setDirty(true));
@@ -395,30 +418,45 @@
     document.getElementById('editProfileForm').addEventListener('submit', async function(e){
       e.preventDefault();
 
-      // Basic client validation
-      // DOB cannot be in the future
+      // ตรวจสอบฝั่งไคลเอนต์
       const dobInput = this.querySelector('input[name="dob"]');
       if(dobInput && dobInput.value){
         const d = new Date(dobInput.value);
         const today = new Date(); today.setHours(0,0,0,0);
         if(d > today){ showAlert('วันเดือนปีเกิดต้องไม่เป็นอนาคต', 'danger'); return; }
       }
-      // Phone pattern
+
+      // ตรวจสอบรูปแบบเบอร์โทร
       if(phone && phone.value && !/^0\d{8,9}$/.test(phone.value)){
         showAlert('รูปแบบเบอร์โทรไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และยาว 9–10 หลัก)', 'danger'); return;
       }
 
+      // ตรวจสอบเลขบัตรประชาชน
+      if(idCard && idCard.value && !/^\d{13}$/.test(idCard.value)){
+        showAlert('เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก', 'danger'); return;
+      }
+
+      // ตรวจสอบฟิลด์ที่จำเป็น
+      const fname = this.querySelector('input[name="fname"]');
+      const lname = this.querySelector('input[name="lname"]');
+      const email = this.querySelector('input[name="email"]');
+      
+      if(!fname || !fname.value.trim()){ showAlert('กรุณากรอกชื่อ', 'danger'); return; }
+      if(!lname || !lname.value.trim()){ showAlert('กรุณากรอกนามสกุล', 'danger'); return; }
+      if(!email || !email.value.trim()){ showAlert('กรุณากรอกอีเมล', 'danger'); return; }
+      if(!idCard || !idCard.value.trim()){ showAlert('กรุณากรอกเลขบัตรประชาชน', 'danger'); return; }
+
       const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
 
       try{
         const fd = new FormData();
-        // append fields
-        ['dob','specialty','education','address','phone','_csrf'].forEach(name=>{
+        // เพิ่มฟิลด์ทั้งหมด
+        ['fname','lname','id_card','license_no','email','dob','specialty','education','address','phone','_csrf'].forEach(name=>{
           const el = this.querySelector('[name="'+name+'"]');
           if(el && el.value !== undefined){ fd.append(name, el.value); }
         });
-        // append photo if selected
+        // เพิ่มรูปถ้ามีการเลือก
         if(photoInput && photoInput.files && photoInput.files[0]){ fd.append('photo', photoInput.files[0]); }
 
         const headers = {};
@@ -429,25 +467,25 @@
 
         const res = await fetch('/dentist/profile/update', {
           method:'POST',
-          headers,            // อย่าตั้ง Content-Type เอง ให้ browser จัดการ boundary ของ multipart
+          headers,
           body: fd
         });
 
-        const payload = await res.json().catch(()=>({success:false,error:'Invalid server response'}));
+        const payload = await res.json().catch(()=>({success:false,error:'การตอบสนองจากเซิร์ฟเวอร์ไม่ถูกต้อง'}));
 
         if(res.ok && payload.success){
-          showAlert('Profile updated successfully!','success');
+          showAlert('อัปเดตโปรไฟล์สำเร็จ!','success');
           window.__dirty = false;
           setTimeout(()=>{ window.location.href='/dentist/profile'; }, 1500);
         }else{
-          const msg = payload && payload.error ? payload.error : 'Update failed.';
-          showAlert('Error: ' + msg,'danger');
+          const msg = payload && payload.error ? payload.error : 'การอัปเดตล้มเหลว';
+          showAlert('ข้อผิดพลาด: ' + msg,'danger');
         }
       }catch(err){
         console.error(err);
-        showAlert('An error occurred while updating profile','danger');
+        showAlert('เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์','danger');
       }finally{
-        saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง';
       }
     });
   </script>
