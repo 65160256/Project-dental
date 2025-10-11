@@ -254,6 +254,23 @@ router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
   }
 });
 
+
+// ==================== Appointment Detail Route ====================
+// หน้ารายละเอียดการจอง - ต้องอยู่ก่อน /appointments/:id
+router.get('/appointments/detail', checkAdminAuth, (req, res) => {
+  const appointmentId = req.query.id;
+  
+  if (!appointmentId) {
+    req.flash('error', 'ไม่พบรหัสการจอง');
+    return res.redirect('/admin/appointments');
+  }
+  
+  res.render('admin/appointment/appointment-detail', { 
+    appointmentId: appointmentId,
+    title: 'รายละเอียดการจอง - Smile Clinic'
+  });
+});
+
 // Update appointment status (confirm/cancel)
 router.put('/api/appointments/:id/status', adminController.updateAppointmentStatus);
 // Update appointment status (confirm/cancel)
@@ -706,6 +723,7 @@ module.exports.passwordResetRoutes = {
     return stats;
   }
 };
+
 
 
 // ตรวจสอบเลขใบประกอบวิชาชีพซ้ำ

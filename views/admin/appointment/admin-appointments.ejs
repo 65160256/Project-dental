@@ -519,6 +519,10 @@
             vertical-align: middle;
         }
 
+        .appointments-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
         .appointments-table tbody tr:hover {
             background: rgba(74, 144, 226, 0.05);
         }
@@ -531,15 +535,21 @@
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            display: inline-block;
-            min-width: 80px;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 90px;
+            justify-content: center;
+        }
+
+        .status-badge i {
+            font-size: 10px;
         }
 
         .status-pending {
@@ -560,32 +570,32 @@
             border: 1px solid #f87171;
         }
 
-        .action-buttons {
-            display: flex;
+        .btn-view-detail {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
             gap: 6px;
         }
 
-        .btn-sm {
-            padding: 8px 16px;
+        .btn-view-detail:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-view-detail i {
             font-size: 12px;
         }
 
-        .btn-view {
-            background: linear-gradient(135deg, #e8f5e8, #d1f2eb);
-            color: #059669;
-            border: 1px solid #a7f3d0;
-        }
-
-        .btn-edit {
-            background: linear-gradient(135deg, #fff3e0, #fed7aa);
-            color: #c2410c;
-            border: 1px solid #fdba74;
-        }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #dc2626;
-            border: 1px solid #f87171;
+        .appointments-table td:last-child {
+            text-align: center;
         }
 
         .loading {
@@ -837,12 +847,12 @@
                         <thead>
                             <tr>
                                 <th><i class="fas fa-clock"></i> เวลา</th>
-                                <th><i class="fas fa-user"></i> ผู้ป่วย</th>
+                                <th><i class="fas fa-user"></i> ชื่อผู้ป่วย</th>
                                 <th><i class="fas fa-tooth"></i> การรักษา</th>
                                 <th><i class="fas fa-user-md"></i> ทันตแพทย์</th>
-                                <th><i class="fas fa-phone"></i> เบอร์ติดต่อ</th>
+                                <th><i class="fas fa-phone"></i> เบอร์โทร</th>
                                 <th><i class="fas fa-info-circle"></i> สถานะ</th>
-                                <th><i class="fas fa-cogs"></i> จัดการ</th>
+                                <th style="text-align: center;"><i class="fas fa-cogs"></i> จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="appointmentTableBody"></tbody>
@@ -888,6 +898,13 @@
             generateDateButtons();
             loadFilterOptions();
             loadAppointments();
+
+            // Auto refresh every 30 seconds
+            setInterval(function() {
+                loadAppointments();
+            }, 30000);
+            
+            console.log('Auto-refresh enabled: Appointments will refresh every 30 seconds');
         });
 
         function formatDateForAPI(date) {
@@ -1048,12 +1065,14 @@
                         renderAppointments(appointmentsData);
                         updateAppointmentCount(appointmentsData.length);
                     }
+                    
+                    console.log(`Loaded ${appointmentsData.length} appointments for ${selectedDate}`);
                 } else {
                     throw new Error(data.error || 'Failed to load appointments');
                 }
             } catch (error) {
                 console.error('Error loading appointments:', error);
-                showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้', 'error');
+                showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้: ' + error.message, 'error');
                 renderEmptyState();
             } finally {
                 document.getElementById('loading').style.display = 'none';
@@ -1074,33 +1093,53 @@
             tableSection.style.display = 'block';
             emptyState.style.display = 'none';
             
-            tbody.innerHTML = appointments.map(appointment => `
-                <tr data-id="${appointment.queue_id}">
-                    <td class="time-cell">${formatDateTime(appointment.time)}</td>
-                    <td>${appointment.patient_name || 'ไม่ระบุ'}</td>
-                    <td>${appointment.treatment_name || 'ไม่ระบุ'}</td>
-                    <td>ทพ. ${appointment.dentist_name || 'ไม่ระบุ'}</td>
-                    <td>${appointment.phone || 'ไม่ระบุ'}</td>
-                    <td>
-                        <span class="status-badge status-${appointment.queue_status}">
-                            ${formatStatus(appointment.queue_status)}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view" onclick="viewAppointment(${appointment.queue_id})" title="ดูรายละเอียด">
+            tbody.innerHTML = appointments.map(appointment => {
+                const statusIcon = getStatusIcon(appointment.queue_status);
+                const statusText = formatStatus(appointment.queue_status);
+                const formattedTime = formatDateTime(appointment.time);
+                
+                return `
+                    <tr data-id="${appointment.queue_id}">
+                        <td class="time-cell">${formattedTime}</td>
+                        <td>${escapeHtml(appointment.patient_name) || 'ไม่ระบุ'}</td>
+                        <td>${escapeHtml(appointment.treatment_name) || 'ไม่ระบุ'}</td>
+                        <td>${appointment.dentist_name ? 'ทพ. ' + escapeHtml(appointment.dentist_name) : '-'}</td>
+                        <td>${escapeHtml(appointment.phone) || 'ไม่ระบุ'}</td>
+                        <td>
+                            <span class="status-badge status-${appointment.queue_status}">
+                                <i class="${statusIcon}"></i>
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-view-detail" onclick="viewAppointmentDetail(${appointment.queue_id})" title="ดูรายละเอียดและจัดการการจอง">
                                 <i class="fas fa-eye"></i>
+                                รายละเอียด
                             </button>
-                            <button class="btn-sm btn-edit" onclick="editAppointment(${appointment.queue_id})" title="แก้ไข">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-sm btn-delete" onclick="confirmDeleteAppointment(${appointment.queue_id}, '${appointment.patient_name}')" title="ยกเลิก">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'pending': return 'fas fa-clock';
+                case 'confirm': return 'fas fa-check-circle';
+                case 'cancel': return 'fas fa-times-circle';
+                default: return 'fas fa-question-circle';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function viewAppointmentDetail(queueId) {
+            window.location.href = `/admin/appointments/detail?id=${queueId}`;
         }
 
         function formatDateTime(dateTime) {
@@ -1254,25 +1293,6 @@
         function refreshAppointments() {
             showToast('กำลังรีเฟรชข้อมูล...', 'success');
             loadAppointments();
-        }
-
-        async function viewAppointment(queueId) {
-            try {
-                const response = await fetch(`/admin/api/appointments/${queueId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        alert(`รายละเอียดนัดหมาย\n\nผู้ป่วย: ${data.appointment.patient_name}\nทันตแพทย์: ทพ. ${data.appointment.dentist_name}\nการรักษา: ${data.appointment.treatment_name}\nสถานะ: ${formatStatus(data.appointment.queue_status)}`);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading appointment details:', error);
-                showToast('ไม่สามารถโหลดรายละเอียดได้', 'error');
-            }
-        }
-
-        function editAppointment(queueId) {
-            window.location.href = `/admin/appointments/edit?id=${queueId}`;
         }
 
         function confirmDeleteAppointment(queueId, patientName) {

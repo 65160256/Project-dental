@@ -1664,16 +1664,27 @@ exports.viewTreatmentDetails = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         q.queue_id,
-        q.time as date,  
+        q.time,
         t.treatment_name,
+        t.duration,
         CONCAT(d.fname, ' ', d.lname) AS dentist_name,
         th.diagnosis,
         th.followUpdate,
-        q.next_appointment
+        q.next_appointment,
+        p.fname AS patient_fname,
+        p.lname AS patient_lname,
+        p.gender,
+        p.dob,
+        p.id_card,
+        p.phone,
+        p.address,
+        p.chronic_disease,
+        p.allergy_history
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       JOIN treatment t ON qd.treatment_id = t.treatment_id
       JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN patient p ON q.patient_id = p.patient_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ? AND q.patient_id = ?
     `, [queueId, id]);
@@ -1683,7 +1694,10 @@ exports.viewTreatmentDetails = async (req, res) => {
     }
 
     const detail = rows[0];
-    const dateObj = new Date(detail.date);  // ตอนนี้จะได้เวลาถูกต้องแล้ว
+    const dateObj = new Date(detail.time);
+    
+    // คำนวณเวลาสิ้นสุด
+    const endTime = new Date(dateObj.getTime() + (detail.duration * 60000)); // duration เป็นนาที
     
     // รูปแบบวันที่เป็นภาษาไทย
     const thaiMonths = [
@@ -1695,12 +1709,18 @@ exports.viewTreatmentDetails = async (req, res) => {
     const month = thaiMonths[dateObj.getMonth()];
     const year = dateObj.getFullYear() + 543;
     
-    // ✅ ตอนนี้จะได้เวลาจริงแล้ว
-    const hours = dateObj.getHours().toString().padStart(2, '0');
-    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    // Format เวลาเริ่มต้น
+    const startHours = dateObj.getHours().toString().padStart(2, '0');
+    const startMinutes = dateObj.getMinutes().toString().padStart(2, '0');
+    
+    // Format เวลาสิ้นสุด
+    const endHours = endTime.getHours().toString().padStart(2, '0');
+    const endMinutes = endTime.getMinutes().toString().padStart(2, '0');
     
     detail.formattedDate = `${day} ${month} ${year}`;
-    detail.formattedTime = `${hours}:${minutes} น.`;
+    detail.formattedTime = `${startHours}:${startMinutes} น.`;
+    detail.formattedTimeRange = `${startHours}:${startMinutes} - ${endHours}:${endMinutes} น.`;
+    detail.formattedDuration = `${detail.duration} นาที`;
 
     res.render('admin/patient/treatment-history/treatment-detail', { 
       detail, 
@@ -2753,10 +2773,10 @@ exports.updateAppointmentStatus = async (req, res) => {
     try {
       // Update appointment status
       const [updateResult] = await db.execute(`
-        UPDATE queue 
-        SET queue_status = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE queue_id = ?
-      `, [status, id]);
+  UPDATE queue 
+  SET queue_status = ?
+  WHERE queue_id = ?
+`, [status, id]);
 
       if (updateResult.affectedRows === 0) {
         await db.query('ROLLBACK');

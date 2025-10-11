@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดการจอง - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sarabun', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .header .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d1f2eb;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(74, 144, 226, 0.1);
+            border-top: 4px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        .booking-id {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: start;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label i {
+            color: #4A90E2;
+            width: 20px;
+        }
+
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            border: 1px solid #fdcb6e;
+        }
+
+        .status-confirm {
+            background: linear-gradient(135deg, #d1f2eb, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .status-cancel {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-confirm:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-cancel:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .info-label {
+                min-width: auto;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='/admin/appointments'">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1>รายละเอียดการจอง</h1>
+            <p>Appointment Details</p>
+        </div>
+
+        <div class="content">
+            <div class="alert alert-success" id="successAlert">
+                <i class="fas fa-check-circle"></i>
+                <span id="successMessage"></span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorMessage"></span>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <h3>กำลังโหลดข้อมูล...</h3>
+                <p>กรุณารอสักครู่</p>
+            </div>
+
+            <div id="appointmentContent" style="display: none;">
+                <div class="detail-card">
+                    <div class="booking-id">
+                        Booking Request ID: <span id="bookingId">#Y-000000</span>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-user"></i>
+                            Patient Name:
+                        </div>
+                        <div class="info-value" id="patientName">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-id-card"></i>
+                            Patient ID:
+                        </div>
+                        <div class="info-value" id="patientId">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-phone"></i>
+                            Phone:
+                        </div>
+                        <div class="info-value" id="phone">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-tooth"></i>
+                            Treatment needed:
+                        </div>
+                        <div class="info-value" id="treatment">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-clock"></i>
+                            Requested Time:
+                        </div>
+                        <div class="info-value" id="requestedTime">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-user-md"></i>
+                            Preferred Dentist:
+                        </div>
+                        <div class="info-value" id="preferredDentist">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-notes-medical"></i>
+                            Symptom Details:
+                        </div>
+                        <div class="info-value" id="symptoms">-</div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">
+                            <i class="fas fa-info-circle"></i>
+                            Current Status:
+                        </div>
+                        <div class="info-value">
+                            <span class="status-badge" id="status">
+                                <i class="fas fa-clock"></i>
+                                Pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons" id="actionButtons">
+                    <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
+                        <i class="fas fa-check"></i>
+                        ยืนยันการจอง
+                    </button>
+                    <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
+                        <i class="fas fa-times"></i>
+                        ยกเลิกการจอง
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appointmentId = <%= appointmentId || 'null' %>;
+        let appointmentData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (appointmentId) {
+                loadAppointmentDetails();
+            } else {
+                showError('ไม่พบรหัสการจอง');
+                setTimeout(() => window.location.href = '/admin/appointments', 2000);
+            }
+        });
+
+        async function loadAppointmentDetails() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('appointmentContent').style.display = 'none';
+
+                const response = await fetch(`/admin/api/appointments/${appointmentId}`);
+                const data = await response.json();
+
+                if (data.success && data.appointment) {
+                    appointmentData = data.appointment;
+                    displayAppointmentDetails(data.appointment);
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลได้');
+                }
+            } catch (error) {
+                console.error('Error loading appointment:', error);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayAppointmentDetails(appointment) {
+            document.getElementById('bookingId').textContent = `#Y-${appointment.queue_id}`;
+            document.getElementById('patientName').textContent = `Mr. ${appointment.patient_name || 'Unknown'}`;
+            document.getElementById('patientId').textContent = 'xxxxx';
+            document.getElementById('phone').textContent = appointment.phone || '-';
+            document.getElementById('treatment').textContent = appointment.treatment_name || '-';
+            
+            const appointmentDate = new Date(appointment.time);
+            const dateStr = appointmentDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            });
+            const timeStr = appointmentDate.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('requestedTime').textContent = `${dateStr}, ${timeStr}`;
+            
+            document.getElementById('preferredDentist').textContent = 
+                appointment.dentist_name || '-';
+            document.getElementById('symptoms').textContent = appointment.diagnosis || '-';
+
+            const statusEl = document.getElementById('status');
+            const status = appointment.queue_status;
+            const statusConfig = {
+                'pending': { icon: 'fa-clock', text: 'Pending' },
+                'confirm': { icon: 'fa-check-circle', text: 'Confirmed' },
+                'cancel': { icon: 'fa-times-circle', text: 'Cancelled' }
+            };
+            
+            const config = statusConfig[status] || statusConfig['pending'];
+            statusEl.innerHTML = `<i class="fas ${config.icon}"></i> ${config.text}`;
+            statusEl.className = 'status-badge status-' + status;
+
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            if (status === 'pending') {
+                confirmBtn.style.display = 'flex';
+                cancelBtn.style.display = 'flex';
+            } else if (status === 'confirm') {
+                confirmBtn.style.display = 'none';
+                cancelBtn.style.display = 'flex';
+            } else if (status === 'cancel') {
+                document.getElementById('actionButtons').style.display = 'none';
+            }
+
+            document.getElementById('appointmentContent').style.display = 'block';
+        }
+
+        async function confirmAppointment() {
+            if (!confirm('คุณต้องการยืนยันการจองนี้หรือไม่?\n\nเมื่อยืนยันแล้ว ระบบจะส่งข้อมูลไปยังทันตแพทย์ทันที')) {
+                return;
+            }
+
+            try {
+                document.getElementById('confirmBtn').disabled = true;
+                document.getElementById('cancelBtn').disabled = true;
+
+                const response = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'confirm' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('ยืนยันการจองสำเร็จ! ระบบได้ส่งข้อมูลไปยังทันตแพทย์แล้ว');
+                    setTimeout(() => loadAppointmentDetails(), 1500);
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถยืนยันการจองได้');
+                }
+            } catch (error) {
+                console.error('Error confirming appointment:', error);
+                showError('เกิดข้อผิดพลาด: ' + error.message);
+                document.getElementById('confirmBtn').disabled = false;
+                document.getElementById('cancelBtn').disabled = false;
+            }
+        }
+
+        async function cancelAppointment() {
+            const reason = prompt('กรุณาระบุเหตุผลในการยกเลิก (ถ้ามี):');
+            if (reason === null) return;
+
+            try {
+                document.getElementById('confirmBtn').disabled = true;
+                document.getElementById('cancelBtn').disabled = true;
+
+                const response = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'cancel', reason: reason })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('ยกเลิกการจองสำเร็จ! ระบบได้ส่งการแจ้งเตือนไปยังผู้ป่วยแล้ว');
+                    setTimeout(() => loadAppointmentDetails(), 1500);
+                } else {
+                    throw new Error(data.error || 'ไม่สามารถยกเลิกการจองได้');
+                }
+            } catch (error) {
+                console.error('Error canceling appointment:', error);
+                showError('เกิดข้อผิดพลาด: ' + error.message);
+                document.getElementById('confirmBtn').disabled = false;
+                document.getElementById('cancelBtn').disabled = false;
+            }
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            document.getElementById('successMessage').textContent = message;
+            alert.style.display = 'flex';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            document.getElementById('errorMessage').textContent = message;
+            alert.style.display = 'flex';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+    </script>
+</body>
+</html>

@@ -628,8 +628,13 @@
             border: 1px solid #ffc107;
         }
 
-        .status-badge.completed,
         .status-badge.confirm {
+            background: linear-gradient(135deg, #cfe2ff, #b6d4fe);
+            color: #084298;
+            border: 1px solid #0d6efd;
+        }
+
+        .status-badge.completed {
             background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             color: #065f46;
             border: 1px solid #10b981;
@@ -993,12 +998,14 @@
                                 </td>
                                 <td>
                                     <span class="status-badge <%= appointment.queue_status %>">
-                                        <% if (appointment.queue_status === 'completed' || appointment.queue_status === 'confirm') { %>
-                                            <i class="fas fa-check"></i> รักษาแล้ว
+                                        <% if (appointment.queue_status === 'completed') { %>
+                                            <i class="fas fa-check-circle"></i> รักษาเสร็จแล้ว
+                                        <% } else if (appointment.queue_status === 'confirm') { %>
+                                            <i class="fas fa-user-md"></i> รอรักษา
                                         <% } else if (appointment.queue_status === 'pending') { %>
-                                            <i class="fas fa-clock"></i> รอรักษา
+                                            <i class="fas fa-clock"></i> รอยืนยัน
                                         <% } else if (appointment.queue_status === 'cancel') { %>
-                                            <i class="fas fa-times"></i> ยกเลิก
+                                            <i class="fas fa-times-circle"></i> ยกเลิก
                                         <% } else { %>
                                             <%= appointment.queue_status %>
                                         <% } %>
@@ -1006,22 +1013,22 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        <% if (appointment.queue_status === 'pending') { %>
-                                            <!-- นัดที่ยังไม่ได้รักษา -->
+                                        <% if (appointment.queue_status === 'pending' || appointment.queue_status === 'confirm') { %>
+                                            <!-- นัดที่ยังไม่ได้รักษา (รอยืนยันหรือยืนยันแล้ว) -->
                                             <button onclick="addHistory(<%= appointment.queue_id %>)" class="action-btn confirm" title="เพิ่มประวัติการรักษา">
-                                                <i class="fas fa-plus"></i> เพิ่มประวัติ
+                                                <i class="fas fa-plus-circle"></i> เพิ่มประวัติ
                                             </button>
-                                            <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="Cancel Appointment">
-                                                <i class="fas fa-times"></i> ยกเลิก
+                                            <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="ยกเลิกนัด">
+                                                <i class="fas fa-times-circle"></i> ยกเลิก
                                             </button>
-                                        <% } else if (appointment.queue_status === 'completed' || appointment.queue_status === 'confirm') { %>
+                                        <% } else if (appointment.queue_status === 'completed') { %>
                                             <!-- นัดที่รักษาเสร็จแล้ว -->
                                             <button onclick="viewTreatmentHistory(<%= appointment.queue_id %>)" class="action-btn" title="ดูประวัติการรักษา">
                                                 <i class="fas fa-file-medical"></i> ดูประวัติ
                                             </button>
                                         <% } else if (appointment.queue_status === 'cancel') { %>
                                             <!-- นัดที่ยกเลิก -->
-                                            <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn" title="View Details" style="opacity: 0.6;">
+                                            <button onclick="viewAppointment(<%= appointment.queue_id %>)" class="action-btn" title="ดูรายละเอียด" style="opacity: 0.6;">
                                                 <i class="fas fa-eye"></i> รายละเอียด
                                             </button>
                                         <% } %>
@@ -1048,6 +1055,19 @@
         let currentDate = new Date();
         let allAppointments = <%- JSON.stringify(appointments || []) %>;
         let stats = <%- JSON.stringify(stats || {total: 0, today: 0, pending: 0, completed: 0, cancelled: 0}) %>;
+
+        // Debug: แสดงข้อมูลใน Console
+        console.log('=== DEBUG: All Appointments ===');
+        console.table(allAppointments.map(a => ({
+            ID: a.queue_id,
+            Patient: a.fname + ' ' + a.lname,
+            Status: a.queue_status,
+            Time: new Date(a.time).toLocaleString('th-TH'),
+            Diagnosis: a.diagnosis ? 'Yes' : 'No'
+        })));
+
+        console.log('=== DEBUG: Stats ===');
+        console.log(stats);
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
@@ -1302,12 +1322,14 @@
 
         // ฟังก์ชันเพิ่มประวัติการรักษา
         function addHistory(queueId) {
+            console.log('Adding history for queue:', queueId);
             showLoading();
             window.location.href = `/dentist/add-history?queueId=${queueId}`;
         }
 
         // ฟังก์ชันดูประวัติการรักษา
         function viewTreatmentHistory(queueId) {
+            console.log('Viewing treatment history for queue:', queueId);
             showLoading();
             window.location.href = `/dentist/treatment-history/${queueId}`;
         }
@@ -1349,16 +1371,20 @@
                 const statusCell = row.querySelector('.status-badge');
                 if (statusCell) {
                     statusCell.className = `status-badge ${newStatus}`;
-                    if (newStatus === 'completed' || newStatus === 'confirm') {
-                        statusCell.innerHTML = '<i class="fas fa-check"></i> รักษาแล้ว';
+                    if (newStatus === 'completed') {
+                        statusCell.innerHTML = '<i class="fas fa-check-circle"></i> รักษาเสร็จแล้ว';
+                    } else if (newStatus === 'confirm') {
+                        statusCell.innerHTML = '<i class="fas fa-user-md"></i> รอรักษา';
+                    } else if (newStatus === 'pending') {
+                        statusCell.innerHTML = '<i class="fas fa-clock"></i> รอยืนยัน';
                     } else if (newStatus === 'cancel') {
-                        statusCell.innerHTML = '<i class="fas fa-times"></i> ยกเลิก';
+                        statusCell.innerHTML = '<i class="fas fa-times-circle"></i> ยกเลิก';
                     }
                 }
                 
                 const actionsCell = row.querySelector('.actions-cell');
                 if (actionsCell) {
-                    if (newStatus === 'completed' || newStatus === 'confirm') {
+                    if (newStatus === 'completed') {
                         actionsCell.innerHTML = `
                             <button onclick="viewTreatmentHistory(${queueId})" class="action-btn" title="ดูประวัติการรักษา">
                                 <i class="fas fa-file-medical"></i> ดูประวัติ
@@ -1366,8 +1392,17 @@
                         `;
                     } else if (newStatus === 'cancel') {
                         actionsCell.innerHTML = `
-                            <button onclick="viewAppointment(${queueId})" class="action-btn" title="View Details" style="opacity: 0.6;">
+                            <button onclick="viewAppointment(${queueId})" class="action-btn" title="ดูรายละเอียด" style="opacity: 0.6;">
                                 <i class="fas fa-eye"></i> รายละเอียด
+                            </button>
+                        `;
+                    } else if (newStatus === 'pending' || newStatus === 'confirm') {
+                        actionsCell.innerHTML = `
+                            <button onclick="addHistory(${queueId})" class="action-btn confirm" title="เพิ่มประวัติการรักษา">
+                                <i class="fas fa-plus-circle"></i> เพิ่มประวัติ
+                            </button>
+                            <button onclick="cancelAppointment(${queueId})" class="action-btn danger" title="ยกเลิกนัด">
+                                <i class="fas fa-times-circle"></i> ยกเลิก
                             </button>
                         `;
                     }
