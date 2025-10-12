@@ -321,4 +321,13 @@ router.get('/api/my-appointment-stats', requirePatient, async (req, res) => {
 router.get('/api/my-profile', requirePatient, patientController.getMyProfile);
 router.get('/api/dentist-treatments/:dentistId', requirePatient, patientController.getDentistTreatments);
 router.get('/api/treatment-history/:id', requirePatient, patientController.getTreatmentHistoryDetails);
+
+const notificationController = require('../controller/notification.controller');
+
+// Notification routes for patient
+router.get('/api/notifications', notificationController.getPatientNotifications);
+router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
+router.put('/api/notifications/:id/read', notificationController.markAsRead);
+router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
+router.delete('/api/notifications/:id', notificationController.deleteNotification);
 module.exports = router;

@@ -437,7 +437,7 @@ function TIME_FORMAT(date, format) {
 // ========== API: จองนัดหมาย ==========
 exports.bookAppointmentWithSchedule = async (req, res) => {
   let connection;
-  
+  const NotificationHelper = require('../utils/notificationHelper');
   try {
     const patientUserId = req.session.userId;
     const { dentist_id, treatment_id, date, start_time, note } = req.body;
@@ -665,6 +665,8 @@ for (let i = 0; i < slotsCheck.length - 1; i++) {
       `, [queueId]);
 
       await connection.commit();
+      await NotificationHelper.createNewAppointmentNotification(queueId, patientId, dentistIdInt);
+
 
       console.log('✅ Booking successful:', queueId);
 

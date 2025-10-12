@@ -2724,6 +2724,8 @@ exports.validateAppointmentTime = async (req, res) => {
 
 // Update appointment status
 exports.updateAppointmentStatus = async (req, res) => {
+  const NotificationHelper = require('../utils/notificationHelper');
+
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
@@ -2867,6 +2869,13 @@ exports.updateAppointmentStatus = async (req, res) => {
 
       // Commit transaction
       await db.query('COMMIT');
+
+      // สร้าง notification ตามสถานะ
+if (status === 'confirm') {
+  await NotificationHelper.createConfirmationNotification(id, appointment.patient_id, appointment.dentist_id);
+} else if (status === 'cancel') {
+  await NotificationHelper.createCancellationNotification(id, appointment.patient_id, appointment.dentist_id, 'admin', reason);
+}
 
       // Log the action for audit trail
       console.log(`[AUDIT] Admin updated appointment ${id} status from ${oldStatus} to ${status}. Patient: ${appointment.patient_name}, Time: ${new Date().toISOString()}`);
@@ -3419,45 +3428,70 @@ exports.getDentistSpecialtiesAPI = async (req, res) => {
 
 // API: Get current user profile info for avatar
 exports.getCurrentUserAPI = async (req, res) => {
-  try {
+   try {
     const userId = req.session.userId;
+    
     if (!userId) {
       return res.status(401).json({
         success: false,
-        error: 'Not authenticated'
+        error: 'ไม่พบข้อมูลผู้ใช้'
       });
     }
 
-    const [userRows] = await db.execute(`
-      SELECT u.email, u.username, r.rname 
-      FROM user u 
-      JOIN role r ON u.role_id = r.role_id 
+    // ดึงข้อมูล user
+    const [users] = await db.execute(`
+      SELECT 
+        u.user_id,
+        u.email,
+        u.role_id,
+        CASE 
+          WHEN u.role_id = 1 THEN 'Admin'
+          WHEN u.role_id = 2 THEN 'Dentist'
+          WHEN u.role_id = 3 THEN 'Patient'
+          ELSE 'Unknown'
+        END as role_name,
+        COALESCE(d.fname, p.fname, 'Admin') as fname,
+        COALESCE(d.lname, p.lname, '') as lname,
+        d.dentist_id,
+        p.patient_id
+      FROM user u
+      LEFT JOIN dentist d ON u.user_id = d.user_id
+      LEFT JOIN patient p ON u.user_id = p.user_id
       WHERE u.user_id = ?
     `, [userId]);
 
-    if (userRows.length === 0) {
+    if (users.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'ไม่พบข้อมูลผู้ใช้'
       });
     }
 
+    const user = users[0];
+
     res.json({
       success: true,
-      email: userRows[0].email,
-      username: userRows[0].username,
-      role: userRows[0].rname
+      user: {
+        user_id: user.user_id,
+        email: user.email,
+        role_id: user.role_id,
+        role_name: user.role_name,
+        fname: user.fname,
+        lname: user.lname,
+        full_name: `${user.fname} ${user.lname}`.trim(),
+        dentist_id: user.dentist_id || null,
+        patient_id: user.patient_id || null
+      }
     });
 
   } catch (error) {
-    console.error('Error fetching user info:', error);
+    console.error('Error in getCurrentUserAPI:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to load user info',
-      details: error.message
+      error: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้'
     });
   }
-};
+},
 
 // Get treatments API
 exports.getTreatmentsAPI = async (req, res) => {

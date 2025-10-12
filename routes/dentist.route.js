@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // ตรวจสอบ path ให้ถูกต้อง - เปลี่ยนตาม folder structure ของคุณ
-const dentistController = require('../controller/dentist.controller'); // หรือ ../controllers/
+const dentistController = require('../controller/dentist.controller'); // หรือ ../controller/
 const multer = require('multer');
 const path = require('path');
 
@@ -197,4 +197,13 @@ router.get('/api/patients/:patientId/appointments-for-history', requireAuth, req
 router.get('/schedule', requireAuth, requireDentist, dentistController.getMonthlySchedule);
 router.post('/api/schedule/save-range', requireAuth, requireDentist, dentistController.saveScheduleRange);
 router.delete('/api/schedule/delete-range', requireAuth, requireDentist, dentistController.deleteScheduleRange);
+
+const notificationController = require('../controller/notification.controller');
+
+// Notification routes for dentist
+router.get('/api/notifications', notificationController.getDentistNotifications);
+router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
+router.put('/api/notifications/:id/read', notificationController.markAsRead);
+router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
+router.delete('/api/notifications/:id', notificationController.deleteNotification);
 module.exports = router;

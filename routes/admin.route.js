@@ -4,6 +4,7 @@ const adminController = require('../controller/admin.controller');
 const db = require('../config/db'); 
 
 const upload = require('../middlewares/upload');
+const notificationController = require('../controller/notification.controller');
 
 
 // Middleware to check admin authentication
@@ -21,6 +22,7 @@ const checkAdminApiAuth = (req, res, next) => {
   }
   next();
 };
+router.get('/api/current-user', checkAdminApiAuth, adminController.getCurrentUserAPI);
 
 // ==================== Dashboard Routes ====================
 router.get('/dashboard', checkAdminAuth, adminController.getReportsDashboard);
@@ -217,13 +219,12 @@ router.get('/api/dentist-treatments/mappings', checkAdminApiAuth, adminControlle
 // Get treatments for a specific dentist
 router.get('/api/dentists/:id/treatments', checkAdminApiAuth, adminController.getDentistTreatmentsAPI);
 
-// ==================== Notifications API Routes ====================
-router.get('/api/notifications', checkAdminApiAuth, adminController.getNotifications);
-router.get('/api/notifications/:id', checkAdminApiAuth, adminController.getNotificationById);
-router.post('/api/notifications/:id/read', checkAdminApiAuth, adminController.markNotificationAsRead);
-router.post('/api/notifications/read-all', checkAdminApiAuth, adminController.markAllNotificationsAsRead);
-router.delete('/api/notifications/:id', checkAdminApiAuth, adminController.deleteNotification);
-router.post('/api/notifications', checkAdminApiAuth, adminController.createNotification);
+// Notification routes
+router.get('/api/notifications', notificationController.getAdminNotifications);
+router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
+router.put('/api/notifications/:id/read', notificationController.markAsRead);
+router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
+router.delete('/api/notifications/:id', notificationController.deleteNotification);
 
 // Add this route for email checking
 router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {

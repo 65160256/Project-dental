@@ -265,6 +265,7 @@ app.use((req, res, next) => {
 // ===============================
 
 app.use(authRoute);
+require('./jobs/appointmentReminder');
 
 app.get('/', (req, res) => {
   if (!req.session.user && !req.session.userId) {
