@@ -419,6 +419,17 @@
             </div>
           </div>
 
+          <div class="input-wrapper">
+            <label>Gender:</label>
+            <select name="gender" id="gender">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            <div class="validation-message"></div>
+          </div>
+
           <h4>Login Information</h4>
 
           <div class="input-wrapper">
@@ -451,6 +462,20 @@
 
           <h4>Contact Information</h4>
 
+          <h4>Medical Information</h4>
+ <div class="input-wrapper">
+   <label>Chronic Diseases (ถ้ามี):</label>
+   <textarea name="chronic_disease" id="chronic_disease" rows="3"
+  placeholder="เช่น เบาหวาน ความดันโลหิตสูง ฯลฯ"></textarea>
+
+   <div class="validation-message"></div>
+ </div>
+
+ <div class="input-wrapper">
+   <label>Drug Allergies (ถ้ามี):</label>
+   <textarea name="allergy_history" id="allergy_history" rows="3" placeholder="เช่น แพ้ Penicillin, NSAIDs ฯลฯ"></textarea>
+   <div class="validation-message"></div>
+ </div>
           <div class="input-wrapper">
             <label>Address: <span class="required">*</span></label>
             <textarea name="address" id="address" required rows="3" autocomplete="street-address"></textarea>

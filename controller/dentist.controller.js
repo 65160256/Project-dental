@@ -366,6 +366,234 @@ const dentistController = {
     }
   },
 
+  // ฟังก์ชันบันทึกตารางงาน
+saveScheduleRange: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { startDate, endDate, status, startTime, endTime, note } = req.body;
+
+    console.log('Received schedule save request:', { startDate, endDate, status, startTime, endTime });
+
+    // Validation
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'กรุณาระบุช่วงวันที่' 
+      });
+    }
+
+    if (status === 'working' && (!startTime || !endTime)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'กรุณาระบุเวลาทำงาน' 
+      });
+    }
+
+    // ตรวจสอบสิทธิ์หมอ
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+    
+    // เริ่ม transaction
+    await db.query('START TRANSACTION');
+
+    try {
+      // ลบตารางเวลาเก่าในช่วงวันที่นี้
+      await db.execute(`
+        DELETE FROM dentist_schedule 
+        WHERE dentist_id = ? 
+          AND schedule_date BETWEEN ? AND ?
+      `, [dentistId, startDate, endDate]);
+
+      // แปลง string เป็น Date objects (ใช้วิธีที่ป้องกัน timezone issue)
+      const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+      const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+      
+      const start = new Date(startYear, startMonth - 1, startDay);
+      const end = new Date(endYear, endMonth - 1, endDay);
+
+      console.log('Processing dates:', {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        startLocal: `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`,
+        endLocal: `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`
+      });
+
+      let insertedDays = 0;
+      let skippedSundays = 0;
+
+      // วนลูปทีละวัน
+      const currentDate = new Date(start);
+      
+      while (currentDate <= end) {
+        const dayOfWeek = currentDate.getDay();
+        
+        // Format วันที่สำหรับบันทึกลงฐานข้อมูล (แบบ local time)
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const scheduleDate = `${year}-${month}-${day}`;
+
+        console.log(`Processing date: ${scheduleDate}, day of week: ${dayOfWeek}`);
+
+        // ข้ามวันอาทิตย์
+        if (dayOfWeek === 0) {
+          skippedSundays++;
+          console.log(`Skipped Sunday: ${scheduleDate}`);
+          currentDate.setDate(currentDate.getDate() + 1);
+          continue;
+        }
+
+        // บันทึกเฉพาะวันจันทร์-เสาร์
+        if (status === 'dayoff') {
+          // บันทึกวันหยุด
+          await db.execute(`
+            INSERT INTO dentist_schedule 
+            (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
+            VALUES (?, ?, ?, 0, 'dayoff', '00:00:00', '23:59:59', ?)
+          `, [dentistId, scheduleDate, dayOfWeek, note || 'วันหยุดพิเศษ']);
+          insertedDays++;
+          console.log(`Inserted dayoff: ${scheduleDate}`);
+        } else {
+          // บันทึกชั่วโมงทำงาน
+          const startHour = parseInt(startTime.split(':')[0]);
+          const endHour = parseInt(endTime.split(':')[0]);
+
+          for (let hour = startHour; hour < endHour; hour++) {
+            const hourStartTime = `${hour.toString().padStart(2, '0')}:00:00`;
+            const hourEndTime = `${(hour + 1).toString().padStart(2, '0')}:00:00`;
+
+            await db.execute(`
+              INSERT INTO dentist_schedule 
+              (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
+              VALUES (?, ?, ?, ?, 'working', ?, ?, ?)
+            `, [dentistId, scheduleDate, dayOfWeek, hour, hourStartTime, hourEndTime, note || '']);
+          }
+          insertedDays++;
+          console.log(`Inserted working hours: ${scheduleDate}, ${startTime}-${endTime}`);
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Commit transaction
+      await db.query('COMMIT');
+
+      console.log(`Successfully saved schedule. Inserted: ${insertedDays} days, Skipped sundays: ${skippedSundays}`);
+
+      let message = '';
+      if (status === 'dayoff') {
+        message = `บันทึกวันหยุดสำเร็จ (${insertedDays} วัน${skippedSundays > 0 ? `, ข้ามวันอาทิตย์ ${skippedSundays} วัน` : ''})`;
+      } else {
+        message = `บันทึกเวลาทำงานสำเร็จ (${insertedDays} วัน${skippedSundays > 0 ? `, ข้ามวันอาทิตย์ ${skippedSundays} วัน` : ''})`;
+      }
+      
+      res.json({ 
+        success: true, 
+        message,
+        insertedDays,
+        skippedSundays
+      });
+
+    } catch (error) {
+      // Rollback transaction
+      await db.query('ROLLBACK');
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('Error saving schedule range:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการบันทึกตารางเวลา'
+    });
+  }
+},
+
+// เพิ่มฟังก์ชันแสดงหน้า monthly schedule
+getMonthlySchedule: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) return res.redirect('/login');
+
+    res.render('dentist/schedule-monthly', { 
+      dentist: dentistResult[0],
+      currentDate: new Date().toISOString().split('T')[0]
+    });
+  } catch (error) {
+    console.error('Error in getMonthlySchedule:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดหน้าตารางเวลา',
+      error 
+    });
+  }
+},
+// เพิ่มฟังก์ชันลบช่วงวันที่
+deleteScheduleRange: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { startDate, endDate } = req.body;
+
+    const [dentistResult] = await db.execute(`
+      SELECT dentist_id FROM dentist WHERE user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
+    }
+
+    const dentistId = dentistResult[0].dentist_id;
+
+    // ตรวจสอบว่ามีนัดหมายในช่วงนี้หรือไม่
+    const [appointmentCheck] = await db.execute(`
+      SELECT COUNT(*) as count
+      FROM queue
+      WHERE dentist_id = ? 
+        AND DATE(time) BETWEEN ? AND ?
+        AND queue_status IN ('pending', 'confirm')
+    `, [dentistId, startDate, endDate]);
+
+    if (appointmentCheck[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `ไม่สามารถลบได้ เนื่องจากมีนัดหมายในช่วงนี้อยู่ ${appointmentCheck[0].count} รายการ` 
+      });
+    }
+
+    // ลบตารางเวลา
+    await db.execute(`
+      DELETE FROM dentist_schedule
+      WHERE dentist_id = ? 
+        AND schedule_date BETWEEN ? AND ?
+    `, [dentistId, startDate, endDate]);
+
+    res.json({ 
+      success: true, 
+      message: 'ลบตารางเวลาเรียบร้อยแล้ว' 
+    });
+
+  } catch (error) {
+    console.error('Error deleting schedule range:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'เกิดข้อผิดพลาดในการลบตารางเวลา' 
+    });
+  }
+},
   // หน้าผู้ป่วย
  // หน้าผู้ป่วย
 getPatients: async (req, res) => {
@@ -1036,7 +1264,7 @@ exportPatientsData: async (req, res) => {
 
       const dentist = dentistResult[0];
 
-      res.render('dentist/schedule', { 
+      res.render('dentist/schedule-monthly', { 
         dentist,
         currentDate: new Date().toISOString().split('T')[0]
       });
@@ -2639,7 +2867,7 @@ getTreatmentHistoryPage: async (req, res) => {
   }
 },
   // API: เพิ่มประวัติการรักษา
- addTreatmentHistory: async (req, res) => {
+addTreatmentHistory: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
     const { queueId, patientId, diagnosis, nextAppointment } = req.body;
@@ -2681,7 +2909,7 @@ getTreatmentHistoryPage: async (req, res) => {
     const queuedetailId = appointmentCheck[0].queuedetail_id;
 
     // เริ่ม transaction
-    await db.execute('START TRANSACTION');
+    await db.query('START TRANSACTION');
 
     try {
       // อัพเดทสถานะเป็น 'completed' และข้อมูลการวินิจฉัย
@@ -2716,7 +2944,7 @@ getTreatmentHistoryPage: async (req, res) => {
       }
 
       // Commit transaction
-      await db.execute('COMMIT');
+      await db.query('COMMIT');
 
       res.json({ 
         success: true, 
@@ -2726,7 +2954,7 @@ getTreatmentHistoryPage: async (req, res) => {
 
     } catch (error) {
       // Rollback transaction
-      await db.execute('ROLLBACK');
+      await db.query('ROLLBACK');
       throw error;
     }
 
@@ -2894,6 +3122,8 @@ saveSchedule: async (req, res) => {
 },
 
  // API: โหลดตารางเวลา
+
+// ฟังก์ชันโหลดตารางงาน
 loadSchedule: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
@@ -2914,12 +3144,12 @@ loadSchedule: async (req, res) => {
     const [scheduleResult] = await db.execute(`
       SELECT 
         schedule_id,
-        schedule_date,
+        DATE_FORMAT(schedule_date, '%Y-%m-%d') as schedule_date,
         day_of_week,
         hour,
         status,
-        start_time,
-        end_time,
+        TIME_FORMAT(start_time, '%H:%i') as start_time,
+        TIME_FORMAT(end_time, '%H:%i') as end_time,
         note,
         created_at
       FROM dentist_schedule
@@ -2928,48 +3158,9 @@ loadSchedule: async (req, res) => {
       ORDER BY schedule_date, hour
     `, [dentistId, startDate, endDate]);
 
-    // ตรวจสอบว่ามีนัดหมายในช่วงเวลานั้นหรือไม่
-    const [appointmentResult] = await db.execute(`
-      SELECT 
-        DATE(time) as appointment_date,
-        HOUR(time) as appointment_hour,
-        COUNT(*) as appointment_count
-      FROM queue q
-      WHERE q.dentist_id = ? 
-        AND DATE(q.time) BETWEEN ? AND ?
-        AND q.queue_status IN ('pending', 'confirm')
-      GROUP BY DATE(time), HOUR(time)
-    `, [dentistId, startDate, endDate]);
-
-    // จัดรูปแบบข้อมูลสำหรับ frontend
-    const scheduleData = scheduleResult.map(schedule => ({
-      scheduleId: schedule.schedule_id,
-      date: schedule.schedule_date,
-      day: schedule.day_of_week,
-      hour: schedule.hour,
-      status: schedule.status,
-      startTime: schedule.start_time.substring(0, 5), // HH:MM format
-      endTime: schedule.end_time.substring(0, 5),
-      note: schedule.note,
-      hasAppointment: false // จะอัพเดทด้านล่าง
-    }));
-
-    // เพิ่มข้อมูลนัดหมาย
-    appointmentResult.forEach(appointment => {
-      const scheduleIndex = scheduleData.findIndex(s => 
-        s.date.toISOString().split('T')[0] === appointment.appointment_date.toISOString().split('T')[0] &&
-        s.hour === appointment.appointment_hour
-      );
-      
-      if (scheduleIndex !== -1) {
-        scheduleData[scheduleIndex].hasAppointment = true;
-        scheduleData[scheduleIndex].appointmentCount = appointment.appointment_count;
-      }
-    });
-
     res.json({ 
       success: true, 
-      schedules: scheduleData 
+      schedules: scheduleResult 
     });
 
   } catch (error) {
@@ -3162,6 +3353,36 @@ getAppointmentForAddHistory: async (req, res) => {
       success: false, 
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูล' 
     });
+  }
+},
+
+
+showScheduleMonthly: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+
+    // ดึงข้อมูลหมอ
+    const [dentistResult] = await db.execute(`
+      SELECT d.*, u.email 
+      FROM dentist d
+      JOIN user u ON d.user_id = u.user_id
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.redirect('/login');
+    }
+
+    const dentist = dentistResult[0];
+
+    res.render('dentist/schedule-monthly', {
+      title: 'ตารางงาน',
+      dentist
+    });
+
+  } catch (error) {
+    console.error('Error in showScheduleMonthly:', error);
+    res.status(500).send('เกิดข้อผิดพลาด');
   }
 },
 

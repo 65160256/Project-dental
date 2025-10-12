@@ -728,4 +728,10 @@ module.exports.passwordResetRoutes = {
 
 // ตรวจสอบเลขใบประกอบวิชาชีพซ้ำ
 router.get('/api/check-license', checkAdminApiAuth, adminController.checkLicenseAvailability);
+
+// ========== Admin Booking with Available Slots ==========
+router.get('/api/booking/calendar-data', checkAdminApiAuth, adminController.getCalendarDataForAdmin);
+router.get('/api/booking/available-dentists', checkAdminApiAuth, adminController.getAvailableDentistsForAdmin);
+router.get('/api/booking/available-slots', checkAdminApiAuth, adminController.getAvailableSlotsForAdmin);
+router.post('/api/booking/create', checkAdminApiAuth, adminController.bookAppointmentForPatient);
 module.exports = router;

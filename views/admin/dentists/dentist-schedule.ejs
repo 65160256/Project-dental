@@ -396,79 +396,102 @@
 
         // วาดปฏิทินจากข้อมูลจริง
         function renderCalendar() {
-            updateCurrentMonthDisplay();
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
+  updateCurrentMonthDisplay();
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
 
-            // หัวตารางวัน
-            daysOfWeekTH.forEach(d=>{
-                const el = document.createElement('div');
-                el.className = 'calendar-header-cell';
-                el.textContent = d;
-                grid.appendChild(el);
-            });
+  // หัวตาราง
+  daysOfWeekTH.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'calendar-header-cell';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
 
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startDow = firstDay.getDay();
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay  = new Date(currentYear, currentMonth + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDow = firstDay.getDay(); // 0 = อาทิตย์
 
-            for (let i=0;i<startDow;i++){
-                const empty = document.createElement('div');
-                empty.className = 'calendar-cell other-month';
-                grid.appendChild(empty);
-            }
+  for (let i = 0; i < startDow; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'calendar-cell other-month';
+    grid.appendChild(empty);
+  }
 
-            for (let day=1; day<=daysInMonth; day++){
-                const cell = document.createElement('div');
-                cell.className = 'calendar-cell';
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'calendar-cell';
 
-                const currentDateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                const todayStr = new Date().toISOString().split('T')[0];
-                if (currentDateStr === todayStr) cell.classList.add('today');
+    const dateObj = new Date(currentYear, currentMonth, day);
+    const dow = dateObj.getDay(); // 0 = อาทิตย์
+    const currentDateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (currentDateStr === todayStr) cell.classList.add('today');
 
-                const cellDate = document.createElement('div');
-                cellDate.className = 'cell-date';
-                cellDate.textContent = day;
-                cell.appendChild(cellDate);
+    const cellDate = document.createElement('div');
+    cellDate.className = 'cell-date';
+    cellDate.textContent = day;
+    cell.appendChild(cellDate);
 
-                const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
+    // ดึงข้อมูลจาก DB สำหรับวันนั้น
+    const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
 
-                if (daySchedules.length > 0){
-                    const hasWorking = daySchedules.some(s => s.status === 'working');
-                    const hasDayOff  = daySchedules.some(s => s.status === 'dayoff');
+    // ---- บังคับอาทิตย์ปิดเสมอ ----
+    if (dow === 0) {
+      cell.classList.add('day-off');
+      const indicator = document.createElement('div');
+      indicator.className = 'schedule-indicator day-off';
+      cell.appendChild(indicator);
 
-                    if (hasDayOff){
-                        cell.classList.add('day-off');
-                        const indicator = document.createElement('div');
-                        indicator.className = 'schedule-indicator day-off';
-                        cell.appendChild(indicator);
+      const info = document.createElement('div');
+      info.className = 'cell-schedule';
+      info.textContent = 'ปิดคลินิก';
+      cell.appendChild(info);
 
-                        const info = document.createElement('div');
-                        info.className = 'cell-schedule';
-                        info.textContent = 'หยุด';
-                        cell.appendChild(info);
-                    } else if (hasWorking){
-                        cell.classList.add('has-schedule');
-                        const indicator = document.createElement('div');
-                        indicator.className = 'schedule-indicator';
-                        cell.appendChild(indicator);
+      cell.addEventListener('click', () => showScheduleDetails(currentDateStr, [], true));
+      grid.appendChild(cell);
+      continue;
+    }
+    // --------------------------------
 
-                        const working = daySchedules.filter(s=>s.status==='working').sort((a,b)=>a.hour-b.hour);
-                        const first = working[0];
-                        const last = working[working.length-1];
-                        const info = document.createElement('div');
-                        info.className = 'cell-schedule';
-                        // เวลา HH:MM เป็น 24-hr อยู่แล้วจาก substr(0,5)
-                        info.textContent = `${first.start_time.substr(0,5)} - ${last.end_time.substr(0,5)}`;
-                        cell.appendChild(info);
-                    }
-                }
+    if (daySchedules.length > 0) {
+      const hasWorking = daySchedules.some(s => s.status === 'working');
+      const hasDayOff  = daySchedules.some(s => s.status === 'dayoff');
 
-                cell.addEventListener('click', ()=>showScheduleDetails(currentDateStr, daySchedules));
-                grid.appendChild(cell);
-            }
-        }
+      if (hasDayOff && !hasWorking) {
+        cell.classList.add('day-off');
+        const indicator = document.createElement('div');
+        indicator.className = 'schedule-indicator day-off';
+        cell.appendChild(indicator);
+
+        const info = document.createElement('div');
+        info.className = 'cell-schedule';
+        info.textContent = 'หยุด';
+        cell.appendChild(info);
+      } else if (hasWorking) {
+        cell.classList.add('has-schedule');
+        const indicator = document.createElement('div');
+        indicator.className = 'schedule-indicator';
+        cell.appendChild(indicator);
+
+        const working = daySchedules
+          .filter(s => s.status === 'working')
+          .sort((a, b) => a.hour - b.hour);
+        const first = working[0];
+        const last  = working[working.length - 1];
+
+        const info = document.createElement('div');
+        info.className = 'cell-schedule';
+        info.textContent = `${first.start_time} - ${last.end_time}`;
+        cell.appendChild(info);
+      }
+    }
+
+    cell.addEventListener('click', () => showScheduleDetails(currentDateStr, daySchedules, false));
+    grid.appendChild(cell);
+  }
+}
 
         // แสดงเดือนปัจจุบัน (ไทย + ปี พ.ศ. โดยค่าเริ่มต้นของ th-TH)
         function updateCurrentMonthDisplay(){
@@ -503,56 +526,49 @@
         }
 
         // โมดอลรายละเอียดของวัน
-        function showScheduleDetails(date, schedules){
-            const modal = document.getElementById('scheduleModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('modalBody');
+    function showScheduleDetails(dateStr, items = [], isSundayClosed = false) {
+  const modal = document.getElementById('scheduleModal');
+  const title = document.getElementById('modalTitle');
+  const body  = document.getElementById('modalBody');
 
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('th-TH',{
-                weekday:'long', year:'numeric', month:'long', day:'numeric'
-            });
+  title.textContent = new Date(dateStr).toLocaleDateString('th-TH', { dateStyle: 'full' });
+  body.innerHTML = '';
 
-            modalTitle.textContent = `ตารางวันที่ ${formattedDate}`;
+  if (isSundayClosed) {
+    body.innerHTML = `
+      <div class="schedule-item day-off">
+        <div class="schedule-time">ปิดคลินิก (วันอาทิตย์)</div>
+        <div class="schedule-status">—</div>
+      </div>`;
+    modal.style.display = 'flex';
+    return;
+  }
 
-            let html = `
-                <div class="schedule-detail">
-                    <div class="detail-label">วันที่</div>
-                    <div class="detail-value">${formattedDate}</div>
-                </div>
-            `;
+  if (!items || items.length === 0) {
+    body.innerHTML = `<div class="schedule-item">
+      <div class="schedule-time">—</div>
+      <div class="schedule-status">ไม่มีตารางทำงาน</div>
+    </div>`;
+    modal.style.display = 'flex';
+    return;
+  }
 
-            if (schedules.length === 0){
-                html += `
-                    <div class="schedule-detail">
-                        <div class="detail-label">สถานะ</div>
-                        <div class="detail-value">ยังไม่ได้ตั้งตารางในวันนี้</div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="schedule-detail">
-                        <div class="detail-label">รายละเอียดเวลา</div>
-                        <div class="schedule-list">
-                `;
-                schedules.sort((a,b)=>a.hour-b.hour);
-                schedules.forEach(s=>{
-                    const cls = s.status === 'dayoff' ? 'day-off' : '';
-                    const timeRange = `${s.start_time.substr(0,5)} - ${s.end_time.substr(0,5)}`; // 24 ชม.
-                    html += `
-                        <div class="schedule-item ${cls}">
-                            <div class="schedule-time">${timeRange}</div>
-                            <div class="schedule-status">${s.status === 'dayoff' ? 'หยุด' : 'เวลาทำงาน'}${s.note ? ` - ${s.note}` : ''}</div>
-                        </div>
-                    `;
-                });
-                html += `</div></div>`;
-            }
+  const sorted = items.sort((a,b) => a.hour - b.hour);
+  sorted.forEach(s => {
+    const el = document.createElement('div');
+    el.className = `schedule-item ${s.status === 'dayoff' ? 'day-off' : ''}`;
+    el.innerHTML = `
+      <div class="schedule-time">${s.start_time} - ${s.end_time}</div>
+      <div class="schedule-status">
+        สถานะ: ${s.status === 'working' ? 'ทำงาน' : 'หยุด'}
+        ${s.appointment_count ? ` • นัด: ${s.appointment_count}` : ''}
+        ${s.note ? ` • หมายเหตุ: ${s.note}` : ''}
+      </div>`;
+    body.appendChild(el);
+  });
 
-            modalBody.innerHTML = html;
-            modal.style.display = 'flex';
-        }
-
+  modal.style.display = 'flex';
+}
         function closeModal(){ document.getElementById('scheduleModal').style.display = 'none'; }
 
         function toggleNotifications(){ showToast('ฟีเจอร์การแจ้งเตือนพร้อมใช้งานในระบบเต็มรูปแบบ','info'); }

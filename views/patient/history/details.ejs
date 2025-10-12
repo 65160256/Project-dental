@@ -679,9 +679,10 @@
               <span class="detail-value"><%= appointment.patient_name %></span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">รหัสผู้ป่วย:</span>
-              <span class="detail-value">xxxx</span>
-            </div>
+  <span class="detail-label">รหัสผู้ป่วย:</span>
+  <span class="detail-value"><%= appointment.patient_id || appointment.patient_code || '-' %></span>
+</div>
+
             <div class="detail-item">
               <span class="detail-label">เบอร์โทรศัพท์:</span>
               <span class="detail-value">087985000</span>
@@ -699,9 +700,14 @@
             <div class="detail-item">
               <span class="detail-label">วันเวลาที่นัด:</span>
               <span class="detail-value">
-                <%= new Date(appointment.time).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) %>, 
-                <%= new Date(appointment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %> น.
-              </span>
+  <% 
+    const start = new Date(appointment.time);
+    const end = new Date(start.getTime() + ((appointment.duration || 60) * 60000));
+    const fmtDate = d => d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const fmtTime = d => d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+  %>
+  <%= fmtDate(start) %>, <%= fmtTime(start) %> - <%= fmtTime(end) %> น.
+</span>
             </div>
             <div class="detail-item full-width-item">
               <span class="detail-label">ทันตแพทย์ที่เลือก:</span>
@@ -759,28 +765,21 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <% if (isActive && canEdit) { %>
-            <a href="/patient/history/edit/<%= appointment.queue_id %>" class="btn btn-edit">
-              <i class="fas fa-edit"></i>
-              แก้ไข
-            </a>
-            <form method="POST" action="/patient/history/cancel/<%= appointment.queue_id %>" style="display: inline;">
-              <button type="submit" class="btn btn-cancel" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกนัดหมายนี้?')">
-                <i class="fas fa-times"></i>
-                ยกเลิก
-              </button>
-            </form>
-          <% } else { %>
-            <button class="btn btn-edit" disabled>
-              <i class="fas fa-edit"></i>
-              แก้ไข
-            </button>
-            <button class="btn btn-cancel" disabled>
-              <i class="fas fa-times"></i>
-              ยกเลิก
-            </button>
-          <% } %>
-        </div>
+  <% if (isActive && canEdit) { %>
+    <form method="POST" action="/patient/history/cancel/<%= appointment.queue_id %>" style="display: inline;">
+      <button type="submit" class="btn btn-cancel" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะยกเลิกนัดหมายนี้?')">
+        <i class="fas fa-times"></i>
+        ยกเลิกนัดหมาย
+      </button>
+    </form>
+  <% } else { %>
+    <button class="btn btn-cancel" disabled>
+      <i class="fas fa-times"></i>
+      ยกเลิกนัดหมาย
+    </button>
+  <% } %>
+</div>
+
       </div>
     </div>
   </div>

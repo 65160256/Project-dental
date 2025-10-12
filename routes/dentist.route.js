@@ -75,6 +75,7 @@ router.get('/dashboard', requireAuth, requireDentist, dentistController.getDashb
 // Schedule Routes
 // =================
 router.get('/schedule', requireAuth, requireDentist, dentistController.getSchedule);
+router.get('/schedule', dentistController.showScheduleMonthly);
 
 // =================
 // Schedule API Routes
@@ -192,4 +193,8 @@ router.get('/add-history/:queueId', requireAuth, requireDentist, dentistControll
 // API สำหรับดึงข้อมูลการจองของผู้ป่วย
 router.get('/api/patients/:patientId/appointments-for-history', requireAuth, requireDentist, dentistController.getAppointmentForHistory);
 
+// ใน dentist.routes.js
+router.get('/schedule', requireAuth, requireDentist, dentistController.getMonthlySchedule);
+router.post('/api/schedule/save-range', requireAuth, requireDentist, dentistController.saveScheduleRange);
+router.delete('/api/schedule/delete-range', requireAuth, requireDentist, dentistController.deleteScheduleRange);
 module.exports = router;

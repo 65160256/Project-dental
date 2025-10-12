@@ -1198,6 +1198,10 @@
                 
                 const id_card = patient.id_card || patient.id_card || '';
                 setFieldValue('id_card', id_card);
+
+                setFieldValue('gender', patient.gender || '');
+        setFieldValue('chronic_disease', patient.chronic_disease || '');
+        setFieldValue('drug_allergy', patient.allergy_history || '');
                 console.log('📋 ตั้งค่าเลขบัตรประชาชนเป็น:', id_card);
                 
                 if (patient.dob) {
@@ -1396,32 +1400,39 @@
             });
         }
 
-        function setupChangeTracking() {
-            const form = document.getElementById('editPatientForm');
-            const inputs = form.querySelectorAll('.form-control');
+       function setupChangeTracking() {
+    const form = document.getElementById('editPatientForm');
+    const inputs = form.querySelectorAll('.form-control, select.form-control');  // ✅ รวม select ด้วย
+    
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const fieldName = this.name;
+            let currentValue = this.value;
             
-            inputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const fieldName = this.name;
-                    const currentValue = this.value;
-                    const originalValue = originalData[fieldName] || originalData[fieldName === 'id_card' ? 'id_card' : fieldName] || '';
-                    
-                    console.log(`🔄 ฟิลด์ ${fieldName} เปลี่ยนแปลง:`, {
-                        current: currentValue,
-                        original: originalValue,
-                        different: currentValue !== originalValue
-                    });
-                    
-                    if (currentValue !== originalValue) {
-                        trackChange(fieldName, currentValue);
-                        this.classList.add('field-changed');
-                    } else {
-                        untrackChange(fieldName);
-                        this.classList.remove('field-changed');
-                    }
-                });
+            // ✅ จัดการชื่อฟิลด์ที่ต่างกัน
+            let originalFieldName = fieldName;
+            if (fieldName === 'drug_allergy') {
+                originalFieldName = 'allergy_history';  // DB ใช้ allergy_history
+            }
+            
+            const originalValue = originalData[originalFieldName] || '';
+            
+            console.log(`🔄 ฟิลด์ ${fieldName} เปลี่ยนแปลง:`, {
+                current: currentValue,
+                original: originalValue,
+                different: currentValue !== originalValue
             });
-        }
+            
+            if (currentValue !== originalValue) {
+                trackChange(fieldName, currentValue);
+                this.classList.add('field-changed');
+            } else {
+                untrackChange(fieldName);
+                this.classList.remove('field-changed');
+            }
+        });
+    });
+}
 
         function trackChange(fieldName, value) {
             const dataKey = fieldName === 'id_card' ? 'id_card' : fieldName;

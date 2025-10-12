@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางงาน - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Sukhumvit Set', 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            padding: 0;
+            color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
+        }
+
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin: 2px 0;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 180px;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 2px solid rgba(74, 144, 226, 0.2);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            min-width: 180px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+
+        .calendar-header-info {
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .calendar-nav-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            gap: 20px;
+        }
+
+        .calendar-nav-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #f0f7ff;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        /* Calendar Table */
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .calendar-table thead th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .calendar-table tbody td {
+            padding: 10px;
+            border: 1px solid #e1e5e9;
+            text-align: center;
+            min-height: 80px;
+            height: 80px;
+            vertical-align: top;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-table tbody td:hover:not(.has-schedule):not(.sunday):not(.disabled) {
+            background: #f8f9fa;
+        }
+
+        .calendar-table tbody td.other-month {
+            background: #fafafa;
+            color: #ccc;
+        }
+
+        .calendar-table tbody td.selected {
+            background: #bbdefb !important;
+            border: 2px solid #2196f3;
+        }
+
+        .calendar-table tbody td.in-range {
+            background: #e3f2fd;
+        }
+
+        .calendar-table tbody td.sunday {
+            background: #ffebee;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .calendar-table tbody td.sunday.other-month {
+            background: #fafafa;
+        }
+
+        .calendar-table tbody td.sunday .day-number {
+            color: #f44336;
+        }
+
+        .calendar-table tbody td.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* วันที่มีตารางแล้ว */
+        .calendar-table tbody td.has-schedule {
+            background: #e8f5e9 !important;
+            border: 2px solid #4caf50;
+        }
+
+        .calendar-table tbody td.has-schedule.sunday {
+            background: #ffcdd2 !important;
+            border: 2px solid #f44336;
+        }
+
+        .calendar-table tbody td.has-schedule:hover {
+            background: #c8e6c9 !important;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .schedule-indicator {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .schedule-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .schedule-badge.working {
+            background: #4caf50;
+            color: white;
+        }
+
+        .schedule-badge.dayoff {
+            background: #f44336;
+            color: white;
+        }
+
+        .schedule-time {
+            font-size: 9px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* Action Buttons */
+        .calendar-actions {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .date-display {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .date-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .date-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .date-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            min-width: 80px;
+        }
+
+        .date-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .date-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            background: white;
+        }
+
+        .date-separator {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            margin: 0;
+            accent-color: #4A90E2;
+            width: 18px;
+            height: 18px;
+        }
+
+        .radio-item label {
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .time-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .time-group {
+            flex: 1;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        textarea.form-control {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-modal {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: #218838;
+        }
+
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #c82333;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            max-width: 400px;
+            font-size: 14px;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid #4A90E2;
+        }
+
+        .toast.success { border-left-color: #28a745; }
+        .toast.error { border-left-color: #dc3545; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #4A90E2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .warning-message {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-message {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Legend */
+        .calendar-legend {
+            display: flex;
+            gap: 20px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e5e9;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .legend-box.working {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .legend-box.dayoff {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .legend-box.selected {
+            background: #bbdefb;
+            border-color: #2196f3;
+        }
+
+        .legend-box.sunday {
+            background: #ffebee;
+            border-color: #f44336;
+            opacity: 0.7;
+        }
+
+        .sunday-notice {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background: #ffebee;
+            color: #c62828;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li class="active"><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div></div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" title="การแจ้งเตือน"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar">
+                            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์">
+                            <% } else { %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() : 'ท' %>
+                            <% } %>
+                        </div>
+                        <div class="user-details">
+                            <strong>สวัสดี ทพ. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'ทันตแพทย์' %></strong>
+                            <small>ทันตแพทย์</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dentist/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> แก้ไขโปรไฟล์</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>ตารางงาน</h1>
+            </div>
+
+            <!-- Header Info -->
+            <div class="calendar-header-info">
+                <div class="info-item">
+                    <span class="info-label">รอบเดือนนี้:</span>
+                    <span class="info-value" id="monthRange">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">สถานะ:</span>
+                    <span class="info-value" id="currentStatus">พร้อมเพิ่มช่วงเวลา</span>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section" id="calendarSection">
+                <div class="calendar-nav-header">
+                    <button class="calendar-nav-btn" onclick="changeMonth(-1)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 class="calendar-title" id="currentMonthTitle">กำลังโหลด...</h2>
+                    <button class="calendar-nav-btn" onclick="changeMonth(1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="sunday-notice">
+                    <i class="fas fa-info-circle"></i> วันอาทิตย์ปิดทำการ (ไม่สามารถเลือกได้)
+                </div>
+
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th style="color: #f44336;">อา.</th>
+                            <th>จ.</th>
+                            <th>อ.</th>
+                            <th>พ.</th>
+                            <th>พฤ.</th>
+                            <th>ศ.</th>
+                            <th>ส.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                        <!-- จะถูกสร้างโดย JavaScript -->
+                    </tbody>
+                </table>
+
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <div class="legend-box working"></div>
+                        <span>มีตารางทำงาน</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box dayoff"></div>
+                        <span>วันหยุด</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box sunday"></div>
+                        <span>วันอาทิตย์ (ปิดทำการ)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box selected"></div>
+                        <span>วันที่เลือก</span>
+                    </div>
+                </div>
+
+                <div class="calendar-actions">
+                    <button class="btn btn-success" onclick="openModal()">
+                        <i class="fas fa-plus"></i> ตั้งค่าตารางเวลา
+                    </button>
+                    <button class="btn btn-danger" onclick="clearSelection()">
+                        <i class="fas fa-times"></i> ยกเลิก
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-calendar-check"></i>
+                    <span id="modalDateRange">เลือกช่วงวันที่</span>
+                </h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+                <div class="date-display">
+                    <div class="date-row">
+                        <span class="date-label">ช่วงวันที่:</span>
+                        <div class="date-inputs">
+                            <input type="text" class="date-input" id="displayStartDate" readonly>
+                            <span class="date-separator">→</span>
+                            <input type="text" class="date-input" id="displayEndDate" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-message" id="sundayInfo" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="sundayInfoText"></span>
+                </div>
+
+                <div class="error-message" id="duplicateWarning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="duplicateMessage"></span>
+                </div>
+
+                <form id="scheduleForm">
+                    <input type="hidden" id="startDate" name="startDate">
+                    <input type="hidden" id="endDate" name="endDate">
+
+                    <div class="form-group">
+                        <div class="form-label">
+                            <i class="fas fa-toggle-on"></i>
+                            สถานะ:
+                        </div>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" id="working" name="status" value="working" checked onchange="toggleTimeInputs()">
+                                <label for="working">วันทำงาน</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="dayoff" name="status" value="dayoff" onchange="toggleTimeInputs()">
+                                <label for="dayoff">วันหยุด</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="time-row" id="timeInputs">
+                        <div class="time-group">
+                            <div class="form-label">
+                                <i class="fas fa-clock"></i>
+                                เวลาเริ่มต้น:
+                            </div>
+                            <select class="form-control" id="startTime" name="startTime">
+                                <option value="10:00" selected>10:00</option>
+                                <option value="10:30">10:30</option>
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                            </select>
+                        </div>
+
+                        <div class="time-group">
+                            <div class="form-label">
+                                <i class="fas fa-clock"></i>
+                                เวลาสิ้นสุด:
+                            </div>
+                            <select class="form-control" id="endTime" name="endTime">
+                                <option value="11:00">11:00</option>
+                                <option value="11:30">11:30</option>
+                                <option value="12:00">12:00</option>
+                                <option value="12:30">12:30</option>
+                                <option value="13:00">13:00</option>
+                                <option value="13:30">13:30</option>
+                                <option value="14:00">14:00</option>
+                                <option value="14:30">14:30</option>
+                                <option value="15:00">15:00</option>
+                                <option value="15:30">15:30</option>
+                                <option value="16:00">16:00</option>
+                                <option value="16:30">16:30</option>
+                                <option value="17:00">17:00</option>
+                                <option value="17:30">17:30</option>
+                                <option value="18:00">18:00</option>
+                                <option value="18:30">18:30</option>
+                                <option value="19:00">19:00</option>
+                                <option value="19:30">19:30</option>
+                                <option value="20:00" selected>20:00</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label">
+                            <i class="fas fa-sticky-note"></i>
+                            หมายเหตุ (ถ้ามี):
+                        </div>
+                        <textarea class="form-control" id="note" name="note" placeholder="ระบุข้อมูลเพิ่มเติม..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-modal btn-confirm" onclick="saveSchedule()">
+                    <i class="fas fa-check"></i> ยืนยัน
+                </button>
+                <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+        let scheduleData = {};
+
+        const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        
+        const thaiMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+            'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCalendar();
+            loadScheduleData();
+        });
+
+        // ฟังก์ชัน format วันที่แบบ local (ไม่มีปัญหา timezone)
+        function formatDateISO(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        async function loadScheduleData() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const startDate = new Date(year, month, 1);
+            const endDate = new Date(year, month + 1, 0);
+            
+            try {
+                const response = await fetch(
+                    `/dentist/api/schedule/load?startDate=${formatDateISO(startDate)}&endDate=${formatDateISO(endDate)}`
+                );
+                const result = await response.json();
+                
+                if (result.success) {
+                    scheduleData = {};
+                    result.schedules.forEach(schedule => {
+                        // ใช้ substring แทน split เพื่อหลีกเลี่ยงปัญหา timezone
+                        const dateKey = schedule.schedule_date.substring(0, 10);
+                        if (!scheduleData[dateKey]) {
+                            scheduleData[dateKey] = {
+                                status: schedule.status,
+                                hours: [],
+                                start_time: schedule.start_time,
+                                end_time: schedule.end_time
+                            };
+                        }
+                        scheduleData[dateKey].hours.push(schedule.hour);
+                    });
+                    
+                    updateCalendarWithSchedule();
+                }
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+            }
+        }
+
+        function updateCalendarWithSchedule() {
+            // ลบ indicator เก่าทั้งหมดก่อน
+            document.querySelectorAll('.schedule-indicator').forEach(el => el.remove());
+            document.querySelectorAll('.calendar-table td').forEach(cell => {
+                cell.classList.remove('has-schedule');
+            });
+            
+            document.querySelectorAll('.calendar-table td').forEach(cell => {
+                const dateStr = cell.dataset.date;
+                if (dateStr && scheduleData[dateStr]) {
+                    const schedule = scheduleData[dateStr];
+                    cell.classList.add('has-schedule');
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'schedule-indicator';
+                    
+                    const badge = document.createElement('span');
+                    badge.className = `schedule-badge ${schedule.status}`;
+                    
+                    if (schedule.status === 'working') {
+                        badge.innerHTML = '<i class="fas fa-briefcase"></i>';
+                        
+                        if (schedule.start_time && schedule.end_time) {
+                            const timeDiv = document.createElement('div');
+                            timeDiv.className = 'schedule-time';
+                            timeDiv.textContent = `${schedule.start_time}-${schedule.end_time}`;
+                            badge.appendChild(timeDiv);
+                        }
+                    } else {
+                        badge.innerHTML = '<i class="fas fa-times"></i>';
+                    }
+                    
+                    indicator.appendChild(badge);
+                    cell.appendChild(indicator);
+                }
+            });
+        }
+
+        function generateCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            const thaiYear = year + 543;
+            document.getElementById('currentMonthTitle').textContent = 
+                `${thaiMonths[month]} ${thaiYear}`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - startDate.getDay());
+            
+            const endDate = new Date(lastDay);
+            endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+
+            updateMonthRange(firstDay, lastDay);
+
+            const tbody = document.getElementById('calendarBody');
+            tbody.innerHTML = '';
+
+            let currentWeek = [];
+            const current = new Date(startDate);
+
+            while (current <= endDate) {
+                currentWeek.push(new Date(current));
+                
+                if (currentWeek.length === 7) {
+                    const row = document.createElement('tr');
+                    currentWeek.forEach(date => {
+                        const cell = createDayCell(date, month);
+                        row.appendChild(cell);
+                    });
+                    tbody.appendChild(row);
+                    currentWeek = [];
+                }
+                
+                current.setDate(current.getDate() + 1);
+            }
+        }
+
+        function createDayCell(date, currentMonth) {
+            const cell = document.createElement('td');
+            const dateStr = formatDateISO(date);
+            cell.dataset.date = dateStr;
+            
+            if (date.getMonth() !== currentMonth) {
+                cell.classList.add('other-month');
+            }
+            
+            // ไฮไลท์วันอาทิตย์และไม่ให้คลิกได้
+            if (date.getDay() === 0) {
+                cell.classList.add('sunday');
+                cell.title = 'วันอาทิตย์ปิดทำการ';
+            }
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-number';
+            dayDiv.textContent = date.getDate();
+            cell.appendChild(dayDiv);
+            
+            // เฉพาะวันที่ไม่ใช่อาทิตย์เท่านั้นที่คลิกได้
+            if (date.getDay() !== 0) {
+                cell.onclick = () => handleDayClick(date);
+            }
+            
+            return cell;
+        }
+
+        function handleDayClick(date) {
+            // ป้องกันการเลือกวันอาทิตย์
+            if (date.getDay() === 0) {
+                showToast('ไม่สามารถเลือกวันอาทิตย์ได้ (ปิดทำการ)', 'error');
+                return;
+            }
+
+            if (!selectedStartDate) {
+                // เลือกวันแรก
+                selectedStartDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                selectedEndDate = null;
+            } else if (!selectedEndDate) {
+                // เลือกวันที่สอง
+                selectedEndDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                
+                // สลับถ้าเลือกย้อนหลัง
+                if (selectedStartDate > selectedEndDate) {
+                    [selectedStartDate, selectedEndDate] = [selectedEndDate, selectedStartDate];
+                }
+            } else {
+                // เริ่มเลือกใหม่
+                selectedStartDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                selectedEndDate = null;
+            }
+            
+            updateSelection();
+        }
+
+        function updateSelection() {
+            document.querySelectorAll('.calendar-table td').forEach(cell => {
+                cell.classList.remove('selected', 'in-range');
+            });
+            
+            if (!selectedStartDate) return;
+            
+            const startCell = document.querySelector(`[data-date="${formatDateISO(selectedStartDate)}"]`);
+            if (startCell) startCell.classList.add('selected');
+            
+            if (selectedEndDate) {
+                const endCell = document.querySelector(`[data-date="${formatDateISO(selectedEndDate)}"]`);
+                if (endCell) endCell.classList.add('selected');
+                
+                const current = new Date(selectedStartDate);
+                current.setDate(current.getDate() + 1);
+                
+                while (current < selectedEndDate) {
+                    const cell = document.querySelector(`[data-date="${formatDateISO(current)}"]`);
+                    if (cell && current.getDay() !== 0) {
+                        cell.classList.add('in-range');
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+            }
+        }
+
+        function openModal() {
+            if (!selectedStartDate || !selectedEndDate) {
+                showToast('กรุณาเลือกช่วงวันที่บนปฏิทิน', 'error');
+                return;
+            }
+            
+            // นับจำนวนวันอาทิตย์ในช่วงที่เลือก
+            const sundayCount = countSundaysInRange(selectedStartDate, selectedEndDate);
+            const sundayInfo = document.getElementById('sundayInfo');
+            const sundayInfoText = document.getElementById('sundayInfoText');
+            
+            if (sundayCount > 0) {
+                sundayInfo.style.display = 'flex';
+                sundayInfoText.textContent = `ช่วงที่เลือกมีวันอาทิตย์ ${sundayCount} วัน ซึ่งจะถูกข้ามโดยอัตโนมัติ (ปิดทำการ)`;
+            } else {
+                sundayInfo.style.display = 'none';
+            }
+            
+            // ตรวจสอบวันที่มีตารางซ้ำ
+            const duplicateDates = checkDuplicateSchedule(selectedStartDate, selectedEndDate);
+            const duplicateWarning = document.getElementById('duplicateWarning');
+            const duplicateMessage = document.getElementById('duplicateMessage');
+            
+            if (duplicateDates.length > 0) {
+                duplicateWarning.style.display = 'flex';
+                duplicateMessage.textContent = `มีตารางซ้ำในวันที่: ${duplicateDates.join(', ')} (จะถูกแทนที่ด้วยข้อมูลใหม่)`;
+            } else {
+                duplicateWarning.style.display = 'none';
+            }
+            
+            const modal = document.getElementById('scheduleModal');
+            
+            const startStr = formatDateThai(selectedStartDate);
+            const endStr = formatDateThai(selectedEndDate);
+            
+            document.getElementById('modalDateRange').textContent = `${startStr} - ${endStr}`;
+            document.getElementById('displayStartDate').value = startStr;
+            document.getElementById('displayEndDate').value = endStr;
+            document.getElementById('startDate').value = formatDateISO(selectedStartDate);
+            document.getElementById('endDate').value = formatDateISO(selectedEndDate);
+            
+            // Debug log
+            console.log('Selected Dates:', {
+                start: formatDateISO(selectedStartDate),
+                end: formatDateISO(selectedEndDate)
+            });
+            
+            document.getElementById('working').checked = true;
+            document.getElementById('startTime').value = '10:00';
+            document.getElementById('endTime').value = '20:00';
+            document.getElementById('note').value = '';
+            toggleTimeInputs();
+            
+            modal.style.display = 'block';
+        }
+
+        function countSundaysInRange(startDate, endDate) {
+            let count = 0;
+            const current = new Date(startDate);
+            
+            while (current <= endDate) {
+                if (current.getDay() === 0) {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return count;
+        }
+
+        function checkDuplicateSchedule(startDate, endDate) {
+            const duplicates = [];
+            const current = new Date(startDate);
+            
+            while (current <= endDate) {
+                if (current.getDay() !== 0) {
+                    const dateStr = formatDateISO(current);
+                    if (scheduleData[dateStr]) {
+                        duplicates.push(current.getDate() + ' ' + thaiMonthsShort[current.getMonth()]);
+                    }
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return duplicates;
+        }
+
+        function closeModal() {
+            document.getElementById('scheduleModal').style.display = 'none';
+        }
+
+        function clearSelection() {
+            selectedStartDate = null;
+            selectedEndDate = null;
+            updateSelection();
+        }
+
+        function toggleTimeInputs() {
+            const working = document.getElementById('working').checked;
+            document.getElementById('timeInputs').style.display = working ? 'flex' : 'none';
+        }
+
+        async function saveSchedule() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const note = document.getElementById('note').value;
+
+            // Validation
+            if (status === 'working') {
+                if (startTime >= endTime) {
+                    showToast('เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด', 'error');
+                    return;
+                }
+            }
+
+            console.log('Sending to server:', { startDate, endDate, status, startTime, endTime, note });
+
+            const formData = {
+                startDate,
+                endDate,
+                status,
+                startTime,
+                endTime,
+                note
+            };
+            
+            try {
+                const response = await fetch('/dentist/api/schedule/save-range', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    closeModal();
+                    clearSelection();
+                    await loadScheduleData();
+                } else {
+                    showToast(result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            generateCalendar();
+            loadScheduleData();
+            clearSelection();
+        }
+
+        function updateMonthRange(firstDay, lastDay) {
+            const startStr = `${firstDay.getDate()} ${thaiMonthsShort[firstDay.getMonth()]}`;
+            const endStr = `${lastDay.getDate()} ${thaiMonthsShort[lastDay.getMonth()]}`;
+            document.getElementById('monthRange').textContent = `${startStr} - ${endStr}`;
+        }
+
+        function formatDateThai(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear() + 543;
+            return `${day}/${month}/${year}`;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function(e) {
+            const prof = document.querySelector('.profile-dropdown');
+            if (prof && !prof.contains(e.target)) {
+                document.getElementById('profileDropdown').style.display = 'none';
+            }
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('scheduleModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

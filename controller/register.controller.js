@@ -102,7 +102,7 @@ exports.registerPatient = async (req, res) => {
             lname: req.body.lname
         });
 
-        const rawData = {
+       const rawData = {
             fname: req.body.fname,
             lname: req.body.lname,
             email: req.body.email,
@@ -111,8 +111,12 @@ exports.registerPatient = async (req, res) => {
             phone: req.body.phone,
             dob: req.body.dob,
             address: req.body.address,
-            id_card: req.body.id_card
+            id_card: req.body.id_card,
+            gender: req.body.gender || null,
+            chronic_disease: req.body.chronic_disease || null,
+            allergy_history: req.body.allergy_history || null
         };
+
         
         // Validate input
         const validation = validateInput(rawData);
@@ -131,7 +135,10 @@ exports.registerPatient = async (req, res) => {
             phone: rawData.phone.trim(),
             dob: rawData.dob,
             address: rawData.address.trim(),
-            id_card: rawData.id_card.trim()
+            id_card: rawData.id_card.trim(),
+            gender: rawData.gender ? String(rawData.gender).trim() : null,
+            chronic_disease: rawData.chronic_disease ? String(rawData.chronic_disease).trim() : null,
+            allergy_history: rawData.allergy_history ? String(rawData.allergy_history).trim() : null
         };
         
         // Check for duplicates (ใช้ Model)
@@ -162,7 +169,12 @@ exports.registerPatient = async (req, res) => {
             dob: cleanData.dob,
             id_card: cleanData.id_card,
             address: cleanData.address,
-            phone: cleanData.phone
+            phone: cleanData.phone,
+            gender: cleanData.gender,
+            chronic_disease
+: cleanData.chronic_disease
+,
+            allergy_history: cleanData.allergy_history
         };
 
         const userId = await RegisterModel.registerPatientWithTransaction(

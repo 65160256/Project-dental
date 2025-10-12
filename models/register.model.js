@@ -58,22 +58,28 @@ class RegisterModel {
   // สร้างข้อมูล patient
   static async createPatient(userId, patientData) {
     try {
-      const { fname, lname, dob, id_card, address, phone } = patientData;
+const { fname, lname, dob, id_card, address, phone, gender, chronic_disease
+, allergy_history } = patientData;      
       
-      await db.execute(`
-        INSERT INTO patient (
-          user_id, fname, lname, dob, id_card, address, phone,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-      `, [
-        userId,
-        fname,
-        lname,
-        dob,
-        id_card,
-        address,
-        phone
-      ]);
+await db.execute(`
+   INSERT INTO patient (
+     user_id, fname, lname, gender, dob, id_card, address, phone, chronic_disease
+, allergy_history,
+     created_at, updated_at
+   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+ `, [
+   userId,
+   fname,
+   lname,
+   gender,
+   dob,
+   id_card,
+   address,
+   phone,
+   chronic_disease
+,
+   allergy_history
+ ]);
       
       return true;
     } catch (error) {
@@ -97,23 +103,28 @@ class RegisterModel {
       const userId = userResult.insertId;
 
       // สร้าง patient
-      const { fname, lname, dob, id_card, address, phone } = patientData;
+const { fname, lname, dob, id_card, address, phone, gender, chronic_disease
+, allergy_history } = patientData;
       
       await connection.execute(`
-        INSERT INTO patient (
-          user_id, fname, lname, dob, id_card, address, phone,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-      `, [
-        userId,
-        fname,
-        lname,
-        dob,
-        id_card,
-        address,
-        phone
-      ]);
-
+   INSERT INTO patient (
+     user_id, fname, lname, gender, dob, id_card, address, phone, chronic_disease
+, allergy_history,
+     created_at, updated_at
+   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+ `, [
+   userId,
+   fname,
+   lname,
+   gender,
+   dob,
+   id_card,
+   address,
+   phone,
+   chronic_disease
+,
+   allergy_history
+ ]);
       await connection.commit();
       return userId;
       

@@ -809,18 +809,20 @@
                   </div>
                 </div>
                 <div class="detail-item">
-                  <div class="detail-icon"><i class="fas fa-clock"></i></div>
-                  <div class="detail-content">
-                    <div class="detail-label">เวลา</div>
-                    <div class="detail-value">
-                      <%= new Date(appointment.time).toLocaleTimeString('th-TH', {
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: false
-                      }) %> น.
-                    </div>
-                  </div>
-                </div>
+  <div class="detail-icon"><i class="fas fa-clock"></i></div>
+  <div class="detail-content">
+    <div class="detail-label">เวลา</div>
+    <div class="detail-value">
+      <% 
+        const startTime = new Date(appointment.time);
+        const endTime = new Date(startTime.getTime() + ((appointment.duration || 60) * 60000));
+        const fmt = d => d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+      %>
+      <%= fmt(startTime) %> - <%= fmt(endTime) %> น.
+    </div>
+  </div>
+</div>
+
               </div>
             </div>
             
@@ -828,11 +830,11 @@
               <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-primary">
                 <i class="fas fa-eye"></i> ดูรายละเอียด
               </a>
-              <% if (appointment.queue_status === 'pending' || appointment.queue_status === 'confirm') { %>
+              <!-- <% if (appointment.queue_status === 'pending' || appointment.queue_status === 'confirm') { %>
                 <a href="/patient/history/edit/<%= appointment.queue_id %>" class="btn btn-outline">
                   <i class="fas fa-edit"></i> แก้ไข
                 </a>
-              <% } %>
+              <% } %> -->
             </div>
           </div>
           <% }); %>

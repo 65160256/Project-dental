@@ -597,29 +597,49 @@
         <form action="/patient/profile/edit" method="POST" class="profile-form">
           <!-- Login Information -->
           <div class="form-section">
-            <h3>
-              <i class="fas fa-lock"></i>
-              ข้อมูลการเข้าสู่ระบบ
-            </h3>
-            
-            <% if (typeof query !== 'undefined' && query.error) { %>
-              <% if (query.error === 'missing_required') { %>
-                <div class="error-message">
-                  <i class="fas fa-exclamation-circle"></i>
-                  กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน
-                </div>
-              <% } else if (query.error === 'email_exists') { %>
-                <div class="error-message">
-                  <i class="fas fa-exclamation-circle"></i>
-                  อีเมลนี้ถูกใช้งานแล้ว
-                </div>
-              <% } else if (query.error === 'update_failed') { %>
-                <div class="error-message">
-                  <i class="fas fa-exclamation-circle"></i>
-                  ไม่สามารถอัพเดทข้อมูลได้ กรุณาลองใหม่อีกครั้ง
-                </div>
-              <% } %>
-            <% } %>
+  <h3>
+    <i class="fas fa-lock"></i>
+    ข้อมูลการเข้าสู่ระบบ
+  </h3>
+  
+  <% if (typeof query !== 'undefined' && query.error) { %>
+    <% if (query.error === 'missing_required') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ชื่อ, นามสกุล และอีเมล)
+      </div>
+    <% } else if (query.error === 'email_exists') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น
+      </div>
+    <% } else if (query.error === 'invalid_email') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        รูปแบบอีเมลไม่ถูกต้อง
+      </div>
+    <% } else if (query.error === 'id_card_exists') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        เลขบัตรประชาชนนี้ถูกใช้งานแล้ว
+      </div>
+    <% } else if (query.error === 'invalid_id_card') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น
+      </div>
+    <% } else if (query.error === 'invalid_phone') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น
+      </div>
+    <% } else if (query.error === 'update_failed') { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        ไม่สามารถอัพเดทข้อมูลได้ กรุณาลองใหม่อีกครั้ง
+      </div>
+    <% } %>
+  <% } %>
 
             <div class="form-group">
               <label class="form-label">อีเมล: *</label>
@@ -660,6 +680,18 @@
                 <label class="form-label">วันเกิด:</label>
                 <input type="date" name="dob" class="form-input" value="<%= patient.dob_formatted %>">
               </div>
+
+              <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">เพศ:</label>
+              <select name="gender" class="form-input">
+                <option value="">— เลือก —</option>
+                <option value="male"   <%= patient.gender === 'male' ? 'selected' : '' %>>ชาย</option>
+                <option value="female" <%= patient.gender === 'female' ? 'selected' : '' %>>หญิง</option>
+                <option value="other"  <%= patient.gender === 'other' ? 'selected' : '' %>>อื่นๆ</option>
+              </select>
+            </div>
+          </div>
               
               <div class="form-group">
                 <label class="form-label">เลขบัตรประชาชน:</label>
@@ -669,6 +701,23 @@
             </div>
           </div>
 
+ <!-- Health Information -->
+<div class="form-section">
+  <h3><i class="fas fa-heartbeat"></i> ข้อมูลสุขภาพ</h3>
+
+  
+
+  <div class="form-group">
+    <label class="form-label">โรคประจำตัว:</label>
+    <textarea name="chronic_disease" class="form-input" rows="3" placeholder="เช่น เบาหวาน, ความดันโลหิตสูง"><%= patient.chronic_disease || '' %></textarea>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">ประวัติการแพ้ยา:</label>
+    <textarea name="allergy_history" class="form-input" rows="3" placeholder="เช่น แพ้เพนิซิลลิน"><%= patient.allergy_history || '' %></textarea>
+  </div>
+</div>
+         
           <!-- Contact Information -->
           <div class="form-section">
             <h3>
@@ -705,54 +754,81 @@
   </div>
 
   <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  function toggleDropdown() {
+    const menu = document.getElementById('profileDropdown');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+  
+  document.addEventListener('click', function (e) {
+    const prof = document.querySelector('.profile-dropdown');
+    if (prof && !prof.contains(e.target)) {
+      document.getElementById('profileDropdown').style.display = 'none';
+    }
+  });
+
+  // Enhanced form validation
+  document.querySelector('.profile-form').addEventListener('submit', function(e) {
+    const fname = document.querySelector('input[name="fname"]').value.trim();
+    const lname = document.querySelector('input[name="lname"]').value.trim();
+    const email = document.querySelector('input[name="email"]').value.trim();
+    const id_card = document.querySelector('input[name="id_card"]').value.trim();
+    const phone = document.querySelector('input[name="phone"]').value.trim();
+    
+    // Check required fields
+    if (!fname || !lname || !email) {
+      e.preventDefault();
+      alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ชื่อ, นามสกุล และอีเมล)');
+      return false;
     }
     
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (prof && !prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      e.preventDefault();
+      alert('กรุณากรอกอีเมลที่ถูกต้อง');
+      return false;
+    }
+    
+    // ID Card validation (if provided)
+    if (id_card) {
+      if (!/^\d{13}$/.test(id_card)) {
+        e.preventDefault();
+        alert('เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลักเท่านั้น');
+        return false;
       }
-    });
+    }
 
-    // Form validation
-    document.querySelector('.profile-form').addEventListener('submit', function(e) {
-      const fname = document.querySelector('input[name="fname"]').value.trim();
-      const lname = document.querySelector('input[name="lname"]').value.trim();
-      const email = document.querySelector('input[name="email"]').value.trim();
-      
-      if (!fname || !lname || !email) {
+    // Phone validation (if provided)
+    if (phone) {
+      if (!/^\d{10}$/.test(phone)) {
         e.preventDefault();
-        alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (ชื่อ, นามสกุล และอีเมล)');
+        alert('เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น');
         return false;
       }
-      
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        e.preventDefault();
-        alert('กรุณากรอกอีเมลที่ถูกต้อง');
-        return false;
-      }
-      
-      // ID Card validation (if provided)
-      const id_card = document.querySelector('input[name="id_card"]').value.trim();
-      if (id_card && id_card.length !== 13) {
-        e.preventDefault();
-        alert('เลขบัตรประชาชนต้องมี 13 หลักเท่านั้น');
-        return false;
-      }
+    }
 
-      // Phone validation (if provided)
-      const phone = document.querySelector('input[name="phone"]').value.trim();
-      if (phone && phone.length !== 10) {
-        e.preventDefault();
-        alert('เบอร์โทรศัพท์ต้องมี 10 หลักเท่านั้น');
-        return false;
-      }
+    // Confirm before submit
+    if (!confirm('คุณต้องการบันทึกการเปลี่ยนแปลงหรือไม่?')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Auto-format phone number (optional)
+  const phoneInput = document.querySelector('input[name="phone"]');
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/\D/g, '').substring(0, 10);
     });
-  </script>
+  }
+
+  // Auto-format ID card (optional)
+  const idCardInput = document.querySelector('input[name="id_card"]');
+  if (idCardInput) {
+    idCardInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/\D/g, '').substring(0, 13);
+    });
+  }
+</script>
 </body>
 </html>

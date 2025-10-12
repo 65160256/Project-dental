@@ -237,6 +237,13 @@
                   <% } %>
                 </div>
               </div>
+              <div class="info-item">
+                <div class="info-label">เพศ</div>
+                <div class="info-value">
+                  <%= patient.gender_th || 'ยังไม่ระบุ' %>
+                </div>
+              </div>
+
               <div class="info-item full-width">
                 <div class="info-label">เลขบัตรประชาชน</div>
                 <div class="info-value">
@@ -249,6 +256,20 @@
               </div>
             </div>
           </div>
+
+          <div class="info-section">
+  <h3><i class="fas fa-heartbeat"></i> ข้อมูลสุขภาพ</h3>
+  <div class="info-grid">
+    <div class="info-item full-width">
+      <div class="info-label">โรคประจำตัว</div>
+      <div class="info-value"><%= patient.chronic_disease || 'ไม่มี/ยังไม่ระบุ' %></div>
+    </div>
+    <div class="info-item full-width">
+      <div class="info-label">ประวัติการแพ้ยา</div>
+      <div class="info-value"><%= patient.allergy_history || 'ไม่มี/ยังไม่ระบุ' %></div>
+    </div>
+  </div>
+</div>
 
           <!-- Contact Info -->
           <div class="info-section">

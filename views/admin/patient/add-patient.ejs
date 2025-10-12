@@ -19,6 +19,19 @@
         .sidebar ul li a{display:block;padding:12px 20px;color:rgba(255,255,255,0.9);text-decoration:none;transition:all .3s ease;font-size:14px;display:flex;align-items:center;gap:8px}
         .sidebar ul li.active a,.sidebar ul li:hover a{background-color:rgba(255,255,255,0.2);color:#fff;border-radius:8px;margin:0 10px}
 
+        .form-control select,
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 35px;
+}
+
+.form-control select:focus,
+select.form-control:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A90E2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
         /* Main */
         .main{margin-left:180px;min-height:100vh}
         .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1);position:relative}
@@ -231,20 +244,56 @@
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="dob">วันเดือนปีเกิด <span class="required">*</span></label>
-                                <input type="date" id="dob" name="dob" class="form-control" required />
-                                <div class="error-message">กรุณาเลือกวันเดือนปีเกิดที่ถูกต้อง</div>
-                            </div>
-                            <div class="form-group">
-                                <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
-                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
-                                <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
-                                <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง</div>
-                            </div>
-                        </div>
-                    </div>
+                         <div class="form-row">
+            <!-- ✅ เพิ่ม Gender field -->
+            <div class="form-group">
+                <label for="gender">เพศ</label>
+                <select id="gender" name="gender" class="form-control">
+                    <option value="">-- เลือกเพศ --</option>
+                    <option value="male">ชาย</option>
+                    <option value="female">หญิง</option>
+                    <option value="other">อื่นๆ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="dob">วันเดือนปีเกิด <span class="required">*</span></label>
+                <input type="date" id="dob" name="dob" class="form-control" required />
+                <div class="error-message">กรุณาเลือกวันเดือนปีเกิดที่ถูกต้อง</div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
+                <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
+                <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ เพิ่ม Medical Information Section ใหม่ -->
+    <div class="form-section" id="medicalSection">
+        <h3 class="section-title">
+            <i class="fas fa-notes-medical"></i>
+            ข้อมูลทางการแพทย์
+        </h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="chronic_disease">โรคประจำตัว</label>
+                <textarea id="chronic_disease" name="chronic_disease" class="form-control" rows="3" 
+                    placeholder="ระบุโรคประจำตัว เช่น เบาหวาน ความดันโลหิตสูง (ถ้ามี)"></textarea>
+                <div class="field-help">ช่วยให้ทันตแพทย์ให้การรักษาได้อย่างเหมาะสม</div>
+            </div>
+            <div class="form-group">
+                <label for="drug_allergy">ประวัติการแพ้ยา</label>
+                <textarea id="drug_allergy" name="drug_allergy" class="form-control" rows="3" 
+                    placeholder="ระบุยาที่แพ้ เช่น เพนนิซิลลิน (ถ้ามี)"></textarea>
+                <div class="field-help">สำคัญมาก! เพื่อหลีกเลี่ยงการแพ้ยา</div>
+            </div>
+        </div>
+    </div>
 
                     <!-- Account -->
                     <div class="form-section">

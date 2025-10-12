@@ -1701,36 +1701,12 @@ exports.getTreatmentDetails = async (req, res) => {
     );
     if (!patientRows[0]) return res.redirect('/login');
     const patient = patientRows[0];
-    const patient_id = patient.patient_id;
-
-    const [treatmentRows] = await db.execute(`
-      SELECT q.*, qd.date, qd.created_at,
-             t.treatment_name, t.duration,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name,
-             d.specialty, d.fname as dentist_fname, d.lname as dentist_lname,
-             th.diagnosis as treatment_diagnosis,
-             th.followUpdate,
-             CONCAT(p.fname, ' ', p.lname) as patient_name
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN patient p ON q.patient_id = p.patient_id
-      LEFT JOIN treatmentHistory th ON q.queuedetail_id = th.queuedetail_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [treatmentId, patient_id]);
-
-    if (!treatmentRows[0]) {
-      return res.status(404).send('Treatment record not found');
-    }
-
-    const treatment = treatmentRows[0];
 
     res.render('patient/treatments/details', {
       title: 'Treatment History Details',
       user: req.session,
       patient: patient,
-      treatment
+      queueId: treatmentId
     });
   } catch (error) {
     console.error('Treatment details error:', error);
@@ -2116,6 +2092,9 @@ exports.getProfile = async (req, res) => {
         p.phone, 
         p.address,
         p.id_card,
+        p.gender,
+        p.chronic_disease,
+        p.allergy_history,
         u.email,
         u.last_login
        FROM patient p 
@@ -2127,7 +2106,11 @@ exports.getProfile = async (req, res) => {
     if (!patientRows[0]) return res.redirect('/login');
     const patient = patientRows[0];
 
-    // Format the data for display
+    const genderTh = patient.gender === 'male' ? 'ชาย'
+                : patient.gender === 'female' ? 'หญิง'
+                : patient.gender === 'other' ? 'อื่นๆ' : 'ยังไม่ระบุ';
+    
+                // Format the data for display
     const profileData = {
       ...patient,
       dob_formatted: patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB', {
@@ -2145,6 +2128,7 @@ exports.getProfile = async (req, res) => {
       }) + ' AM' : 'Never logged in',
       full_name: `${patient.fname} ${patient.lname}`,
       masked_password: '******',
+      gender_th: genderTh,
       // ใช้ข้อมูล ID Card จากฐานข้อมูล
       id_card_display: patient.id_card || 'Not specified'
     };
@@ -2161,12 +2145,13 @@ exports.getProfile = async (req, res) => {
 };
 
 // Show edit profile form
+// Show edit profile form
 exports.showEditProfile = async (req, res) => {
   try {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info with user details
+    // Get patient info with user details - เพิ่มฟิลด์ทั้งหมด
     const [patientRows] = await db.execute(
       `SELECT 
         p.patient_id,
@@ -2176,6 +2161,9 @@ exports.showEditProfile = async (req, res) => {
         p.phone, 
         p.address,
         p.id_card,
+        p.gender,
+        p.chronic_disease,
+        p.allergy_history,
         u.email,
         u.last_login
        FROM patient p 
@@ -2191,21 +2179,23 @@ exports.showEditProfile = async (req, res) => {
     const profileData = {
       ...patient,
       dob_formatted: patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : '',
-      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
+      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('th-TH', {
         day: '2-digit',
         month: 'long',
         year: 'numeric'
-      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
+      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit'
-      }) + ' AM' : 'Never logged in',
+      }) : 'ยังไม่เคยเข้าสู่ระบบ',
       full_name: `${patient.fname} ${patient.lname}`
     };
 
+    // ส่ง query parameter ไปด้วยสำหรับแสดง error/success messages
     res.render('patient/edit-profile', {
       title: 'Edit My Profile',
       user: req.session,
-      patient: profileData
+      patient: profileData,
+      query: req.query // เพิ่มส่วนนี้
     });
   } catch (error) {
     console.error('Edit profile error:', error);
@@ -2215,6 +2205,7 @@ exports.showEditProfile = async (req, res) => {
 
 // Update profile
 exports.updateProfile = async (req, res) => {
+  let connection;
   try {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
@@ -2226,7 +2217,10 @@ exports.updateProfile = async (req, res) => {
       id_card,
       address,
       phone,
-      email
+      email,
+      gender,
+      chronic_disease,
+      allergy_history
     } = req.body;
 
     // Validate required fields
@@ -2234,14 +2228,31 @@ exports.updateProfile = async (req, res) => {
       return res.redirect('/patient/profile/edit?error=missing_required');
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.redirect('/patient/profile/edit?error=invalid_email');
+    }
+
+    // Validate ID Card format (13 digits) if provided
+    if (id_card && !/^\d{13}$/.test(id_card)) {
+      return res.redirect('/patient/profile/edit?error=invalid_id_card');
+    }
+
+    // Validate phone format (10 digits) if provided
+    if (phone && !/^\d{10}$/.test(phone)) {
+      return res.redirect('/patient/profile/edit?error=invalid_phone');
+    }
+
     // Get patient ID
     const [patientRows] = await db.execute(
-      'SELECT patient_id FROM patient WHERE user_id = ?',
+      'SELECT patient_id, id_card FROM patient WHERE user_id = ?',
       [userId]
     );
 
     if (!patientRows[0]) return res.redirect('/login');
     const patient_id = patientRows[0].patient_id;
+    const currentIdCard = patientRows[0].id_card;
 
     // Check if email is already used by another user
     const [emailCheck] = await db.execute(
@@ -2253,8 +2264,20 @@ exports.updateProfile = async (req, res) => {
       return res.redirect('/patient/profile/edit?error=email_exists');
     }
 
+    // Check if ID card is already used by another patient (only if changed)
+    if (id_card && id_card !== currentIdCard) {
+      const [idCardCheck] = await db.execute(
+        'SELECT patient_id FROM patient WHERE id_card = ? AND patient_id != ?',
+        [id_card, patient_id]
+      );
+
+      if (idCardCheck.length > 0) {
+        return res.redirect('/patient/profile/edit?error=id_card_exists');
+      }
+    }
+
     // Start transaction
-    const connection = await db.getConnection();
+    connection = await db.getConnection();
     await connection.beginTransaction();
 
     try {
@@ -2264,7 +2287,7 @@ exports.updateProfile = async (req, res) => {
         [email, userId]
       );
 
-      // Update patient table
+      // Update patient table - แก้ไข SQL query ให้ถูกต้อง
       await connection.execute(
         `UPDATE patient SET 
          fname = ?, 
@@ -2272,26 +2295,40 @@ exports.updateProfile = async (req, res) => {
          dob = ?, 
          id_card = ?, 
          address = ?, 
-         phone = ? 
+         phone = ?,
+         gender = ?,
+         chronic_disease = ?,
+         allergy_history = ?
          WHERE patient_id = ?`,
-        [fname, lname, dob || null, id_card || null, address || null, phone || null, patient_id]
+        [
+          fname, 
+          lname, 
+          dob || null, 
+          id_card || null, 
+          address || null, 
+          phone || null, 
+          gender || null, 
+          chronic_disease || null, 
+          allergy_history || null, 
+          patient_id
+        ]
       );
 
       // Commit transaction
       await connection.commit();
-      connection.release();
-
+      
       res.redirect('/patient/profile?success=updated');
     } catch (error) {
       // Rollback on error
       await connection.rollback();
-      connection.release();
       throw error;
     }
 
   } catch (error) {
     console.error('Update profile error:', error);
     res.redirect('/patient/profile/edit?error=update_failed');
+  } finally {
+    if (connection) connection.release();
   }
 };
 
@@ -2487,6 +2524,89 @@ exports.getDentistTreatments = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาด'
+    });
+  }
+};
+
+exports.getTreatmentHistoryDetails = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { id } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Authentication required' 
+      });
+    }
+
+    // Get patient_id
+    const [patientResult] = await db.execute(
+      'SELECT patient_id FROM patient WHERE user_id = ?',
+      [userId]
+    );
+
+    if (patientResult.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Patient not found' 
+      });
+    }
+
+    const patientId = patientResult[0].patient_id;
+
+    // Get treatment history with all details
+    const [treatments] = await db.execute(`
+      SELECT 
+        q.queue_id,
+        q.time,
+        q.queue_status,
+        q.diagnosis,
+        q.next_appointment,
+        p.patient_id,
+        p.fname as patient_fname,
+        p.lname as patient_lname,
+        p.gender,
+        p.dob,
+        p.phone,
+        p.address,
+        p.id_card,
+        p.chronic_disease,
+        p.allergy_history,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname,
+        d.specialty,
+        t.treatment_name,
+        t.duration,
+        th.diagnosis as treatment_diagnosis,
+        th.followUpdate as next_appointment_detail,
+        qd.date
+      FROM queue q
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+      WHERE q.queue_id = ? AND q.patient_id = ?
+    `, [id, patientId]);
+
+    if (treatments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Treatment history not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      treatment: treatments[0]
+    });
+
+  } catch (error) {
+    console.error('Error fetching treatment history:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch treatment history'
     });
   }
 };
