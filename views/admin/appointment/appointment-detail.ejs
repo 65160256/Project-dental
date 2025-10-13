@@ -10,86 +10,270 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Sarabun', 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #f5f7fa;
+            margin: 0;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
+            position: fixed;
+            height: 100vh;
+            color: #fff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .sidebar .logo {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar .logo .logo-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: white;
+            padding: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            color: #4A90E2;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 700px;
-            width: 100%;
-            overflow: hidden;
-            animation: slideUp 0.5s ease;
+        .sidebar .logo h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .sidebar ul {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
         }
 
-        .header {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
+        .sidebar ul li {
+            margin: 2px 0;
         }
 
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: background 0.2s;
             font-size: 14px;
         }
 
-        .header .back-btn {
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            background: rgba(255,255,255,0.2);
-            border: none;
+        .sidebar ul li.active a,
+        .sidebar ul li:hover a {
+            background-color: rgba(255,255,255,0.2);
             color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* Main */
+        .main {
+            margin-left: 180px;
+            flex: 1;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title-section h1 {
+            font-size: 20px;
+            color: #333;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .page-title-section i {
+            color: #4A90E2;
+            font-size: 22px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
             cursor: pointer;
-            transition: all 0.3s;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .notification-icon:hover {
+            color: #4A90E2;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .user-info:hover {
+            opacity: 0.8;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4A90E2;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            overflow: hidden;
         }
 
-        .header .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.1);
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 180px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            height: 1px;
+            background: #e1e5e9;
+        }
+
+        /* Content */
         .content {
-            padding: 40px;
+            padding: 30px;
         }
 
+        /* Date Header */
+        .date-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #4A90E2;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .back-btn:hover {
+            background: #f0f7ff;
+        }
+
+        .page-header {
+            flex: 1;
+        }
+
+        .page-header h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .page-header p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Alert */
         .alert {
             padding: 15px 20px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin-bottom: 20px;
             display: none;
             align-items: center;
@@ -120,20 +304,23 @@
             border-left: 4px solid #ef4444;
         }
 
+        /* Loading */
         .loading {
-            display: none;
-            text-align: center;
-            padding: 60px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(74, 144, 226, 0.1);
-            border-top: 4px solid #4A90E2;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #4A90E2;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -141,47 +328,73 @@
             100% { transform: rotate(360deg); }
         }
 
-        .detail-card {
-            background: #f8f9fa;
-            border-radius: 12px;
+        .loading-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 8px;
             padding: 30px;
-            margin-bottom: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .booking-id {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 14px;
             color: #333;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e1e5e9;
+            border-bottom: 2px solid #f1f3f4;
+            font-weight: 600;
         }
 
-        .info-row {
+        /* Info Section */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
             display: flex;
-            margin-bottom: 15px;
-            align-items: start;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
         }
 
         .info-label {
-            font-weight: 600;
-            color: #555;
-            min-width: 180px;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .info-label i {
             color: #4A90E2;
-            width: 20px;
+            width: 16px;
         }
 
         .info-value {
+            font-size: 14px;
             color: #333;
-            flex: 1;
         }
 
+        .info-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -211,25 +424,28 @@
             border: 1px solid #f87171;
         }
 
+        /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 15px;
             margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f1f3f4;
         }
 
         .btn {
             flex: 1;
-            padding: 15px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-confirm {
@@ -239,7 +455,7 @@
 
         .btn-confirm:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
         }
 
         .btn-cancel {
@@ -249,7 +465,7 @@
 
         .btn-cancel:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
         }
 
         .btn:disabled {
@@ -257,22 +473,37 @@
             cursor: not-allowed;
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
-            .container {
-                margin: 10px;
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main {
+                margin-left: 0;
             }
 
             .content {
+                padding: 20px 15px;
+            }
+
+            .content-card {
                 padding: 20px;
             }
 
-            .info-row {
-                flex-direction: column;
-                gap: 5px;
+            .info-grid {
+                grid-template-columns: 1fr;
             }
 
-            .info-label {
-                min-width: auto;
+            .date-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .top-bar {
+                padding: 10px 15px;
             }
 
             .action-buttons {
@@ -282,15 +513,51 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button class="back-btn" onclick="window.location.href='/admin/appointments'">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <h1>รายละเอียดการจอง</h1>
-            <p>Appointment Details</p>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+            <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+        </ul>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-title-section">
+                <i class="fas fa-clipboard-list"></i>
+                <h1>รายละเอียดการจอง</h1>
+            </div>
+            <div class="user-section">
+                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
+                <div class="profile-dropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">A</div>
+                        <div class="user-details">
+                            <strong>สวัสดี ผู้ดูแลระบบ</strong>
+                            <small>Admin</small>
+                        </div>
+                        <i class="fas fa-caret-down"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- Content -->
         <div class="content">
             <div class="alert alert-success" id="successAlert">
                 <i class="fas fa-check-circle"></i>
@@ -302,97 +569,112 @@
                 <span id="errorMessage"></span>
             </div>
 
-            <div class="loading" id="loading">
+            <!-- Loading -->
+            <div id="loading" class="loading">
                 <div class="loading-spinner"></div>
-                <h3>กำลังโหลดข้อมูล...</h3>
-                <p>กรุณารอสักครู่</p>
+                <div class="loading-text">กำลังโหลดข้อมูล...</div>
             </div>
 
+            <!-- Content Area -->
             <div id="appointmentContent" style="display: none;">
-                <div class="detail-card">
-                    <div class="booking-id">
-                        Booking Request ID: <span id="bookingId">#Y-000000</span>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-user"></i>
-                            Patient Name:
-                        </div>
-                        <div class="info-value" id="patientName">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-id-card"></i>
-                            Patient ID:
-                        </div>
-                        <div class="info-value" id="patientId">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-phone"></i>
-                            Phone:
-                        </div>
-                        <div class="info-value" id="phone">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-tooth"></i>
-                            Treatment needed:
-                        </div>
-                        <div class="info-value" id="treatment">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-clock"></i>
-                            Requested Time:
-                        </div>
-                        <div class="info-value" id="requestedTime">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-user-md"></i>
-                            Preferred Dentist:
-                        </div>
-                        <div class="info-value" id="preferredDentist">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-notes-medical"></i>
-                            Symptom Details:
-                        </div>
-                        <div class="info-value" id="symptoms">-</div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-label">
-                            <i class="fas fa-info-circle"></i>
-                            Current Status:
-                        </div>
-                        <div class="info-value">
-                            <span class="status-badge" id="status">
-                                <i class="fas fa-clock"></i>
-                                Pending
-                            </span>
-                        </div>
+                <!-- Date Header with Back Button -->
+                <div class="date-header">
+                    <button class="back-btn" onclick="window.location.href='/admin/appointments'" title="กลับ">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="page-header">
+                        <h2>รายละเอียดการจอง</h2>
+                        <p>ข้อมูลการนัดหมายและรายละเอียดการรักษา</p>
                     </div>
                 </div>
 
-                <div class="action-buttons" id="actionButtons">
-                    <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
-                        <i class="fas fa-check"></i>
-                        ยืนยันการจอง
-                    </button>
-                    <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
-                        <i class="fas fa-times"></i>
-                        ยกเลิกการจอง
-                    </button>
+                <!-- Content Card -->
+                <div class="content-card">
+                    <div class="booking-id">
+                        <strong>Booking Request ID:</strong> <span id="bookingId">#Y-000000</span>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-user"></i>
+                                Patient Name:
+                            </div>
+                            <div class="info-value" id="patientName">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-id-card"></i>
+                                Patient ID:
+                            </div>
+                            <div class="info-value" id="patientId">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-phone"></i>
+                                Phone:
+                            </div>
+                            <div class="info-value" id="phone">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-tooth"></i>
+                                Treatment needed:
+                            </div>
+                            <div class="info-value" id="treatment">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-clock"></i>
+                                Requested Time:
+                            </div>
+                            <div class="info-value" id="requestedTime">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-user-md"></i>
+                                Preferred Dentist:
+                            </div>
+                            <div class="info-value" id="preferredDentist">-</div>
+                        </div>
+
+                        <div class="info-item full-width">
+                            <div class="info-label">
+                                <i class="fas fa-notes-medical"></i>
+                                Symptom Details:
+                            </div>
+                            <div class="info-value" id="symptoms">-</div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-info-circle"></i>
+                                Current Status:
+                            </div>
+                            <div class="info-value">
+                                <span class="status-badge" id="status">
+                                    <i class="fas fa-clock"></i>
+                                    Pending
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons" id="actionButtons">
+                        <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
+                            <i class="fas fa-check"></i>
+                            ยืนยันการจอง
+                        </button>
+                        <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
+                            <i class="fas fa-times"></i>
+                            ยกเลิกการจอง
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -403,6 +685,7 @@
         let appointmentData = null;
 
         document.addEventListener('DOMContentLoaded', function() {
+            updateUserAvatar();
             if (appointmentId) {
                 loadAppointmentDetails();
             } else {
@@ -411,9 +694,22 @@
             }
         });
 
+        // Update user avatar
+        async function updateUserAvatar() {
+            try {
+                const res = await fetch('/admin/profile/api');
+                if (!res.ok) throw new Error('Failed to fetch profile');
+                const data = await res.json();
+                const ch = (data && data.email ? data.email.charAt(0) : 'A').toUpperCase();
+                document.getElementById('userAvatar').textContent = ch;
+            } catch (e) {
+                document.getElementById('userAvatar').textContent = 'A';
+            }
+        }
+
         async function loadAppointmentDetails() {
             try {
-                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').style.display = 'flex';
                 document.getElementById('appointmentContent').style.display = 'none';
 
                 const response = await fetch(`/admin/api/appointments/${appointmentId}`);
@@ -439,21 +735,21 @@
             document.getElementById('patientId').textContent = 'xxxxx';
             document.getElementById('phone').textContent = appointment.phone || '-';
             document.getElementById('treatment').textContent = appointment.treatment_name || '-';
-            
+
             const appointmentDate = new Date(appointment.time);
-            const dateStr = appointmentDate.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit' 
+            const dateStr = appointmentDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
             });
-            const timeStr = appointmentDate.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+            const timeStr = appointmentDate.toLocaleTimeString('en-US', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: true 
+                hour12: true
             });
             document.getElementById('requestedTime').textContent = `${dateStr}, ${timeStr}`;
-            
-            document.getElementById('preferredDentist').textContent = 
+
+            document.getElementById('preferredDentist').textContent =
                 appointment.dentist_name || '-';
             document.getElementById('symptoms').textContent = appointment.diagnosis || '-';
 
@@ -464,14 +760,14 @@
                 'confirm': { icon: 'fa-check-circle', text: 'Confirmed' },
                 'cancel': { icon: 'fa-times-circle', text: 'Cancelled' }
             };
-            
+
             const config = statusConfig[status] || statusConfig['pending'];
             statusEl.innerHTML = `<i class="fas ${config.icon}"></i> ${config.text}`;
             statusEl.className = 'status-badge status-' + status;
 
             const confirmBtn = document.getElementById('confirmBtn');
             const cancelBtn = document.getElementById('cancelBtn');
-            
+
             if (status === 'pending') {
                 confirmBtn.style.display = 'flex';
                 cancelBtn.style.display = 'flex';
@@ -559,6 +855,34 @@
             alert.style.display = 'flex';
             setTimeout(() => alert.style.display = 'none', 5000);
         }
+
+        // UI Functions
+        function toggleDropdown() {
+            const menu = document.getElementById('profileDropdown');
+            if (menu) {
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+        }
+
+        function toggleNotifications() {
+            window.location.href = '/admin/notifications';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            const prof = document.querySelector('.profile-dropdown');
+            const dropdown = document.getElementById('profileDropdown');
+            if (prof && !prof.contains(e.target) && dropdown) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.location.href = '/admin/appointments';
+            }
+        });
     </script>
 </body>
 </html>

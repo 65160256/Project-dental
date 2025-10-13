@@ -113,6 +113,7 @@ router.get('/api/dentists/:id/schedule-data', checkAdminApiAuth, adminController
 
 // ==================== Patients Routes ====================
 router.get('/patients', checkAdminAuth, adminController.getPatients);
+router.get('/admin/patients', checkAdminAuth, adminController.listPatients);
 router.get('/patients/add', checkAdminAuth, adminController.showAddPatientForm);
 router.post('/patients/add', checkAdminAuth, adminController.addPatient);
 router.get('/patients/:id/edit', checkAdminAuth, adminController.showEditPatientForm);
@@ -121,7 +122,7 @@ router.get('/patients/:id', checkAdminAuth, adminController.viewPatient);
 router.get('/patients/:id/delete', checkAdminAuth, adminController.deletePatient);
 router.get('/patients/:id/treatments', checkAdminAuth, adminController.viewPatientTreatmentHistory);
 router.get('/patients/:id/treatments/:queueId', checkAdminAuth, adminController.viewTreatmentDetails);
-
+router.get('/patients/api', checkAdminAuth, adminController.getPatientsAPI);
 // ==================== Patients API Routes ====================
 router.get('/api/patients', checkAdminApiAuth, adminController.getPatientsAPI);
 router.get('/api/patients/:id', checkAdminApiAuth, adminController.getPatientByIdAPI);
@@ -144,7 +145,53 @@ router.get('/api/patients/:id/check-email', checkAdminApiAuth, adminController.c
 // Modern edit patient form (ใช้หน้าใหม่)
 router.get('/patients/:id/edit-modern', checkAdminAuth, adminController.showEditPatientFormModern);
 
-// ==================== Validation Routes ====================
+// ==================== อัปเดต check-email route ให้รองรับ patient ====================
+
+// อัปเดต route check-email เดิมให้รองรับการยกเว้น patient
+router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
+  const db = require('../config/db'); // ต้อง import db
+  
+  try {
+    const { email, exclude_patient_id, exclude_user_id } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+    let params = [email];
+
+    // ยกเว้นอีเมลของผู้ป่วยปัจจุบัน ถ้าระบุ
+    if (exclude_patient_id) {
+      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
+      params.push(exclude_patient_id);
+    }
+    
+    // หรือยกเว้นโดย user_id โดยตรง
+    if (exclude_user_id) {
+      query += ' AND user_id != ?';
+      params.push(exclude_user_id);
+    }
+
+    const [existingUser] = await db.execute(query, params);
+    const exists = existingUser[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+});
 // ==================== Treatments Routes ====================
 router.get('/treatments', checkAdminAuth, adminController.listTreatments);
 router.get('/treatments/add', checkAdminAuth, adminController.showAddTreatmentForm);
@@ -153,6 +200,7 @@ router.get('/treatments/:id', checkAdminAuth, adminController.viewTreatment);
 router.get('/treatments/:id/edit', checkAdminAuth, adminController.showEditTreatmentForm);
 router.post('/treatments/:id/edit', checkAdminAuth, adminController.updateTreatment);
 router.get('/treatments/:id/delete', checkAdminAuth, adminController.deleteTreatment);
+router.delete('/treatments/:id/delete', checkAdminAuth, adminController.deleteTreatment);
 // In your admin routes file, add:
 router.get('/api/treatments', checkAdminApiAuth, adminController.getTreatmentsAPI);
 router.get('/api/treatments/:id', checkAdminApiAuth, adminController.getTreatmentByIdAPI);
@@ -170,6 +218,42 @@ router.get('/api/dentist-treatments/mappings', checkAdminApiAuth, adminControlle
 
 // Get treatments for a specific dentist
 router.get('/api/dentists/:id/treatments', checkAdminApiAuth, adminController.getDentistTreatmentsAPI);
+
+// Notification routes
+router.get('/api/notifications', notificationController.getAdminNotifications);
+router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
+router.put('/api/notifications/:id/read', notificationController.markAsRead);
+router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
+router.delete('/api/notifications/:id', notificationController.deleteNotification);
+
+// Add this route for email checking
+router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {
+  try {
+    const { email } = req.query;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email parameter is required'
+      });
+    }
+
+    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    const exists = existingUser[0].count > 0;
+
+    res.json({
+      success: true,
+      exists: exists
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to check email availability'
+    });
+  }
+});
 
 
 // ==================== Appointment Detail Route ====================
@@ -190,6 +274,8 @@ router.get('/appointments/detail', checkAdminAuth, (req, res) => {
 
 // Update appointment status (confirm/cancel)
 router.put('/api/appointments/:id/status', adminController.updateAppointmentStatus);
+// Update appointment status (confirm/cancel)
+router.put('/api/appointments/:id/status', adminController.updateAppointmentStatus);
 
 // Get pending appointments count
 router.get('/api/appointments/pending/count', adminController.getPendingAppointmentsCount);
@@ -208,8 +294,12 @@ router.get('/api/appointments', adminController.getAppointmentsAPI);
 // Get single appointment details (make sure this exists)
 router.get('/api/appointments/:id', checkAdminApiAuth, adminController.getAppointmentById);
 
-// Update appointment
+// Update appointment (this is the one causing the 500 error)
 router.put('/api/appointments/:id', checkAdminApiAuth, adminController.updateAppointment);
+
+
+// Create new appointment
+router.post('/api/appointments', adminController.createAppointment);
 
 // Delete appointment
 router.delete('/api/appointments/:id', checkAdminApiAuth, adminController.deleteAppointment);
@@ -222,6 +312,9 @@ router.get('/appointments/add', checkAdminAuth, adminController.showAddAppointme
 
 // Create new appointment (API endpoint)
 router.post('/api/appointments', checkAdminApiAuth, adminController.createAppointmentAPI);
+
+// Get available time slots for dentist on specific date
+router.get('/api/dentists/:id/schedule', checkAdminApiAuth, adminController.getDentistScheduleAPI);
 
 // ==================== Notification Routes ====================
 
@@ -255,11 +348,48 @@ router.post('/api/notifications', adminController.createNotification);
 // Get current user info
 router.get('/api/user/current', adminController.getCurrentUserAPI);
 
-// ==================== Appointment Edit Routes ====================
+// Get dentists list
+router.get('/api/dentists', checkAdminApiAuth, adminController.getDentistsAPI);
 
+// Get treatments list  
+router.get('/api/treatments', checkAdminApiAuth, adminController.getTreatmentsAPI);
+
+
+
+// Edit appointment page
+router.get('/appointments/edit', (req, res) => {
+  res.render('edit-appointment'); // or serve the HTML file
+});
+
+router.get('/appointments/edit', checkAdminAuth, (req, res) => {
+  const appointmentId = req.query.id;
+  if (!appointmentId) {
+    return res.redirect('/admin/appointments');
+  }
+  res.render('edit-appointment', { appointmentId: appointmentId });
+});
+
+router.get('/appointments/edit/:id', checkAdminAuth, (req, res) => {
+  res.render('edit-appointment', { 
+    appointmentId: req.params.id,
+    title: 'Edit Appointment - Smile Clinic'
+  });
+});
 // Show edit appointment form
 router.get('/appointments/edit/:id', checkAdminAuth, adminController.showEditAppointmentForm);
+
+// Alternative route using query parameter
 router.get('/appointments/edit', checkAdminAuth, adminController.showEditAppointmentForm);
+router.get('/appointments/edit', checkAdminAuth, (req, res) => {
+  const appointmentId = req.query.id;
+  if (!appointmentId) {
+    return res.redirect('/admin/appointments');
+  }
+  res.render('edit-appointment', { 
+    appointmentId: appointmentId,
+    title: 'Edit Appointment - Smile Clinic'
+  });
+});
 
 const passwordResetController = require('../controller/password-reset.controller');
 const { runDetailedCleanup } = require('../jobs/cleanup-tokens');
@@ -514,8 +644,19 @@ let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE id_card = ?';
   }
 });
 
-// Enhanced email checking
+// Enhanced email checking (replaces the existing check-email)
 router.get('/api/check-email-enhanced', checkAdminApiAuth, adminController.checkEmailAvailabilityEnhanced);
+
+// Specific routes for different entities
+router.get('/api/dentists/check-id-card', checkAdminApiAuth, async (req, res) => {
+  req.query.exclude_patient_id = null; // Only check against dentists
+  adminController.checkid_cardAvailability(req, res);
+});
+
+router.get('/api/patients/check-id-card', checkAdminApiAuth, async (req, res) => {
+  req.query.exclude_dentist_id = null; // Only check against patients  
+  adminController.checkid_cardAvailability(req, res);
+});
 
 // Existing check-email route with enhanced functionality
 router.get('/api/check-email', checkAdminApiAuth, async (req, res) => {

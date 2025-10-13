@@ -1139,18 +1139,6 @@ exports.deletePatientAPI = async (req, res) => {
 exports.showAddPatientForm = (req, res) => {
   res.render('admin/patient/add-patient');
 };
-exports.listPatients = async (req, res) => {
-  try {
-    const [rows] = await db.execute(`
-      SELECT patient_id AS id, CONCAT(fname, ' ', lname) AS name, phone
-      FROM patient
-    `);
-    res.render('admin/patient/admin-patients', { patients: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Failed to load patients');
-  }
-};
 
 // Updated addPatient function to handle the new form structure
 exports.addPatient = async (req, res) => {
@@ -1265,35 +1253,6 @@ async function getUnreadNotificationCount() {
     return 0;
   }
 }
-
-// Email availability check function
-exports.checkEmailAvailability = async (req, res) => {
-  try {
-    const { email } = req.query;
-    
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email parameter is required'
-      });
-    }
-
-    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
-    const exists = existingUser[0].count > 0;
-
-    res.json({
-      success: true,
-      exists: exists
-    });
-
-  } catch (error) {
-    console.error('Error checking email:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to check email availability'
-    });
-  }
-};
 
 // แสดงฟอร์มแก้ไข patient
 exports.showEditPatientForm = async (req, res) => {
@@ -1669,7 +1628,7 @@ exports.viewTreatmentDetails = async (req, res) => {
 
   try {
     const [rows] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         t.treatment_name,
@@ -1677,7 +1636,6 @@ exports.viewTreatmentDetails = async (req, res) => {
         CONCAT(d.fname, ' ', d.lname) AS dentist_name,
         th.diagnosis,
         th.followUpdate,
-        q.next_appointment,
         p.fname AS patient_fname,
         p.lname AS patient_lname,
         p.gender,
@@ -1962,43 +1920,42 @@ exports.deleteTreatment = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const { limit = 50, offset = 0, unread_only = 'false' } = req.query;
-    
-    let whereClause = '';
-    let params = [];
-    
-    if (unread_only === 'true') {
-      whereClause = 'WHERE is_read = 0';
-    }
-    
-    // แก้ส่วนนี้ - ต้องส่ง params เป็น number
-    const [notifications] = await db.execute(`
-      SELECT 
-        n.id,
-        n.type,
-        n.title,
-        n.message,
-        n.is_read,
-        n.is_new,
-        n.appointment_id,
-        n.dentist_id,
-        n.patient_id,
-        n.created_at,
-        p.fname as patient_fname,
-        p.lname as patient_lname,
-        d.fname as dentist_fname,
-        d.lname as dentist_lname
-      FROM notifications n
-      LEFT JOIN patient p ON n.patient_id = p.patient_id
-      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
-      ${whereClause}
-      ORDER BY n.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [...params, parseInt(limit), parseInt(offset)]);  // ⬅️ ต้องแน่ใจว่าเป็น number
 
-    // Get total count with same WHERE clause
-    const [countResult] = await db.execute(`
-      SELECT COUNT(*) as total FROM notifications n ${whereClause}
-    `, params);  // ⬅️ ไม่ส่ง limit/offset ที่นี่
+    // แปลงเป็น number ทันที
+    const limitNum = Number(limit);
+    const offsetNum = Number(offset);
+
+    console.log('🔍 Query params:', { limit, offset, unread_only, limitNum, offsetNum });
+
+    let whereClause = '';
+
+    if (unread_only === 'true') {
+      whereClause = 'WHERE n.is_read = 0';
+    }
+
+    // Build query without placeholders for LIMIT/OFFSET (MySQL issue with prepared statements)
+    const query =
+      'SELECT ' +
+      'n.id, n.type, n.title, n.message, n.is_read, n.is_new, ' +
+      'n.appointment_id, n.dentist_id, n.patient_id, n.created_at, ' +
+      'p.fname as patient_fname, p.lname as patient_lname, ' +
+      'd.fname as dentist_fname, d.lname as dentist_lname ' +
+      'FROM notifications n ' +
+      'LEFT JOIN patient p ON n.patient_id = p.patient_id ' +
+      'LEFT JOIN dentist d ON n.dentist_id = d.dentist_id ' +
+      (whereClause ? whereClause + ' ' : '') +
+      'ORDER BY n.created_at DESC ' +
+      'LIMIT ' + limitNum + ' OFFSET ' + offsetNum;
+
+    console.log('🔍 Final Query:', query);
+
+    const [notifications] = await db.query(query);
+
+    // Get total count with same WHERE clause - use string concatenation
+    const countQuery = 'SELECT COUNT(*) as total FROM notifications n ' + (whereClause ? whereClause : '');
+    console.log('🔍 Count query:', countQuery);
+
+    const [countResult] = await db.execute(countQuery);
 
     const totalCount = countResult[0].total;
     const unreadCount = await getUnreadNotificationCount();
@@ -2006,12 +1963,8 @@ exports.getNotifications = async (req, res) => {
     res.json({
       success: true,
       notifications: notifications,
-      pagination: {
-        total: totalCount,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        unread_count: unreadCount
-      }
+      unread: unreadCount,
+      total: totalCount
     });
 
   } catch (error) {
@@ -2299,11 +2252,11 @@ exports.getAppointmentsAPI = async (req, res) => {
     const { date = new Date().toISOString().split('T')[0] } = req.query;
     
     const [appointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
+        th.diagnosis,
         CONCAT(p.fname, ' ', p.lname) as patient_name,
         p.phone,
         CONCAT(d.fname, ' ', d.lname) as dentist_name,
@@ -2314,6 +2267,8 @@ exports.getAppointmentsAPI = async (req, res) => {
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE DATE(q.time) = ?
       ORDER BY q.time ASC
     `, [date]);
@@ -2973,9 +2928,9 @@ exports.createAppointment = async (req, res) => {
 
     // Create queue entry
     const [queueResult] = await db.execute(`
-      INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
-      VALUES (?, ?, ?, ?, ?, 'pending', ?)
-    `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time, notes || null]);
+      INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+      VALUES (?, ?, ?, ?, ?, 'pending')
+    `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
 
     const queueId = queueResult.insertId;
 
@@ -3734,37 +3689,6 @@ exports.createTreatmentAPI = async (req, res) => {
   }
 };
 
-// Traditional delete route handler
-exports.deleteTreatment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Delete dentist-treatment relationships first
-      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [id]);
-      
-      // Delete the treatment
-      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [id]);
-      
-      await db.query('COMMIT');
-      
-      req.flash('success', 'Treatment deleted successfully.');
-      res.redirect('/admin/treatments');
-      
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
-    
-  } catch (error) {
-    console.error('Error deleting treatment:', error);
-    req.flash('error', 'Failed to delete treatment.');
-    res.redirect('/admin/treatments');
-  }
-};
-
 exports.getPendingAppointmentsCount = async (req, res) => {
   try {
     const [result] = await db.execute(`
@@ -4183,9 +4107,9 @@ exports.createAppointmentAPI = async (req, res) => {
 
       // Create queue entry
       const [queueResult] = await db.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
-        VALUES (?, ?, ?, ?, ?, 'pending', ?)
-      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time, notes || null]);
+        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+        VALUES (?, ?, ?, ?, ?, 'pending')
+      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
 
       const queueId = queueResult.insertId;
 
@@ -4338,11 +4262,11 @@ exports.getPatientTreatmentHistoryAPI = async (req, res) => {
     const { id } = req.params;
     
     const [treatments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time as date,
         q.queue_status,
-        q.diagnosis,
+        th.diagnosis,
         t.treatment_name,
         CONCAT(d.fname, ' ', d.lname) as dentist_name,
         th.followUpdate as follow_update
@@ -5310,9 +5234,9 @@ exports.bookAppointmentForPatient = async (req, res) => {
 
       // ✅ สร้าง queue โดยใช้ 'confirm' แทน 'pending' เพราะเป็น admin จอง
       const [queueResult] = await connection.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
-        VALUES (?, ?, ?, ?, ?, 'confirm', ?)
-      `, [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime, note || null]);
+        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+        VALUES (?, ?, ?, ?, ?, 'confirm')
+      `, [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
 
       const queueId = queueResult.insertId;
 

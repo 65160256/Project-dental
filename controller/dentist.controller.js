@@ -101,11 +101,11 @@ const dentistController = {
 
     // 5) นัดหมายล่าสุด
     const [latestAppointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
+        th.diagnosis,
         p.fname,
         p.lname,
         t.treatment_name,
@@ -113,6 +113,8 @@ const dentistController = {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.dentist_id = ?
       ORDER BY q.time DESC
       LIMIT 10
@@ -214,12 +216,12 @@ const dentistController = {
 
     // ดึงข้อมูลนัดหมายทั้งหมด เรียงจากใหม่ไปเก่า
     const [appointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         p.fname,
         p.lname,
         p.phone,
@@ -228,6 +230,8 @@ const dentistController = {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.dentist_id = ?
       ORDER BY q.time DESC
     `, [dentistId]);
@@ -755,12 +759,12 @@ getPatientDetailAPI: async (req, res) => {
 
     // ดึงประวัติการรักษาทั้งหมด
     const [treatmentHistory] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         t.treatment_name,
         t.duration,
         d.fname as dentist_fname,
@@ -768,6 +772,8 @@ getPatientDetailAPI: async (req, res) => {
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND q.dentist_id = ?
       ORDER BY q.time DESC
     `, [patientId, dentistId]);
@@ -863,16 +869,18 @@ searchPatientTreatments: async (req, res) => {
     const dentistId = dentistResult[0].dentist_id;
 
     let query = `
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         t.treatment_name,
         t.duration
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND q.dentist_id = ?
     `;
 
@@ -1240,12 +1248,12 @@ exportPatientsData: async (req, res) => {
 
     // ดึงประวัติการรักษาทั้งหมดของผู้ป่วยกับหมอคนนี้
     const [treatmentHistory] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         t.treatment_name,
         t.duration,
         d.fname as dentist_fname,
@@ -1253,6 +1261,8 @@ exportPatientsData: async (req, res) => {
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND q.dentist_id = ?
       ORDER BY q.time DESC
     `, [patientId, dentistId]);
@@ -1342,12 +1352,12 @@ getHistory: async (req, res) => {
 
     // ดึงประวัติการรักษาทั้งหมด
     const [treatmentHistory] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         p.patient_id,
         p.fname,
         p.lname,
@@ -1359,6 +1369,8 @@ getHistory: async (req, res) => {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.dentist_id = ?
       ORDER BY q.time DESC
     `, [dentistId]);
@@ -1425,12 +1437,12 @@ getAddHistoryPage: async (req, res) => {
     // ถ้ามี queueId ให้ดึงข้อมูลการจอง
     if (queueId) {
       const [appointmentResult] = await db.execute(`
-        SELECT 
+        SELECT
           q.queue_id,
           q.patient_id,
           q.time,
-          q.diagnosis,
-          q.next_appointment,
+          th.diagnosis,
+          th.next_appointment,
           q.queue_status,
           p.fname,
           p.lname,
@@ -1443,6 +1455,8 @@ getAddHistoryPage: async (req, res) => {
         JOIN patient p ON q.patient_id = p.patient_id
         JOIN treatment t ON q.treatment_id = t.treatment_id
         JOIN dentist d ON q.dentist_id = d.dentist_id
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
         WHERE q.queue_id = ? AND d.user_id = ?
       `, [queueId, userId]);
 
@@ -1515,12 +1529,12 @@ getPatientHistoryAPI: async (req, res) => {
     const dentistId = dentistResult[0].dentist_id;
 
     const [historyResult] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         p.patient_id,
         p.fname,
         p.lname,
@@ -1532,6 +1546,8 @@ getPatientHistoryAPI: async (req, res) => {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.dentist_id = ?
       ORDER BY q.time DESC
     `, [dentistId]);
@@ -1675,11 +1691,11 @@ searchPatientHistory: async (req, res) => {
     }
 
     const [searchResult] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
+        th.diagnosis,
         p.patient_id,
         p.fname,
         p.lname,
@@ -1691,6 +1707,8 @@ searchPatientHistory: async (req, res) => {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       ${whereClause}
       ORDER BY q.time DESC
       LIMIT 100
@@ -2441,11 +2459,11 @@ createTreatmentHistory: async (req, res) => {
       const dentistId = dentistResult[0].dentist_id;
 
       const [appointments] = await db.execute(`
-        SELECT 
+        SELECT
           q.queue_id,
           q.time,
           q.queue_status,
-          q.diagnosis,
+          th.diagnosis,
           p.fname,
           p.lname,
           p.phone,
@@ -2454,7 +2472,9 @@ createTreatmentHistory: async (req, res) => {
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
         JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.dentist_id = ? 
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+        WHERE q.dentist_id = ?
           AND DATE(q.time) = ?
         ORDER BY q.time ASC
       `, [dentistId, date]);
@@ -2786,15 +2806,17 @@ completeAppointment: async (req, res) => {
 
       // ดึงนัดหมายล่าสุด 5 รายการ
       const [appointments] = await db.execute(`
-        SELECT 
+        SELECT
           q.queue_id,
           q.time,
           q.queue_status,
-          q.diagnosis,
+          th.diagnosis,
           t.treatment_name
         FROM queue q
         JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.patient_id = ? 
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+        WHERE q.patient_id = ?
           AND q.dentist_id = ?
         ORDER BY q.time DESC
         LIMIT 5
@@ -2828,12 +2850,12 @@ getTreatmentHistoryDetail: async (req, res) => {
     const dentistId = dentist.dentist_id;
 
     const [treatmentResult] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.followUpdate,
         p.patient_id,
         p.fname as patient_fname,
         p.lname as patient_lname,
@@ -2853,6 +2875,8 @@ getTreatmentHistoryDetail: async (req, res) => {
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ? AND q.dentist_id = ?
     `, [queueId, dentistId]);
 
@@ -2978,15 +3002,15 @@ addTreatmentHistory: async (req, res) => {
         if (existingHistory.length > 0) {
           // อัพเดทประวัติที่มีอยู่
           await db.execute(`
-            UPDATE treatmentHistory 
-            SET diagnosis = ?, followUpdate = ?
+            UPDATE treatmentHistory
+            SET diagnosis = ?, followUpdate = ?, next_appointment = NULL
             WHERE queuedetail_id = ?
           `, [diagnosis.trim(), nextAppointment?.trim() || '', queuedetailId]);
         } else {
           // เพิ่มประวัติใหม่
           await db.execute(`
-            INSERT INTO treatmentHistory (queuedetail_id, diagnosis, followUpdate)
-            VALUES (?, ?, ?)
+            INSERT INTO treatmentHistory (queuedetail_id, diagnosis, followUpdate, next_appointment)
+            VALUES (?, ?, ?, NULL)
           `, [queuedetailId, diagnosis.trim(), nextAppointment?.trim() || '']);
         }
       }
@@ -3032,13 +3056,13 @@ getAppointmentForHistory: async (req, res) => {
 
     // ดึงการจองล่าสุดที่ยังไม่ได้บันทึกประวัติ
     const [appointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.patient_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         p.fname,
         p.lname,
         p.phone,
@@ -3047,7 +3071,9 @@ getAppointmentForHistory: async (req, res) => {
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.patient_id = ? 
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+      WHERE q.patient_id = ?
         AND q.dentist_id = ?
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time DESC
@@ -3337,11 +3363,11 @@ getAppointmentForAddHistory: async (req, res) => {
 
     // ดึงข้อมูล appointment พร้อมข้อมูลผู้ป่วยแบบละเอียด
     const [appointmentData] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         q.queue_status,
         p.patient_id,
         p.fname as patient_fname,
@@ -3364,6 +3390,8 @@ getAppointmentForAddHistory: async (req, res) => {
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ? AND q.dentist_id = ?
     `, [queueId, dentistId]);
 
@@ -3489,12 +3517,10 @@ saveAddHistory: async (req, res) => {
         : null;
 
       await db.execute(`
-        UPDATE queue 
-        SET queue_status = 'completed', 
-            diagnosis = ?,
-            next_appointment = ?
+        UPDATE queue
+        SET queue_status = 'completed'
         WHERE queue_id = ?
-      `, [diagnosis.trim(), nextAppointmentValue, queueId]);
+      `, [queueId]);
 
       if (queuedetailId) {
         const [existingHistory] = await db.execute(`
@@ -3505,38 +3531,35 @@ saveAddHistory: async (req, res) => {
         if (followUpRecommendation && followUpRecommendation.trim()) {
           followUpdateText = followUpRecommendation.trim();
         }
+
+        // แปลง nextAppointmentValue เป็น DATE format สำหรับ MySQL
+        let nextAppointmentDate = null;
         if (nextAppointmentValue) {
-          const formattedDate = new Date(nextAppointmentValue).toLocaleDateString('th-TH', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-          });
-          if (followUpdateText) {
-            followUpdateText += `\n\nนัดครั้งต่อไป: ${formattedDate}`;
-          } else {
-            followUpdateText = `นัดครั้งต่อไป: ${formattedDate}`;
-          }
+          nextAppointmentDate = new Date(nextAppointmentValue).toISOString().split('T')[0];
         }
 
         if (existingHistory.length > 0) {
           await db.execute(`
-            UPDATE treatmentHistory 
-            SET diagnosis = ?, 
-                followUpdate = ?
+            UPDATE treatmentHistory
+            SET diagnosis = ?,
+                followUpdate = ?,
+                next_appointment = ?
             WHERE queuedetail_id = ?
           `, [
-            diagnosis.trim(), 
-            followUpdateText || '', 
+            diagnosis.trim(),
+            followUpdateText || '',
+            nextAppointmentDate,
             queuedetailId
           ]);
         } else {
           await db.execute(`
-            INSERT INTO treatmentHistory (queuedetail_id, diagnosis, followUpdate)
-            VALUES (?, ?, ?)
+            INSERT INTO treatmentHistory (queuedetail_id, diagnosis, followUpdate, next_appointment)
+            VALUES (?, ?, ?, ?)
           `, [
-            queuedetailId, 
-            diagnosis.trim(), 
-            followUpdateText || ''
+            queuedetailId,
+            diagnosis.trim(),
+            followUpdateText || '',
+            nextAppointmentDate
           ]);
         }
       }

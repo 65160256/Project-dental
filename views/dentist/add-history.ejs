@@ -656,38 +656,21 @@
                             </div>
                         </div>
 
-                        <!-- Follow-up & Next Appointment -->
+                        <!-- Follow-up -->
                         <div class="form-section">
-                            <h4><i class="fas fa-calendar-check"></i> การติดตามและนัดครั้งต่อไป</h4>
-                            
+                            <h4><i class="fas fa-clipboard-list"></i> การติดตาม</h4>
+
                             <!-- Recommendations -->
                             <div class="form-group full-width">
                                 <label class="form-label">คำแนะนำ / ข้อควรระวัง</label>
-                                <textarea 
-                                    class="form-control form-textarea" 
-                                    id="followUpRecommendation" 
-                                    name="followUpRecommendation" 
+                                <textarea
+                                    class="form-control form-textarea"
+                                    id="followUpRecommendation"
+                                    name="followUpRecommendation"
                                     rows="4"
-                                    placeholder="ระบุคำแนะนำสำหรับผู้ป่วย&#10;&#10;ตัวอย่าง:&#10;- งดอาหารและเครื่องดื่มในช่วง 1 ชั่วโมงแรกหลังอุดฟัน&#10;- หลีกเลี่ยงอาหารแข็งและเหนียวด้านที่อุดฟันเป็นเวลา 24 ชั่วโมง&#10;- แปรงฟันอย่างนุ่มนวลบริเวณที่รักษา&#10;- หากมีอาการเจ็บหรือไม่สบายผิดปกติ ให้รีบติดต่อคลินิก"><%= appointment.next_appointment || '' %></textarea>
+                                    placeholder="ระบุคำแนะนำสำหรับผู้ป่วย&#10;&#10;ตัวอย่าง:&#10;- งดอาหารและเครื่องดื่มในช่วง 1 ชั่วโมงแรกหลังอุดฟัน&#10;- หลีกเลี่ยงอาหารแข็งและเหนียวด้านที่อุดฟันเป็นเวลา 24 ชั่วโมง&#10;- แปรงฟันอย่างนุ่มนวลบริเวณที่รักษา&#10;- หากมีอาการเจ็บหรือไม่สบายผิดปกติ ให้รีบติดต่อคลินิก"><%= appointment.followUpdate || '' %></textarea>
                                 <div class="field-description">
                                     <i class="fas fa-info-circle"></i> ระบุคำแนะนำหรือข้อควรระวังสำหรับผู้ป่วยหลังการรักษา
-                                </div>
-                            </div>
-
-                            <!-- Next Appointment Date -->
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-plus"></i> วันนัดครั้งต่อไป (ถ้ามี)
-                                </label>
-                                <input 
-                                    type="date" 
-                                    class="form-control" 
-                                    id="nextAppointmentDate" 
-                                    name="nextAppointmentDate"
-                                    min="<%= new Date().toISOString().split('T')[0] %>"
-                                >
-                                <div class="field-description">
-                                    <i class="fas fa-calendar"></i> เลือกวันที่นัดหมายครั้งต่อไป หากไม่มีการนัดติดตามให้เว้นว่างไว้
                                 </div>
                             </div>
                         </div>
@@ -751,8 +734,7 @@
                 const formData = {
                     queueId: document.getElementById('queueId').value,
                     diagnosis: diagnosis,
-                    followUpRecommendation: document.getElementById('followUpRecommendation').value.trim(),
-                    nextAppointmentDate: document.getElementById('nextAppointmentDate').value || null
+                    followUpRecommendation: document.getElementById('followUpRecommendation').value.trim()
                 };
                 
                 console.log('Sending data:', formData);

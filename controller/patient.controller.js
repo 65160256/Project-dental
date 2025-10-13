@@ -852,20 +852,22 @@ exports.getMyUpcomingAppointments = async (req, res) => {
     const patientId = patientResult[0].patient_id;
 
     const [appointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis as notes,
+        th.diagnosis as notes,
         CONCAT(d.fname, ' ', d.lname) as dentist_name,
         d.specialty as dentist_specialty,
         t.treatment_name,
         t.duration,
-        CASE 
+        CASE
           WHEN q.time > DATE_ADD(NOW(), INTERVAL 24 HOUR) AND q.queue_status IN ('pending', 'confirm') THEN TRUE
           ELSE FALSE
         END as can_cancel
       FROM queue q
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE q.patient_id = ?
@@ -1320,13 +1322,14 @@ exports.getHistory = async (req, res) => {
     const patient_id = patient.patient_id;
 
     const [appointments] = await db.execute(`
-      SELECT q.queue_id, q.time, q.queue_status, q.diagnosis, q.next_appointment,
+      SELECT q.queue_id, q.time, q.queue_status, th.diagnosis, th.next_appointment,
              t.treatment_name, t.duration,
              CONCAT(d.fname, ' ', d.lname) as dentist_name,
              d.specialty,
              qd.date, qd.created_at
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
@@ -1605,26 +1608,28 @@ exports.getMyAppointments = async (req, res) => {
     const patientId = patientResult[0].patient_id;
 
     const [appointments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         d.fname as dentist_fname,
         d.lname as dentist_lname,
         d.specialty,
         t.treatment_name,
         t.duration,
-        CASE 
+        CASE
           WHEN q.time > NOW() AND q.queue_status IN ('pending', 'confirm') THEN TRUE
           ELSE FALSE
         END as can_cancel,
-        CASE 
+        CASE
           WHEN q.time > DATE_ADD(NOW(), INTERVAL 2 HOUR) AND q.queue_status IN ('pending', 'confirm') THEN TRUE
           ELSE FALSE
         END as can_modify
       FROM queue q
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE q.patient_id = ?
@@ -1662,7 +1667,7 @@ exports.getMyTreatments = async (req, res) => {
     const searchYear = req.query.year || new Date().getFullYear();
 
     const [treatments] = await db.execute(`
-      SELECT q.queue_id, q.time, q.diagnosis, q.next_appointment,
+      SELECT q.queue_id, q.time, th.diagnosis, th.next_appointment,
              t.treatment_name, t.duration,
              CONCAT(d.fname, ' ', d.lname) as dentist_name,
              d.specialty,
@@ -1676,7 +1681,7 @@ exports.getMyTreatments = async (req, res) => {
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
-      LEFT JOIN treatmentHistory th ON q.queuedetail_id = th.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND (q.queue_status = 'confirm' OR th.tmh_id IS NOT NULL)
       ORDER BY qd.date DESC, q.time DESC
     `, [patient_id]);
@@ -2577,12 +2582,12 @@ exports.getTreatmentHistoryDetails = async (req, res) => {
 
     // Get treatment history with all details
     const [treatments] = await db.execute(`
-      SELECT 
+      SELECT
         q.queue_id,
         q.time,
         q.queue_status,
-        q.diagnosis,
-        q.next_appointment,
+        th.diagnosis,
+        th.next_appointment,
         p.patient_id,
         p.fname as patient_fname,
         p.lname as patient_lname,

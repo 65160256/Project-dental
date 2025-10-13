@@ -637,8 +637,8 @@
                                 <div class="info-value" id="diagnosis-result"></div>
                             </div>
                             <div class="info-item full-width">
-                                <div class="info-label">คำแนะนำ / นัดหมายครั้งต่อไป:</div>
-                                <div class="info-value" id="next-appointment"></div>
+                                <div class="info-label">คำแนะนำ / ข้อควรระวัง:</div>
+                                <div class="info-value" id="follow-update"></div>
                             </div>
                         </div>
                     </div>
@@ -843,13 +843,13 @@
                     diagnosisElement.classList.add('empty');
                 }
 
-                // Next Appointment
-                const nextElement = document.getElementById('next-appointment');
-                if (treatment.next_appointment && treatment.next_appointment.trim()) {
-                    nextElement.innerHTML = `<div class="next-box">${treatment.next_appointment}</div>`;
+                // Follow-up Recommendations
+                const followElement = document.getElementById('follow-update');
+                if (treatment.followUpdate && treatment.followUpdate.trim()) {
+                    followElement.innerHTML = `<div class="next-box">${treatment.followUpdate}</div>`;
                 } else {
-                    nextElement.textContent = '-';
-                    nextElement.classList.add('empty');
+                    followElement.textContent = '-';
+                    followElement.classList.add('empty');
                 }
                 
                 // แสดงเนื้อหา
