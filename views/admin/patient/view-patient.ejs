@@ -62,7 +62,7 @@
 
         /* Left Panel */
         .left-panel{background:#fff;border-radius:12px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,0.08);height:fit-content;text-align:center}
-        .patient-avatar{width:200px;height:200px;border-radius:12px;object-fit:cover;margin-bottom:20px;border:3px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-size:60px;font-weight:600}
+        .patient-avatar{width:200px;height:200px;border-radius:12px;object-fit:cover;margin:0 auto 20px;border:3px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-size:60px;font-weight:600}
         .patient-id-badge{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:20px}
         .status-badge{background:#10b981;color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:500;display:inline-block}
 
@@ -78,6 +78,26 @@
         .info-value{font-size:14px;color:#333;font-weight:500;word-break:break-word}
         .info-value.empty{color:#999;font-style:italic}
         .info-value.loading{color:#999;font-style:italic}
+
+        /* Medical alert styling */
+        .info-value.has-medical-alert {
+            color: #dc2626;
+            font-weight: 600;
+            background: #fee2e2;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #dc2626;
+        }
+
+        .medical-section {
+            background: #fff9f0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .medical-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+            color: #f59e0b;
+        }
 
         /* Actions */
         .action-section{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
@@ -211,6 +231,10 @@
                             <div class="info-value loading" id="birthDate">กำลังโหลด...</div>
                         </div>
                         <div class="info-item">
+                            <div class="info-label">เพศ</div>
+                            <div class="info-value loading" id="gender">กำลังโหลด...</div>
+                        </div>
+                        <div class="info-item">
                             <div class="info-label">เลขบัตรประชาชน</div>
                             <div class="info-value loading" id="id_card">กำลังโหลด...</div>
                         </div>
@@ -221,6 +245,24 @@
                         <div class="info-item">
                             <div class="info-label">เข้าสู่ระบบล่าสุด</div>
                             <div class="info-value loading" id="lastLogin">กำลังโหลด...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Information -->
+                <div class="info-section medical-section">
+                    <div class="section-header">
+                        <div class="section-icon medical-icon"><i class="fas fa-notes-medical"></i></div>
+                        <h3 class="section-title">ข้อมูลทางการแพทย์</h3>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">โรคประจำตัว</div>
+                            <div class="info-value loading" id="chronic_disease">กำลังโหลด...</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">ประวัติการแพ้ยา</div>
+                            <div class="info-value loading" id="drug_allergy">กำลังโหลด...</div>
                         </div>
                     </div>
                 </div>
@@ -301,7 +343,7 @@
             loadNotifications();
         });
 
-        // Extract patient ID (รองรับมี/ไม่มี / ท้าย URL)
+        // Extract patient ID
         function extractPatientId() {
             const path = window.location.pathname;
             const matches = path.match(/\/patients\/(\d+)(?:\/)?$/);
@@ -342,6 +384,8 @@
 
         // Populate data
         function populateData(patient) {
+            console.log('📋 กำลังแสดงข้อมูลผู้ป่วย:', patient);
+
             // Full name & avatar initials
             const fullName = `${patient.fname || ''} ${patient.lname || ''}`.trim();
             setValue('fullName', fullName || 'ไม่ได้ระบุ');
@@ -357,7 +401,16 @@
             } else dobEl.innerHTML = '<span class="empty">ไม่ได้ระบุ</span>';
             dobEl.classList.remove('loading');
 
-            // Thai ID (X-XXXX-XXXXX-XX-X) — รองรับหลายชื่อฟิลด์ทั่วไป
+            // Gender
+            const genderMap = {
+                'male': 'ชาย',
+                'female': 'หญิง',
+                'other': 'อื่นๆ'
+            };
+            const genderText = patient.gender ? (genderMap[patient.gender] || patient.gender) : 'ไม่ได้ระบุ';
+            setValue('gender', genderText);
+
+            // Thai ID
             const idFields = ['id_card','ID_CARD','citizenId','nationalId'];
             let idVal = '';
             for (const f of idFields) {
@@ -371,10 +424,28 @@
             } else idEl.innerHTML = '<span class="empty">ไม่ได้ระบุ</span>';
             idEl.classList.remove('loading');
 
+            // Medical Information
+            const chronicDisease = (patient.chronic_disease || '').trim();
+            const allergyHistory = (patient.allergy_history || patient.drug_allergy || '').trim();
+
+            if (chronicDisease) {
+                setValue('chronic_disease', chronicDisease);
+                document.getElementById('chronic_disease').classList.add('has-medical-alert');
+            } else {
+                setValue('chronic_disease', '<span class="empty">ไม่มี</span>', true);
+            }
+
+            if (allergyHistory) {
+                setValue('drug_allergy', allergyHistory);
+                document.getElementById('drug_allergy').classList.add('has-medical-alert');
+            } else {
+                setValue('drug_allergy', '<span class="empty">ไม่มี</span>', true);
+            }
+
             // Address
             setValue('address', (patient.address||'').trim() || '<span class="empty">ไม่ได้ระบุ</span>', true);
 
-            // Phone (format ไทยคร่าวๆ)
+            // Phone
             const phoneRaw = (patient.phone||'').trim();
             const phoneEl = document.getElementById('phone');
             if (phoneRaw) {
@@ -397,7 +468,7 @@
             document.getElementById('totalAppointments').textContent = totalAppointments;
             document.getElementById('totalTreatments').textContent = patient.stats?.total_treatments ?? totalAppointments;
 
-            // Status badge (optional mapping)
+            // Status badge
             if (typeof patient.active !== 'undefined') {
                 document.getElementById('statusBadge').textContent = patient.active ? 'ใช้งานอยู่' : 'ถูกระงับ';
                 document.getElementById('statusBadge').style.background = patient.active ? '#10b981' : '#9ca3af';
@@ -406,10 +477,13 @@
             // Action links
             document.getElementById('treatmentBtn').href = `/admin/patients/${patientId}/treatments`;
             document.getElementById('editBtn').href = `/admin/patients/${patientId}/edit`;
+
+            console.log('✅ แสดงข้อมูลผู้ป่วยสำเร็จ');
         }
 
         function setValue(id, value, isHTML=false){
             const el = document.getElementById(id);
+            if (!el) return;
             if (isHTML) el.innerHTML = value; else el.textContent = value;
             el.classList.remove('loading');
         }
@@ -552,7 +626,7 @@
             setTimeout(()=>{ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>{ toast.remove(); },300); }, 4500);
         }
 
-        // Time ago (Thai + 24h)
+        // Time ago
         function getTimeAgo(date){
             const now = new Date();
             const s = Math.floor((now - date)/1000);

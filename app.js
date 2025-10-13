@@ -16,7 +16,8 @@ const authRoute = require('./routes/auth.route');
 const adminRoutes = require('./routes/admin.route');
 const dentistRoutes = require('./routes/dentist.route'); 
 const patientRoutes = require('./routes/patient.route');
-
+const { initializeNotificationJobs } = require('./jobs/notificationJobs');
+const patientNotificationRoutes = require('./routes/patient-notifications');
 const app = express();
 
 // ===============================
@@ -336,6 +337,7 @@ const requireAuth = (requiredRole = null) => {
 // ===============================
 app.use('/admin', requireAuth(1), adminRoutes);
 app.use('/dentist', requireAuth(2), dentistRoutes);
+app.use('/patient/api/notifications', requireAuth(3), patientNotificationRoutes);
 app.use('/patient', requireAuth(3), patientRoutes);
 
 // ===============================
@@ -595,6 +597,16 @@ try {
   console.log('Password reset token cleanup job initialized');
 } catch (error) {
   console.log('Cleanup job not available, using cron schedule instead');
+}
+
+// ===============================
+// Initialize Notification Jobs
+// ===============================
+try {
+  initializeNotificationJobs();
+  console.log('✅ Notification cron jobs initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize notification jobs:', error);
 }
 
 // ===============================

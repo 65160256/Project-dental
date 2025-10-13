@@ -5,6 +5,7 @@ const router = express.Router();
 const dentistController = require('../controller/dentist.controller'); // หรือ ../controller/
 const multer = require('multer');
 const path = require('path');
+const notificationController = require('../controller/notification.controller');
 
 // ตั้งค่า multer สำหรับอัพโหลดรูป
 const storage = multer.diskStorage({
@@ -198,12 +199,50 @@ router.get('/schedule', requireAuth, requireDentist, dentistController.getMonthl
 router.post('/api/schedule/save-range', requireAuth, requireDentist, dentistController.saveScheduleRange);
 router.delete('/api/schedule/delete-range', requireAuth, requireDentist, dentistController.deleteScheduleRange);
 
-const notificationController = require('../controller/notification.controller');
+// ========== NOTIFICATION ROUTES ==========
 
-// Notification routes for dentist
+// Get all notifications for dentist
 router.get('/api/notifications', notificationController.getDentistNotifications);
+
+// Get unread count
 router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
+
+// Mark notification as read
 router.put('/api/notifications/:id/read', notificationController.markAsRead);
+
+// Mark all notifications as read
 router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
+
+// Delete notification
 router.delete('/api/notifications/:id', notificationController.deleteNotification);
+
+// Notification page (full list)
+router.get('/notifications', async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    
+    const [dentistResult] = await require('../config/db').execute(`
+      SELECT d.*, u.email, u.username 
+      FROM dentist d 
+      JOIN user u ON d.user_id = u.user_id 
+      WHERE d.user_id = ?
+    `, [userId]);
+
+    if (dentistResult.length === 0) {
+      return res.redirect('/login');
+    }
+
+    res.render('dentist/notifications', { 
+      dentist: dentistResult[0],
+      title: 'การแจ้งเตือน'
+    });
+  } catch (error) {
+    console.error('Error loading notifications page:', error);
+    res.status(500).render('error', { 
+      message: 'เกิดข้อผิดพลาดในการโหลดหน้าการแจ้งเตือน',
+      error 
+    });
+  }
+});
+
 module.exports = router;

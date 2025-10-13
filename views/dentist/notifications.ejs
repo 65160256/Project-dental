@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การแจ้งเตือน - Smile Clinic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f5f7fa; }
+
+        .sidebar { width: 180px; background: linear-gradient(135deg, #4A90E2, #2DA8FF); position: fixed; height: 100vh; padding: 0; color: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 100; }
+        .sidebar .logo { text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar .logo .logo-icon { width: 50px; height: 50px; border-radius: 8px; background: white; padding: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; color: #4A90E2; }
+        .sidebar .logo h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .sidebar ul { list-style: none; padding: 10px 0; margin: 0; }
+        .sidebar ul li { margin: 2px 0; }
+        .sidebar ul li a { display: block; padding: 12px 20px; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.3s ease; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .sidebar ul li.active a, .sidebar ul li:hover a { background-color: rgba(255,255,255,0.2); color: white; border-radius: 8px; margin: 0 10px; }
+
+        .main { margin-left: 180px; padding: 0; min-height: 100vh; }
+        
+        .top-bar { background: white; padding: 20px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 50; }
+        .top-bar h1 { font-size: 24px; color: #333; margin: 0; display: flex; align-items: center; gap: 12px; }
+        .top-bar h1 i { color: #4A90E2; }
+
+        .content { padding: 30px; max-width: 1200px; margin: 0 auto; }
+
+        .filter-bar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .filter-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn { padding: 10px 20px; border: 2px solid #e1e5e9; background: white; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .filter-btn:hover { border-color: #4A90E2; color: #4A90E2; }
+        .filter-btn.active { background: linear-gradient(135deg, #4A90E2, #2DA8FF); color: white; border-color: #4A90E2; }
+        .action-buttons { display: flex; gap: 10px; }
+        .action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .btn-mark-all { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+        .btn-mark-all:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+
+        .notifications-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .notification-item { padding: 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: all 0.3s ease; position: relative; display: flex; align-items: flex-start; gap: 15px; }
+        .notification-item:hover { background: #f8f9fa; }
+        .notification-item.unread { background: linear-gradient(135deg, #f0f4ff, #e0e7ff); border-left: 4px solid #4A90E2; }
+        .notification-item.unread::before { content: ''; position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; background: #4A90E2; border-radius: 50%; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .notification-icon-wrapper { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .notification-icon-wrapper.new { background: linear-gradient(135deg, #4A90E2, #2DA8FF); }
+        .notification-icon-wrapper.confirmed { background: linear-gradient(135deg, #10b981, #34d399); }
+        .notification-icon-wrapper.cancelled { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .notification-icon-wrapper.reminder { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .notification-icon-wrapper.completed { background: linear-gradient(135deg, #6366f1, #818cf8); }
+
+        .notification-content { flex: 1; padding-left: 20px; }
+        .notification-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .notification-title { font-size: 16px; font-weight: 600; color: #333; }
+        .notification-time { font-size: 12px; color: #999; white-space: nowrap; }
+        .notification-message { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 8px; }
+        .notification-meta { display: flex; gap: 15px; flex-wrap: wrap; }
+        .meta-item { font-size: 12px; color: #999; display: flex; align-items: center; gap: 5px; }
+        .meta-item i { color: #4A90E2; }
+
+        .notification-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .notification-action-btn { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-view { background: linear-gradient(135deg, #4A90E2, #2DA8FF); color: white; }
+        .btn-delete { background: #f1f3f4; color: #666; }
+        .btn-delete:hover { background: #ef4444; color: white; }
+
+        .empty-state { padding: 60px 20px; text-align: center; }
+        .empty-state i { font-size: 64px; color: #d1d5db; margin-bottom: 20px; }
+        .empty-state h3 { font-size: 18px; color: #666; margin-bottom: 10px; }
+        .empty-state p { font-size: 14px; color: #999; }
+
+        .loading-spinner { display: flex; justify-content: center; align-items: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #4A90E2; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 20px; }
+        .pagination-btn { padding: 8px 16px; border: 1px solid #e1e5e9; background: white; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.3s ease; }
+        .pagination-btn:hover:not(:disabled) { background: #4A90E2; color: white; border-color: #4A90E2; }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination-info { font-size: 13px; color: #666; }
+
+        /* Toast */
+        .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1001; max-width: 400px; font-size: 14px; animation: slideInRight 0.3s ease; border-left: 4px solid #4A90E2; }
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: #ef4444; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main { margin-left: 0; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-buttons, .action-buttons { width: 100%; }
+            .filter-btn, .action-btn { flex: 1; justify-content: center; }
+            .notification-header { flex-direction: column; gap: 5px; }
+            .notification-meta { flex-direction: column; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🦷</div>
+            <h3>Smile Clinic</h3>
+        </div>
+        <ul>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางทำงาน</a></li>
+            <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h1><i class="fas fa-bell"></i> การแจ้งเตือน</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-list"></i> ทั้งหมด
+                    </button>
+                    <button class="filter-btn" data-filter="unread">
+                        <i class="fas fa-envelope"></i> ยังไม่อ่าน
+                    </button>
+                    <button class="filter-btn" data-filter="new_appointment">
+                        <i class="fas fa-calendar-plus"></i> นัดหมายใหม่
+                    </button>
+                    <button class="filter-btn" data-filter="appointment_cancelled">
+                        <i class="fas fa-calendar-times"></i> ยกเลิก
+                    </button>
+                    <button class="filter-btn" data-filter="appointment_reminder">
+                        <i class="fas fa-clock"></i> เตือน
+                    </button>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn btn-mark-all" id="markAllReadBtn">
+                        <i class="fas fa-check-double"></i> อ่านทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notifications Container -->
+            <div class="notifications-container" id="notificationsContainer">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="paginationContainer" style="display: none;">
+                <button class="pagination-btn" id="prevBtn">
+                    <i class="fas fa-chevron-left"></i> ก่อนหน้า
+                </button>
+                <span class="pagination-info" id="paginationInfo"></span>
+                <button class="pagination-btn" id="nextBtn">
+                    ถัดไป <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let totalNotifications = 0;
+
+        // Load notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.getAttribute('data-filter');
+                    currentPage = 1;
+                    loadNotifications();
+                });
+            });
+
+            // Mark all as read
+            document.getElementById('markAllReadBtn').addEventListener('click', markAllAsRead);
+
+            // Pagination
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadNotifications();
+                }
+            });
+
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(totalNotifications / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadNotifications();
+                }
+            });
+        }
+
+        async function loadNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+            try {
+                const offset = (currentPage - 1) * itemsPerPage;
+                let url = `/dentist/api/notifications?limit=${itemsPerPage}&offset=${offset}`;
+                
+                if (currentFilter === 'unread') {
+                    url += '&unread_only=true';
+                } else if (currentFilter !== 'all') {
+                    url += `&type=${currentFilter}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    totalNotifications = data.total;
+                    renderNotifications(data.notifications);
+                    updatePagination();
+                } else {
+                    showError('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน');
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                showError('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            }
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsContainer');
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>ไม่มีการแจ้งเตือน</h3>
+                        <p>คุณไม่มีการแจ้งเตือนในขณะนี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notif => createNotificationHTML(notif)).join('');
+
+            // Add event listeners
+            document.querySelectorAll('.notification-item').forEach((item, index) => {
+                const notification = notifications[index];
+                
+                item.addEventListener('click', function(e) {
+                    if (!e.target.closest('.notification-action-btn')) {
+                        handleNotificationClick(notification);
+                    }
+                });
+
+                // Delete button
+                const deleteBtn = item.querySelector('.btn-delete');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                    });
+                }
+
+                // View button
+                const viewBtn = item.querySelector('.btn-view');
+                if (viewBtn) {
+                    viewBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        handleNotificationClick(notification);
+                    });
+                }
+            });
+        }
+
+        function createNotificationHTML(notif) {
+            const unreadClass = notif.is_read ? '' : 'unread';
+            const iconInfo = getNotificationIconInfo(notif.type);
+            
+            return `
+                <div class="notification-item ${unreadClass}" data-id="${notif.id}">
+                    <div class="notification-icon-wrapper ${iconInfo.class}">
+                        ${iconInfo.icon}
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-time">${notif.time_ago || formatTimeAgo(notif.created_at)}</div>
+                        </div>
+                        <div class="notification-message">${notif.message}</div>
+                        ${notif.patient_fname ? `
+                        <div class="notification-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-user"></i>
+                                ${notif.patient_fname} ${notif.patient_lname}
+                            </span>
+                            ${notif.patient_phone ? `
+                            <span class="meta-item">
+                                <i class="fas fa-phone"></i>
+                                ${notif.patient_phone}
+                            </span>
+                            ` : ''}
+                            ${notif.appointment_time ? `
+                            <span class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                ${new Date(notif.appointment_time).toLocaleString('th-TH', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false
+                                })}
+                            </span>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                        <div class="notification-actions">
+                            ${notif.appointment_id ? `
+                            <button class="notification-action-btn btn-view">
+                                <i class="fas fa-eye"></i> ดูรายละเอียด
+                            </button>
+                            ` : ''}
+                            <button class="notification-action-btn btn-delete">
+                                <i class="fas fa-trash"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getNotificationIconInfo(type) {
+            const iconMap = {
+                'new_appointment': { icon: '🆕', class: 'new' },
+                'appointment_confirmed': { icon: '✅', class: 'confirmed' },
+                'appointment_cancelled': { icon: '❌', class: 'cancelled' },
+                'appointment_reminder': { icon: '⏰', class: 'reminder' },
+                'treatment_completed': { icon: '📝', class: 'completed' }
+            };
+            return iconMap[type] || { icon: '🔔', class: 'new' };
+        }
+
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const past = new Date(date);
+            const diffMs = now - past;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'เมื่อสักครู่';
+            if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+            if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+            if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+            
+            return past.toLocaleDateString('th-TH', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        async function handleNotificationClick(notif) {
+            // Mark as read
+            if (!notif.is_read) {
+                await markAsRead(notif.id);
+            }
+
+            // Navigate to related page
+            if (notif.appointment_id) {
+                window.location.href = `/dentist/appointments/${notif.appointment_id}`;
+            }
+        }
+
+        async function markAsRead(notifId) {
+            try {
+                const response = await fetch(`/dentist/api/notifications/${notifId}/read`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/dentist/api/notifications/mark-all-read', {
+                    method: 'PUT'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('อ่านการแจ้งเตือนทั้งหมดแล้ว', 'success');
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                showToast('เกิดข้อผิดพลาด', 'error');
+            }
+        }
+
+        async function deleteNotification(notifId) {
+            if (!confirm('คุณต้องการลบการแจ้งเตือนนี้หรือไม่?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/dentist/api/notifications/${notifId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('ลบการแจ้งเตือนแล้ว', 'success');
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                showToast('เกิดข้อผิดพลาด', 'error');
+            }
+        }
+
+        function updatePagination() {
+            const container = document.getElementById('paginationContainer');
+            const totalPages = Math.ceil(totalNotifications / itemsPerPage);
+
+            if (totalPages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            document.getElementById('paginationInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('notificationsContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>เกิดข้อผิดพลาด</h3>
+                    <p>${message}</p>
+                    <button class="action-btn btn-mark-all" onclick="loadNotifications()" style="margin-top: 15px;">
+                        <i class="fas fa-redo"></i> ลองอีกครั้ง
+                    </button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

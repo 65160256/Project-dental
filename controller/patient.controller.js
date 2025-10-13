@@ -139,7 +139,12 @@ exports.getDashboard = async (req, res) => {
       appointments: appointmentsRows,
       treatmentHistory,  // ส่งไปแม้จะเป็น null
       dentists: dentistsRows,
-      currentDate: new Date().toLocaleDateString()
+      currentDate: new Date().toLocaleDateString('th-TH', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     });
   } catch (err) {
     console.error(err);
@@ -886,14 +891,15 @@ exports.getMyUpcomingAppointments = async (req, res) => {
 
 // Enhanced cancelMyAppointment with 24-hour restriction
 exports.cancelMyAppointment = async (req, res) => {
+  const NotificationHelper = require('../utils/notificationHelper');
   try {
     const patientUserId = req.session.userId;
-    const { queue_id } = req.body;
+    const { queue_id, reason } = req.body;
 
     if (!queue_id) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่พบรหัสนัดหมาย' 
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่พบรหัสนัดหมาย'
       });
     }
 
@@ -902,19 +908,20 @@ exports.cancelMyAppointment = async (req, res) => {
     `, [patientUserId]);
 
     if (patientResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบข้อมูลผู้ป่วย' 
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
     const patientId = patientResult[0].patient_id;
 
     const [appointmentCheck] = await db.execute(`
-      SELECT 
-        q.queue_id, 
+      SELECT
+        q.queue_id,
         q.time,
         q.queue_status,
+        q.dentist_id,
         CONCAT(p.fname, ' ', p.lname) as patient_name,
         CONCAT(d.fname, ' ', d.lname) as dentist_name
       FROM queue q
@@ -924,9 +931,9 @@ exports.cancelMyAppointment = async (req, res) => {
     `, [queue_id, patientId]);
 
     if (appointmentCheck.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบนัดหมาย หรือไม่มีสิทธิ์ยกเลิก' 
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบนัดหมาย หรือไม่มีสิทธิ์ยกเลิก'
       });
     }
 
@@ -938,9 +945,9 @@ exports.cancelMyAppointment = async (req, res) => {
     const hoursDiff = timeDiff / (1000 * 3600);
 
     if (hoursDiff < 24) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่สามารถยกเลิกได้ เนื่องจากใกล้เวลานัดหมายแล้ว (ต้องยกเลิกก่อน 24 ชั่วโมง)' 
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่สามารถยกเลิกได้ เนื่องจากใกล้เวลานัดหมายแล้ว (ต้องยกเลิกก่อน 24 ชั่วโมง)'
       });
     }
 
@@ -952,10 +959,21 @@ exports.cancelMyAppointment = async (req, res) => {
     }
 
     await db.execute(`
-      UPDATE queue 
+      UPDATE queue
       SET queue_status = 'cancel'
       WHERE queue_id = ? AND patient_id = ?
     `, [queue_id, patientId]);
+
+    // แจ้งเตือน dentist และ admin เมื่อ patient ยกเลิกนัด
+    await NotificationHelper.createCancellationNotification(
+      queue_id,
+      patientId,
+      appointment.dentist_id,
+      'patient',
+      reason || null
+    );
+
+    console.log(`✅ Patient cancelled appointment ${queue_id} and notifications sent`);
 
     res.json({
       success: true,
@@ -968,7 +986,7 @@ exports.cancelMyAppointment = async (req, res) => {
 
   } catch (error) {
     console.error('Error in cancelMyAppointment:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการยกเลิกนัดหมาย'
     });
@@ -2610,5 +2628,30 @@ exports.getTreatmentHistoryDetails = async (req, res) => {
       success: false,
       error: 'Failed to fetch treatment history'
     });
+  }
+};
+
+// แสดงหน้าการแจ้งเตือนทั้งหมด
+exports.getNotificationsPage = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) return res.redirect('/login');
+
+    // Get patient info
+    const [patientRows] = await db.execute(
+      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
+      [userId]
+    );
+    if (!patientRows[0]) return res.redirect('/login');
+    const patient = patientRows[0];
+
+    res.render('patient/notifications', {
+      title: 'การแจ้งเตือนทั้งหมด',
+      user: req.session,
+      patient: patient
+    });
+  } catch (error) {
+    console.error('Notifications page error:', error);
+    res.status(500).send('Internal Server Error');
   }
 };

@@ -924,39 +924,69 @@
                     </div>
 
                     <div class="form-section" id="personalSection" style="display: none;">
-                        <h3 class="section-title">
-                            <i class="fas fa-user"></i>
-                            ข้อมูลส่วนตัว
-                        </h3>
+    <h3 class="section-title">
+        <i class="fas fa-user"></i>
+        ข้อมูลส่วนตัว
+    </h3>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="fname">ชื่อ <span class="required">*</span></label>
-                                <input type="text" id="fname" name="fname" class="form-control" required />
-                                <div class="error-message">กรุณากรอกชื่อ</div>
-                            </div>
-                            <div class="form-group">
-                                <label for="lname">นามสกุล <span class="required">*</span></label>
-                                <input type="text" id="lname" name="lname" class="form-control" required />
-                                <div class="error-message">กรุณากรอกนามสกุล</div>
-                            </div>
-                        </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="fname">ชื่อ <span class="required">*</span></label>
+            <input type="text" id="fname" name="fname" class="form-control" required />
+            <div class="error-message">กรุณากรอกชื่อ</div>
+        </div>
+        <div class="form-group">
+            <label for="lname">นามสกุล <span class="required">*</span></label>
+            <input type="text" id="lname" name="lname" class="form-control" required />
+            <div class="error-message">กรุณากรอกนามสกุล</div>
+        </div>
+    </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="dob">วันเกิด <span class="required">*</span></label>
-                                <input type="date" id="dob" name="dob" class="form-control" required />
-                                <div class="error-message">กรุณาเลือกวันเกิดที่ถูกต้อง</div>
-                            </div>
-                            <div class="form-group">
-                                <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
-                                <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
-                                <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
-                                <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลัก</div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="dob">วันเกิด <span class="required">*</span></label>
+            <input type="date" id="dob" name="dob" class="form-control" required />
+            <div class="error-message">กรุณาเลือกวันเกิดที่ถูกต้อง</div>
+        </div>
+        <div class="form-group">
+            <label for="id_card">เลขบัตรประชาชน <span class="required">*</span></label>
+            <input type="text" id="id_card" name="id_card" class="form-control" required maxlength="13" />
+            <div class="field-help">เลขบัตรประชาชน 13 หลัก</div>
+            <div class="error-message">กรุณากรอกเลขบัตรประชาชน 13 หลัก</div>
+        </div>
+    </div>
 
+    <!-- ✅ เพิ่มฟิลด์ใหม่ -->
+    <div class="form-row">
+        <div class="form-group">
+            <label for="gender">เพศ</label>
+            <select id="gender" name="gender" class="form-control">
+                <option value="">ไม่ระบุ</option>
+                <option value="male">ชาย</option>
+                <option value="female">หญิง</option>
+                <option value="other">อื่นๆ</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row single">
+        <div class="form-group">
+            <label for="chronic_disease">โรคประจำตัว</label>
+            <textarea id="chronic_disease" name="chronic_disease" class="form-control" rows="2" 
+                      placeholder="เช่น เบาหวาน, ความดันโลหิตสูง (ถ้ามี)"></textarea>
+            <div class="field-help">ระบุโรคประจำตัวหากมี เพื่อความปลอดภัยในการรักษา</div>
+        </div>
+    </div>
+
+    <div class="form-row single">
+        <div class="form-group">
+            <label for="drug_allergy">ประวัติการแพ้ยา</label>
+            <textarea id="drug_allergy" name="drug_allergy" class="form-control" rows="2" 
+                      placeholder="เช่น Penicillin, Aspirin (ถ้ามี)"></textarea>
+            <div class="field-help">ระบุยาที่แพ้หากมี เพื่อหลีกเลี่ยงในการรักษา</div>
+        </div>
+    </div>
+</div>
                     <div class="form-section" id="accountSection" style="display: none;">
                         <h3 class="section-title">
                             <i class="fas fa-key"></i>

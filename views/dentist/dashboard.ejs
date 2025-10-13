@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f5f7fa; margin: 0; }
 
-        /* Sidebar - เหมือนหน้า Appointments */
+        /* Sidebar */
         .sidebar { width: 180px; background: linear-gradient(135deg, #4A90E2, #2DA8FF); position: fixed; height: 100vh; padding: 0; color: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 100; }
         .sidebar .logo { text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar .logo .logo-icon { width: 50px; height: 50px; border-radius: 8px; background: white; padding: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; color: #4A90E2; }
@@ -33,15 +33,48 @@
         .search-box input::placeholder { color: #999; }
 
         .user-section { display: flex; align-items: center; gap: 15px; }
-        .notification-icon { width: 20px; height: 20px; cursor: pointer; color: #666; position: relative; transition: color 0.3s ease; }
-        .notification-icon:hover { color: #4A90E2; }
-        .notification-badge { position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
+        /* Notification Bell */
+        .notification-bell-container { position: relative; display: inline-block; }
+        .notification-bell-btn { position: relative; background: none; border: none; font-size: 20px; color: #666; cursor: pointer; padding: 8px 12px; border-radius: 50%; transition: all 0.3s ease; }
+        .notification-bell-btn:hover { background: #f0f0f0; color: #667eea; }
+        .notification-badge { position: absolute; top: 5px; right: 5px; background: #ff4757; color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: bold; min-width: 18px; text-align: center; animation: pulse 2s infinite; display: none; }
+        .notification-badge.show { display: block; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .notification-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 380px; max-height: 500px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 1000; animation: slideDown 0.3s ease; display: none; }
+        .notification-dropdown.show { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .notification-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee; }
+        .notification-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .mark-all-read-btn { background: none; border: none; color: #667eea; font-size: 13px; cursor: pointer; padding: 5px 10px; border-radius: 5px; transition: background 0.3s; }
+        .mark-all-read-btn:hover { background: #f0f0f0; }
+
+        .notification-list { max-height: 350px; overflow-y: auto; }
+        .notification-item { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; position: relative; }
+        .notification-item:hover { background: #f8f9fa; }
+        .notification-item.unread { background: #f0f4ff; }
+        .notification-item.unread::before { content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: #667eea; border-radius: 50%; }
+
+        .notification-icon { font-size: 24px; margin-right: 12px; vertical-align: middle; }
+        .notification-content { display: inline-block; width: calc(100% - 40px); vertical-align: middle; padding-left: 20px; }
+        .notification-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #333; }
+        .notification-message { font-size: 13px; color: #666; line-height: 1.4; margin-bottom: 4px; }
+        .notification-time { font-size: 12px; color: #999; }
+
+        .notification-footer { padding: 12px 20px; text-align: center; border-top: 1px solid #eee; }
+        .view-all-link { color: #667eea; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .view-all-link:hover { text-decoration: underline; }
+
+        .notification-loading, .notification-empty { padding: 40px 20px; text-align: center; color: #999; }
+        .notification-empty i { font-size: 48px; margin-bottom: 10px; opacity: 0.3; display: block; }
+
+        /* Profile Dropdown */
         .profile-dropdown { position: relative; }
         .user-info { display: flex; align-items: center; cursor: pointer; gap: 10px; transition: opacity 0.3s ease; }
         .user-info:hover { opacity: 0.8; }
 
-        /* Gmail-style Avatar */
         .avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: -0.5px; transition: all 0.3s ease; position: relative; overflow: hidden; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
         .avatar:hover { transform: scale(1.08); box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23); }
         .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -61,7 +94,6 @@
         .dropdown-arrow { color: #666; font-size: 12px; }
 
         .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e1e5e9; border-radius: 8px; min-width: 180px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); z-index: 1000; animation: slideDown 0.3s ease; margin-top: 5px; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .dropdown-menu.show { display: block; }
         .dropdown-menu a { display: block; padding: 12px 15px; text-decoration: none; color: #333; font-size: 13px; transition: background 0.2s ease; }
         .dropdown-menu a:hover { background-color: #f8f9fa; }
@@ -225,13 +257,34 @@
             </div>
             
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน">
-                    <% if (typeof notificationCount !== 'undefined' && notificationCount > 0) { %>
-                    <span class="notification-badge" id="notificationBadge"><%= notificationCount %></span>
-                    <% } else { %>
-                    <span class="notification-badge" id="notificationBadge">3</span>
-                    <% } %>
-                </i>
+                <!-- Notification Bell -->
+                <div class="notification-bell-container">
+                    <button class="notification-bell-btn" id="notificationBellBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>การแจ้งเตือน</h3>
+                            <button class="mark-all-read-btn" id="markAllReadBtn">
+                                <i class="fas fa-check-double"></i> อ่านทั้งหมด
+                            </button>
+                        </div>
+                        
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-loading">
+                                <i class="fas fa-spinner fa-spin"></i> กำลังโหลด...
+                            </div>
+                        </div>
+                        
+                        <div class="notification-footer">
+                            <a href="/dentist/notifications" class="view-all-link">
+                                ดูทั้งหมด <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="profile-dropdown" id="profileDropdown">
                     <div class="user-info" onclick="toggleDropdown()">
@@ -317,7 +370,7 @@
             <!-- Next Appointment Alert -->
             <% if (todaySchedule) { %>
             <div class="next-appointment">
-                <h2><i class="fas fa-clock"></i> ใบนัดถัดไปวันนี้</h2>
+                <h2><i class="fas fa-clock"></i> นัดหมายถัดไปวันนี้</h2>
                 <div class="appointment-details">
                     <div class="appointment-detail"><i class="fas fa-stethoscope"></i><span><strong>การรักษา:</strong> <%= todaySchedule.treatment_name %></span></div>
                     <div class="appointment-detail"><i class="fas fa-clock"></i><span><strong>เวลา:</strong> <%= new Date(todaySchedule.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %></span></div>
@@ -332,9 +385,8 @@
                 <!-- Appointments Section -->
                 <div class="appointments-section">
                     <div class="section-header">
-                        <h2>ใบนัดล่าสุด</h2>
+                        <h2>นัดหมายล่าสุด</h2>
                         <div class="controls">
-                            <button class="filter-btn" onclick="showFilters()"><i class="fas fa-filter"></i> ตัวกรอง</button>
                             <a href="/dentist/appointments" class="add-btn"><i class="fas fa-calendar-plus"></i> ดูทั้งหมด</a>
                         </div>
                     </div>
@@ -346,7 +398,6 @@
                                     <th><i class="fas fa-user"></i> ผู้ป่วย</th>
                                     <th><i class="fas fa-tooth"></i> การรักษา</th>
                                     <th><i class="fas fa-info-circle"></i> สถานะ</th>
-                                    <!-- ลบคอลัมน์ Action ออก -->
                                 </tr>
                             </thead>
                             <tbody id="appointmentsTableBody">
@@ -372,7 +423,6 @@
                                                 <% } %>
                                             </span>
                                         </td>
-                                        <!-- ไม่มีคอลัมน์ Action แล้ว -->
                                     </tr>
                                     <% }); %>
                                 <% } else { %>
@@ -466,13 +516,239 @@
         let currentDate = new Date(<%= currentYear %>, <%= currentMonth - 1 %>, 1);
         const monthlyAppointments = <%- JSON.stringify(monthlyAppointments) %>;
 
+        // Notification System
+        class NotificationSystem {
+            constructor() {
+                this.pollInterval = 30000; // 30 วินาที
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.isOpen = false;
+                this.init();
+            }
+
+            init() {
+                this.attachEventListeners();
+                this.loadNotifications();
+                this.startPolling();
+            }
+
+            attachEventListeners() {
+                // Toggle dropdown
+                document.getElementById('notificationBellBtn')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleDropdown();
+                });
+
+                // Mark all as read
+                document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
+                    this.markAllAsRead();
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const container = document.querySelector('.notification-bell-container');
+                    if (container && !container.contains(e.target)) {
+                        this.closeDropdown();
+                    }
+                });
+            }
+
+            async loadNotifications() {
+                try {
+                    const response = await fetch('/dentist/api/notifications?limit=5');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.notifications = data.notifications;
+                        this.unreadCount = data.unread || 0;
+                        this.updateBadge();
+                        this.renderNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            async loadUnreadCount() {
+                try {
+                    const response = await fetch('/dentist/api/notifications/unread-count');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.unreadCount = data.unread_count || 0;
+                        this.updateBadge();
+                    }
+                } catch (error) {
+                    console.error('Error loading unread count:', error);
+                }
+            }
+
+            updateBadge() {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (this.unreadCount > 0) {
+                        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+                        badge.classList.add('show');
+                    } else {
+                        badge.classList.remove('show');
+                    }
+                }
+            }
+
+            renderNotifications() {
+                const list = document.getElementById('notificationList');
+                if (!list) return;
+
+                if (this.notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="notification-empty">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>ไม่มีการแจ้งเตือน</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = this.notifications.map(notif => this.createNotificationHTML(notif)).join('');
+
+                // Add click events
+                list.querySelectorAll('.notification-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        this.handleNotificationClick(this.notifications[index]);
+                    });
+                });
+            }
+
+            createNotificationHTML(notif) {
+                const icon = this.getNotificationIcon(notif.type);
+                const unreadClass = notif.is_read ? '' : 'unread';
+
+                return `
+                    <div class="notification-item ${unreadClass}" data-id="${notif.id}">
+                        <span class="notification-icon">${icon}</span>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-message">${notif.message}</div>
+                            <div class="notification-time">${notif.time_ago || this.getTimeAgo(notif.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    'new_appointment': '🆕',
+                    'appointment_confirmed': '✅',
+                    'appointment_cancelled': '❌',
+                    'appointment_reminder': '⏰',
+                    'treatment_completed': '📝',
+                    'default': '🔔'
+                };
+                return icons[type] || icons.default;
+            }
+
+            getTimeAgo(date) {
+                const now = new Date();
+                const past = new Date(date);
+                const diffMs = now - past;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) return 'เมื่อสักครู่';
+                if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+                if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+                if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+                
+                return past.toLocaleDateString('th-TH', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+
+            async handleNotificationClick(notif) {
+                // Mark as read
+                if (!notif.is_read) {
+                    await this.markAsRead(notif.id);
+                }
+
+                // Navigate to related page
+                if (notif.appointment_id) {
+                    window.location.href = `/dentist/appointments/${notif.appointment_id}`;
+                }
+            }
+
+            async markAsRead(notifId) {
+                try {
+                    const response = await fetch(`/dentist/api/notifications/${notifId}/read`, {
+                        method: 'PUT'
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+            }
+
+            async markAllAsRead() {
+                try {
+                    const response = await fetch('/dentist/api/notifications/mark-all-read', {
+                        method: 'PUT'
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('อ่านการแจ้งเตือนทั้งหมดแล้ว', 'success');
+                        this.loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            }
+
+            toggleDropdown() {
+                this.isOpen = !this.isOpen;
+                const dropdown = document.getElementById('notificationDropdown');
+                
+                if (dropdown) {
+                    dropdown.classList.toggle('show');
+                    
+                    if (this.isOpen) {
+                        this.loadNotifications();
+                    }
+                }
+            }
+
+            closeDropdown() {
+                this.isOpen = false;
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            }
+
+            startPolling() {
+                // Poll for new notifications every 30 seconds
+                setInterval(() => {
+                    this.loadUnreadCount();
+                }, this.pollInterval);
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             initializeAvatar();
             generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+            
+            // Initialize notification system
+            window.notificationSystem = new NotificationSystem();
         });
 
-        // สร้างอักษรย่อจากชื่อ
+        // Avatar functions
         function generateInitials(fname, lname) {
             let initials = '';
             if (fname && fname.trim()) { initials += fname.trim().charAt(0); }
@@ -481,7 +757,6 @@
             return initials.toUpperCase() || 'DR';
         }
 
-        // คำนวณสีจากชื่อ (สไตล์ Gmail)
         function getColorFromName(name) {
             let hash = 0;
             for (let i = 0; i < name.length; i++) {
@@ -491,7 +766,6 @@
             return Math.abs(hash % 10);
         }
 
-        // สร้าง Avatar แบบ Gmail
         function createGmailAvatar(containerElement, fname, lname, photoUrl) {
             const initials = generateInitials(fname, lname);
             const fullName = `${fname} ${lname}`.trim();
@@ -515,14 +789,13 @@
             createGmailAvatar(avatarEl, dentist.fname, dentist.lname, dentist.photo);
         }
 
-        // เมนูโปรไฟล์
+        // Profile dropdown
         function toggleDropdown() {
             const menu = document.getElementById('dropdownMenu');
             menu.classList.toggle('show');
         }
-        function toggleNotifications() { showToast('ฟีเจอร์การแจ้งเตือนกำลังจะมาเร็ว ๆ นี้!', 'info'); }
 
-        // ปิดเมนูเมื่อคลิกนอกพื้นที่
+        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const profileDropdown = document.getElementById('profileDropdown');
             if (!profileDropdown.contains(e.target)) {
@@ -530,7 +803,7 @@
             }
         });
 
-        // ค้นหาในตาราง
+        // Search in table
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#appointmentsTableBody tr');
@@ -540,25 +813,7 @@
             });
         });
 
-        // **คงฟังก์ชันเดิมไว้แต่ไม่ได้ใช้ปุ่มแล้ว**
-        function viewAppointment(id) { window.location.href = `/dentist/appointments/${id}`; }
-        function confirmAppointment(id) {
-            if (confirm('ยืนยันนัดหมายนี้หรือไม่?')) {
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '<div class="loading"></div>';
-                button.disabled = true;
-                setTimeout(() => {
-                    button.innerHTML = '<i class="fas fa-check"></i> ยืนยันแล้ว';
-                    button.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
-                    showToast('ยืนยันนัดหมายสำเร็จ!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                }, 1000);
-            }
-        }
-        function showFilters() { showToast('ฟีเจอร์ตัวกรองกำลังจะมาเร็ว ๆ นี้!', 'info'); }
-
-        // ปฏิทิน
+        // Calendar
         function generateCalendar(year, month) {
             const firstDay = new Date(year, month, 1);
             const startDate = new Date(firstDay);

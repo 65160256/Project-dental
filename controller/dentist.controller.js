@@ -3,6 +3,7 @@ const db = require('../config/db');
 
 const path = require('path');
 const bcrypt = require('bcrypt'); 
+const NotificationHelper = require('../utils/notificationHelper');
 
 // helper: แปลง Date เป็น 'YYYY-MM-DD' เพื่อเทียบค่าวันให้แม่น
 const toYMD = (d) => {
@@ -323,50 +324,79 @@ const dentistController = {
     }
   },
 
-  // อัพเดทสถานะนัดหมาย
-  updateAppointmentStatus: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-      const { queueId, status, diagnosis, nextAppointment } = req.body;
+ // อัพเดทสถานะนัดหมาย - มีการแจ้งเตือน
+updateAppointmentStatus: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { queueId, status, diagnosis, nextAppointment } = req.body;
 
-      // ตรวจสอบสิทธิ์
-      const [appointmentCheck] = await db.execute(`
-        SELECT q.queue_id 
-        FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        WHERE q.queue_id = ? AND d.user_id = ?
-      `, [queueId, userId]);
+    // ตรวจสอบสิทธิ์
+    const [appointmentCheck] = await db.execute(`
+      SELECT q.queue_id, q.patient_id, q.dentist_id, q.queue_status
+      FROM queue q
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.queue_id = ? AND d.user_id = ?
+    `, [queueId, userId]);
 
-      if (appointmentCheck.length === 0) {
-        return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์แก้ไขนัดหมายนี้' });
-      }
-
-      // อัพเดทข้อมูล
-      let updateQuery = 'UPDATE queue SET queue_status = ?';
-      const updateParams = [status];
-
-      if (diagnosis) {
-        updateQuery += ', diagnosis = ?';
-        updateParams.push(diagnosis);
-      }
-      if (nextAppointment) {
-        updateQuery += ', next_appointment = ?';
-        updateParams.push(nextAppointment);
-      }
-
-      updateQuery += ' WHERE queue_id = ?';
-      updateParams.push(queueId);
-
-      await db.execute(updateQuery, updateParams);
-
-      res.json({ success: true, message: 'อัพเดทสถานะนัดหมายเรียบร้อยแล้ว' });
-    } catch (error) {
-      console.error('Error in updateAppointmentStatus:', error);
-      res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการอัพเดทสถานะ' });
+    if (appointmentCheck.length === 0) {
+      return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์แก้ไขนัดหมายนี้' });
     }
-  },
 
-  // ฟังก์ชันบันทึกตารางงาน
+    const appointment = appointmentCheck[0];
+    const oldStatus = appointment.queue_status;
+
+    // อัพเดทข้อมูล
+    let updateQuery = 'UPDATE queue SET queue_status = ?';
+    const updateParams = [status];
+
+    if (diagnosis) {
+      updateQuery += ', diagnosis = ?';
+      updateParams.push(diagnosis);
+    }
+    if (nextAppointment) {
+      updateQuery += ', next_appointment = ?';
+      updateParams.push(nextAppointment);
+    }
+
+    updateQuery += ' WHERE queue_id = ?';
+    updateParams.push(queueId);
+
+    await db.execute(updateQuery, updateParams);
+
+    // สร้างการแจ้งเตือนตามสถานะใหม่
+    if (status === 'confirm' && oldStatus !== 'confirm') {
+      // ยืนยันนัดหมาย
+      await NotificationHelper.createConfirmationNotification(
+        queueId,
+        appointment.patient_id,
+        appointment.dentist_id
+      );
+    } else if (status === 'cancel' && oldStatus !== 'cancel') {
+      // ยกเลิกนัดหมาย
+      await NotificationHelper.createCancellationNotification(
+        queueId,
+        appointment.patient_id,
+        appointment.dentist_id,
+        'dentist',
+        diagnosis // ใช้ diagnosis เป็นเหตุผล
+      );
+    } else if (status === 'completed' && oldStatus !== 'completed') {
+      // เสร็จสิ้นการรักษา
+      await NotificationHelper.createTreatmentRecordNotification(
+        queueId,
+        appointment.patient_id,
+        appointment.dentist_id
+      );
+    }
+
+    res.json({ success: true, message: 'อัพเดทสถานะนัดหมายเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Error in updateAppointmentStatus:', error);
+    res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการอัพเดทสถานะ' });
+  }
+},
+
+  // บันทึกตารางงาน - มีการแจ้งเตือน
 saveScheduleRange: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
@@ -374,7 +404,6 @@ saveScheduleRange: async (req, res) => {
 
     console.log('Received schedule save request:', { startDate, endDate, status, startTime, endTime });
 
-    // Validation
     if (!startDate || !endDate) {
       return res.status(400).json({ 
         success: false, 
@@ -389,7 +418,6 @@ saveScheduleRange: async (req, res) => {
       });
     }
 
-    // ตรวจสอบสิทธิ์หมอ
     const [dentistResult] = await db.execute(`
       SELECT dentist_id FROM dentist WHERE user_id = ?
     `, [userId]);
@@ -400,68 +428,48 @@ saveScheduleRange: async (req, res) => {
 
     const dentistId = dentistResult[0].dentist_id;
     
-    // เริ่ม transaction
     await db.query('START TRANSACTION');
 
     try {
-      // ลบตารางเวลาเก่าในช่วงวันที่นี้
       await db.execute(`
         DELETE FROM dentist_schedule 
         WHERE dentist_id = ? 
           AND schedule_date BETWEEN ? AND ?
       `, [dentistId, startDate, endDate]);
 
-      // แปลง string เป็น Date objects (ใช้วิธีที่ป้องกัน timezone issue)
       const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
       const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
       
       const start = new Date(startYear, startMonth - 1, startDay);
       const end = new Date(endYear, endMonth - 1, endDay);
 
-      console.log('Processing dates:', {
-        start: start.toISOString(),
-        end: end.toISOString(),
-        startLocal: `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`,
-        endLocal: `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`
-      });
-
       let insertedDays = 0;
       let skippedSundays = 0;
 
-      // วนลูปทีละวัน
       const currentDate = new Date(start);
       
       while (currentDate <= end) {
         const dayOfWeek = currentDate.getDay();
         
-        // Format วันที่สำหรับบันทึกลงฐานข้อมูล (แบบ local time)
         const year = currentDate.getFullYear();
         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
         const day = String(currentDate.getDate()).padStart(2, '0');
         const scheduleDate = `${year}-${month}-${day}`;
 
-        console.log(`Processing date: ${scheduleDate}, day of week: ${dayOfWeek}`);
-
-        // ข้ามวันอาทิตย์
         if (dayOfWeek === 0) {
           skippedSundays++;
-          console.log(`Skipped Sunday: ${scheduleDate}`);
           currentDate.setDate(currentDate.getDate() + 1);
           continue;
         }
 
-        // บันทึกเฉพาะวันจันทร์-เสาร์
         if (status === 'dayoff') {
-          // บันทึกวันหยุด
           await db.execute(`
             INSERT INTO dentist_schedule 
             (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
             VALUES (?, ?, ?, 0, 'dayoff', '00:00:00', '23:59:59', ?)
           `, [dentistId, scheduleDate, dayOfWeek, note || 'วันหยุดพิเศษ']);
           insertedDays++;
-          console.log(`Inserted dayoff: ${scheduleDate}`);
         } else {
-          // บันทึกชั่วโมงทำงาน
           const startHour = parseInt(startTime.split(':')[0]);
           const endHour = parseInt(endTime.split(':')[0]);
 
@@ -476,16 +484,28 @@ saveScheduleRange: async (req, res) => {
             `, [dentistId, scheduleDate, dayOfWeek, hour, hourStartTime, hourEndTime, note || '']);
           }
           insertedDays++;
-          console.log(`Inserted working hours: ${scheduleDate}, ${startTime}-${endTime}`);
         }
 
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      // Commit transaction
       await db.query('COMMIT');
 
-      console.log(`Successfully saved schedule. Inserted: ${insertedDays} days, Skipped sundays: ${skippedSundays}`);
+      // สร้างการแจ้งเตือนการเปลี่ยนแปลงตารางงาน
+      const dateRangeText = startDate === endDate 
+        ? `วันที่ ${new Date(startDate).toLocaleDateString('th-TH', {day: '2-digit', month: 'long', year: 'numeric'})}`
+        : `${new Date(startDate).toLocaleDateString('th-TH', {day: '2-digit', month: 'long'})} - ${new Date(endDate).toLocaleDateString('th-TH', {day: '2-digit', month: 'long', year: 'numeric'})}`;
+      
+      const detailsText = status === 'dayoff' 
+        ? (note ? `หมายเหตุ: ${note}` : '')
+        : `เวลา ${startTime}-${endTime}`;
+
+      await NotificationHelper.createScheduleChangeNotification(
+        dentistId,
+        status === 'dayoff' ? 'dayoff' : 'added',
+        dateRangeText,
+        detailsText
+      );
 
       let message = '';
       if (status === 'dayoff') {
@@ -502,7 +522,6 @@ saveScheduleRange: async (req, res) => {
       });
 
     } catch (error) {
-      // Rollback transaction
       await db.query('ROLLBACK');
       throw error;
     }
@@ -515,6 +534,7 @@ saveScheduleRange: async (req, res) => {
     });
   }
 },
+
 
 // เพิ่มฟังก์ชันแสดงหน้า monthly schedule
 getMonthlySchedule: async (req, res) => {
@@ -2626,14 +2646,15 @@ createTreatmentHistory: async (req, res) => {
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลปฏิทิน' });
   }
 },
-  // API: ยืนยันนัดหมาย
-  confirmAppointment: async (req, res) => {
+  
+// ยืนยันนัดหมาย - มีการแจ้งเตือน
+confirmAppointment: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
     const { queueId } = req.body;
 
     const [appointmentCheck] = await db.execute(`
-      SELECT q.queue_id 
+      SELECT q.queue_id, q.patient_id, q.dentist_id
       FROM queue q
       JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.queue_id = ? AND d.user_id = ?
@@ -2643,7 +2664,16 @@ createTreatmentHistory: async (req, res) => {
       return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์' });
     }
 
+    const appointment = appointmentCheck[0];
+
     await db.execute(`UPDATE queue SET queue_status = 'confirm' WHERE queue_id = ?`, [queueId]);
+
+    // สร้างการแจ้งเตือนการยืนยัน
+    await NotificationHelper.createConfirmationNotification(
+      queueId,
+      appointment.patient_id,
+      appointment.dentist_id
+    );
 
     res.json({ success: true, message: 'ยืนยันนัดหมายเรียบร้อยแล้ว' });
   } catch (error) {
@@ -2652,40 +2682,14 @@ createTreatmentHistory: async (req, res) => {
   }
 },
 
-  // API: ยกเลิกนัดหมาย
-  cancelAppointment: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-      const { queueId } = req.body;
-
-      const [appointmentCheck] = await db.execute(`
-        SELECT q.queue_id 
-        FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        WHERE q.queue_id = ? AND d.user_id = ?
-      `, [queueId, userId]);
-
-      if (appointmentCheck.length === 0) {
-        return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์' });
-      }
-
-      await db.execute(`UPDATE queue SET queue_status = 'cancel' WHERE queue_id = ?`, [queueId]);
-
-      res.json({ success: true, message: 'ยกเลิกนัดหมายเรียบร้อยแล้ว' });
-    } catch (error) {
-      console.error('Error in cancelAppointment:', error);
-      res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาด' });
-    }
-  },
-
-  // API: ทำเครื่องหมายเสร็จสิ้น
-  completeAppointment: async (req, res) => {
+  // ยกเลิกนัดหมาย - มีการแจ้งเตือน
+cancelAppointment: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
-    const { queueId, status, diagnosis, nextAppointment } = req.body;
+    const { queueId, reason } = req.body;
 
     const [appointmentCheck] = await db.execute(`
-      SELECT q.queue_id, q.queue_status
+      SELECT q.queue_id, q.patient_id, q.dentist_id
       FROM queue q
       JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.queue_id = ? AND d.user_id = ?
@@ -2695,9 +2699,46 @@ createTreatmentHistory: async (req, res) => {
       return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์' });
     }
 
-    // เปลี่ยนเป็น completed แทน confirm
-    let updateQuery = `UPDATE queue SET queue_status = ?`;
-    const params = ['completed']; // เปลี่ยนจาก 'confirm' เป็น 'completed'
+    const appointment = appointmentCheck[0];
+
+    await db.execute(`UPDATE queue SET queue_status = 'cancel' WHERE queue_id = ?`, [queueId]);
+
+    // สร้างการแจ้งเตือนการยกเลิก
+    await NotificationHelper.createCancellationNotification(
+      queueId,
+      appointment.patient_id,
+      appointment.dentist_id,
+      'dentist',
+      reason
+    );
+
+    res.json({ success: true, message: 'ยกเลิกนัดหมายเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Error in cancelAppointment:', error);
+    res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาด' });
+  }
+},
+  // ทำเครื่องหมายเสร็จสิ้น - มีการแจ้งเตือน
+completeAppointment: async (req, res) => {
+  try {
+    const userId = req.session.user?.user_id || req.session.userId;
+    const { queueId, diagnosis, nextAppointment } = req.body;
+
+    const [appointmentCheck] = await db.execute(`
+      SELECT q.queue_id, q.patient_id, q.dentist_id, q.queue_status
+      FROM queue q
+      JOIN dentist d ON q.dentist_id = d.dentist_id
+      WHERE q.queue_id = ? AND d.user_id = ?
+    `, [queueId, userId]);
+
+    if (appointmentCheck.length === 0) {
+      return res.status(403).json({ success: false, error: 'ไม่มีสิทธิ์' });
+    }
+
+    const appointment = appointmentCheck[0];
+
+    let updateQuery = `UPDATE queue SET queue_status = 'completed'`;
+    const params = [];
 
     if (diagnosis) {
       updateQuery += `, diagnosis = ?`;
@@ -2713,6 +2754,13 @@ createTreatmentHistory: async (req, res) => {
     params.push(queueId);
 
     await db.execute(updateQuery, params);
+
+    // สร้างการแจ้งเตือนการบันทึกประวัติการรักษา
+    await NotificationHelper.createTreatmentRecordNotification(
+      queueId,
+      appointment.patient_id,
+      appointment.dentist_id
+    );
 
     res.json({ success: true, message: 'ทำเครื่องหมายการรักษาเสร็จสิ้นแล้ว' });
   } catch (error) {
@@ -3386,8 +3434,7 @@ showScheduleMonthly: async (req, res) => {
   }
 },
 
-// บันทึกประวัติการรักษา
-// บันทึกประวัติการรักษา
+// บันทึกประวัติการรักษา - มีการแจ้งเตือน
 saveAddHistory: async (req, res) => {
   try {
     const userId = req.session.user?.user_id || req.session.userId;
@@ -3398,7 +3445,6 @@ saveAddHistory: async (req, res) => {
       nextAppointmentDate
     } = req.body;
 
-    // Validation
     if (!queueId || !diagnosis || !diagnosis.trim()) {
       return res.status(400).json({ 
         success: false, 
@@ -3406,7 +3452,6 @@ saveAddHistory: async (req, res) => {
       });
     }
 
-    // ตรวจสอบสิทธิ์หมอ
     const [dentistResult] = await db.execute(`
       SELECT dentist_id FROM dentist WHERE user_id = ?
     `, [userId]);
@@ -3420,9 +3465,8 @@ saveAddHistory: async (req, res) => {
 
     const dentistId = dentistResult[0].dentist_id;
 
-    // ตรวจสอบการจองและสิทธิ์
     const [appointmentCheck] = await db.execute(`
-      SELECT q.queue_id, q.queue_status, q.queuedetail_id
+      SELECT q.queue_id, q.queue_status, q.queuedetail_id, q.patient_id
       FROM queue q
       WHERE q.queue_id = ? AND q.dentist_id = ?
     `, [queueId, dentistId]);
@@ -3434,9 +3478,9 @@ saveAddHistory: async (req, res) => {
       });
     }
 
-    const queuedetailId = appointmentCheck[0].queuedetail_id;
+    const appointment = appointmentCheck[0];
+    const queuedetailId = appointment.queuedetail_id;
 
-    // เริ่ม transaction
     await db.query('START TRANSACTION');
 
     try {
@@ -3444,7 +3488,6 @@ saveAddHistory: async (req, res) => {
         ? nextAppointmentDate.trim() 
         : null;
 
-      // อัพเดทสถานะเป็น 'completed' เมื่อหมอบันทึกประวัติ
       await db.execute(`
         UPDATE queue 
         SET queue_status = 'completed', 
@@ -3453,13 +3496,11 @@ saveAddHistory: async (req, res) => {
         WHERE queue_id = ?
       `, [diagnosis.trim(), nextAppointmentValue, queueId]);
 
-      // บันทึกประวัติใน treatmentHistory
       if (queuedetailId) {
         const [existingHistory] = await db.execute(`
           SELECT tmh_id FROM treatmentHistory WHERE queuedetail_id = ?
         `, [queuedetailId]);
 
-        // สร้างข้อความรวมของคำแนะนำ
         let followUpdateText = '';
         if (followUpRecommendation && followUpRecommendation.trim()) {
           followUpdateText = followUpRecommendation.trim();
@@ -3478,7 +3519,6 @@ saveAddHistory: async (req, res) => {
         }
 
         if (existingHistory.length > 0) {
-          // อัพเดทประวัติที่มีอยู่
           await db.execute(`
             UPDATE treatmentHistory 
             SET diagnosis = ?, 
@@ -3490,7 +3530,6 @@ saveAddHistory: async (req, res) => {
             queuedetailId
           ]);
         } else {
-          // เพิ่มประวัติใหม่
           await db.execute(`
             INSERT INTO treatmentHistory (queuedetail_id, diagnosis, followUpdate)
             VALUES (?, ?, ?)
@@ -3502,8 +3541,14 @@ saveAddHistory: async (req, res) => {
         }
       }
 
-      // Commit transaction
       await db.query('COMMIT');
+
+      // สร้างการแจ้งเตือนการบันทึกประวัติการรักษา
+      await NotificationHelper.createTreatmentRecordNotification(
+        queueId,
+        appointment.patient_id,
+        dentistId
+      );
 
       res.json({ 
         success: true, 
@@ -3512,7 +3557,6 @@ saveAddHistory: async (req, res) => {
       });
 
     } catch (error) {
-      // Rollback transaction
       await db.query('ROLLBACK');
       throw error;
     }
@@ -3525,7 +3569,6 @@ saveAddHistory: async (req, res) => {
     });
   }
 },
-
   getAvailableDentists: async (req, res) => {
     res.json({ success: true, dentists: [] });
   },

@@ -318,6 +318,13 @@ router.get('/api/dentists/:id/schedule', checkAdminApiAuth, adminController.getD
 
 // ==================== Notification Routes ====================
 
+// หน้าแสดงการแจ้งเตือนทั้งหมด
+router.get('/notifications', checkAdminAuth, (req, res) => {
+  res.render('admin/notifications', {
+    title: 'การแจ้งเตือน - Smile Clinic'
+  });
+});
+
 // Get all notifications
 router.get('/api/notifications', adminController.getNotifications);
 

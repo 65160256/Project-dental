@@ -324,10 +324,7 @@ router.get('/api/treatment-history/:id', requirePatient, patientController.getTr
 
 const notificationController = require('../controller/notification.controller');
 
-// Notification routes for patient
-router.get('/api/notifications', notificationController.getPatientNotifications);
-router.get('/api/notifications/unread-count', notificationController.getUnreadCount);
-router.put('/api/notifications/:id/read', notificationController.markAsRead);
-router.put('/api/notifications/mark-all-read', notificationController.markAllAsRead);
-router.delete('/api/notifications/:id', notificationController.deleteNotification);
+// Notifications (เพิ่มใหม่)
+router.get('/notifications', patientController.getNotificationsPage);
+
 module.exports = router;
