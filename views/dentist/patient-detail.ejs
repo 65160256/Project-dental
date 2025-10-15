@@ -811,9 +811,9 @@
                 <div class="section-header">
                     <h2 class="section-title">ประวัติการรักษา</h2>
                     <div class="filter-section">
-                        <button class="filter-btn add-btn" onclick="openAddTreatmentModal()">
+                        <!-- <button class="filter-btn add-btn" onclick="openAddTreatmentModal()">
                             <i class="fas fa-plus"></i> เพิ่มประวัติการรักษา
-                        </button>
+                        </button> -->
                         <label>ค้นหาตามวันที่:</label>
                         <input type="date" class="filter-input" id="dateFilter">
                         <button class="filter-btn" onclick="filterByDate()">
@@ -832,67 +832,7 @@
         </div>
     </div>
 
-    <!-- Add Treatment History Modal -->
-    <div class="modal" id="addTreatmentModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-plus"></i> เพิ่มประวัติการรักษา</h3>
-                <button class="close-btn" onclick="closeAddTreatmentModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="addTreatmentForm">
-                    <input type="hidden" id="modalPatientId">
-                    
-                    <div class="form-section">
-                        <h4><i class="fas fa-user"></i> ข้อมูลผู้ป่วย</h4>
-                        <div id="modalPatientInfo">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4><i class="fas fa-tooth"></i> รายละเอียดการรักษา</h4>
-                        
-                        <div class="form-group">
-                            <label for="treatmentSelect">ประเภทการรักษา <span class="required">*</span></label>
-                            <select id="treatmentSelect" name="treatmentId" required>
-                                <option value="">เลือกการรักษา</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="appointmentDateTime">วันที่และเวลา <span class="required">*</span></label>
-                            <input type="datetime-local" id="appointmentDateTime" name="appointmentDate" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="diagnosis">การวินิจฉัย <span class="required">*</span></label>
-                            <textarea id="diagnosis" name="diagnosis" rows="3" placeholder="กรอกการวินิจฉัย..." required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="treatmentNotes">บันทึกการรักษา</label>
-                            <textarea id="treatmentNotes" name="treatmentNotes" rows="4" placeholder="ขั้นตอนการรักษา, เทคนิคที่ใช้..."></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="followUpDate">วันนัดติดตาม</label>
-                            <input type="date" id="followUpDate" name="followUpDate">
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" onclick="closeAddTreatmentModal()" class="btn btn-cancel">
-                            <i class="fas fa-times"></i> ยกเลิก
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> บันทึกประวัติการรักษา
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    
 
     <script>
         // Get patient ID from URL

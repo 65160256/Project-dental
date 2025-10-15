@@ -3,6 +3,16 @@ const db = require('../config/db');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 
+// [REFACTORED] Import model classes
+const Patient = require('../models/Patient.model');
+const User = require('../models/User.model');
+const Treatment = require('../models/Treatment.model');
+const Dentist = require('../models/Dentist.model');
+const Queue = require('../models/Queue.model');
+const AvailableSlots = require('../models/AvailableSlots.model');
+const TreatmentHistory = require('../models/TreatmentHistory.model');
+const DentistSchedule = require('../models/DentistSchedule.model');
+
 // Show forgot password form
 exports.showForgotPasswordForm = (req, res) => {
   res.render('patient/forgot-password');
@@ -13,12 +23,10 @@ exports.handleForgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const [rows] = await db.execute(
-      'SELECT * FROM user u JOIN patient p ON u.user_id = p.user_id WHERE u.email = ? AND u.role_id = 3',
-      [email]
-    );
+    // [REFACTORED] ใช้ User.findPatientByEmail แทน raw SQL
+    const user = await User.findPatientByEmail(email);
 
-    if (rows.length === 0) return res.send('Email not found or not a patient account.');
+    if (!user) return res.send('Email not found or not a patient account.');
 
     const resetToken = Math.random().toString(36).substring(2);
     const resetLink = `http://localhost:3000/patient/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
@@ -59,7 +67,8 @@ exports.resetPassword = async (req, res) => {
   const hashed = bcrypt.hashSync(password, 10);
 
   try {
-    await db.execute('UPDATE user SET password = ? WHERE email = ? AND role_id = 3', [hashed, email]);
+    // [REFACTORED] ใช้ User.resetPasswordByEmail แทน raw SQL
+    await User.resetPasswordByEmail(email, hashed);
     res.send('Password has been reset. You can now login.');
   } catch (err) {
     console.error(err);
@@ -73,72 +82,19 @@ exports.getDashboard = async (req, res) => {
   if (!userId) return res.redirect('/login');
 
   try {
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    const patient = patientRows[0];
-    if (!patient) return res.redirect('/login');
+    // [REFACTORED] ใช้ Patient.getDashboardData แทน raw SQL
+    const dashboardData = await Patient.getDashboardData(userId);
 
-    // Get next appointment
-    const [nextAppointmentRows] = await db.execute(
-      `SELECT q.queue_id, q.time, t.treatment_name AS treatment, 
-              CONCAT(d.fname, ' ', d.lname) AS dentist, q.queue_status
-       FROM queue q
-       JOIN treatment t ON q.treatment_id = t.treatment_id
-       JOIN dentist d ON q.dentist_id = d.dentist_id
-       WHERE q.patient_id = ? AND q.time > NOW() AND q.queue_status IN ('pending', 'confirm')
-       ORDER BY q.time ASC LIMIT 1`,
-      [patient.patient_id]
-    );
-    const nextAppointment = nextAppointmentRows[0];
-
-    // Get appointments history
-    const [appointmentsRows] = await db.execute(
-      `SELECT q.time, CONCAT(p.fname, ' ', p.lname) AS name, 
-              t.treatment_name AS treatment, CONCAT(d.fname, ' ', d.lname) AS dentist, 
-              q.queue_status
-       FROM queue q
-       JOIN patient p ON q.patient_id = p.patient_id
-       JOIN treatment t ON q.treatment_id = t.treatment_id
-       JOIN dentist d ON q.dentist_id = d.dentist_id
-       WHERE q.patient_id = ? ORDER BY q.time DESC LIMIT 5`,
-      [patient.patient_id]
-    );
-
-    // Get treatment history (แก้ไขส่วนนี้)
-    const [treatmentHistoryRows] = await db.execute(
-      `SELECT th.diagnosis, th.followUpdate, t.treatment_name AS treatment, 
-              CONCAT(d.fname, ' ', d.lname) AS dentist
-       FROM treatmentHistory th
-       JOIN queuedetail qd ON th.queuedetail_id = qd.queuedetail_id
-       JOIN treatment t ON qd.treatment_id = t.treatment_id
-       JOIN dentist d ON qd.dentist_id = d.dentist_id
-       WHERE qd.patient_id = ?
-       ORDER BY th.tmh_id DESC LIMIT 1`,
-      [patient.patient_id]
-    );
-    const treatmentHistory = treatmentHistoryRows[0] || null;
-
-    // Get today's working dentists
-    const [dentistsRows] = await db.execute(
-      `SELECT DISTINCT 
-          CONCAT(d.fname, ' ', d.lname) AS name, 
-          d.photo,
-          d.specialty
-       FROM dentist d
-       JOIN available_slots s ON d.dentist_id = s.dentist_id
-       WHERE s.date = CURDATE()
-       AND s.is_available = 1`
-    );
+    if (!dashboardData || !dashboardData.patient) {
+      return res.redirect('/login');
+    }
 
     res.render('patient/patient-dashboard', {
-      patient,
-      nextAppointment,
-      appointments: appointmentsRows,
-      treatmentHistory,  // ส่งไปแม้จะเป็น null
-      dentists: dentistsRows,
+      patient: dashboardData.patient,
+      nextAppointment: dashboardData.nextAppointment,
+      appointments: dashboardData.recentAppointments,
+      treatmentHistory: dashboardData.latestTreatmentHistory,
+      dentists: dashboardData.todayDentists,
       currentDate: new Date().toLocaleDateString('th-TH', {
         weekday: 'long',
         year: 'numeric',
@@ -167,16 +123,14 @@ exports.showNewBookingForm = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findByUserIdWithEmail แทน raw SQL
+    const patient = await Patient.findByUserIdWithEmail(userId);
 
-    const [treatments] = await db.execute('SELECT * FROM treatment ORDER BY treatment_name');
-    
+    if (!patient) return res.redirect('/login');
+
+    // [REFACTORED] ใช้ Treatment.findAllActive แทน raw SQL
+    const treatments = await Treatment.findAllActive();
+
     res.render('patient/appointment/book', {
       title: 'จองนัดหมาย',
       user: req.session,
@@ -227,71 +181,10 @@ exports.getAvailableDentistsForBooking = async (req, res) => {
       });
     }
 
-    // Query หาทันตแพทย์ที่มี available slots
-    let query = `
-      SELECT 
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        d.phone,
-        d.education,
-        CASE 
-          WHEN d.photo IS NULL OR d.photo = '' OR d.photo = 'default-avatar.png' 
-          THEN 'default-doctor.png'
-          ELSE d.photo 
-        END as photo,
-        COUNT(DISTINCT s.slot_id) as total_slots,
-        COUNT(DISTINCT CASE 
-          WHEN s.is_available = 1 
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q 
-            WHERE q.dentist_id = s.dentist_id 
-            AND DATE(q.time) = s.date 
-            AND TIME(q.time) = s.start_time 
-            AND q.queue_status IN ('pending', 'confirm')
-          ) THEN s.slot_id 
-        END) as available_slots
-      FROM dentist d
-      INNER JOIN available_slots s ON d.dentist_id = s.dentist_id
-      WHERE s.date = ?
-      AND d.user_id IS NOT NULL
-    `;
+    // [REFACTORED] ใช้ AvailableSlots.getAvailableDentistsForBooking แทน raw SQL
+    const availableDentists = await AvailableSlots.getAvailableDentistsForBooking(date, treatment_id);
 
-    let queryParams = [date];
-
-    // กรองตามการรักษา (ถ้ามี)
-    if (treatment_id) {
-      query += ` AND EXISTS (
-        SELECT 1 FROM dentist_treatment dt 
-        WHERE dt.dentist_id = d.dentist_id 
-        AND dt.treatment_id = ?
-      )`;
-      queryParams.push(treatment_id);
-    }
-
-    query += `
-      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.education, d.photo
-      HAVING available_slots > 0
-      ORDER BY d.fname, d.lname
-    `;
-
-    const [availableDentists] = await db.execute(query, queryParams);
-    
     console.log('✅ Found', availableDentists.length, 'dentists with available slots');
-
-    // ดึงข้อมูลการรักษาของแต่ละทันตแพทย์
-    for (let dentist of availableDentists) {
-      const [treatments] = await db.execute(`
-        SELECT t.treatment_id, t.treatment_name, t.duration
-        FROM dentist_treatment dt
-        JOIN treatment t ON dt.treatment_id = t.treatment_id
-        WHERE dt.dentist_id = ?
-        ORDER BY t.treatment_name
-      `, [dentist.dentist_id]);
-      
-      dentist.treatments = treatments;
-    }
 
     res.json({
       success: true,
@@ -324,100 +217,38 @@ exports.getAvailableTimeSlots = async (req, res) => {
 
     console.log('⏰ Getting time slots for:', { date, dentistId, treatmentId });
 
-    // ดึง duration ของการรักษา
-    const [treatmentData] = await db.execute(
-      'SELECT duration FROM treatment WHERE treatment_id = ?',
-      [treatmentId]
-    );
+    // [REFACTORED] ใช้ Treatment.findById แทน raw SQL
+    const treatment = await Treatment.findById(treatmentId);
 
-    if (treatmentData.length === 0) {
+    if (!treatment) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบข้อมูลการรักษา'
       });
     }
 
-    const duration = treatmentData[0].duration;
-    const requiredSlots = Math.ceil(duration / 30);
+    const duration = treatment.duration;
 
-    // ดึง available slots ทั้งหมด
-    const [slots] = await db.execute(`
-      SELECT 
-        s.slot_id,
-        s.start_time,
-        s.end_time,
-        TIME_FORMAT(s.start_time, '%H:%i') as formatted_start_time,
-        TIME_FORMAT(s.end_time, '%H:%i') as formatted_end_time
-      FROM available_slots s
-      WHERE s.dentist_id = ?
-      AND s.date = ?
-      AND s.is_available = 1
-      AND NOT EXISTS (
-        SELECT 1 FROM queue q
-        WHERE q.dentist_id = s.dentist_id 
-        AND DATE(q.time) = s.date 
-        AND TIME(q.time) = s.start_time
-        AND q.queue_status IN ('pending', 'confirm')
-      )
-      ORDER BY s.start_time
-    `, [dentistId, date]);
+    // [REFACTORED] ใช้ AvailableSlots.getAvailableTimeSlotsForBooking แทน raw SQL
+    const result = await AvailableSlots.getAvailableTimeSlotsForBooking(date, dentistId, treatmentId);
+    const validSlots = result.slots || [];
 
-    console.log('Found', slots.length, 'available slots');
+    // ใช้ formatted_start_time ที่ model ได้จัดรูปแบบไว้แล้ว (HH:MM)
+    const formattedSlots = validSlots.map(slot => ({
+      ...slot,
+      start_time: slot.formatted_start_time || slot.start_time
+    }));
 
-    // กรอง slots ที่เพียงพอและต่อเนื่อง
-    const now = new Date();
-    const validSlots = [];
-    
-    for (let i = 0; i < slots.length; i++) {
-      let hasEnoughTime = true;
-      let consecutiveSlots = 1;
-      
-      // ตรวจสอบ slots ต่อเนื่อง
-      for (let j = 1; j < requiredSlots && (i + j) < slots.length; j++) {
-        const currentSlot = slots[i + j - 1];
-        const nextSlot = slots[i + j];
-        
-        if (currentSlot.end_time === nextSlot.start_time) {
-          consecutiveSlots++;
-        } else {
-          hasEnoughTime = false;
-          break;
-        }
-      }
-      
-      if (hasEnoughTime && consecutiveSlots >= requiredSlots) {
-        const startDateTime = new Date(`${date} ${slots[i].formatted_start_time}:00`);
-        
-        // ตรวจสอบกฎ 24 ชั่วโมง
-        const slotTimeDiff = startDateTime.getTime() - now.getTime();
-        const slotHoursDiff = slotTimeDiff / (1000 * 3600);
-        
-        if (slotHoursDiff >= 24) {
-          const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
-          const endHours = String(endDateTime.getHours()).padStart(2, '0');
-          const endMinutes = String(endDateTime.getMinutes()).padStart(2, '0');
-          
-          validSlots.push({
-            start_time: slots[i].formatted_start_time,
-            end_time: `${endHours}:${endMinutes}`,
-            display: `${slots[i].formatted_start_time} - ${endHours}:${endMinutes}`,
-            duration: duration,
-            slots_needed: requiredSlots
-          });
-        }
-      }
-    }
-
-    console.log('✅ Valid slots:', validSlots.length);
+    console.log('✅ Valid slots:', formattedSlots.length);
 
     res.json({
       success: true,
-      slots: validSlots,
+      slots: formattedSlots,
       date: date,
       dentistId: dentistId,
       treatmentId: treatmentId,
       treatment_duration: duration,
-      total_slots: validSlots.length
+      total_slots: formattedSlots.length
     });
 
   } catch (error) {
@@ -451,40 +282,35 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
 
     // Validate ข้อมูลพื้นฐาน
     if (!dentist_id || !treatment_id || !date || !start_time) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ข้อมูลไม่ครบถ้วน กรุณาระบุ dentist_id, treatment_id, date และ start_time' 
+      return res.status(400).json({
+        success: false,
+        error: 'ข้อมูลไม่ครบถ้วน กรุณาระบุ dentist_id, treatment_id, date และ start_time'
       });
     }
 
-    // ดึงข้อมูลผู้ป่วย
-    const [patientResult] = await db.execute(`
-      SELECT patient_id, fname, lname FROM patient WHERE user_id = ?
-    `, [patientUserId]);
+    // [REFACTORED] ใช้ Patient.findByUserId แทน raw SQL
+    const patient = await Patient.findByUserId(patientUserId);
 
-    if (patientResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบข้อมูลผู้ป่วย' 
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
-    const patientId = patientResult[0].patient_id;
+    const patientId = patient.patient_id;
 
-    // ดึง duration ของการรักษา
-    const [treatmentData] = await db.execute(
-      'SELECT duration FROM treatment WHERE treatment_id = ?',
-      [treatment_id]
-    );
+    // [REFACTORED] ใช้ Treatment.findById แทน raw SQL
+    const treatment = await Treatment.findById(treatment_id);
 
-    if (treatmentData.length === 0) {
+    if (!treatment) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบข้อมูลการรักษา'
       });
     }
 
-    const duration = treatmentData[0].duration;
+    const duration = treatment.duration;
     const requiredSlots = Math.ceil(duration / 30);
 
     console.log('📊 Treatment info:', { duration, requiredSlots });
@@ -544,83 +370,25 @@ exports.bookAppointmentWithSchedule = async (req, res) => {
         });
       }
 
-      const slotsParams = [
-        dentistIdInt,
-        date,
-        start_time,
-        requiredSlotsInt
-      ];
+      console.log('🔍 Checking slots:', { dentistIdInt, date, start_time, requiredSlotsInt });
 
-      console.log('🔍 Checking slots with params:', slotsParams);
-      console.log('🔍 Types:', slotsParams.map(p => `${typeof p} (${p})`));
+      // [REFACTORED] ใช้ AvailableSlots.getConsecutiveSlots แทน raw SQL
+      const slotsCheck = await AvailableSlots.getConsecutiveSlots(dentistIdInt, date, start_time, requiredSlotsInt);
 
-      
-// ✅ Step 1: ดึง available slots ทั้งหมดก่อน (ไม่ใช้ function ใน query)
-const [allSlots] = await connection.execute(`
-  SELECT s.slot_id, s.start_time, s.end_time
-  FROM available_slots s
-  WHERE s.dentist_id = ?
-  AND s.date = ?
-  AND s.start_time >= ?
-  AND s.is_available = 1
-  ORDER BY s.start_time
-`, [dentistIdInt, date, start_time]);
+      console.log('✅ Available slots after filtering:', slotsCheck.length, '/ Required:', requiredSlotsInt);
 
-console.log('📊 Found potential slots:', allSlots.length);
+      if (slotsCheck.length < requiredSlotsInt) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          error: `ช่วงเวลานี้ไม่เพียงพอสำหรับการรักษา (ต้องการ ${requiredSlotsInt} ช่วง, มีว่าง ${slotsCheck.length} ช่วง)`
+        });
+      }
 
-// ✅ Step 2: ตรวจสอบว่า slot ไหนมี booking แล้วบ้าง
-const slotsCheck = [];
-for (const slot of allSlots) {
-  if (slotsCheck.length >= requiredSlotsInt) break; // พอแล้ว
-  
-  const slotDateTime = `${date} ${slot.start_time}`;
-  
-  const [existingBooking] = await connection.execute(`
-    SELECT queue_id
-    FROM queue
-    WHERE dentist_id = ?
-    AND time = ?
-    AND queue_status IN ('pending', 'confirm')
-  `, [dentistIdInt, slotDateTime]);
-  
-  if (existingBooking.length === 0) {
-    slotsCheck.push(slot);
-  }
-}
+      // [REFACTORED] ใช้ Queue.checkExistingAppointmentOnDate แทน raw SQL
+      const existingCount = await Queue.checkExistingAppointmentOnDate(connection, patientId, date);
 
-console.log('✅ Available slots after filtering:', slotsCheck.length, '/ Required:', requiredSlotsInt);
-
-if (slotsCheck.length < requiredSlotsInt) {
-  await connection.rollback();
-  return res.status(400).json({ 
-    success: false, 
-    error: `ช่วงเวลานี้ไม่เพียงพอสำหรับการรักษา (ต้องการ ${requiredSlotsInt} ช่วง, มีว่าง ${slotsCheck.length} ช่วง)` 
-  });
-}
-
-// ตรวจสอบว่า slots ต่อเนื่องกัน
-for (let i = 0; i < slotsCheck.length - 1; i++) {
-  if (slotsCheck[i].end_time !== slotsCheck[i + 1].start_time) {
-    await connection.rollback();
-    return res.status(400).json({
-      success: false,
-      error: 'ช่วงเวลาที่เลือกไม่ต่อเนื่องกัน'
-    });
-  }
-}
-
-// ... ส่วนที่เหลือเหมือนเดิม
-
-      // ตรวจสอบว่าไม่มีนัดหมายในวันเดียวกัน
-      const [existingAppointments] = await connection.execute(`
-        SELECT COUNT(*) as count
-        FROM queue q
-        WHERE q.patient_id = ?
-        AND DATE(q.time) = ?
-        AND q.queue_status IN ('pending', 'confirm')
-      `, [patientId, date]);
-
-      if (existingAppointments[0].count > 0) {
+      if (existingCount > 0) {
         await connection.rollback();
         return res.status(400).json({
           success: false,
@@ -628,50 +396,24 @@ for (let i = 0; i < slotsCheck.length - 1; i++) {
         });
       }
 
-      // สร้าง queuedetail
-      const [queueDetailResult] = await connection.execute(`
-        INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-        VALUES (?, ?, ?, ?, NOW())
-      `, [patientId, treatment_id, dentistIdInt, date]);
+      // [REFACTORED] ใช้ Queue.createBookingWithSlots แทน raw SQL
+      const bookingResult = await Queue.createBookingWithSlots(
+        connection,
+        {
+          patientId,
+          treatmentId: treatment_id,
+          dentistId: dentistIdInt,
+          date,
+          startTime: start_time,
+          note
+        },
+        slotsCheck
+      );
 
-      const queueDetailId = queueDetailResult.insertId;
-
-      // สร้าง queue
-      const [queueResult] = await connection.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
-        VALUES (?, ?, ?, ?, ?, 'pending', ?)
-      `, [queueDetailId, patientId, treatment_id, dentistIdInt, appointmentDateTime, note || null]);
-
-      const queueId = queueResult.insertId;
-
-      // อัพเดท slots เป็น not available
-      for (const slot of slotsCheck) {
-        await connection.execute(`
-          UPDATE available_slots
-          SET treatment_id = ?, is_available = 0
-          WHERE slot_id = ?
-        `, [treatment_id, slot.slot_id]);
-      }
-
-      // ดึงรายละเอียดการจอง
-      const [bookingDetails] = await connection.execute(`
-        SELECT 
-          q.queue_id,
-          q.time,
-          CONCAT(p.fname, ' ', p.lname) as patient_name,
-          CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          t.treatment_name,
-          t.duration
-        FROM queue q
-        JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.queue_id = ?
-      `, [queueId]);
+      const { queueId, bookingDetails } = bookingResult;
 
       await connection.commit();
       await NotificationHelper.createNewAppointmentNotification(queueId, patientId, dentistIdInt);
-
 
       console.log('✅ Booking successful:', queueId);
 
@@ -681,10 +423,10 @@ for (let i = 0; i < slotsCheck.length - 1; i++) {
         booking: {
           queue_id: queueId,
           appointment_time: appointmentDateTime,
-          patient_name: bookingDetails[0]?.patient_name,
-          dentist_name: bookingDetails[0]?.dentist_name,
-          treatment_name: bookingDetails[0]?.treatment_name,
-          duration: bookingDetails[0]?.duration,
+          patient_name: bookingDetails?.patient_name,
+          dentist_name: bookingDetails?.dentist_name,
+          treatment_name: bookingDetails?.treatment_name,
+          duration: bookingDetails?.duration,
           status: 'pending'
         }
       });
@@ -702,7 +444,7 @@ for (let i = 0; i < slotsCheck.length - 1; i++) {
 
   } catch (error) {
     console.error('❌ Error in bookAppointmentWithSchedule:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการจองนัดหมาย: ' + error.message
     });
@@ -713,116 +455,28 @@ for (let i = 0; i < slotsCheck.length - 1; i++) {
 exports.getCalendarData = async (req, res) => {
   try {
     const { year, month, treatment_id } = req.query;
-    
+
     if (!year || !month) {
       return res.status(400).json({
         success: false,
         error: 'กรุณาระบุปีและเดือน'
       });
     }
-    
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
-    
-    console.log('📅 Getting calendar data for:', { year, month, startDate, endDate, treatment_id });
-    
-    // Query หลัก: ดึงข้อมูลทั้งหมดที่ต้องการในครั้งเดียว
-    let mainQuery = `
-      SELECT 
-        s.date,
-        DATE_FORMAT(s.date, '%Y-%m-%d') as date_string,
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        d.photo,
-        COUNT(DISTINCT s.slot_id) as dentist_total_slots,
-        COUNT(DISTINCT CASE 
-          WHEN s.is_available = 1 
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q 
-            WHERE q.dentist_id = s.dentist_id 
-            AND DATE(q.time) = s.date 
-            AND TIME(q.time) = s.start_time 
-            AND q.queue_status IN ('pending', 'confirm')
-          ) 
-          THEN s.slot_id 
-        END) as dentist_available_slots
-      FROM available_slots s
-      JOIN dentist d ON s.dentist_id = d.dentist_id
-      WHERE s.date BETWEEN ? AND ?
-      AND d.user_id IS NOT NULL
-    `;
-    
-    let queryParams = [
-      startDate.toISOString().split('T')[0],
-      endDate.toISOString().split('T')[0]
-    ];
-    
-    // ถ้ามีการกรองตามการรักษา
-    if (treatment_id) {
-      mainQuery += ` AND EXISTS (
-        SELECT 1 FROM dentist_treatment dt 
-        WHERE dt.dentist_id = d.dentist_id 
-        AND dt.treatment_id = ?
-      )`;
-      queryParams.push(treatment_id);
-    }
-    
-    mainQuery += `
-      GROUP BY s.date, d.dentist_id, d.fname, d.lname, d.specialty, d.photo
-      HAVING dentist_available_slots > 0
-      ORDER BY s.date, d.fname, d.lname
-    `;
-    
-    const [rawData] = await db.execute(mainQuery, queryParams);
-    
-    console.log('✅ Raw data from DB:', rawData.length, 'records');
-    
-    // จัดกลุ่มข้อมูลตามวันที่
-    const groupedByDate = {};
-    
-    rawData.forEach(row => {
-      const dateStr = row.date_string;
-      
-      if (!groupedByDate[dateStr]) {
-        groupedByDate[dateStr] = {
-          date: dateStr,
-          available_dentists: 0,
-          total_slots: 0,
-          available_slots: 0,
-          dentists: []
-        };
-      }
-      
-      groupedByDate[dateStr].available_dentists++;
-      groupedByDate[dateStr].total_slots += parseInt(row.dentist_total_slots);
-      groupedByDate[dateStr].available_slots += parseInt(row.dentist_available_slots);
-      
-      groupedByDate[dateStr].dentists.push({
-        dentist_id: row.dentist_id,
-        name: `${row.fname} ${row.lname}`,
-        fname: row.fname,
-        lname: row.lname,
-        specialty: row.specialty || 'ทันตแพทย์ทั่วไป',
-        photo: row.photo,
-        available_slots: parseInt(row.dentist_available_slots)
-      });
-    });
-    
-    // แปลงเป็น array
-    const calendarData = Object.values(groupedByDate);
-    
+
+    console.log('📅 Getting calendar data for:', { year, month, treatment_id });
+
+    // [REFACTORED] ใช้ AvailableSlots.getCalendarDataForMonth แทน raw SQL
+    const calendarData = await AvailableSlots.getCalendarDataForMonth(parseInt(year), parseInt(month), treatment_id);
+
     console.log('✅ Calendar data processed:', calendarData.length, 'days with available dentists');
-    console.log('Sample day:', calendarData[0]);
-    
+
     res.json({
       success: true,
       calendar_data: calendarData,
       year: parseInt(year),
       month: parseInt(month)
     });
-    
+
   } catch (error) {
     console.error('❌ Error in getCalendarData:', error);
     res.status(500).json({
@@ -838,43 +492,20 @@ exports.getMyUpcomingAppointments = async (req, res) => {
   try {
     const patientUserId = req.session.userId;
 
-    const [patientResult] = await db.execute(`
-      SELECT patient_id FROM patient WHERE user_id = ?
-    `, [patientUserId]);
+    // [REFACTORED] ใช้ Patient.findByUserId แทน raw SQL
+    const patient = await Patient.findByUserId(patientUserId);
 
-    if (patientResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบข้อมูลผู้ป่วย' 
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
-    const patientId = patientResult[0].patient_id;
+    const patientId = patient.patient_id;
 
-    const [appointments] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        th.diagnosis as notes,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty as dentist_specialty,
-        t.treatment_name,
-        t.duration,
-        CASE
-          WHEN q.time > DATE_ADD(NOW(), INTERVAL 24 HOUR) AND q.queue_status IN ('pending', 'confirm') THEN TRUE
-          ELSE FALSE
-        END as can_cancel
-      FROM queue q
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.patient_id = ?
-      AND q.time > NOW()
-      AND q.queue_status IN ('pending', 'confirm')
-      ORDER BY q.time ASC
-    `, [patientId]);
+    // [REFACTORED] ใช้ Patient.getUpcomingAppointments แทน raw SQL
+    const appointments = await Patient.getUpcomingAppointments(patientId);
 
     res.json({
       success: true,
@@ -884,7 +515,7 @@ exports.getMyUpcomingAppointments = async (req, res) => {
 
   } catch (error) {
     console.error('Error in getMyUpcomingAppointments:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลนัดหมาย'
     });
@@ -905,41 +536,25 @@ exports.cancelMyAppointment = async (req, res) => {
       });
     }
 
-    const [patientResult] = await db.execute(`
-      SELECT patient_id FROM patient WHERE user_id = ?
-    `, [patientUserId]);
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patientId = await Patient.findIdByUserId(patientUserId);
 
-    if (patientResult.length === 0) {
+    if (!patientId) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
-    const patientId = patientResult[0].patient_id;
+    // [REFACTORED] ใช้ Queue.findByIdWithPatientAuth แทน raw SQL
+    const appointment = await Queue.findByIdWithPatientAuth(queue_id, patientId);
 
-    const [appointmentCheck] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        q.dentist_id,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [queue_id, patientId]);
-
-    if (appointmentCheck.length === 0) {
+    if (!appointment) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบนัดหมาย หรือไม่มีสิทธิ์ยกเลิก'
       });
     }
-
-    const appointment = appointmentCheck[0];
 
     const appointmentTime = new Date(appointment.time);
     const now = new Date();
@@ -960,11 +575,8 @@ exports.cancelMyAppointment = async (req, res) => {
       });
     }
 
-    await db.execute(`
-      UPDATE queue
-      SET queue_status = 'cancel'
-      WHERE queue_id = ? AND patient_id = ?
-    `, [queue_id, patientId]);
+    // [REFACTORED] ใช้ Queue.updatePatientAppointmentStatus แทน raw SQL
+    await Queue.updatePatientAppointmentStatus(queue_id, patientId, 'cancel');
 
     // แจ้งเตือน dentist และ admin เมื่อ patient ยกเลิกนัด
     await NotificationHelper.createCancellationNotification(
@@ -1000,13 +612,9 @@ exports.appointmentMonth = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     const year = req.query.year || new Date().getFullYear();
     const month = req.query.month || new Date().getMonth();
@@ -1035,13 +643,9 @@ exports.appointmentWeek = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     const date = req.query.date ? new Date(req.query.date) : new Date();
     const monday = getMonday(date);
@@ -1069,13 +673,9 @@ exports.appointmentDay = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     const date = req.query.date ? new Date(req.query.date) : new Date();
     
@@ -1102,29 +702,17 @@ exports.showBookingForm = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findByUserIdWithEmail แทน raw SQL
+    const patient = await Patient.findByUserIdWithEmail(userId);
+    if (!patient) return res.redirect('/login');
 
     const { date, time, dentist_id, treatment_id } = req.query;
-    
-    // Get treatments
-    const [treatments] = await db.execute('SELECT * FROM treatment ORDER BY treatment_name');
-    
-    // Get dentists with schedules
-    const [dentists] = await db.execute(`
-      SELECT DISTINCT d.*, CONCAT(d.fname, ' ', d.lname) as full_name 
-      FROM dentist d 
-      JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
-      WHERE d.user_id IS NOT NULL
-      AND ds.schedule_date >= CURDATE()
-      AND ds.status = 'working'
-      ORDER BY d.fname
-    `);
+
+    // [REFACTORED] ใช้ Treatment.findAllActive แทน raw SQL
+    const treatments = await Treatment.findAllActive();
+
+    // [REFACTORED] ใช้ Dentist.findAllWithSchedules แทน raw SQL
+    const dentists = await Dentist.findAllWithSchedules();
 
     res.render('patient/appointment/book', {
       title: 'Book an appointment',
@@ -1148,48 +736,29 @@ exports.bookAppointment = async (req, res) => {
   try {
     const { date, time, dentist_id, treatment_id, symptom_details, phone } = req.body;
     const userId = req.session.userId;
-    
-    // Get patient ID
-    const [patientRows] = await db.execute('SELECT patient_id FROM patient WHERE user_id = ?', [userId]);
-    if (!patientRows[0]) return res.redirect('/patient/appointment/book?error=1');
-    
-    const patient_id = patientRows[0].patient_id;
-    
-    // Validate the appointment time against dentist schedule
-    const hour = parseInt(time.split(':')[0]);
-    const [scheduleValidation] = await db.execute(`
-      SELECT ds.schedule_id
-      FROM dentist_schedule ds
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      WHERE ds.dentist_id = ?
-      AND ds.schedule_date = ?
-      AND ds.hour = ?
-      AND ds.status = 'working'
-      AND q.queue_id IS NULL
-    `, [dentist_id, date, hour]);
 
-    if (scheduleValidation.length === 0) {
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patient_id = await Patient.findIdByUserId(userId);
+    if (!patient_id) return res.redirect('/patient/appointment/book?error=1');
+
+    // [REFACTORED] ใช้ DentistSchedule.validateScheduleAvailability แทน raw SQL
+    const hour = parseInt(time.split(':')[0]);
+    const isAvailable = await DentistSchedule.validateScheduleAvailability(dentist_id, date, hour);
+
+    if (!isAvailable) {
       return res.redirect('/patient/appointment/book?error=time_unavailable');
     }
-    
-    // Create appointment datetime
-    const appointmentTime = `${date} ${time}:00`;
-    
-    // Insert into queuedetail
-    const [queueDetailResult] = await db.execute(`
-      INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-      VALUES (?, ?, ?, ?, NOW())
-    `, [patient_id, treatment_id, dentist_id, date]);
-    
-    // Insert into queue
-    await db.execute(`
-      INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, diagnosis)
-      VALUES (?, ?, ?, ?, ?, 'pending', ?)
-    `, [queueDetailResult.insertId, patient_id, treatment_id, dentist_id, appointmentTime, symptom_details]);
-    
+
+    // [REFACTORED] ใช้ Queue.createLegacyBooking แทน raw SQL
+    await Queue.createLegacyBooking({
+      patientId: patient_id,
+      treatmentId: treatment_id,
+      dentistId: dentist_id,
+      date,
+      time,
+      diagnosis: symptom_details
+    });
+
     res.redirect('/patient/appointment/month?success=1');
   } catch (error) {
     console.error('Create booking error:', error);
@@ -1198,106 +767,17 @@ exports.bookAppointment = async (req, res) => {
 };
 
 // Helper functions using real schedule data
+// [REFACTORED] ใช้ DentistSchedule model methods
 async function getAvailableAppointmentsByMonth(year, month) {
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN q.queue_id IS NULL THEN 'available'
-        ELSE 'booked'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-      AND DATE(q.time) = ds.schedule_date 
-      AND HOUR(q.time) = ds.hour
-      AND q.queue_status IN ('pending', 'confirm')
-    WHERE YEAR(ds.schedule_date) = ? 
-    AND MONTH(ds.schedule_date) = ?
-    AND ds.status = 'working'
-    AND ds.schedule_date >= CURDATE()
-    ORDER BY ds.schedule_date, ds.hour
-  `, [year, month + 1]);
-  
-  return appointments;
+  return await DentistSchedule.getAvailableAppointmentsByMonth(year, month);
 }
 
 async function getAvailableAppointmentsByWeek(startDate) {
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6);
-  
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN q.queue_id IS NULL THEN 'available'
-        ELSE 'booked'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-      AND DATE(q.time) = ds.schedule_date 
-      AND HOUR(q.time) = ds.hour
-      AND q.queue_status IN ('pending', 'confirm')
-    WHERE ds.schedule_date BETWEEN ? AND ?
-    AND ds.status = 'working'
-    AND ds.schedule_date >= CURDATE()
-    ORDER BY ds.schedule_date, ds.hour
-  `, [
-    startDate.toISOString().split('T')[0],
-    endDate.toISOString().split('T')[0]
-  ]);
-  
-  return appointments;
+  return await DentistSchedule.getAvailableAppointmentsByWeek(startDate);
 }
 
 async function getAvailableAppointmentsByDay(date) {
-  const [appointments] = await db.execute(`
-    SELECT 
-      ds.schedule_date as date,
-      ds.hour,
-      ds.start_time,
-      ds.end_time,
-      TIME_FORMAT(ds.start_time, '%H:%i') as time_formatted,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      d.dentist_id,
-      d.specialty,
-      'Available' as treatment_name,
-      60 as duration,
-      CASE 
-        WHEN q.queue_id IS NULL THEN 'available'
-        ELSE 'booked'
-      END as status
-    FROM dentist_schedule ds
-    JOIN dentist d ON ds.dentist_id = d.dentist_id
-    LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-      AND DATE(q.time) = ds.schedule_date 
-      AND HOUR(q.time) = ds.hour
-      AND q.queue_status IN ('pending', 'confirm')
-    WHERE ds.schedule_date = ?
-    AND ds.status = 'working'
-    ORDER BY ds.hour
-  `, [date.toISOString().split('T')[0]]);
-  
-  return appointments;
+  return await DentistSchedule.getAvailableAppointmentsByDay(date);
 }
 
 function getMonday(date) {
@@ -1313,28 +793,14 @@ exports.getHistory = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
+
     const patient_id = patient.patient_id;
 
-    const [appointments] = await db.execute(`
-      SELECT q.queue_id, q.time, q.queue_status, th.diagnosis, th.next_appointment,
-             t.treatment_name, t.duration,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name,
-             d.specialty,
-             qd.date, qd.created_at
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE q.patient_id = ?
-      ORDER BY q.time DESC
-    `, [patient_id]);
+    // [REFACTORED] ใช้ Queue.getPatientHistoryWithDetails แทน raw SQL
+    const appointments = await Queue.getPatientHistoryWithDetails(patient_id);
 
     res.render('patient/history/list', {
       title: 'Appointment History',
@@ -1352,36 +818,21 @@ exports.getAppointmentDetails = async (req, res) => {
   try {
     const userId = req.session.userId;
     const appointmentId = req.params.id;
-    
+
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
+
     const patient_id = patient.patient_id;
 
-    const [appointmentRows] = await db.execute(`
-      SELECT q.*, qd.date, qd.created_at,
-             t.treatment_name, t.duration,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name,
-             d.specialty,
-             CONCAT(p.fname, ' ', p.lname) as patient_name
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [appointmentId, patient_id]);
+    // [REFACTORED] ใช้ Queue.getPatientAppointmentDetail แทน raw SQL
+    const appointment = await Queue.getPatientAppointmentDetail(appointmentId, patient_id);
 
-    if (!appointmentRows[0]) {
+    if (!appointment) {
       return res.status(404).send('Appointment not found');
     }
-
-    const appointment = appointmentRows[0];
 
     res.render('patient/history/details', {
       title: 'Appointment Details',
@@ -1399,55 +850,34 @@ exports.showEditAppointment = async (req, res) => {
   try {
     const userId = req.session.userId;
     const appointmentId = req.params.id;
-    
+
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findByUserIdWithEmail แทน raw SQL
+    const patient = await Patient.findByUserIdWithEmail(userId);
+    if (!patient) return res.redirect('/login');
     const patient_id = patient.patient_id;
 
-    const [appointmentRows] = await db.execute(`
-      SELECT q.*, qd.date, qd.created_at,
-             t.treatment_name, t.treatment_id, t.duration,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name,
-             d.dentist_id, d.specialty,
-             CONCAT(p.fname, ' ', p.lname) as patient_name
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [appointmentId, patient_id]);
+    // [REFACTORED] ใช้ Queue.getPatientAppointmentDetail แทน raw SQL
+    const appointment = await Queue.getPatientAppointmentDetail(appointmentId, patient_id);
 
-    if (!appointmentRows[0]) {
+    if (!appointment) {
       return res.status(404).send('Appointment not found');
     }
 
-    const appointment = appointmentRows[0];
-    
     // Check if appointment can be edited (24 hours before)
     const appointmentTime = new Date(appointment.time);
     const now = new Date();
     const timeDiff = appointmentTime.getTime() - now.getTime();
     const hoursDiff = timeDiff / (1000 * 3600);
-    
+
     const canEdit = hoursDiff > 24;
 
-    // Get treatments
-    const [treatments] = await db.execute('SELECT * FROM treatment ORDER BY treatment_name');
-    
-    // Get dentists
-    const [dentists] = await db.execute(`
-      SELECT d.*, CONCAT(d.fname, ' ', d.lname) as full_name 
-      FROM dentist d 
-      WHERE d.user_id IS NOT NULL
-      ORDER BY d.fname
-    `);
+    // [REFACTORED] ใช้ Treatment.findAllActive แทน raw SQL
+    const treatments = await Treatment.findAllActive();
+
+    // [REFACTORED] ใช้ Dentist.findAll แทน raw SQL
+    const dentists = await Dentist.findAll();
 
     res.render('patient/history/edit', {
       title: 'Edit Appointment History',
@@ -1470,70 +900,45 @@ exports.updateAppointment = async (req, res) => {
     const userId = req.session.userId;
     const appointmentId = req.params.id;
     const { date, time } = req.body;
-    
+
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute('SELECT patient_id FROM patient WHERE user_id = ?', [userId]);
-    if (!patientRows[0]) return res.redirect('/login');
-    
-    const patient_id = patientRows[0].patient_id;
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patient_id = await Patient.findIdByUserId(userId);
+    if (!patient_id) return res.redirect('/login');
 
-    const [currentRows] = await db.execute(`
-      SELECT * FROM queue WHERE queue_id = ? AND patient_id = ?
-    `, [appointmentId, patient_id]);
+    // [REFACTORED] ใช้ Queue.findById แทน raw SQL
+    const currentAppointment = await Queue.findById(appointmentId);
 
-    if (!currentRows[0]) {
+    if (!currentAppointment || currentAppointment.patient_id !== patient_id) {
       return res.status(404).send('Appointment not found');
     }
 
-    const currentAppointment = currentRows[0];
-    
     // Check if appointment can be edited (24 hours before)
     const appointmentTime = new Date(currentAppointment.time);
     const now = new Date();
     const timeDiff = appointmentTime.getTime() - now.getTime();
     const hoursDiff = timeDiff / (1000 * 3600);
-    
+
     if (hoursDiff <= 24) {
       return res.redirect(`/patient/history/edit/${appointmentId}?error=time_limit`);
     }
 
-    // Validate new time against dentist schedule
+    // [REFACTORED] ใช้ DentistSchedule.validateScheduleAvailability แทน raw SQL
     const hour = parseInt(time.split(':')[0]);
-    const [scheduleValidation] = await db.execute(`
-      SELECT ds.schedule_id
-      FROM dentist_schedule ds
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-        AND q.queue_id != ?
-      WHERE ds.dentist_id = ?
-      AND ds.schedule_date = ?
-      AND ds.hour = ?
-      AND ds.status = 'working'
-      AND q.queue_id IS NULL
-    `, [appointmentId, currentAppointment.dentist_id, date, hour]);
+    const isAvailable = await DentistSchedule.validateScheduleAvailability(
+      currentAppointment.dentist_id,
+      date,
+      hour,
+      appointmentId
+    );
 
-    if (scheduleValidation.length === 0) {
+    if (!isAvailable) {
       return res.redirect(`/patient/history/edit/${appointmentId}?error=time_unavailable`);
     }
 
-    const newAppointmentTime = `${date} ${time}:00`;
-
-    // Update queue
-    await db.execute(`
-      UPDATE queue 
-      SET time = ?
-      WHERE queue_id = ? AND patient_id = ?
-    `, [newAppointmentTime, appointmentId, patient_id]);
-
-    // Update queuedetail
-    await db.execute(`
-      UPDATE queuedetail 
-      SET date = ?
-      WHERE queuedetail_id = ?
-    `, [date, currentAppointment.queuedetail_id]);
+    // [REFACTORED] ใช้ Queue.updateAppointmentTime แทน raw SQL
+    await Queue.updateAppointmentTime(appointmentId, patient_id, date, time);
 
     res.redirect(`/patient/history/details/${appointmentId}?success=updated`);
   } catch (error) {
@@ -1546,40 +951,32 @@ exports.cancelAppointment = async (req, res) => {
   try {
     const userId = req.session.userId;
     const appointmentId = req.params.id;
-    
+
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute('SELECT patient_id FROM patient WHERE user_id = ?', [userId]);
-    if (!patientRows[0]) return res.redirect('/login');
-    
-    const patient_id = patientRows[0].patient_id;
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patient_id = await Patient.findIdByUserId(userId);
+    if (!patient_id) return res.redirect('/login');
 
-    const [currentRows] = await db.execute(`
-      SELECT * FROM queue WHERE queue_id = ? AND patient_id = ?
-    `, [appointmentId, patient_id]);
+    // [REFACTORED] ใช้ Queue.findById แทน raw SQL
+    const currentAppointment = await Queue.findById(appointmentId);
 
-    if (!currentRows[0]) {
+    if (!currentAppointment || currentAppointment.patient_id !== patient_id) {
       return res.status(404).send('Appointment not found');
     }
 
-    const currentAppointment = currentRows[0];
-    
     // Check if appointment can be cancelled (24 hours before)
     const appointmentTime = new Date(currentAppointment.time);
     const now = new Date();
     const timeDiff = appointmentTime.getTime() - now.getTime();
     const hoursDiff = timeDiff / (1000 * 3600);
-    
+
     if (hoursDiff <= 24) {
       return res.redirect(`/patient/history/details/${appointmentId}?error=cancel_time_limit`);
     }
 
-    // Update appointment status to cancelled
-    await db.execute(`
-      UPDATE queue 
-      SET queue_status = 'cancel'
-      WHERE queue_id = ? AND patient_id = ?
-    `, [appointmentId, patient_id]);
+    // [REFACTORED] ใช้ Queue.cancelPatientAppointment แทน raw SQL
+    await Queue.cancelPatientAppointment(appointmentId, patient_id);
 
     res.redirect('/patient/history?success=cancelled');
   } catch (error) {
@@ -1594,47 +991,18 @@ exports.getMyAppointments = async (req, res) => {
   try {
     const patientUserId = req.session.userId;
 
-    const [patientResult] = await db.execute(`
-      SELECT patient_id FROM patient WHERE user_id = ?
-    `, [patientUserId]);
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patientId = await Patient.findIdByUserId(patientUserId);
 
-    if (patientResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบข้อมูลผู้ป่วย' 
+    if (!patientId) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
-    const patientId = patientResult[0].patient_id;
-
-    const [appointments] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        th.diagnosis,
-        th.next_appointment,
-        d.fname as dentist_fname,
-        d.lname as dentist_lname,
-        d.specialty,
-        t.treatment_name,
-        t.duration,
-        CASE
-          WHEN q.time > NOW() AND q.queue_status IN ('pending', 'confirm') THEN TRUE
-          ELSE FALSE
-        END as can_cancel,
-        CASE
-          WHEN q.time > DATE_ADD(NOW(), INTERVAL 2 HOUR) AND q.queue_status IN ('pending', 'confirm') THEN TRUE
-          ELSE FALSE
-        END as can_modify
-      FROM queue q
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.patient_id = ?
-      ORDER BY q.time DESC
-    `, [patientId]);
+    // [REFACTORED] ใช้ Patient.getAppointmentsWithDetails แทน raw SQL
+    const appointments = await Patient.getAppointmentsWithDetails(patientId);
 
     res.json({
       success: true,
@@ -1643,7 +1011,7 @@ exports.getMyAppointments = async (req, res) => {
 
   } catch (error) {
     console.error('Error in getMyAppointments:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลนัดหมาย'
     });
@@ -1656,35 +1024,15 @@ exports.getMyTreatments = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
     const patient_id = patient.patient_id;
 
     const searchYear = req.query.year || new Date().getFullYear();
 
-    const [treatments] = await db.execute(`
-      SELECT q.queue_id, q.time, th.diagnosis, th.next_appointment,
-             t.treatment_name, t.duration,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name,
-             d.specialty,
-             qd.date, qd.created_at,
-             th.diagnosis as treatment_diagnosis,
-             th.followUpdate,
-             YEAR(qd.date) as treatment_year,
-             MONTH(qd.date) as treatment_month,
-             DAY(qd.date) as treatment_day
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.patient_id = ? AND (q.queue_status = 'confirm' OR th.tmh_id IS NOT NULL)
-      ORDER BY qd.date DESC, q.time DESC
-    `, [patient_id]);
+    // [REFACTORED] ใช้ Queue.getPatientTreatmentsByYear แทน raw SQL
+    const treatments = await Queue.getPatientTreatmentsByYear(patient_id);
 
     // Group treatments by year
     const treatmentsByYear = {};
@@ -1717,15 +1065,12 @@ exports.getTreatmentDetails = async (req, res) => {
   try {
     const userId = req.session.userId;
     const treatmentId = req.params.id;
-    
+
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     res.render('patient/treatments/details', {
       title: 'Treatment History Details',
@@ -1745,45 +1090,19 @@ exports.getDentists = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     const searchQuery = req.query.search || '';
 
-    let dentistsQuery = `
-      SELECT d.dentist_id, d.fname, d.lname, d.specialty, d.education, d.photo,
-             CONCAT(d.fname, ' ', d.lname) as full_name,
-             u.email
-      FROM dentist d
-      JOIN user u ON d.user_id = u.user_id
-      WHERE u.role_id = 2 AND d.fname IS NOT NULL AND d.lname IS NOT NULL
-    `;
-
-    let queryParams = [];
-
-    if (searchQuery) {
-      dentistsQuery += ` AND (CONCAT(d.fname, ' ', d.lname) LIKE ? OR d.specialty LIKE ?)`;
-      queryParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
-    }
-
-    dentistsQuery += ` ORDER BY d.specialty ASC, d.fname ASC`;
-
-    const [dentists] = await db.execute(dentistsQuery, queryParams);
+    // [REFACTORED] ใช้ Dentist.findAllForPatients แทน raw SQL
+    const dentists = await Dentist.findAllForPatients(searchQuery);
 
     // Get treatments for each dentist
     for (let dentist of dentists) {
-      const [treatments] = await db.execute(`
-        SELECT t.treatment_name, t.duration
-        FROM dentist_treatment dt
-        JOIN treatment t ON dt.treatment_id = t.treatment_id
-        WHERE dt.dentist_id = ?
-        ORDER BY t.treatment_name
-      `, [dentist.dentist_id]);
-      
+      // [REFACTORED] ใช้ Dentist.getTreatments แทน raw SQL
+      const treatments = await Dentist.getTreatments(dentist.dentist_id);
       dentist.treatments = treatments;
     }
 
@@ -1832,100 +1151,27 @@ exports.getDentistProfile = async (req, res) => {
     const { dentistId } = req.params;
 
     if (!dentistId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่พบรหัสหมอฟัน' 
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่พบรหัสหมอฟัน'
       });
     }
 
-    // Get dentist details with schedule availability
-    const [dentistResult] = await db.execute(`
-      SELECT 
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        CONCAT(d.fname, ' ', d.lname) as full_name,
-        d.specialty,
-        d.education,
-        d.phone,
-        d.photo,
-        d.work_start,
-        d.work_end,
-        u.email,
-        (
-          SELECT COUNT(*) 
-          FROM dentist_schedule ds 
-          WHERE ds.dentist_id = d.dentist_id 
-          AND ds.schedule_date >= CURDATE() 
-          AND ds.schedule_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-          AND ds.status = 'working'
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id 
-            AND DATE(q.time) = ds.schedule_date 
-            AND HOUR(q.time) = ds.hour
-            AND q.queue_status IN ('pending', 'confirm')
-          )
-        ) as available_slots_this_week,
-        (
-          SELECT COUNT(*) 
-          FROM queue q 
-          WHERE q.dentist_id = d.dentist_id 
-          AND q.queue_status = 'confirm'
-        ) as total_patients_treated
-      FROM dentist d
-      JOIN user u ON d.user_id = u.user_id
-      WHERE d.dentist_id = ?
-      AND u.role_id = 2
-    `, [dentistId]);
+    // [REFACTORED] ใช้ Dentist.getProfileWithStats แทน raw SQL
+    const dentist = await Dentist.getProfileWithStats(dentistId);
 
-    if (dentistResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'ไม่พบข้อมูลหมอฟัน' 
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        error: 'ไม่พบข้อมูลหมอฟัน'
       });
     }
 
-    const dentist = dentistResult[0];
+    // [REFACTORED] ใช้ Dentist.getTreatments แทน raw SQL
+    dentist.treatments = await Dentist.getTreatments(dentistId);
 
-    // Get dentist's treatments/specializations
-    const [treatments] = await db.execute(`
-      SELECT t.treatment_name, t.duration
-      FROM dentist_treatment dt
-      JOIN treatment t ON dt.treatment_id = t.treatment_id
-      WHERE dt.dentist_id = ?
-      ORDER BY t.treatment_name
-    `, [dentistId]);
-
-    dentist.treatments = treatments;
-
-    // Get recent availability (next 7 days)
-    const [upcomingSlots] = await db.execute(`
-      SELECT 
-        ds.schedule_date,
-        ds.hour,
-        TIME_FORMAT(ds.start_time, '%H:%i') as start_time,
-        TIME_FORMAT(ds.end_time, '%H:%i') as end_time,
-        CASE 
-          WHEN EXISTS (
-            SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id 
-            AND DATE(q.time) = ds.schedule_date 
-            AND HOUR(q.time) = ds.hour
-            AND q.queue_status IN ('pending', 'confirm')
-          ) THEN 'booked'
-          ELSE 'available'
-        END as status
-      FROM dentist_schedule ds
-      WHERE ds.dentist_id = ?
-      AND ds.schedule_date >= CURDATE()
-      AND ds.schedule_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-      AND ds.status = 'working'
-      ORDER BY ds.schedule_date, ds.hour
-      LIMIT 20
-    `, [dentistId]);
-
-    dentist.upcoming_slots = upcomingSlots;
+    // [REFACTORED] ใช้ Dentist.getUpcomingAvailableSlots แทน raw SQL
+    dentist.upcoming_slots = await Dentist.getUpcomingAvailableSlots(dentistId);
 
     res.json({
       success: true,
@@ -1934,7 +1180,7 @@ exports.getDentistProfile = async (req, res) => {
 
   } catch (error) {
     console.error('Error in getDentistProfile:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลหมอฟัน'
     });
@@ -1948,9 +1194,9 @@ exports.getDentistAvailability = async (req, res) => {
     const { date } = req.query;
 
     if (!dentistId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'ไม่พบรหัสหมอฟัน' 
+      return res.status(400).json({
+        success: false,
+        error: 'ไม่พบรหัสหมอฟัน'
       });
     }
 
@@ -1965,29 +1211,8 @@ exports.getDentistAvailability = async (req, res) => {
       endDate = end.toISOString().split('T')[0];
     }
 
-    const [availability] = await db.execute(`
-      SELECT 
-        ds.schedule_date,
-        ds.hour,
-        TIME_FORMAT(ds.start_time, '%H:%i') as start_time,
-        TIME_FORMAT(ds.end_time, '%H:%i') as end_time,
-        CONCAT(
-          TIME_FORMAT(ds.start_time, '%H:%i'), ' - ', 
-          TIME_FORMAT(ds.end_time, '%H:%i')
-        ) as time_display
-      FROM dentist_schedule ds
-      WHERE ds.dentist_id = ?
-      AND ds.schedule_date BETWEEN ? AND ?
-      AND ds.status = 'working'
-      AND NOT EXISTS (
-        SELECT 1 FROM queue q
-        WHERE q.dentist_id = ds.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      )
-      ORDER BY ds.schedule_date, ds.hour
-    `, [dentistId, startDate, endDate]);
+    // [REFACTORED] ใช้ Dentist.getAvailability แทน raw SQL
+    const availability = await Dentist.getAvailability(dentistId, startDate, endDate);
 
     res.json({
       success: true,
@@ -1998,7 +1223,7 @@ exports.getDentistAvailability = async (req, res) => {
 
   } catch (error) {
     console.error('Error in getDentistAvailability:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลตารางเวลา'
     });
@@ -2011,67 +1236,19 @@ exports.getDentistsEnhanced = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     const searchQuery = req.query.search || '';
 
-    let dentistsQuery = `
-      SELECT 
-        d.dentist_id, 
-        d.fname, 
-        d.lname, 
-        d.specialty, 
-        d.education, 
-        d.photo,
-        CONCAT(d.fname, ' ', d.lname) as full_name,
-        u.email,
-        (
-          SELECT COUNT(*) 
-          FROM dentist_schedule ds 
-          WHERE ds.dentist_id = d.dentist_id 
-          AND ds.schedule_date >= CURDATE() 
-          AND ds.schedule_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-          AND ds.status = 'working'
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id 
-            AND DATE(q.time) = ds.schedule_date 
-            AND HOUR(q.time) = ds.hour
-            AND q.queue_status IN ('pending', 'confirm')
-          )
-        ) as available_slots_this_week
-      FROM dentist d
-      JOIN user u ON d.user_id = u.user_id
-      WHERE u.role_id = 2 AND d.fname IS NOT NULL AND d.lname IS NOT NULL
-    `;
-
-    let queryParams = [];
-
-    if (searchQuery) {
-      dentistsQuery += ` AND (CONCAT(d.fname, ' ', d.lname) LIKE ? OR d.specialty LIKE ?)`;
-      queryParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
-    }
-
-    dentistsQuery += ` ORDER BY d.specialty ASC, d.fname ASC`;
-
-    const [dentists] = await db.execute(dentistsQuery, queryParams);
+    // [REFACTORED] ใช้ Dentist.findAllWithAvailability แทน raw SQL
+    const dentists = await Dentist.findAllWithAvailability(searchQuery);
 
     // Get treatments for each dentist
     for (let dentist of dentists) {
-      const [treatments] = await db.execute(`
-        SELECT t.treatment_name, t.duration
-        FROM dentist_treatment dt
-        JOIN treatment t ON dt.treatment_id = t.treatment_id
-        WHERE dt.dentist_id = ?
-        ORDER BY t.treatment_name
-      `, [dentist.dentist_id]);
-      
-      dentist.treatments = treatments;
+      // [REFACTORED] ใช้ Dentist.getTreatments แทน raw SQL
+      dentist.treatments = await Dentist.getTreatments(dentist.dentist_id);
     }
 
     // Group dentists by specialty
@@ -2107,56 +1284,10 @@ exports.getProfile = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info with user details - เพิ่ม id_card ในการดึงข้อมูล
-    const [patientRows] = await db.execute(
-      `SELECT 
-        p.patient_id,
-        p.fname, 
-        p.lname, 
-        p.dob, 
-        p.phone, 
-        p.address,
-        p.id_card,
-        p.gender,
-        p.chronic_disease,
-        p.allergy_history,
-        u.email,
-        u.last_login
-       FROM patient p 
-       JOIN user u ON p.user_id = u.user_id 
-       WHERE p.user_id = ?`, 
-      [userId]
-    );
+    // [REFACTORED] ใช้ Patient.getProfileData แทน raw SQL
+    const profileData = await Patient.getProfileData(userId);
 
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
-
-    const genderTh = patient.gender === 'male' ? 'ชาย'
-                : patient.gender === 'female' ? 'หญิง'
-                : patient.gender === 'other' ? 'อื่นๆ' : 'ยังไม่ระบุ';
-    
-                // Format the data for display
-    const profileData = {
-      ...patient,
-      dob_formatted: patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long', 
-        year: 'numeric'
-      }) : 'Not specified',
-      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) + ' AM' : 'Never logged in',
-      full_name: `${patient.fname} ${patient.lname}`,
-      masked_password: '******',
-      gender_th: genderTh,
-      // ใช้ข้อมูล ID Card จากฐานข้อมูล
-      id_card_display: patient.id_card || 'Not specified'
-    };
+    if (!profileData) return res.redirect('/login');
 
     res.render('patient/profile', {
       title: 'My Profile',
@@ -2176,29 +1307,10 @@ exports.showEditProfile = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info with user details - เพิ่มฟิลด์ทั้งหมด
-    const [patientRows] = await db.execute(
-      `SELECT 
-        p.patient_id,
-        p.fname, 
-        p.lname, 
-        p.dob, 
-        p.phone, 
-        p.address,
-        p.id_card,
-        p.gender,
-        p.chronic_disease,
-        p.allergy_history,
-        u.email,
-        u.last_login
-       FROM patient p 
-       JOIN user u ON p.user_id = u.user_id 
-       WHERE p.user_id = ?`, 
-      [userId]
-    );
+    // [REFACTORED] ใช้ Patient.findForEditProfile แทน raw SQL
+    const patient = await Patient.findForEditProfile(userId);
 
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    if (!patient) return res.redirect('/login');
 
     // Format the data for form
     const profileData = {
@@ -2230,22 +1342,13 @@ exports.showEditProfile = async (req, res) => {
 
 // Update profile
 exports.updateProfile = async (req, res) => {
-  let connection;
   try {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
     const {
-      fname,
-      lname,
-      dob,
-      id_card,
-      address,
-      phone,
-      email,
-      gender,
-      chronic_disease,
-      allergy_history
+      fname, lname, dob, id_card, address, phone, email,
+      gender, chronic_disease, allergy_history
     } = req.body;
 
     // Validate required fields
@@ -2269,91 +1372,24 @@ exports.updateProfile = async (req, res) => {
       return res.redirect('/patient/profile/edit?error=invalid_phone');
     }
 
-    // Get patient ID
-    const [patientRows] = await db.execute(
-      'SELECT patient_id, id_card FROM patient WHERE user_id = ?',
-      [userId]
-    );
+    // [REFACTORED] ใช้ Patient.updateProfileWithEmail แทน raw SQL และ transaction
+    await Patient.updateProfileWithEmail(userId, {
+      fname, lname, dob, id_card, address, phone, email,
+      gender, chronic_disease, allergy_history
+    });
 
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient_id = patientRows[0].patient_id;
-    const currentIdCard = patientRows[0].id_card;
-
-    // Check if email is already used by another user
-    const [emailCheck] = await db.execute(
-      'SELECT user_id FROM user WHERE email = ? AND user_id != ?',
-      [email, userId]
-    );
-
-    if (emailCheck.length > 0) {
-      return res.redirect('/patient/profile/edit?error=email_exists');
-    }
-
-    // Check if ID card is already used by another patient (only if changed)
-    if (id_card && id_card !== currentIdCard) {
-      const [idCardCheck] = await db.execute(
-        'SELECT patient_id FROM patient WHERE id_card = ? AND patient_id != ?',
-        [id_card, patient_id]
-      );
-
-      if (idCardCheck.length > 0) {
-        return res.redirect('/patient/profile/edit?error=id_card_exists');
-      }
-    }
-
-    // Start transaction
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-
-    try {
-      // Update user table
-      await connection.execute(
-        'UPDATE user SET email = ? WHERE user_id = ?',
-        [email, userId]
-      );
-
-      // Update patient table - แก้ไข SQL query ให้ถูกต้อง
-      await connection.execute(
-        `UPDATE patient SET 
-         fname = ?, 
-         lname = ?, 
-         dob = ?, 
-         id_card = ?, 
-         address = ?, 
-         phone = ?,
-         gender = ?,
-         chronic_disease = ?,
-         allergy_history = ?
-         WHERE patient_id = ?`,
-        [
-          fname, 
-          lname, 
-          dob || null, 
-          id_card || null, 
-          address || null, 
-          phone || null, 
-          gender || null, 
-          chronic_disease || null, 
-          allergy_history || null, 
-          patient_id
-        ]
-      );
-
-      // Commit transaction
-      await connection.commit();
-      
-      res.redirect('/patient/profile?success=updated');
-    } catch (error) {
-      // Rollback on error
-      await connection.rollback();
-      throw error;
-    }
+    res.redirect('/patient/profile?success=updated');
 
   } catch (error) {
     console.error('Update profile error:', error);
+    // Check for specific error messages from Model
+    if (error.message.includes('อีเมล')) {
+      return res.redirect('/patient/profile/edit?error=email_exists');
+    }
+    if (error.message.includes('บัตรประชาชน')) {
+      return res.redirect('/patient/profile/edit?error=id_card_exists');
+    }
     res.redirect('/patient/profile/edit?error=update_failed');
-  } finally {
-    if (connection) connection.release();
   }
 };
 
@@ -2364,22 +1400,10 @@ exports.showChangePassword = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info with user details
-    const [patientRows] = await db.execute(
-      `SELECT 
-        p.patient_id,
-        p.fname, 
-        p.lname, 
-        u.email,
-        u.last_login
-       FROM patient p 
-       JOIN user u ON p.user_id = u.user_id 
-       WHERE p.user_id = ?`, 
-      [userId]
-    );
+    // [REFACTORED] ใช้ Patient.findForChangePassword แทน raw SQL
+    const patient = await Patient.findForChangePassword(userId);
 
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    if (!patient) return res.redirect('/login');
 
     // Format the data for display
     const profileData = {
@@ -2433,53 +1457,41 @@ exports.changePassword = async (req, res) => {
       return res.redirect('/patient/profile/change-password?error=password_weak');
     }
 
-    // Get current user data
-    const [userRows] = await db.execute(
-      'SELECT password FROM user WHERE user_id = ?',
-      [userId]
-    );
+    // [REFACTORED] ใช้ User.getPassword แทน raw SQL
+    const currentHashedPassword = await User.getPassword(userId);
 
-    if (!userRows[0]) return res.redirect('/login');
+    if (!currentHashedPassword) return res.redirect('/login');
 
     // Verify current password
-    const isCurrentPasswordValid = bcrypt.compareSync(currentPassword, userRows[0].password);
+    const isCurrentPasswordValid = bcrypt.compareSync(currentPassword, currentHashedPassword);
     if (!isCurrentPasswordValid) {
       return res.redirect('/patient/profile/change-password?error=current_password_wrong');
     }
 
     // Check if new password is different from current
-    const isSamePassword = bcrypt.compareSync(newPassword, userRows[0].password);
+    const isSamePassword = bcrypt.compareSync(newPassword, currentHashedPassword);
     if (isSamePassword) {
       return res.redirect('/patient/profile/change-password?error=same_password');
     }
 
-    // Hash new password
-    const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
-
-    // Update password in database
-    await db.execute(
-      'UPDATE user SET password = ? WHERE user_id = ?',
-      [hashedNewPassword, userId]
-    );
+    // [REFACTORED] ใช้ User.changePassword แทน raw SQL
+    await User.changePassword(userId, currentPassword, newPassword);
 
     res.redirect('/patient/profile?success=password_changed');
 
   } catch (error) {
     console.error('Change password error:', error);
+    if (error.message.includes('รหัสผ่านปัจจุบันไม่ถูกต้อง')) {
+      return res.redirect('/patient/profile/change-password?error=current_password_wrong');
+    }
     res.redirect('/patient/profile/change-password?error=update_failed');
   }
 };
 
 exports.getTreatmentsAPI = async (req, res) => {
   try {
-    const [treatments] = await db.execute(`
-      SELECT 
-        treatment_id,
-        treatment_name,
-        duration
-      FROM treatment
-      ORDER BY treatment_name ASC
-    `);
+    // [REFACTORED] ใช้ Treatment.findAllActive แทน raw SQL
+    const treatments = await Treatment.findAllActive();
 
     res.json({
       success: true,
@@ -2499,24 +1511,22 @@ exports.getTreatmentsAPI = async (req, res) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const userId = req.session.userId;
-    
-    const [patientRows] = await db.execute(
-      'SELECT fname, lname, phone, email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?',
-      [userId]
-    );
-    
-    if (patientRows.length === 0) {
+
+    // [REFACTORED] ใช้ Patient.getBasicProfile แทน raw SQL
+    const patient = await Patient.getBasicProfile(userId);
+
+    if (!patient) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
-    
+
     res.json({
       success: true,
-      patient: patientRows[0]
+      patient: patient
     });
-    
+
   } catch (error) {
     console.error('Error getting profile:', error);
     res.status(500).json({
@@ -2530,20 +1540,15 @@ exports.getMyProfile = async (req, res) => {
 exports.getDentistTreatments = async (req, res) => {
   try {
     const { dentistId } = req.params;
-    
-    const [treatments] = await db.execute(`
-      SELECT t.treatment_id, t.treatment_name, t.duration
-      FROM dentist_treatment dt
-      JOIN treatment t ON dt.treatment_id = t.treatment_id
-      WHERE dt.dentist_id = ?
-      ORDER BY t.treatment_name
-    `, [dentistId]);
-    
+
+    // [REFACTORED] ใช้ Dentist.getTreatments แทน raw SQL
+    const treatments = await Dentist.getTreatments(dentistId);
+
     res.json({
       success: true,
       treatments: treatments
     });
-    
+
   } catch (error) {
     console.error('Error getting dentist treatments:', error);
     res.status(500).json({
@@ -2559,63 +1564,26 @@ exports.getTreatmentHistoryDetails = async (req, res) => {
     const { id } = req.params;
 
     if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Authentication required' 
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
       });
     }
 
-    // Get patient_id
-    const [patientResult] = await db.execute(
-      'SELECT patient_id FROM patient WHERE user_id = ?',
-      [userId]
-    );
+    // [REFACTORED] ใช้ Patient.findIdByUserId แทน raw SQL
+    const patientId = await Patient.findIdByUserId(userId);
 
-    if (patientResult.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Patient not found' 
+    if (!patientId) {
+      return res.status(404).json({
+        success: false,
+        error: 'Patient not found'
       });
     }
 
-    const patientId = patientResult[0].patient_id;
+    // [REFACTORED] ใช้ Queue.getPatientTreatmentHistoryDetail แทน raw SQL
+    const treatment = await Queue.getPatientTreatmentHistoryDetail(id, patientId);
 
-    // Get treatment history with all details
-    const [treatments] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        th.diagnosis,
-        th.next_appointment,
-        p.patient_id,
-        p.fname as patient_fname,
-        p.lname as patient_lname,
-        p.gender,
-        p.dob,
-        p.phone,
-        p.address,
-        p.id_card,
-        p.chronic_disease,
-        p.allergy_history,
-        d.fname as dentist_fname,
-        d.lname as dentist_lname,
-        d.specialty,
-        t.treatment_name,
-        t.duration,
-        th.diagnosis as treatment_diagnosis,
-        th.followUpdate as next_appointment_detail,
-        qd.date
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [id, patientId]);
-
-    if (treatments.length === 0) {
+    if (!treatment) {
       return res.status(404).json({
         success: false,
         error: 'Treatment history not found'
@@ -2624,7 +1592,7 @@ exports.getTreatmentHistoryDetails = async (req, res) => {
 
     res.json({
       success: true,
-      treatment: treatments[0]
+      treatment: treatment
     });
 
   } catch (error) {
@@ -2642,13 +1610,9 @@ exports.getNotificationsPage = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.redirect('/login');
 
-    // Get patient info
-    const [patientRows] = await db.execute(
-      'SELECT p.*, u.email FROM patient p JOIN user u ON p.user_id = u.user_id WHERE p.user_id = ?', 
-      [userId]
-    );
-    if (!patientRows[0]) return res.redirect('/login');
-    const patient = patientRows[0];
+    // [REFACTORED] ใช้ Patient.findForHistoryPage แทน raw SQL
+    const patient = await Patient.findForHistoryPage(userId);
+    if (!patient) return res.redirect('/login');
 
     res.render('patient/notifications', {
       title: 'การแจ้งเตือนทั้งหมด',

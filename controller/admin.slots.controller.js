@@ -1,12 +1,12 @@
 // Admin controller for managing available slots
 
-const db = require('../config/db');
+const AvailableSlotsModel = require('../models/AvailableSlots.model');
 
 // Generate slots for a date range
 exports.generateSlots = async (req, res) => {
   try {
     const { start_date, end_date } = req.body;
-    
+
     if (!start_date || !end_date) {
       return res.status(400).json({
         success: false,
@@ -14,8 +14,8 @@ exports.generateSlots = async (req, res) => {
       });
     }
 
-    // Call stored procedure
-    await db.execute('CALL generate_available_slots(?, ?)', [start_date, end_date]);
+    // ใช้ Model แทน SQL โดยตรง
+    await AvailableSlotsModel.generateSlots(start_date, end_date);
 
     res.json({
       success: true,
@@ -41,7 +41,8 @@ exports.regenerateSlots = async (req, res) => {
     const startDate = today.toISOString().split('T')[0];
     const endDate = threeMonthsLater.toISOString().split('T')[0];
 
-    await db.execute('CALL generate_available_slots(?, ?)', [startDate, endDate]);
+    // ใช้ Model แทน SQL โดยตรง
+    await AvailableSlotsModel.generateSlots(startDate, endDate);
 
     res.json({
       success: true,
@@ -62,53 +63,12 @@ exports.regenerateSlots = async (req, res) => {
 // Get slots statistics
 exports.getSlotsStatistics = async (req, res) => {
   try {
-    const [stats] = await db.execute(`
-      SELECT 
-        COUNT(*) as total_slots,
-        COUNT(CASE WHEN is_available = 1 THEN 1 END) as available_slots,
-        COUNT(CASE WHEN is_available = 0 THEN 1 END) as booked_slots,
-        COUNT(DISTINCT dentist_id) as total_dentists,
-        COUNT(DISTINCT date) as total_days,
-        MIN(date) as earliest_date,
-        MAX(date) as latest_date
-      FROM available_slots
-      WHERE date >= CURDATE()
-    `);
-
-    const [slotsByDentist] = await db.execute(`
-      SELECT 
-        d.dentist_id,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty,
-        COUNT(s.slot_id) as total_slots,
-        COUNT(CASE WHEN s.is_available = 1 THEN 1 END) as available_slots,
-        COUNT(CASE WHEN s.is_available = 0 THEN 1 END) as booked_slots
-      FROM dentist d
-      LEFT JOIN available_slots s ON d.dentist_id = s.dentist_id AND s.date >= CURDATE()
-      WHERE d.user_id IS NOT NULL
-      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
-      ORDER BY d.fname, d.lname
-    `);
-
-    const [slotsByDate] = await db.execute(`
-      SELECT 
-        date,
-        COUNT(*) as total_slots,
-        COUNT(CASE WHEN is_available = 1 THEN 1 END) as available_slots,
-        COUNT(CASE WHEN is_available = 0 THEN 1 END) as booked_slots,
-        COUNT(DISTINCT dentist_id) as dentists_working
-      FROM available_slots
-      WHERE date >= CURDATE()
-      AND date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-      GROUP BY date
-      ORDER BY date
-    `);
+    // ใช้ Model แทน SQL โดยตรง
+    const statistics = await AvailableSlotsModel.getSlotsStatistics();
 
     res.json({
       success: true,
-      overall: stats[0],
-      by_dentist: slotsByDentist,
-      next_7_days: slotsByDate
+      ...statistics
     });
 
   } catch (error) {
@@ -123,10 +83,8 @@ exports.getSlotsStatistics = async (req, res) => {
 // Delete old slots (past dates)
 exports.cleanupOldSlots = async (req, res) => {
   try {
-    const [result] = await db.execute(`
-      DELETE FROM available_slots
-      WHERE date < CURDATE()
-    `);
+    // ใช้ Model แทน SQL โดยตรง
+    const result = await AvailableSlotsModel.cleanupOldSlots();
 
     res.json({
       success: true,
@@ -155,39 +113,8 @@ exports.getDentistSlots = async (req, res) => {
       });
     }
 
-    const [slots] = await db.execute(`
-      SELECT 
-        s.slot_id,
-        s.date,
-        s.start_time,
-        s.end_time,
-        s.is_available,
-        s.treatment_id,
-        t.treatment_name,
-        CASE 
-          WHEN EXISTS (
-            SELECT 1 FROM queue q
-            WHERE q.dentist_id = s.dentist_id 
-            AND DATE(q.time) = s.date 
-            AND TIME(q.time) = s.start_time
-            AND q.queue_status IN ('pending', 'confirm')
-          ) THEN 'booked'
-          WHEN s.is_available = 1 THEN 'available'
-          ELSE 'unavailable'
-        END as status,
-        q.queue_id,
-        CONCAT(p.fname, ' ', p.lname) as patient_name
-      FROM available_slots s
-      LEFT JOIN treatment t ON s.treatment_id = t.treatment_id
-      LEFT JOIN queue q ON s.dentist_id = q.dentist_id 
-        AND DATE(q.time) = s.date 
-        AND TIME(q.time) = s.start_time
-        AND q.queue_status IN ('pending', 'confirm')
-      LEFT JOIN patient p ON q.patient_id = p.patient_id
-      WHERE s.dentist_id = ?
-      AND s.date = ?
-      ORDER BY s.start_time
-    `, [dentist_id, date]);
+    // ใช้ Model แทน SQL โดยตรง
+    const slots = await AvailableSlotsModel.getDentistSlotsWithDetails(dentist_id, date);
 
     res.json({
       success: true,
@@ -216,23 +143,18 @@ exports.createSlot = async (req, res) => {
       });
     }
 
-    // Check if slot already exists
-    const [existing] = await db.execute(`
-      SELECT slot_id FROM available_slots
-      WHERE dentist_id = ? AND date = ? AND start_time = ?
-    `, [dentist_id, date, start_time]);
+    // Check if slot already exists โดยใช้ Model
+    const exists = await AvailableSlotsModel.slotExists(dentist_id, date, start_time);
 
-    if (existing.length > 0) {
+    if (exists) {
       return res.status(400).json({
         success: false,
         error: 'Slot นี้มีอยู่แล้ว'
       });
     }
 
-    await db.execute(`
-      INSERT INTO available_slots (dentist_id, date, start_time, end_time, is_available)
-      VALUES (?, ?, ?, ?, 1)
-    `, [dentist_id, date, start_time, end_time]);
+    // ใช้ Model แทน SQL โดยตรง
+    await AvailableSlotsModel.createSlot({ dentist_id, date, start_time, end_time });
 
     res.json({
       success: true,
@@ -253,32 +175,25 @@ exports.deleteSlot = async (req, res) => {
   try {
     const { slot_id } = req.params;
 
-    // Check if slot is booked
-    const [slot] = await db.execute(`
-      SELECT s.*, q.queue_id
-      FROM available_slots s
-      LEFT JOIN queue q ON s.dentist_id = q.dentist_id 
-        AND DATE(q.time) = s.date 
-        AND TIME(q.time) = s.start_time
-        AND q.queue_status IN ('pending', 'confirm')
-      WHERE s.slot_id = ?
-    `, [slot_id]);
+    // Check if slot is booked โดยใช้ Model
+    const slot = await AvailableSlotsModel.getSlotWithBookingStatus(slot_id);
 
-    if (slot.length === 0) {
+    if (!slot) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบ slot นี้'
       });
     }
 
-    if (slot[0].queue_id) {
+    if (slot.queue_id) {
       return res.status(400).json({
         success: false,
         error: 'ไม่สามารถลบ slot ที่มีการจองแล้ว'
       });
     }
 
-    await db.execute('DELETE FROM available_slots WHERE slot_id = ?', [slot_id]);
+    // ใช้ Model แทน SQL โดยตรง
+    await AvailableSlotsModel.deleteSlot(slot_id);
 
     res.json({
       success: true,
@@ -300,13 +215,10 @@ exports.updateSlotAvailability = async (req, res) => {
     const { slot_id } = req.params;
     const { is_available } = req.body;
 
-    const [result] = await db.execute(`
-      UPDATE available_slots
-      SET is_available = ?, updated_at = NOW()
-      WHERE slot_id = ?
-    `, [is_available ? 1 : 0, slot_id]);
+    // ใช้ Model แทน SQL โดยตรง
+    const result = await AvailableSlotsModel.updateSlotAvailability(slot_id, is_available);
 
-    if (result.affectedRows === 0) {
+    if (!result.success) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบ slot นี้'

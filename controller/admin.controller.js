@@ -1,8 +1,18 @@
 const db = require('../config/db');
-
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
+
+// Import Admin Models
+const {
+  AdminModel,
+  DentistAdminModel,
+  PatientAdminModel,
+  TreatmentAdminModel,
+  AppointmentAdminModel,
+  NotificationAdminModel,
+  ReportAdminModel
+} = require('../models');
 
 // -------------------- แสดงโปรไฟล์ --------------------
 exports.getProfile = async (req, res) => {
@@ -10,16 +20,10 @@ exports.getProfile = async (req, res) => {
   if (!userId) return res.redirect('/login');
 
   try {
-    const [userRows] = await db.execute(`
-      SELECT u.email, u.username, u.last_login, r.rname 
-      FROM user u 
-      JOIN role r ON u.role_id = r.role_id 
-      WHERE u.user_id = ?
-    `, [userId]);
+    const user = await AdminModel.getProfile(userId);
+    
+    if (!user) return res.redirect('/login');
 
-    if (userRows.length === 0) return res.redirect('/login');
-
-    const user = userRows[0];
     res.render('admin/profile/admin-profile', { user });
 
   } catch (err) {
@@ -49,15 +53,15 @@ exports.changePassword = async (req, res) => {
   }
 
   try {
-    const [rows] = await db.execute('SELECT password FROM user WHERE user_id = ?', [userId]);
-    if (rows.length === 0) {
+    const currentHashedPassword = await AdminModel.getCurrentPassword(userId);
+    if (!currentHashedPassword) {
       return res.status(404).json({ 
         success: false, 
         message: 'User not found' 
       });
     }
 
-    const match = await bcrypt.compare(currentPassword, rows[0].password);
+    const match = await bcrypt.compare(currentPassword, currentHashedPassword);
     if (!match) {
       return res.status(400).json({ 
         success: false, 
@@ -66,7 +70,7 @@ exports.changePassword = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.execute('UPDATE user SET password = ? WHERE user_id = ?', [hashedPassword, userId]);
+    await AdminModel.updatePassword(userId, hashedPassword);
 
     // ลบ session
     req.session.destroy(() => {
@@ -89,29 +93,7 @@ exports.changePassword = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     // ดึงข้อมูลตารางเวลาของทันตแพทย์ทั้งหมด
-    const [scheduleData] = await db.execute(`
-      SELECT 
-        ds.schedule_date,
-        ds.hour,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        ds.note,
-        d.fname,
-        d.lname,
-        d.specialty,
-        COUNT(q.queue_id) as appointment_count
-      FROM dentist_schedule ds
-      JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY
-        AND ds.schedule_date <= CURDATE() + INTERVAL 60 DAY
-      GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
-      ORDER BY ds.schedule_date, ds.hour
-    `);
+    const scheduleData = await AdminModel.getDashboardData();
 
     // จัดรูปแบบข้อมูลสำหรับ FullCalendar
     const events = [];
@@ -228,40 +210,7 @@ exports.getScheduleAPI = async (req, res) => {
   try {
     const { start, end } = req.query;
     
-    let whereClause = '';
-    let params = [];
-    
-    if (start && end) {
-      whereClause = 'WHERE ds.schedule_date BETWEEN ? AND ?';
-      params = [start, end];
-    } else {
-      whereClause = `WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY 
-                     AND ds.schedule_date <= CURDATE() + INTERVAL 60 DAY`;
-    }
-
-    const [scheduleData] = await db.execute(`
-      SELECT 
-        ds.schedule_date,
-        ds.hour,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        ds.note,
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        COUNT(q.queue_id) as appointment_count
-      FROM dentist_schedule ds
-      JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      ${whereClause}
-      GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.dentist_id, d.fname, d.lname, d.specialty
-      ORDER BY ds.schedule_date, ds.hour
-    `, params);
+    const scheduleData = await AdminModel.getScheduleData(start, end);
 
     // จัดรูปแบบข้อมูลสำหรับ FullCalendar
     const events = [];
@@ -410,22 +359,7 @@ exports.viewAppointments = async (req, res) => {
     const weekOffset = parseInt(req.query.weekOffset) || 0;
     const selectedDate = req.query.date || new Date().toISOString().split('T')[0];
 
-    const [appointments] = await db.execute(`
-      SELECT 
-        qd.date AS time_start,
-        CONCAT(p.fname, ' ', p.lname) AS name,
-        t.treatment_name AS treatment,
-        d.fname AS dentist,
-        p.phone,
-        q.queue_status AS status
-      FROM queuedetail qd
-      JOIN patient p ON qd.patient_id = p.patient_id
-      JOIN treatment t ON qd.treatment_id = t.treatment_id
-      JOIN dentist d ON qd.dentist_id = d.dentist_id
-      JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
-      WHERE DATE(qd.date) = ?
-      ORDER BY qd.date DESC
-    `, [selectedDate]);
+    const appointments = await AdminModel.getAppointmentsByDate(selectedDate);
 
     res.render('admin/appointment/admin-appointments', {
       appointments,
@@ -444,22 +378,7 @@ exports.ajaxAppointments = async (req, res) => {
   const date = req.query.date;
 
   try {
-    const [appointments] = await db.execute(`
-      SELECT 
-        qd.date AS time_start,
-        CONCAT(p.fname, ' ', p.lname) AS name,
-        t.treatment_name AS treatment,
-        d.fname AS dentist,
-        p.phone,
-        q.queue_status AS status
-      FROM queuedetail qd
-      JOIN patient p ON qd.patient_id = p.patient_id
-      JOIN treatment t ON qd.treatment_id = t.treatment_id
-      JOIN dentist d ON qd.dentist_id = d.dentist_id
-      JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
-      WHERE DATE(qd.date) = ?
-      ORDER BY qd.date DESC
-    `, [date]);
+    const appointments = await AdminModel.getAllAppointments(date);
 
     res.render('partials/appointments-table', { appointments });
 
@@ -548,9 +467,9 @@ exports.addDentist = async (req, res) => {
   try {
     // ตรวจสอบอีเมลซ้ำก่อน
     console.log('Checking for duplicate email:', email);
-    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
+    const emailExists = await DentistAdminModel.checkEmailExists(email);
     
-    if (existingUser[0].count > 0) {
+    if (emailExists) {
       console.log('Email already exists:', email);
       
       // ลบไฟล์ที่อัพโหลดแล้ว
@@ -571,15 +490,6 @@ exports.addDentist = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // สร้าง user record
-    console.log('Creating user record...');
-    const [userResult] = await db.execute(
-      `INSERT INTO user (email, password, role_id) VALUES (?, ?, 2)`,
-      [email, hashedPassword]
-    );
-    const userId = userResult.insertId;
-    console.log('User created with ID:', userId);
     
     // กำหนด photo filename
     let photoFilename = null;
@@ -617,16 +527,26 @@ exports.addDentist = async (req, res) => {
     const addressValue = address && address.trim() !== '' ? address : null;
     
     console.log('Creating dentist record with values:', {
-      userId, fname, lname, dobValue, id_card, specialty, 
+      fname, lname, dobValue, id_card, specialty, 
       educationValue, addressValue, phone, photoFilename
     });
     
     // สร้าง dentist record
-    await db.execute(
-      `INSERT INTO dentist (user_id, fname, lname, dob, id_card, specialty, education, address, phone, photo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, fname, lname, dobValue, id_card, specialty, educationValue, addressValue, phone, photoFilename]
-    );
+    const dentistData = {
+      email,
+      hashedPassword,
+      fname,
+      lname,
+      dob: dobValue,
+      id_card,
+      specialty,
+      education: educationValue,
+      address: addressValue,
+      phone,
+      photo: photoFilename
+    };
+    
+    const result = await DentistAdminModel.createDentist(dentistData);
     
     console.log('='.repeat(60));
     console.log('Dentist created successfully');
@@ -635,10 +555,10 @@ exports.addDentist = async (req, res) => {
     // ส่งกลับ JSON response
     res.json({
       success: true,
-      message: 'Dentist added successfully',
+      message: result.message,
       redirect: '/admin/dentists',
       dentist: {
-        userId,
+        userId: result.userId,
         fname,
         lname,
         email,
@@ -687,25 +607,17 @@ exports.addDentist = async (req, res) => {
 
 exports.viewDentist = async (req, res) => {
   const id = req.params.id;
-  const [rows] = await db.execute(`
-    SELECT d.*, u.email FROM dentist d
-    JOIN user u ON d.user_id = u.user_id WHERE d.dentist_id = ?
-  `, [id]);
-  res.render('admin/dentists/view-dentist', { dentist: rows[0] });
+  const dentist = await DentistAdminModel.getDentistById(id);
+  res.render('admin/dentists/view-dentist', { dentist });
 };
 
 exports.editDentistForm = async (req, res) => {
   const id = req.params.id;
-  const [rows] = await db.execute(`
-    SELECT d.*, u.email FROM dentist d
-    JOIN user u ON d.user_id = u.user_id
-    WHERE d.dentist_id = ?
-  `, [id]);
+  const dentist = await DentistAdminModel.getDentistById(id);
 
-  if (rows.length === 0) return res.status(404).send('Dentist not found');
+  if (!dentist) return res.status(404).send('Dentist not found');
 
   // ✅ แปลง dob เป็น Date object ถ้ามีค่า
-  const dentist = rows[0];
   if (dentist.dob) {
     dentist.dob = new Date(dentist.dob);
   }
@@ -1623,73 +1535,56 @@ exports.viewPatientTreatmentHistory = async (req, res) => {
 };
 
 
+// ✅ REFACTORED: ใช้ Model แทน SQL
 exports.viewTreatmentDetails = async (req, res) => {
   const { id, queueId } = req.params;
 
   try {
-    const [rows] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        t.treatment_name,
-        t.duration,
-        CONCAT(d.fname, ' ', d.lname) AS dentist_name,
-        th.diagnosis,
-        th.followUpdate,
-        p.fname AS patient_fname,
-        p.lname AS patient_lname,
-        p.gender,
-        p.dob,
-        p.id_card,
-        p.phone,
-        p.address,
-        p.chronic_disease,
-        p.allergy_history
-      FROM queue q
-      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON qd.treatment_id = t.treatment_id
-      JOIN dentist d ON qd.dentist_id = d.dentist_id
-      JOIN patient p ON q.patient_id = p.patient_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.queue_id = ? AND q.patient_id = ?
-    `, [queueId, id]);
+    // ใช้ Model ดึงข้อมูลประวัติการรักษา
+    const { TreatmentHistoryModel } = require('../models');
+    const treatment = await TreatmentHistoryModel.findByQueueIdWithDetails(queueId);
 
-    if (rows.length === 0) {
+    if (!treatment) {
       return res.status(404).send('ไม่พบข้อมูลการรักษา');
     }
 
-    const detail = rows[0];
-    const dateObj = new Date(detail.time);
-    
-    // คำนวณเวลาสิ้นสุด
-    const endTime = new Date(dateObj.getTime() + (detail.duration * 60000)); // duration เป็นนาที
-    
-    // รูปแบบวันที่เป็นภาษาไทย
+    // ตรวจสอบว่าเป็นผู้ป่วยคนเดียวกันหรือไม่
+    if (treatment.patient_id !== parseInt(id)) {
+      return res.status(403).send('ไม่มีสิทธิ์เข้าถึงข้อมูลนี้');
+    }
+
+    // จัดรูปแบบวันที่และเวลา (View Logic - อยู่ใน Controller ได้)
+    const dateObj = new Date(treatment.appointment_time);
+    const endTime = new Date(dateObj.getTime() + (treatment.duration * 60000));
+
     const thaiMonths = [
       'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
     ];
-    
+
     const day = dateObj.getDate();
     const month = thaiMonths[dateObj.getMonth()];
     const year = dateObj.getFullYear() + 543;
-    
-    // Format เวลาเริ่มต้น
+
     const startHours = dateObj.getHours().toString().padStart(2, '0');
     const startMinutes = dateObj.getMinutes().toString().padStart(2, '0');
-    
-    // Format เวลาสิ้นสุด
     const endHours = endTime.getHours().toString().padStart(2, '0');
     const endMinutes = endTime.getMinutes().toString().padStart(2, '0');
-    
-    detail.formattedDate = `${day} ${month} ${year}`;
-    detail.formattedTime = `${startHours}:${startMinutes} น.`;
-    detail.formattedTimeRange = `${startHours}:${startMinutes} - ${endHours}:${endMinutes} น.`;
-    detail.formattedDuration = `${detail.duration} นาที`;
 
-    res.render('admin/patient/treatment-history/treatment-detail', { 
-      detail, 
-      patientId: id 
+    // เพิ่มข้อมูลที่จัดรูปแบบแล้ว
+    const detail = {
+      ...treatment,
+      time: treatment.appointment_time,
+      dentist_name: `${treatment.dentist_fname} ${treatment.dentist_lname}`,
+      formattedDate: `${day} ${month} ${year}`,
+      formattedTime: `${startHours}:${startMinutes} น.`,
+      formattedTimeRange: `${startHours}:${startMinutes} - ${endHours}:${endMinutes} น.`,
+      formattedDuration: `${treatment.duration} นาที`
+    };
+
+    res.render('admin/patient/treatment-history/treatment-detail', {
+      detail,
+      patientId: id
     });
 
   } catch (err) {
@@ -1773,28 +1668,7 @@ exports.addTreatment = async (req, res) => {
 };
 
 
-// แสดงฟอร์มแก้ไข treatment
-// exports.showEditTreatmentForm = async (req, res) => {
-//   const treatmentId = req.params.id;
 
-//   try {
-//     const [treatmentRows] = await db.execute('SELECT * FROM treatment WHERE treatment_id = ?', [treatmentId]);
-//     const [dentistRows] = await db.execute('SELECT dentist_id, fname, lname FROM dentist');
-
-//     if (treatmentRows.length === 0) {
-//       return res.status(404).send('Treatment not found');
-//     }
-
-//     res.render('admin/treatment/edit-treatment', {
-//       treatment: treatmentRows[0],
-//       dentists: dentistRows
-//     });
-
-//   } catch (err) {
-//     console.error('Error fetching treatment:', err);
-//     res.status(500).send('Internal Server Error');
-//   }
-// };
 exports.showEditTreatmentForm = async (req, res) => {
   const treatmentId = req.params.id;
 
@@ -1825,25 +1699,7 @@ exports.showEditTreatmentForm = async (req, res) => {
 
 
 
-// บันทึกการแก้ไข treatment
-// exports.updateTreatment = async (req, res) => {
-//   const treatmentId = req.params.id;
-//   const { treatment_name, duration } = req.body;
 
-//   try {
-//     await db.execute(
-//       'UPDATE treatment SET treatment_name = ?, duration = ? WHERE treatment_id = ?',
-//       [treatment_name, duration, treatmentId]
-//     );
-
-//     // TODO: ถ้าต้องการอัปเดต dentist_treatment ให้เพิ่ม logic ที่นี่
-
-//     res.redirect('/admin/treatments');
-//   } catch (err) {
-//     console.error('Error updating treatment:', err);
-//     res.status(500).send('Failed to update treatment');
-//   }
-// };
 exports.updateTreatment = async (req, res) => {
   const treatmentId = req.params.id;
   const { treatment_name, duration, dentist_ids } = req.body;

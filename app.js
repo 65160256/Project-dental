@@ -337,8 +337,9 @@ const requireAuth = (requiredRole = null) => {
 // ===============================
 app.use('/admin', requireAuth(1), adminRoutes);
 app.use('/dentist', requireAuth(2), dentistRoutes);
-app.use('/patient/api/notifications', requireAuth(3), patientNotificationRoutes);
-app.use('/patient', requireAuth(3), patientRoutes);
+// Patient routes use their own requirePatient middleware, so no need for global requireAuth
+app.use('/patient/api/notifications', patientNotificationRoutes);
+app.use('/patient', patientRoutes);
 
 // ===============================
 // API Health Check

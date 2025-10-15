@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointment Detail - Smile Clinic</title>
+    <title>รายละเอียดการนัดหมาย - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
@@ -100,6 +100,9 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .back-button {
@@ -121,22 +124,138 @@
             background: #5a6268;
         }
 
+        /* --- โปรไฟล์/การแจ้งเตือน: ให้เหมือนหน้าอื่น --- */
         .user-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
-
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .notification-icon:hover {
+            background: #e9ecef;
+            color: #4A90E2;
+        }
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .profile-dropdown {
+            position: relative;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 12px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .user-info:hover { background: #f8f9fa; }
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: #4A90E2;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: 2px solid #e1e5e9;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .user-details strong {
             font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+        .user-details small {
+            color: #666;
+            font-size: 12px;
+        }
+        .dropdown-arrow {
+            color: #666;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+        .profile-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 12px;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeInDown 0.3s ease;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .dropdown-menu a:hover { background-color: #f8f9fa; }
+        .dropdown-menu hr {
+            margin: 0;
+            border: none;
+            border-top: 1px solid #e1e5e9;
         }
 
         /* Content */
@@ -176,21 +295,9 @@
             text-transform: uppercase;
         }
 
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-completed,
-        .status-confirm {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-cancel {
-            background: #fecaca;
-            color: #991b1b;
-        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-completed, .status-confirm { background: #d1fae5; color: #065f46; }
+        .status-cancel { background: #fecaca; color: #991b1b; }
 
         .detail-sections {
             display: grid;
@@ -258,68 +365,25 @@
             transition: all 0.3s;
         }
 
-        .btn-primary {
-            background: #4A90E2;
-            color: white;
-        }
+        .btn-primary { background: #4A90E2; color: white; }
+        .btn-primary:hover { background: #357abd; }
 
-        .btn-primary:hover {
-            background: #357abd;
-        }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
 
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
 
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            
-            .main {
-                margin-left: 0;
-            }
-            
-            .detail-sections {
-                grid-template-columns: 1fr;
-            }
-
-            .appointment-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-
-            .action-buttons {
-                flex-wrap: wrap;
-                justify-content: flex-start;
-            }
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main { margin-left: 0; }
+            .detail-sections { grid-template-columns: 1fr; }
+            .appointment-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .action-buttons { flex-wrap: wrap; justify-content: flex-start; }
         }
     </style>
 </head>
@@ -331,11 +395,11 @@
             <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-            <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
-            <!-- <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> History</a></li> -->
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+            <!-- <li><a href="/dentist/patient-history"><i class="fas fa-history"></i> ประวัติ</a></li> -->
         </ul>
     </div>
 
@@ -344,13 +408,37 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <a href="/dentist/appointments" class="back-button">
-                <i class="fas fa-arrow-left"></i> Back to Appointments
+                <i class="fas fa-arrow-left"></i> กลับไปหน้าการนัดหมาย
             </a>
+
+            <!-- โปรไฟล์ + การแจ้งเตือน แบบเดียวกับหน้าอื่น -->
             <div class="user-section">
-                <div class="avatar">👨‍⚕️</div>
-                <div class="user-details">
-                    <strong>Hello Dr. <%= appointment.dentist_fname %> <%= appointment.dentist_lname %></strong>
-                    <small>dentist</small>
+                <div class="notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">3</span>
+                </div>
+
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="user-info" onclick="toggleDropdown()">
+                        <div class="avatar" id="userAvatar">
+                            <% if (appointment && appointment.dentist_photo && appointment.dentist_photo !== 'default-avatar.png') { %>
+                                <img src="/uploads/<%= appointment.dentist_photo %>" alt="โปรไฟล์" onerror="showInitials()">
+                            <% } else { %>
+                                <%= (appointment && appointment.dentist_fname) ? appointment.dentist_fname.charAt(0).toUpperCase() + (appointment.dentist_lname ? appointment.dentist_lname.charAt(0).toUpperCase() : '') : 'ท' %>
+                            <% } %>
+                        </div>
+                        <div class="user-details">
+                            <strong id="userName">ทพ. <%= appointment.dentist_fname %> <%= appointment.dentist_lname %></strong>
+                            <small>ทันตแพทย์</small>
+                        </div>
+                        <i class="fas fa-caret-down dropdown-arrow"></i>
+                    </div>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="/dentist/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+                        <a href="/dentist/profile/change-password"><i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน</a>
+                        <hr />
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -361,7 +449,7 @@
                 <div class="appointment-header">
                     <h1 class="appointment-title">
                         <i class="fas fa-calendar-check"></i>
-                        Appointment Details
+                        รายละเอียดการนัดหมาย
                     </h1>
                     <span class="status-badge status-<%= appointment.queue_status %>">
                         <%= appointment.queue_status === 'completed' || appointment.queue_status === 'confirm' ? 'รักษาแล้ว' : 
@@ -375,25 +463,25 @@
                     <div class="detail-section">
                         <h3 class="section-title">
                             <i class="fas fa-user"></i>
-                            Patient Information
+                            ข้อมูลผู้ป่วย
                         </h3>
                         <div class="detail-item">
-                            <span class="detail-label">Name:</span>
+                            <span class="detail-label">ชื่อ-นามสกุล:</span>
                             <span class="detail-value"><%= appointment.fname %> <%= appointment.lname %></span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Phone:</span>
-                            <span class="detail-value"><%= appointment.phone || 'N/A' %></span>
+                            <span class="detail-label">โทรศัพท์:</span>
+                            <span class="detail-value"><%= appointment.phone || 'ไม่มี' %></span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Date of Birth:</span>
+                            <span class="detail-label">วันเกิด:</span>
                             <span class="detail-value">
-                                <%= appointment.dob ? new Date(appointment.dob).toLocaleDateString('en-GB') : 'N/A' %>
+                                <%= appointment.dob ? new Date(appointment.dob).toLocaleDateString('th-TH') : 'ไม่มี' %>
                             </span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Address:</span>
-                            <span class="detail-value"><%= appointment.address || 'N/A' %></span>
+                            <span class="detail-label">ที่อยู่:</span>
+                            <span class="detail-value"><%= appointment.address || 'ไม่มี' %></span>
                         </div>
                     </div>
 
@@ -401,29 +489,29 @@
                     <div class="detail-section">
                         <h3 class="section-title">
                             <i class="fas fa-calendar-alt"></i>
-                            Appointment Information
+                            ข้อมูลการนัดหมาย
                         </h3>
                         <div class="detail-item">
-                            <span class="detail-label">Date:</span>
+                            <span class="detail-label">วันที่:</span>
                             <span class="detail-value"><%= new Date(appointment.time).toLocaleDateString('en-GB') %></span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Time:</span>
+                            <span class="detail-label">เวลา:</span>
                             <span class="detail-value">
                                 <%= new Date(appointment.time).toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', hour12: false}) %>
                             </span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Treatment:</span>
+                            <span class="detail-label">การรักษา:</span>
                             <span class="detail-value"><%= appointment.treatment_name %></span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Duration:</span>
-                            <span class="detail-value"><%= appointment.duration %> minutes</span>
+                            <span class="detail-label">ระยะเวลา:</span>
+                            <span class="detail-value"><%= appointment.duration %> นาที</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Dentist:</span>
-                            <span class="detail-value">Dr. <%= appointment.dentist_fname %> <%= appointment.dentist_lname %></span>
+                            <span class="detail-label">ทันตแพทย์:</span>
+                            <span class="detail-value">ทพ. <%= appointment.dentist_fname %> <%= appointment.dentist_lname %></span>
                         </div>
                     </div>
 
@@ -432,7 +520,7 @@
                     <div class="detail-section diagnosis-section">
                         <h3 class="section-title">
                             <i class="fas fa-stethoscope"></i>
-                            Diagnosis & Notes
+                            การวินิจฉัยและบันทึก
                         </h3>
                         <div class="detail-item">
                             <span class="detail-value" style="width: 100%; text-align: left; line-height: 1.6;">
@@ -447,10 +535,10 @@
                     <div class="detail-section">
                         <h3 class="section-title">
                             <i class="fas fa-calendar-plus"></i>
-                            Next Appointment
+                            การนัดหมายครั้งถัดไป
                         </h3>
                         <div class="detail-item">
-                            <span class="detail-label">Scheduled Date:</span>
+                            <span class="detail-label">วันที่นัดหมาย:</span>
                             <span class="detail-value"><%= new Date(appointment.next_appointment).toLocaleDateString('en-GB') %></span>
                         </div>
                     </div>
@@ -461,22 +549,22 @@
                 <div class="action-buttons">
                     <% if (appointment.queue_status === 'pending') { %>
                     <button onclick="updateStatus('confirm')" class="btn btn-success">
-                        <i class="fas fa-check"></i> Confirm Appointment
+                        <i class="fas fa-check"></i> ยืนยันการนัดหมาย
                     </button>
                     <button onclick="updateStatus('completed')" class="btn btn-primary">
-                        <i class="fas fa-check-double"></i> Mark as Completed
+                        <i class="fas fa-check-double"></i> ทำเครื่องหมายว่าเสร็จสิ้น
                     </button>
                     <button onclick="updateStatus('cancel')" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Cancel Appointment
+                        <i class="fas fa-times"></i> ยกเลิกนัด
                     </button>
                     <% } else if (appointment.queue_status === 'confirm') { %>
                     <button onclick="updateStatus('completed')" class="btn btn-primary">
-                        <i class="fas fa-check-double"></i> Mark as Completed
+                        <i class="fas fa-check-double"></i> ทำเครื่องหมายว่าเสร็จสิ้น
                     </button>
                     <% } %>
-                    
-                    <!-- <button onclick="editAppointment()" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Edit Details
+                    <!-- ปุ่มแก้ไข (ถ้าต้องใช้ภายหลัง)
+                    <button onclick="editAppointment()" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> แก้ไขรายละเอียด
                     </button> -->
                 </div>
             </div>
@@ -484,46 +572,39 @@
     </div>
 
     <script>
+        // ฟังก์ชันสถานะ
         function updateStatus(status) {
             const statusText = {
-                'confirm': 'confirm this appointment',
-                'completed': 'mark this appointment as completed',
-                'cancel': 'cancel this appointment'
+                'confirm': 'ยืนยันการนัดหมายนี้',
+                'completed': 'ทำเครื่องหมายการนัดหมายนี้ว่าเสร็จสิ้น',
+                'cancel': 'ยกเลิกการนัดหมายนี้'
             };
 
-            if (confirm(`Are you sure you want to ${statusText[status]}?`)) {
+            if (confirm(`ต้องการ${statusText[status]}ใช่หรือไม่?`)) {
                 const queueId = <%= appointment.queue_id %>;
                 
                 fetch('/dentist/appointments/update-status', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        queueId: queueId,
-                        status: status
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ queueId: queueId, status: status })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showNotification(data.message, 'success');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
+                        showNotification(data.message || 'อัปเดตสถานะสำเร็จ', 'success');
+                        setTimeout(() => { window.location.reload(); }, 1500);
                     } else {
-                        showNotification('Error: ' + data.error, 'error');
+                        showNotification('เกิดข้อผิดพลาด: ' + (data.error || ''), 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showNotification('Connection error occurred', 'error');
+                    showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
                 });
             }
         }
 
         // function editAppointment() {
-        //     // Redirect to edit page or open modal
         //     const queueId = <%= appointment.queue_id %>;
         //     window.location.href = `/dentist/appointments/${queueId}/edit`;
         // }
@@ -546,13 +627,10 @@
             `;
             notification.textContent = message;
             document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            setTimeout(() => { notification.remove(); }, 3000);
         }
 
-        // Add CSS animation keyframes
+        // เพิ่ม keyframes
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideIn {
@@ -561,6 +639,65 @@
             }
         `;
         document.head.appendChild(style);
+
+        // ===== ส่วนโปรไฟล์ให้ทำงานเหมือนหน้าอื่น =====
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAvatar();
+        });
+
+        function toggleNotifications() {
+            showNotification('ฟีเจอร์การแจ้งเตือนจะพร้อมใช้งานเร็ว ๆ นี้!', 'info');
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            const menu = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('open');
+            menu.classList.toggle('show');
+        }
+
+        // ปิดดรอปดาวน์เมื่อคลิกนอกพื้นที่
+        document.addEventListener('click', function(e) {
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileDropdown && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('open');
+                const menu = document.getElementById('dropdownMenu');
+                if (menu) menu.classList.remove('show');
+            }
+        });
+
+        // แสดงตัวย่อชื่อ หากไม่มีรูป
+        function initializeAvatar() {
+            const avatarEl = document.getElementById('userAvatar');
+            if (!avatarEl) return;
+
+            if (avatarEl.querySelector('img')) return;
+
+            if (!avatarEl.textContent.trim()) {
+                const userNameEl = document.getElementById('userName');
+                const userName = userNameEl ? userNameEl.textContent : '';
+                const nameParts = userName.replace('ทพ. ', '').split(' ');
+                const initials = nameParts.map(p => p.charAt(0)).join('').substring(0,2).toUpperCase();
+                const blueColors = ['#4A90E2','#2196F3','#03A9F4','#00BCD4','#5DADE2','#3498DB','#2980B9','#1976D2'];
+                const colorIndex = userName.length % blueColors.length;
+                avatarEl.style.background = blueColors[colorIndex];
+                avatarEl.textContent = initials || 'ทพ';
+            }
+        }
+
+        function showInitials() {
+            const avatar = document.getElementById('userAvatar');
+            const img = avatar ? avatar.querySelector('img') : null;
+            if (avatar && img) {
+                img.remove();
+                const userNameEl = document.getElementById('userName');
+                const userName = userNameEl ? userNameEl.textContent : '';
+                const nameParts = userName.replace('ทพ. ', '').split(' ');
+                const initials = nameParts.map(p => p.charAt(0)).join('').substring(0,2).toUpperCase();
+                avatar.style.background = '#4A90E2';
+                avatar.textContent = initials || 'ทพ';
+            }
+        }
     </script>
 </body>
 </html>

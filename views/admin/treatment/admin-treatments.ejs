@@ -8,185 +8,120 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
     body{background:#f5f7fa}
+
+    /* Sidebar */
     .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
     .sidebar .logo{padding:20px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1)}
     .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;color:#4A90E2;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px}
     .sidebar ul{list-style:none;padding:10px 0}
-    .sidebar ul li a{display:flex;gap:8px;align-items:center;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s}
+    .sidebar ul li a{display:flex;gap:8px;align-items:center;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
     .sidebar ul li.active a,.sidebar ul li a:hover{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+    /* Main / Topbar (match patients page) */
     .main{margin-left:180px;min-height:100vh}
     .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-    .page-info h1{font-size:22px;margin:0 0 4px;color:#333}
+    .page-info h1{font-size:22px;margin:0 0 4px;color:#333;font-weight:600}
     .page-info p{font-size:13px;color:#666;margin:0}
     .search-section{display:flex;align-items:center;gap:15px}
-    .search-box{position:relative}
-    .search-box input{width:260px;padding:10px 40px 10px 14px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px}
-    .search-box input:focus{outline:none;border-color:#4A90E2;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
-    .search-box i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#999}
+    .search-box{background:#f8f9fa;border:1px solid #e1e5e9;border-radius:20px;padding:8px 15px;display:flex;align-items:center;width:250px;transition:.3s}
+    .search-box:focus-within{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.1)}
+    .search-box i{color:#666;margin-right:8px;font-size:14px}
+    .search-box input{border:none;background:transparent;outline:none;width:100%;font-size:13px}
+
     .user-section{display:flex;align-items:center;gap:15px}
     .notification-container{position:relative}
-    .notification-icon{font-size:18px;color:#666;cursor:pointer}
+    .notification-icon{font-size:18px;color:#666;cursor:pointer;transition:.2s}
+    .notification-icon:hover{color:#4A90E2}
     .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
     .notification-badge.show{display:flex;animation:pulse 2s infinite}
     @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
     .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none;max-height:500px;overflow:hidden;z-index:2000}
     .notification-dropdown.show{display:block;animation:slideDown .25s ease}
     @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-    .notification-header{padding:16px 20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;display:flex;justify-content:space-between;align-items:center}
     .mark-all-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer}
-    .notification-content{max-height:400px;overflow-y:auto}
-    .notification-item{padding:14px 18px;border-bottom:1px solid #f1f3f4;cursor:pointer}
-    .notification-item.unread{background:#f0f8ff;border-left:4px solid #4A90E2}
-    .notification-title{font-weight:600;color:#333;font-size:14px;margin-bottom:4px}
-    .notification-message{color:#666;font-size:13px;margin-bottom:6px;line-height:1.4}
+    .notification-content{max-height:400px;overflow-y:auto;padding:10px}
+    .notification-item{padding:12px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:.2s}
+    .notification-item:hover{background:#f8f9fa}
+    .notification-title{font-weight:600;color:#333;font-size:13px;margin-bottom:3px}
+    .notification-message{color:#666;font-size:12px;margin-bottom:5px;line-height:1.3}
     .notification-time{color:#999;font-size:11px}
+
     .profile-dropdown{position:relative}
-    .user-info{display:flex;gap:10px;align-items:center;cursor:pointer}
+    .user-info{display:flex;gap:10px;align-items:center;cursor:pointer;padding:5px;border-radius:8px;transition:.2s}
+    .user-info:hover{background:#f8f9fa}
     .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
     .user-details strong{display:block;font-size:13px;color:#333}
     .user-details small{color:#666;font-size:11px}
     .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
     .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
     .dropdown-menu a:hover{background:#f8f9fa}
+
+    /* Content */
     .content{padding:30px}
-    .tools-bar{background:#fff;padding:18px 24px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-    .stats-info{display:flex;align-items:center;gap:8px;color:#666}
-    .btn{padding:10px 16px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .3s ease}
+
+    /* Buttons (match patients page) */
+    .btn{padding:10px 16px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.3s;white-space:nowrap;text-decoration:none}
     .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
     .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,.3)}
     .btn-secondary{background:#f8f9fa;color:#666;border:1px solid #e1e5e9}
-    .btn-secondary:hover{background:#e9ecef}
-    .btn-danger{background:linear-gradient(135deg,#dc3545,#c82333);color:#fff}
-    .btn-danger:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(220,53,69,.4)}
-    .table-container{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
-    .table-header{padding:18px 24px;background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));border-bottom:1px solid #e1e5e9}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:14px 18px;border-bottom:1px solid #f1f3f4;font-size:14px}
-    thead{background:#f8f9fa}
-    .treatment-name{font-weight:600;color:#333}
-    .duration-badge{background:#e3f2fd;color:#1976d2;padding:4px 12px;border-radius:999px;font-size:12px}
+    .btn-secondary:hover{background:#e9ecef;border-color:#d1d3d6}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:6px}
+
+    /* Small action buttons style set */
     .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
-    .btn-sm{padding:6px 10px;font-size:12px;border-radius:6px;transition:all .2s ease}
-    .btn-view{background:#17a2b8;color:#fff}.btn-view:hover{background:#138496;transform:translateY(-1px)}
-    .btn-edit{background:#ffc107;color:#212529}.btn-edit:hover{background:#e0a800;transform:translateY(-1px)}
-    .btn-delete{background:#dc3545;color:#fff}.btn-delete:hover{background:#c82333;transform:translateY(-1px)}
+    .btn-view{background:#e8f5e8;color:#2e7d32;border:1px solid #c8e6c9}
+    .btn-view:hover{background:#c8e6c9;transform:translateY(-1px)}
+    .btn-edit{background:#fff3e0;color:#f57c00;border:1px solid #ffcc02}
+    .btn-edit:hover{background:#ffcc02;color:#fff;transform:translateY(-1px)}
+    .btn-schedule{background:#e3f2fd;color:#1976d2;border:1px solid #bbdefb}
+    .btn-schedule:hover{background:#bbdefb;transform:translateY(-1px)}
+    .btn-delete{background:#ffebee;color:#d32f2f;border:1px solid #ffcdd2}
+    .btn-delete:hover{background:#ffcdd2;transform:translateY(-1px)}
+
+    /* Stats bar (replace tools-bar look & feel) */
+    .stats-bar{background:#fff;padding:20px 25px;border-radius:12px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .stats-info{display:flex;align-items:center;gap:10px;color:#666;font-size:14px}
+    .stats-info i{color:#4A90E2;font-size:16px}
+
+    /* Table section */
+    .table-section{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+    .table-header{padding:20px 25px;background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));border-bottom:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
+    .table-header h3{margin:0;font-size:18px;font-weight:600;color:#333}
+    table{width:100%;border-collapse:collapse}
+    thead{background:#f8f9fa}
+    th,td{padding:14px 18px;border-bottom:1px solid #f1f3f4;font-size:14px;color:#333;text-align:left}
+    tr:hover{background:rgba(74,144,226,.05)}
+    .treatment-name{font-weight:600}
+    .duration-badge{background:#e3f2fd;color:#1976d2;padding:4px 12px;border-radius:999px;font-size:12px;border:1px solid #bbdefb}
+
     .loading,.empty,.error{text-align:center;padding:40px 20px;color:#666}
     .offline-banner{display:none;background:#ff6b6b;color:#fff;padding:10px 30px;text-align:center}
-    
-    /* Modal Styles - ปรับปรุงใหม่ */
-    .modal-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.5);
-      backdrop-filter:blur(4px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      animation:fadeIn .3s ease
-    }
+
+    /* Modal (match patients page buttons; keep your nice header) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;animation:fadeIn .3s ease}
     .modal-overlay.show{display:flex}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes modalSlide{from{opacity:0;transform:translateY(-30px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-    
-    .modal-content{
-      background:#fff;
-      border-radius:16px;
-      box-shadow:0 25px 50px rgba(0,0,0,.25);
-      max-width:480px;
-      width:92%;
-      overflow:hidden;
-      animation:modalSlide .3s ease
-    }
-    
-    .modal-header{
-      padding:24px;
-      background:linear-gradient(135deg,#dc3545,#c82333);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      gap:16px
-    }
-    
-    .modal-icon{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      background:rgba(255,255,255,.2);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:28px;
-      flex-shrink:0
-    }
-    
-    .modal-header-text h3{
-      margin:0 0 4px;
-      font-size:20px;
-      font-weight:600
-    }
-    
-    .modal-header-text p{
-      margin:0;
-      font-size:13px;
-      opacity:.9
-    }
-    
-    .modal-body{
-      padding:28px 24px
-    }
-    
-    .modal-body .treatment-info{
-      background:#fff5f5;
-      border:1px dashed #dc3545;
-      border-radius:10px;
-      padding:16px;
-      margin-top:12px
-    }
-    
-    .modal-body .treatment-info .label{
-      font-size:12px;
-      color:#666;
-      margin-bottom:4px
-    }
-    
-    .modal-body .treatment-info .value{
-      font-size:16px;
-      font-weight:600;
-      color:#dc3545
-    }
-    
-    .modal-body .warning-text{
-      display:flex;
-      gap:12px;
-      align-items:start;
-      margin-top:16px;
-      padding:14px;
-      background:#fff3cd;
-      border-radius:8px;
-      font-size:13px;
-      color:#856404
-    }
-    
-    .modal-body .warning-text i{
-      margin-top:2px;
-      flex-shrink:0
-    }
-    
-    .modal-footer{
-      padding:20px 24px;
-      background:#f8f9fa;
-      border-top:1px solid #e1e5e9;
-      display:flex;
-      gap:12px;
-      justify-content:flex-end
-    }
-    
-    .modal-footer .btn{
-      min-width:100px;
-      justify-content:center
-    }
-    
+    .modal-content{background:#fff;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,.25);max-width:480px;width:92%;overflow:hidden;animation:modalSlide .3s ease}
+    .modal-header{padding:24px;background:linear-gradient(135deg,#dc3545,#c82333);color:#fff;display:flex;align-items:center;gap:16px}
+    .modal-icon{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+    .modal-header-text h3{margin:0 0 4px;font-size:20px;font-weight:600}
+    .modal-header-text p{margin:0;font-size:13px;opacity:.9}
+    .modal-body{padding:28px 24px}
+    .modal-body .treatment-info{background:#fff5f5;border:1px dashed #dc3545;border-radius:10px;padding:16px;margin-top:12px}
+    .modal-body .treatment-info .label{font-size:12px;color:#666;margin-bottom:4px}
+    .modal-body .treatment-info .value{font-size:16px;font-weight:600;color:#dc3545}
+    .modal-body .warning-text{display:flex;gap:12px;align-items:start;margin-top:16px;padding:14px;background:#fff3cd;border-radius:8px;font-size:13px;color:#856404}
+    .modal-body .warning-text i{margin-top:2px;flex-shrink:0}
+    .modal-footer{padding:20px 24px;background:#f8f9fa;border-top:1px solid #e1e5e9;display:flex;gap:10px;justify-content:flex-end}
+    .modal-footer .btn{min-width:100px;justify-content:center}
+
+    /* Animations for toast */
+    @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+    /* Responsive */
     @media (max-width:768px){
       .sidebar{width:100%;position:relative;height:auto}
       .main{margin-left:0}
@@ -203,7 +138,7 @@
   <!-- แถบแจ้งออฟไลน์ -->
   <div id="offlineBanner" class="offline-banner"><i class="fas fa-wifi"></i> การเชื่อมต่อขาดหาย บางฟังก์ชันอาจใช้งานไม่ได้</div>
 
-  <!-- เมนูด้านข้าง -->
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
       <div class="logo-icon">🦷</div>
@@ -220,7 +155,7 @@
   </aside>
 
   <main class="main">
-    <!-- แถบบน -->
+    <!-- Top bar -->
     <div class="top-bar">
       <div class="page-info">
         <h1>จัดการการรักษา</h1>
@@ -228,8 +163,8 @@
       </div>
       <div class="search-section">
         <div class="search-box">
-          <input id="searchInput" type="text" placeholder="ค้นหาการรักษา...">
           <i class="fas fa-search"></i>
+          <input id="searchInput" type="text" placeholder="ค้นหาการรักษา...">
         </div>
       </div>
       <div class="user-section">
@@ -250,7 +185,7 @@
           <div class="user-info" onclick="toggleProfileDropdown()">
             <div id="userAvatar" class="avatar">A</div>
             <div class="user-details">
-              <strong>ผู้ดูแลระบบ</strong>
+              <strong>สวัสดี แอดมิน</strong>
               <small>ผู้ดูแลระบบ</small>
             </div>
             <i class="fas fa-caret-down"></i>
@@ -264,18 +199,21 @@
       </div>
     </div>
 
-    <!-- เนื้อหา -->
+    <!-- Content -->
     <div class="content">
-      <div class="tools-bar">
+      <div class="stats-bar">
         <div class="stats-info"><i class="fas fa-tooth"></i> <span id="treatmentCount">กำลังนับ...</span> รายการ</div>
-        <div class="tools-actions">
+        <div class="page-actions">
           <button class="btn btn-secondary" onclick="refreshData()"><i id="refreshIcon" class="fas fa-rotate"></i> โหลดใหม่</button>
           <a class="btn btn-primary" href="/admin/treatments/add"><i class="fas fa-plus"></i> เพิ่มการรักษา</a>
         </div>
       </div>
 
-      <div class="table-container">
-        <div class="table-header"><h3>รายการการรักษาทั้งหมด</h3></div>
+      <div class="table-section">
+        <div class="table-header">
+          <h3>รายการการรักษาทั้งหมด</h3>
+          <div></div>
+        </div>
         <div id="tableContent" class="loading">
           <i class="fas fa-spinner fa-spin"></i>
           <p>กำลังโหลดข้อมูลการรักษา...</p>
@@ -284,7 +222,7 @@
     </div>
   </main>
 
-  <!-- Modal ยืนยันลบ - ปรับปรุงใหม่ -->
+  <!-- Delete Modal -->
   <div id="deleteModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -296,30 +234,20 @@
           <p>การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
         </div>
       </div>
-      
       <div class="modal-body">
         <p style="color:#333;font-size:15px;line-height:1.6">คุณแน่ใจหรือไม่ว่าต้องการลบรายการการรักษานี้?</p>
-        
         <div class="treatment-info">
           <div class="label">ชื่อการรักษา</div>
           <div class="value" id="deleteItemName">-</div>
         </div>
-        
         <div class="warning-text">
           <i class="fas fa-exclamation-triangle"></i>
-          <div>
-            <strong>คำเตือน:</strong> การลบการรักษานี้จะส่งผลต่อการนัดหมายที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนข้อมูลได้
-          </div>
+          <div><strong>คำเตือน:</strong> การลบการรักษานี้จะส่งผลต่อการนัดหมายที่เกี่ยวข้องทั้งหมด และไม่สามารถกู้คืนข้อมูลได้</div>
         </div>
       </div>
-      
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">
-          <i class="fas fa-times"></i> ยกเลิก
-        </button>
-        <button id="confirmDeleteBtn" class="btn btn-danger">
-          <i class="fas fa-trash-alt"></i> ลบรายการ
-        </button>
+        <button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> ยกเลิก</button>
+        <button id="confirmDeleteBtn" class="btn btn-delete"><i class="fas fa-trash"></i> ลบรายการ</button>
       </div>
     </div>
   </div>
@@ -330,9 +258,7 @@
     let deleteId = null;
     let isOnline = navigator.onLine;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      setup();
-    });
+    document.addEventListener('DOMContentLoaded', () => { setup(); });
 
     function setup(){
       let timer;
@@ -381,9 +307,7 @@
       return `${dd} ${mm} ${yy} • ${hh}:${mi} น.`;
     }
 
-    function toggleNotifications(){
-      document.getElementById('notificationDropdown').classList.toggle('show');
-    }
+    function toggleNotifications(){ document.getElementById('notificationDropdown').classList.toggle('show'); }
     function toggleProfileDropdown(){
       const el = document.getElementById('profileDropdown');
       el.style.display = (el.style.display==='block'?'none':'block');
@@ -416,7 +340,7 @@
         const list = data.notifications||[];
         const badge = document.getElementById('notificationBadge');
         const unread = list.filter(x=>x.is_read===0).length;
-        if(unread>0){badge.textContent=unread;badge.classList.add('show')}
+        if(unread>0){badge.textContent=unread>99?'99+':unread;badge.classList.add('show')}
         const wrap = document.getElementById('notificationContent');
         if(list.length===0){wrap.innerHTML='<div class="empty"><i class="fas fa-bell-slash"></i><p>ยังไม่มีการแจ้งเตือน</p></div>';return}
         wrap.innerHTML = list.map(n=>`
@@ -439,8 +363,8 @@
       if(!list || list.length===0){
         document.getElementById('tableContent').innerHTML = `
           <div class="empty">
-            <i class="fas fa-tooth"></i>
-            <h3>ไม่พบข้อมูล</h3>
+            <i class="fas fa-tooth" style="font-size:48px;color:#ddd"></i>
+            <h3 style="color:#999">ไม่พบข้อมูล</h3>
             <p>เริ่มจากการเพิ่มรายการการรักษาแรกของคุณ</p>
             <a class="btn btn-primary" href="/admin/treatments/add"><i class="fas fa-plus"></i> เพิ่มการรักษา</a>
           </div>`;
@@ -448,34 +372,36 @@
       }
 
       const html = `
-      <table>
-        <thead>
-          <tr>
-            <th>ลำดับ</th>
-            <th>ชื่อการรักษา</th>
-            <th>ระยะเวลา</th>
-            <th>ทันตแพทย์ที่ทำได้</th>
-            <th>การจัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${list.map((t,i)=>`
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
             <tr>
-              <td>${i+1}</td>
-              <td class="treatment-name">${escapeHtml(t.treatment_name||'-')}</td>
-              <td><span class="duration-badge">${t.duration||0} นาที</span></td>
-              <td>${t.dentist_count||0} คน</td>
-              <td>
-                <div class="action-buttons">
-                  <button class="btn btn-sm btn-view" onclick="viewTreatment(${t.treatment_id})"><i class="fas fa-eye"></i> ดู</button>
-                  <button class="btn btn-sm btn-edit" onclick="editTreatment(${t.treatment_id})"><i class="fas fa-pen"></i> แก้ไข</button>
-                  <button class="btn btn-sm btn-delete" onclick="confirmDelete(${t.treatment_id}, '${escapeHtml(t.treatment_name||'รายการ')}')"><i class="fas fa-trash"></i> ลบ</button>
-                </div>
-              </td>
+              <th>ลำดับ</th>
+              <th>ชื่อการรักษา</th>
+              <th>ระยะเวลา</th>
+              <th>ทันตแพทย์ที่ทำได้</th>
+              <th>การจัดการ</th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>`;
+          </thead>
+          <tbody>
+            ${list.map((t,i)=>`
+              <tr>
+                <td>${i+1}</td>
+                <td class="treatment-name">${escapeHtml(t.treatment_name||'-')}</td>
+                <td><span class="duration-badge">${t.duration||0} นาที</span></td>
+                <td>${t.dentist_count||0} คน</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-view" onclick="viewTreatment(${t.treatment_id})"><i class="fas fa-eye"></i> ดู</button>
+                    <button class="btn btn-sm btn-edit" onclick="editTreatment(${t.treatment_id})"><i class="fas fa-pen"></i> แก้ไข</button>
+                    <button class="btn btn-sm btn-delete" onclick="confirmDelete(${t.treatment_id}, '${escapeHtml(t.treatment_name||'รายการ')}')"><i class="fas fa-trash"></i> ลบ</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
       document.getElementById('tableContent').innerHTML = html;
     }
 
@@ -493,103 +419,61 @@
       updateCount(filtered.length);
     }
 
-    function clearSearch(){document.getElementById('searchInput').value='';filterList('')}
     async function refreshData(){
       const icon = document.getElementById('refreshIcon');
       icon.classList.add('fa-spin'); await loadTreatments(); icon.classList.remove('fa-spin');
     }
     function viewTreatment(id){window.location.href = `/admin/treatments/${id}`}
     function editTreatment(id){window.location.href = `/admin/treatments/${id}/edit`}
-    
+
     function confirmDelete(id, name){
       deleteId = id;
       document.getElementById('deleteItemName').textContent = name;
       document.getElementById('deleteModal').classList.add('show');
     }
-    
     function closeModal(){
       document.getElementById('deleteModal').classList.remove('show');
       deleteId=null;
     }
-    
+
     async function removeTreatment(id){
       try{
         const btn = document.getElementById('confirmDeleteBtn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังลบ...';
-        
+
         const res = await fetch(`/admin/api/treatments/${id}`,{method:'DELETE'});
         if(!res.ok) throw new Error('HTTP '+res.status);
-        
+
         closeModal();
         showToast('ลบรายการสำเร็จ', 'success');
         await refreshData();
       }catch(e){
         console.error(e);
         showToast('ลบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
-        document.getElementById('confirmDeleteBtn').disabled = false;
-        document.getElementById('confirmDeleteBtn').innerHTML = '<i class="fas fa-trash-alt"></i> ลบรายการ';
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> ลบรายการ';
       }
     }
 
     function showToast(message, type = 'info'){
       const toast = document.createElement('div');
       toast.style.cssText = `
-        position:fixed;
-        top:20px;
-        right:20px;
-        padding:16px 20px;
-        border-radius:10px;
-        color:#fff;
-        font-size:14px;
-        font-weight:500;
-        z-index:10000;
-        box-shadow:0 4px 12px rgba(0,0,0,.15);
-        animation:slideInRight .3s ease;
-        display:flex;
-        align-items:center;
-        gap:10px;
-        min-width:280px;
+        position:fixed; top:20px; right:20px; padding:12px 20px; border-radius:8px;
+        color:#fff; font-size:14px; font-weight:500; z-index:10000; box-shadow:0 4px 12px rgba(0,0,0,.15);
+        animation:slideInRight .3s ease; max-width:300px
       `;
-      
-      const colors = {
-        success: 'linear-gradient(135deg,#10b981,#059669)',
-        error: 'linear-gradient(135deg,#ef4444,#dc2626)',
-        info: 'linear-gradient(135deg,#3b82f6,#2563eb)',
-        warning: 'linear-gradient(135deg,#f59e0b,#d97706)'
-      };
-      
-      const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle',
-        info: 'fas fa-info-circle',
-        warning: 'fas fa-exclamation-triangle'
-      };
-      
+      const colors = {success:'#10b981', error:'#ef4444', info:'#3b82f6', warning:'#f59e0b'};
+      const icons = {success:'check', error:'exclamation-triangle', info:'info-circle', warning:'exclamation-triangle'};
       toast.style.background = colors[type] || colors.info;
-      toast.innerHTML = `<i class="${icons[type] || icons.info}"></i> ${message}`;
-      
+      toast.innerHTML = `<i class="fas fa-${icons[type]||icons.info}"></i> ${message}`;
       document.body.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.style.animation = 'slideOutRight .3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
+      setTimeout(()=>{ toast.style.animation='slideOutRight .3s ease'; setTimeout(()=>toast.remove(),300); },3000);
     }
 
     function escapeHtml(text){const div=document.createElement('div');div.textContent=String(text);return div.innerHTML}
     function markAllAsRead(){fetch('/admin/api/notifications/mark-all-read',{method:'PUT'}).then(()=>loadNotifications())}
   </script>
-  
-  <style>
-    @keyframes slideInRight{
-      from{transform:translateX(100%);opacity:0}
-      to{transform:translateX(0);opacity:1}
-    }
-    @keyframes slideOutRight{
-      from{transform:translateX(0);opacity:1}
-      to{transform:translateX(100%);opacity:0}
-    }
-  </style>
 </body>
 </html>

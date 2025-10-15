@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointments - Smile Clinic</title>
+    <title>การนัดหมาย - Smile Clinic</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <style>
         * {
@@ -845,10 +845,10 @@
             <h3>Smile Clinic</h3>
         </div>
         <ul>
-            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> Dashboard</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> Work Schedule</a></li>
-            <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> Appointments</a></li>
-            <li><a href="/dentist/patients"><i class="fas fa-users"></i> Patients</a></li>
+            <li><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
+            <li class="active"><a href="/dentist/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+            <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
         </ul>
     </div>
 
@@ -857,15 +857,15 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div class="search-section">
-                <label>Search:</label>
+                <label>ค้นหา:</label>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search by patient name, treatment, or phone..." id="searchInput" />
+                    <input type="text" placeholder="ค้นหาด้วยชื่อผู้ป่วย รายการรักษา หรือโทรศัพท์..." id="searchInput" />
                 </div>
             </div>
             
             <div class="user-section">
-                <div class="notification-icon" onclick="toggleNotifications()">
+                <div class="notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน">
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge" id="notificationBadge">3</span>
                 </div>
@@ -874,27 +874,27 @@
                     <div class="user-info" onclick="toggleDropdown()">
                         <div class="avatar" id="userAvatar">
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                                <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
+                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์" onerror="showInitials()">
                             <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'ท' %>
                             <% } %>
                         </div>
                         <div class="user-details">
-                            <strong id="userName">Dr. <%= dentist.fname %> <%= dentist.lname %></strong>
-                            <small>Dentist</small>
+                            <strong id="userName">ทพ. <%= dentist.fname %> <%= dentist.lname %></strong>
+                            <small>ทันตแพทย์</small>
                         </div>
                         <i class="fas fa-caret-down dropdown-arrow"></i>
                     </div>
                     <div class="dropdown-menu" id="dropdownMenu">
                         <a href="/dentist/profile">
-                            <i class="fas fa-user"></i> My Profile
+                            <i class="fas fa-user"></i> โปรไฟล์ของฉัน
                         </a>
                         <a href="/dentist/profile/change-password">
-                            <i class="fas fa-key"></i> Change Password
+                            <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
                         </a>
                         <hr />
                         <a href="/logout">
-                            <i class="fas fa-sign-out-alt"></i> Log Out
+                            <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
                         </a>
                     </div>
                 </div>
@@ -905,36 +905,36 @@
         <div class="content">
             <!-- Page Header -->
             <div class="page-header">
-                <h1><i class="fas fa-hospital"></i> Appointments Management</h1>
+                <h1><i class="fas fa-hospital"></i> จัดการการนัดหมาย</h1>
             </div>
 
             <!-- Calendar Section -->
             <div class="calendar-header">
                 <div class="calendar-nav-bar">
                     <h3 class="month-year" id="currentMonth">
-                        <%= new Date().toLocaleDateString('en-US', {month: 'long', year: 'numeric'}) %>
+                        <%= new Date().toLocaleDateString('th-TH', {month: 'long', year: 'numeric'}) %>
                     </h3>
                     <div class="nav-buttons">
-                        <button class="nav-btn" onclick="changeWeek(-1)" title="Previous Week">
+                        <button class="nav-btn" onclick="changeWeek(-1)" title="สัปดาห์ก่อนหน้า">
                             <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
                         </button>
-                        <button class="nav-btn" onclick="changeMonth(-1)" title="Previous Month">
+                        <button class="nav-btn" onclick="changeMonth(-1)" title="เดือนก่อนหน้า">
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button class="nav-btn today" onclick="goToToday()" title="Today">
-                            <i class="fas fa-home"></i> Today
+                        <button class="nav-btn today" onclick="goToToday()" title="วันนี้">
+                            <i class="fas fa-home"></i> วันนี้
                         </button>
-                        <button class="nav-btn" onclick="changeMonth(1)" title="Next Month">
+                        <button class="nav-btn" onclick="changeMonth(1)" title="เดือนถัดไป">
                             <i class="fas fa-chevron-right"></i>
                         </button>
-                        <button class="nav-btn" onclick="changeWeek(1)" title="Next Week">
+                        <button class="nav-btn" onclick="changeWeek(1)" title="สัปดาห์ถัดไป">
                             <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
                 
                 <div class="week-view" id="weekView">
-                    <!-- Current week will be generated by JavaScript -->
+                    <!-- สัปดาห์ปัจจุบันจะถูกสร้างด้วย JavaScript -->
                 </div>
             </div>
 
@@ -943,27 +943,27 @@
                 <div class="section-header">
                     <div class="section-title">
                         <i class="fas fa-list-alt"></i>
-                        <span id="sectionTitle">All Appointments</span>
+                        <span id="sectionTitle">การนัดหมายทั้งหมด</span>
                         <span class="appointment-count-badge" id="appointmentCount">
                             <%= stats ? stats.total : (appointments ? appointments.length : 0) %>
                         </span>
                     </div>
                     <div class="filters-controls">
                         <button class="filters-btn" onclick="showTodayAppointments()" id="todayBtn">
-                            <i class="fas fa-calendar-day"></i> Today
+                            <i class="fas fa-calendar-day"></i> วันนี้
                         </button>
                         <button class="filters-btn" onclick="showUpcomingAppointments()" id="upcomingBtn">
-                            <i class="fas fa-arrow-right"></i> Upcoming
+                            <i class="fas fa-arrow-right"></i> ถัดไป
                         </button>
                         <button class="filters-btn active" onclick="showAllAppointments()" id="allBtn">
-                            <i class="fas fa-list"></i> All
+                            <i class="fas fa-list"></i> ทั้งหมด
                         </button>
                     </div>
                 </div>
 
                 <div class="selected-date-info" id="selectedDateInfo">
                     <i class="fas fa-info-circle"></i>
-                    Showing all appointments (Total: <%= stats ? stats.total : (appointments ? appointments.length : 0) %>)
+                    แสดงการนัดหมายทั้งหมด (รวม: <%= stats ? stats.total : (appointments ? appointments.length : 0) %>)
                 </div>
 
                 <div class="table-container">
@@ -971,12 +971,12 @@
                     <table class="appointments-table" id="appointmentsTable">
                         <thead>
                             <tr>
-                                <th><i class="fas fa-calendar"></i> Date</th>
-                                <th><i class="fas fa-clock"></i> Time</th>
-                                <th><i class="fas fa-user"></i> Patient</th>
-                                <th><i class="fas fa-tooth"></i> Treatment</th>
-                                <th><i class="fas fa-info-circle"></i> Status</th>
-                                <th><i class="fas fa-cogs"></i> Actions</th>
+                                <th><i class="fas fa-calendar"></i> วันที่</th>
+                                <th><i class="fas fa-clock"></i> เวลา</th>
+                                <th><i class="fas fa-user"></i> ผู้ป่วย</th>
+                                <th><i class="fas fa-tooth"></i> การรักษา</th>
+                                <th><i class="fas fa-info-circle"></i> สถานะ</th>
+                                <th><i class="fas fa-cogs"></i> การดำเนินการ</th>
                             </tr>
                         </thead>
                         <tbody id="appointmentsBody">
@@ -993,7 +993,7 @@
                                 <td class="treatment-type">
                                     <%= appointment.treatment_name %>
                                     <% if (appointment.duration) { %>
-                                        <br><small style="color: #666;">(<%= appointment.duration %> min)</small>
+                                        <br><small style="color: #666;">(<%= appointment.duration %> นาที)</small>
                                     <% } %>
                                 </td>
                                 <td>
@@ -1041,8 +1041,8 @@
                     <% } else { %>
                     <div class="no-appointments" id="noAppointments">
                         <i class="fas fa-calendar-times"></i>
-                        <h3>No appointments scheduled</h3>
-                        <p>There are no appointments at this time. New appointments will appear here.</p>
+                        <h3>ยังไม่มีการนัดหมาย</h3>
+                        <p>ขณะนี้ยังไม่มีรายการนัดหมาย รายการใหม่จะแสดงที่นี่</p>
                     </div>
                     <% } %>
                 </div>
@@ -1057,16 +1057,16 @@
         let stats = <%- JSON.stringify(stats || {total: 0, today: 0, pending: 0, completed: 0, cancelled: 0}) %>;
 
         // Debug: แสดงข้อมูลใน Console
-        console.log('=== DEBUG: All Appointments ===');
+        console.log('=== DEBUG: รายการนัดหมายทั้งหมด ===');
         console.table(allAppointments.map(a => ({
-            ID: a.queue_id,
-            Patient: a.fname + ' ' + a.lname,
-            Status: a.queue_status,
-            Time: new Date(a.time).toLocaleString('th-TH'),
-            Diagnosis: a.diagnosis ? 'Yes' : 'No'
+            ไอดี: a.queue_id,
+            ผู้ป่วย: a.fname + ' ' + a.lname,
+            สถานะ: a.queue_status,
+            เวลา: new Date(a.time).toLocaleString('th-TH'),
+            มีการวินิจฉัยหรือไม่: a.diagnosis ? 'มี' : 'ไม่มี'
         })));
 
-        console.log('=== DEBUG: Stats ===');
+        console.log('=== DEBUG: สถิติ ===');
         console.log(stats);
 
         // Initialize the page
@@ -1086,7 +1086,7 @@
             
             if (!avatarEl.textContent.trim()) {
                 const userName = document.getElementById('userName').textContent;
-                const nameParts = userName.replace('Dr. ', '').split(' ');
+                const nameParts = userName.replace('ทพ. ', '').split(' ');
                 const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
                 
                 const blueColors = [
@@ -1106,7 +1106,7 @@
             if (img) {
                 img.remove();
                 const userName = document.getElementById('userName').textContent;
-                const nameParts = userName.replace('Dr. ', '').split(' ');
+                const nameParts = userName.replace('ทพ. ', '').split(' ');
                 const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
                 
                 avatar.style.background = '#4A90E2';
@@ -1125,8 +1125,8 @@
 
             weekView.innerHTML = '';
             
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            const fullDayNames = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
             
             for (let i = 0; i < 7; i++) {
                 const date = new Date(startOfWeek);
@@ -1141,7 +1141,7 @@
                     <div style="font-weight: 700;">${dayNames[i]}</div>
                     <div style="font-size: 18px; margin-top: 5px;">${date.getDate()}</div>
                 `;
-                dayHeader.title = `${fullDayNames[i]}, ${date.toLocaleDateString('en-GB')}`;
+                dayHeader.title = `${fullDayNames[i]}, ${date.toLocaleDateString('th-TH')}`;
                 dayHeader.onclick = () => filterByDate(dateStr);
                 
                 if (date.toDateString() === today.toDateString()) {
@@ -1173,7 +1173,7 @@
             let visibleCount = 0;
             
             const targetDate = new Date(date);
-            const formattedDate = targetDate.toLocaleDateString('en-GB', {
+            const formattedDate = targetDate.toLocaleDateString('th-TH', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -1193,7 +1193,7 @@
                 }
             });
             
-            updateFilterResults(visibleCount, `Appointments for ${formattedDate}`, 'Selected Date');
+            updateFilterResults(visibleCount, `การนัดหมายสำหรับ ${formattedDate}`, 'วันที่ที่เลือก');
             setActiveFilter(null);
         }
 
@@ -1225,7 +1225,7 @@
                 }
             });
             
-            updateFilterResults(visibleCount, 'Showing upcoming appointments', 'Upcoming Appointments');
+            updateFilterResults(visibleCount, 'แสดงการนัดหมายที่กำลังจะมาถึง', 'กำลังจะมาถึง');
             setActiveFilter('upcomingBtn');
         }
 
@@ -1236,7 +1236,7 @@
                 row.style.display = '';
             });
             
-            updateFilterResults(allAppointments.length, `Showing all appointments (Total: ${allAppointments.length})`, 'All Appointments');
+            updateFilterResults(allAppointments.length, `แสดงการนัดหมายทั้งหมด (รวม: ${allAppointments.length})`, 'การนัดหมายทั้งหมด');
             setActiveFilter('allBtn');
             
             toggleTableVisibility(allAppointments.length > 0);
@@ -1294,11 +1294,11 @@
         }
 
         function updateMonthDisplay() {
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
             
             document.getElementById('currentMonth').textContent = 
-                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear() + 543}`;
         }
 
         function loadTodaysAppointments() {
@@ -1322,20 +1322,20 @@
 
         // ฟังก์ชันเพิ่มประวัติการรักษา
         function addHistory(queueId) {
-            console.log('Adding history for queue:', queueId);
+            console.log('เพิ่มประวัติให้คิว:', queueId);
             showLoading();
             window.location.href = `/dentist/add-history?queueId=${queueId}`;
         }
 
         // ฟังก์ชันดูประวัติการรักษา
         function viewTreatmentHistory(queueId) {
-            console.log('Viewing treatment history for queue:', queueId);
+            console.log('เปิดดูประวัติการรักษาของคิว:', queueId);
             showLoading();
             window.location.href = `/dentist/treatment-history/${queueId}`;
         }
 
         function cancelAppointment(queueId) {
-            if (confirm('Are you sure you want to cancel this appointment?')) {
+            if (confirm('ยืนยันที่จะยกเลิกการนัดหมายนี้หรือไม่?')) {
                 showLoading();
                 
                 fetch('/dentist/api/appointment/cancel', {
@@ -1349,16 +1349,16 @@
                 .then(data => {
                     hideLoading();
                     if (data.success) {
-                        showNotification('Appointment cancelled successfully!', 'success');
+                        showNotification('ยกเลิกการนัดหมายสำเร็จ!', 'success');
                         updateAppointmentRow(queueId, 'cancel');
                     } else {
-                        showNotification('Error: ' + data.error, 'error');
+                        showNotification('เกิดข้อผิดพลาด: ' + data.error, 'error');
                     }
                 })
                 .catch(error => {
                     hideLoading();
                     console.error('Error:', error);
-                    showNotification('Connection error occurred', 'error');
+                    showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
                 });
             }
         }
@@ -1427,7 +1427,7 @@
             });
             
             if (searchTerm) {
-                updateFilterResults(visibleCount, `Search results for "${e.target.value}" (${visibleCount} found)`, 'Search Results');
+                updateFilterResults(visibleCount, `ผลการค้นหา "${e.target.value}" (พบ ${visibleCount} รายการ)`, 'ผลการค้นหา');
                 setActiveFilter(null);
             } else {
                 showAllAppointments();
@@ -1443,7 +1443,7 @@
         }
 
         function toggleNotifications() {
-            showNotification('Notifications feature coming soon!', 'info');
+            showNotification('ฟีเจอร์การแจ้งเตือนจะพร้อมใช้งานเร็ว ๆ นี้!', 'info');
         }
 
         function showLoading() {

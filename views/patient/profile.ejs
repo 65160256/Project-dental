@@ -5,133 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><%= title || 'โปรไฟล์ของฉัน - คลินิกยิ้มสดใส' %></title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <style>
-    *{ box-sizing: border-box; }
-    :root{
-      --primary:#4A90E2; --primary-2:#2DA8FF; --bg:#f5f7fa; --text:#333; --muted:#666; --border:#e1e5e9;
-      --accent:#ffc107;
-    }
-    body{ margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg); color:var(--text); }
-    .hidden{ display:none !important; }
-
-    /* Sidebar */
-    .sidebar{
-      width: 220px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      position: fixed; inset: 0 auto 0 0;
-      height: 100vh; padding: 0; color: #fff;
-      box-shadow: 2px 0 15px rgba(0,0,0,.1); z-index: 1000;
-    }
-    .sidebar .logo{ text-align:center; padding:25px 20px; border-bottom:1px solid rgba(255,255,255,.15) }
-    .sidebar .logo img{
-      width:55px;height:55px;border-radius:10px;background:#fff;padding:8px;margin-bottom:10px;object-fit:contain;
-    }
-    .sidebar .logo h3{ margin:0; font-size:18px; font-weight:700 }
-    .sidebar ul{ list-style:none; padding:15px 0; margin:0 }
-    .sidebar ul li{ margin:3px 0 }
-    .sidebar ul li a{
-      display:flex; align-items:center; gap:12px;
-      padding:15px 25px; color:rgba(255,255,255,.9); text-decoration:none; transition:.3s; font-size:15px; font-weight:600;
-    }
-    .sidebar ul li a i{ width:20px; text-align:center }
-    .sidebar ul li a:hover,
-    .sidebar ul li.active a{
-      background:rgba(255,255,255,.2); color:#fff; border-radius:10px; margin:0 15px; transform: translateX(5px);
-    }
-
-    /* Main & Top bar */
-    .main{ margin-left:220px; min-height:100vh }
-    .top-bar{
-      background:#fff; padding:20px 30px; display:flex; justify-content:space-between; align-items:center;
-      box-shadow:0 2px 10px rgba(0,0,0,.08); position:sticky; top:0; z-index:999;
-    }
-    .top-bar h1{ margin:0; font-size:24px; font-weight:800; color:#333; display:flex; align-items:center; gap:10px }
-    .user-section{ display:flex; align-items:center; gap:25px }
-    .notification-icon{ font-size:20px; cursor:pointer; color:#666; padding:8px; transition:.2s }
-    .notification-icon:hover{ color:var(--primary) }
-
-    .profile-dropdown{ position:relative }
-    .user-info{
-      display:flex; align-items:center; gap:12px; padding:10px 15px; border-radius:10px; cursor:pointer; transition:.2s
-    }
-    .user-info:hover{ background:#f8f9fa }
-    .avatar{
-      width:40px; height:40px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center;
-      font-weight:800; color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-2)); border:2px solid #fff;
-    }
-    .avatar img{ width:100%; height:100%; object-fit:cover; display:block }
-    .user-details strong{ display:block; font-size:15px; color:#333; font-weight:700 }
-    .user-details small{ color:#666; font-size:12px }
-    .dropdown-menu{
-      display:none; position:absolute; right:0; top:110%; background:#fff; border:1px solid var(--border); border-radius:10px;
-      min-width:200px; box-shadow:0 10px 30px rgba(0,0,0,.15); overflow:hidden; z-index:1000;
-    }
-    .dropdown-menu a{
-      display:flex; align-items:center; gap:10px; padding:14px 18px; text-decoration:none; color:#333; font-size:14px; font-weight:600;
-    }
-    .dropdown-menu a:hover{ background:#f8f9fa }
-    .dropdown-menu hr{ margin:0; border:none; border-top:1px solid var(--border) }
-
-    /* Content */
-    .content{ padding:30px }
-    .back-button{
-      background:none; border:none; cursor:pointer; font-size:18px; color:var(--primary); margin-bottom:20px; padding:6px 8px; border-radius:8px;
-      display:inline-flex; align-items:center; gap:8px; transition:.2s
-    }
-    .back-button:hover{ color:#357abd; background:#e9f2ff }
-
-    .profile-container{
-      max-width:900px; margin:0 auto; background:#fff; border-radius:15px; box-shadow:0 2px 15px rgba(0,0,0,.08); overflow:hidden;
-    }
-    .profile-header{
-      background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      color:#fff; padding:40px 30px; text-align:center; position:relative;
-    }
-    .profile-avatar{
-      width:110px; height:110px; border-radius:50%; margin:0 auto 18px; display:flex; align-items:center; justify-content:center;
-      background: rgba(255,255,255,.18); font-size:44px; color:#fff; font-weight:800; letter-spacing:.5px; overflow:hidden;
-      box-shadow:0 8px 24px rgba(0,0,0,.15);
-    }
-    .profile-header h2{ margin:0 0 8px 0; font-size:28px; font-weight:800 }
-    .profile-header p{ margin:0; font-size:14px; opacity:.95 }
-    .profile-body{ padding:28px 30px }
-    .info-section{ margin-bottom:28px }
-    .info-section h3{
-      margin:0 0 16px 0; color:#333; font-size:18px; font-weight:800; padding-bottom:10px; border-bottom:2px solid #f1f3f4;
-      display:flex; align-items:center; gap:10px;
-    }
-    .info-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:20px }
-    .full-width{ grid-column:1 / -1 }
-    .info-item{}
-    .info-label{ font-size:14px; font-weight:700; color:#555; margin-bottom:6px }
-    .info-value{ font-size:14px; color:#333; padding:10px 12px; background:#f8f9fa; border-radius:8px; border:1px solid #f1f3f4 }
-
-    .action-buttons{
-      display:flex; gap:12px; justify-content:center; padding-top:18px; border-top:1px solid #f1f3f4; flex-wrap:wrap;
-    }
-    .btn{
-      padding:12px 20px; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer;
-      display:inline-flex; align-items:center; gap:8px; text-decoration:none; transition:.2s
-    }
-    .btn-secondary{ background:#6c757d; color:#fff }
-    .btn-secondary:hover{ background:#545b62; transform: translateY(-1px) }
-    .btn-primary{
-      background: linear-gradient(135deg, var(--accent), #ffcf3f); color:#212529; box-shadow:0 4px 12px rgba(255,193,7,.35)
-    }
-    .btn-primary:hover{ transform: translateY(-1px); filter:saturate(1.05) }
-
-    @media (max-width:1024px){
-      .sidebar{ width:200px }
-      .main{ margin-left:200px }
-    }
-    @media (max-width:768px){
-      .sidebar{ width:100%; height:auto; position:relative }
-      .main{ margin-left:0 }
-      .content{ padding:20px }
-      .info-grid{ grid-template-columns:1fr }
-      .action-buttons{ flex-direction:column }
-    }
-  </style>
+  <!-- 🔗 CSS ภายนอก -->
+  <link rel="stylesheet" href="/css/patient/profile.css" />
 </head>
 <body>
   <!-- Sidebar -->
@@ -154,7 +29,7 @@
     <div class="top-bar" role="banner">
       <h1><i class="fas fa-id-badge" aria-hidden="true"></i> โปรไฟล์ของฉัน</h1>
       <div class="user-section">
-        <i class="fas fa-bell notification-icon" role="button" tabindex="0" aria-label="การแจ้งเตือน" onclick="toggleNotifications()"></i>
+        <!-- <i class="fas fa-bell notification-icon" role="button" tabindex="0" aria-label="การแจ้งเตือน" onclick="toggleNotifications()"></i> -->
         <div class="profile-dropdown">
           <div class="user-info" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false"
                onclick="toggleDropdown()"
@@ -257,19 +132,20 @@
             </div>
           </div>
 
+          <!-- Health -->
           <div class="info-section">
-  <h3><i class="fas fa-heartbeat"></i> ข้อมูลสุขภาพ</h3>
-  <div class="info-grid">
-    <div class="info-item full-width">
-      <div class="info-label">โรคประจำตัว</div>
-      <div class="info-value"><%= patient.chronic_disease || 'ไม่มี/ยังไม่ระบุ' %></div>
-    </div>
-    <div class="info-item full-width">
-      <div class="info-label">ประวัติการแพ้ยา</div>
-      <div class="info-value"><%= patient.allergy_history || 'ไม่มี/ยังไม่ระบุ' %></div>
-    </div>
-  </div>
-</div>
+            <h3><i class="fas fa-heartbeat"></i> ข้อมูลสุขภาพ</h3>
+            <div class="info-grid">
+              <div class="info-item full-width">
+                <div class="info-label">โรคประจำตัว</div>
+                <div class="info-value"><%= patient.chronic_disease || 'ไม่มี/ยังไม่ระบุ' %></div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">ประวัติการแพ้ยา</div>
+                <div class="info-value"><%= patient.allergy_history || 'ไม่มี/ยังไม่ระบุ' %></div>
+              </div>
+            </div>
+          </div>
 
           <!-- Contact Info -->
           <div class="info-section">
@@ -312,28 +188,7 @@
     </div>
   </div>
 
-  <script>
-    function toggleDropdown() {
-      const menu = document.getElementById('profileDropdown');
-      const trigger = document.querySelector('.profile-dropdown .user-info');
-      const isOpen = menu.style.display === 'block';
-      menu.style.display = isOpen ? 'none' : 'block';
-      trigger && trigger.setAttribute('aria-expanded', String(!isOpen));
-    }
-
-    function toggleNotifications() {
-      console.log('การแจ้งเตือนถูกคลิก'); // สามารถเชื่อม API แจ้งเตือนในภายหลังได้
-    }
-
-    // ปิดเมนูเมื่อคลิกนอก
-    document.addEventListener('click', function (e) {
-      const prof = document.querySelector('.profile-dropdown');
-      if (prof && !prof.contains(e.target)) {
-        document.getElementById('profileDropdown').style.display = 'none';
-        const trigger = prof.querySelector('.user-info');
-        trigger && trigger.setAttribute('aria-expanded','false');
-      }
-    });
-  </script>
+  <!-- 🔗 JS ภายนอก -->
+  <script src="/js/patient/profile.js"></script>
 </body>
 </html>

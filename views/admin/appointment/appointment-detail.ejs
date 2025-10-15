@@ -1,888 +1,393 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดการจอง - Smile Clinic</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            margin: 0;
-            display: flex;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 180px;
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            position: fixed;
-            height: 100vh;
-            color: #fff;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        .sidebar .logo {
-            text-align: center;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar .logo .logo-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background: white;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 24px;
-            color: #4A90E2;
-        }
-
-        .sidebar .logo h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 10px 0;
-            margin: 0;
-        }
-
-        .sidebar ul li {
-            margin: 2px 0;
-        }
-
-        .sidebar ul li a {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            transition: background 0.2s;
-            font-size: 14px;
-        }
-
-        .sidebar ul li.active a,
-        .sidebar ul li:hover a {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 8px;
-            margin: 0 10px;
-        }
-
-        /* Main */
-        .main {
-            margin-left: 180px;
-            flex: 1;
-            min-height: 100vh;
-        }
-
-        /* Top Bar */
-        .top-bar {
-            background: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .page-title-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .page-title-section h1 {
-            font-size: 20px;
-            color: #333;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .page-title-section i {
-            color: #4A90E2;
-            font-size: 22px;
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification-icon {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s;
-        }
-
-        .notification-icon:hover {
-            color: #4A90E2;
-        }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            gap: 10px;
-            transition: opacity 0.3s;
-        }
-
-        .user-info:hover {
-            opacity: 0.8;
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #4A90E2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            overflow: hidden;
-        }
-
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-details strong {
-            display: block;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .user-details small {
-            color: #666;
-            font-size: 11px;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            min-width: 180px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            margin-top: 5px;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #333;
-            font-size: 13px;
-        }
-
-        .dropdown-menu a:hover {
-            background-color: #f8f9fa;
-        }
-
-        .dropdown-menu hr {
-            margin: 5px 0;
-            border: none;
-            height: 1px;
-            background: #e1e5e9;
-        }
-
-        /* Content */
-        .content {
-            padding: 30px;
-        }
-
-        /* Date Header */
-        .date-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: #4A90E2;
-            cursor: pointer;
-            font-size: 24px;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            border-radius: 6px;
-        }
-
-        .back-btn:hover {
-            background: #f0f7ff;
-        }
-
-        .page-header {
-            flex: 1;
-        }
-
-        .page-header h2 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .page-header p {
-            color: #666;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        /* Alert */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            align-items: center;
-            gap: 12px;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-success {
-            background: #d1f2eb;
-            color: #065f46;
-            border-left: 4px solid #10b981;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
-        }
-
-        /* Loading */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 400px;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid #4A90E2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #666;
-            font-size: 14px;
-        }
-
-        /* Content Card */
-        .content-card {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .booking-id {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f1f3f4;
-            font-weight: 600;
-        }
-
-        /* Info Section */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .info-label {
-            font-size: 13px;
-            color: #666;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .info-label i {
-            color: #4A90E2;
-            width: 16px;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .info-value.empty {
-            color: #999;
-            font-style: italic;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-pending {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            color: #856404;
-            border: 1px solid #fdcb6e;
-        }
-
-        .status-confirm {
-            background: linear-gradient(135deg, #d1f2eb, #a7f3d0);
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
-        .status-cancel {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #991b1b;
-            border: 1px solid #f87171;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 2px solid #f1f3f4;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-confirm {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-
-        .btn-confirm:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-cancel {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .btn-cancel:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-
-            .main {
-                margin-left: 0;
-            }
-
-            .content {
-                padding: 20px 15px;
-            }
-
-            .content-card {
-                padding: 20px;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .date-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .top-bar {
-                padding: 10px 15px;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>รายละเอียดการจอง - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- ฟอนต์ไทย -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{background:#f5f7fa;margin:0;display:flex}
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;color:#fff;box-shadow:2px 0 5px rgba(0,0,0,0.1);z-index:100}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+    .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0;margin:0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,0.9);text-decoration:none;transition:background .2s;font-size:14px}
+    .sidebar ul li.active a,.sidebar ul li:hover a{background:rgba(255,255,255,0.2);color:#fff;border-radius:8px;margin:0 10px}
+    /* Main */
+    .main{margin-left:180px;flex:1;min-height:100vh}
+    /* Top Bar */
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.1);position:sticky;top:0;z-index:50}
+    .page-title-section{display:flex;align-items:center;gap:10px}
+    .page-title-section h1{font-size:20px;color:#333;margin:0;font-weight:600}
+    .page-title-section i{color:#4A90E2;font-size:22px}
+    .user-section{display:flex;align-items:center;gap:15px}
+    .notification-icon{width:20px;height:20px;cursor:pointer;color:#666;transition:color .3s}
+    .notification-icon:hover{color:#4A90E2}
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;align-items:center;cursor:pointer;gap:10px;transition:opacity .3s}
+    .user-info:hover{opacity:.8}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;text-transform:uppercase;overflow:hidden}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:6px;min-width:180px;box-shadow:0 2px 10px rgba(0,0,0,.1);z-index:1000;margin-top:5px}
+    .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+    .dropdown-menu a:hover{background:#f8f9fa}
+    .dropdown-menu hr{margin:5px 0;border:none;height:1px;background:#e1e5e9}
+    /* Content */
+    .content{padding:30px}
+    /* Date Header */
+    .date-header{display:flex;align-items:center;gap:15px;margin-bottom:30px}
+    .back-btn{background:none;border:none;color:#4A90E2;cursor:pointer;font-size:24px;padding:8px;display:flex;align-items:center;justify-content:center;transition:.3s;border-radius:6px}
+    .back-btn:hover{background:#f0f7ff}
+    .page-header{flex:1}
+    .page-header h2{font-size:24px;color:#333;margin-bottom:5px;font-weight:600}
+    .page-header p{color:#666;font-size:14px;margin:0}
+    /* Alert */
+    .alert{padding:15px 20px;border-radius:8px;margin-bottom:20px;display:none;align-items:center;gap:12px;animation:slideDown .3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .alert-success{background:#d1f2eb;color:#065f46;border-left:4px solid #10b981}
+    .alert-error{background:#fee2e2;color:#991b1b;border-left:4px solid #ef4444}
+    /* Loading */
+    .loading{display:flex;justify-content:center;align-items:center;min-height:400px;flex-direction:column;gap:15px}
+    .loading-spinner{width:40px;height:40px;border:3px solid #e0e0e0;border-top:3px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .loading-text{color:#666;font-size:14px}
+    /* Content Card */
+    .content-card{background:#fff;border-radius:8px;padding:30px;box-shadow:0 1px 3px rgba(0,0,0,.1);max-width:900px;margin:0 auto}
+    .booking-id{font-size:14px;color:#333;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #f1f3f4;font-weight:600}
+    /* Info Section */
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:25px}
+    .info-item{display:flex;flex-direction:column;gap:5px}
+    .info-item.full-width{grid-column:1/-1}
+    .info-label{font-size:13px;color:#666;font-weight:500;display:flex;align-items:center;gap:6px}
+    .info-label i{color:#4A90E2;width:16px}
+    .info-value{font-size:14px;color:#333}
+    .info-value.empty{color:#999;font-style:italic}
+    /* Status Badge */
+    .status-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700}
+    .status-pending{background:linear-gradient(135deg,#fff3cd,#ffeaa7);color:#856404;border:1px solid #fdcb6e}
+    .status-confirm{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
+    .status-cancel{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;border:1px solid #f87171}
+    /* Action Buttons */
+    .action-buttons{display:flex;gap:15px;margin-top:30px;padding-top:25px;border-top:2px solid #f1f3f4}
+    .btn{flex:1;padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-confirm{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+    .btn-confirm:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(16,185,129,.3)}
+    .btn-cancel{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+    .btn-cancel:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(239,68,68,.3)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    /* Responsive */
+    @media (max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative}
+      .main{margin-left:0}
+      .content{padding:20px 15px}
+      .content-card{padding:20px}
+      .info-grid{grid-template-columns:1fr}
+      .date-header{flex-direction:column;align-items:flex-start}
+      .top-bar{padding:10px 15px}
+      .action-buttons{flex-direction:column}
+    }
+  </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">🦷</div>
-            <h3>Smile Clinic</h3>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
+      <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+      <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+      <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+    </ul>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="page-title-section">
+        <i class="fas fa-clipboard-list"></i>
+        <h1>รายละเอียดการจอง</h1>
+      </div>
+      <div class="user-section">
+        <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleDropdown()">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+              <strong>สวัสดี ผู้ดูแลระบบ</strong>
+              <small>ผู้ดูแลระบบ</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+            <hr/>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+          </div>
         </div>
-        <ul>
-            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
-            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
-            <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
-            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
-            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
-            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
-        </ul>
+      </div>
     </div>
 
-    <!-- Main -->
-    <div class="main">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="page-title-section">
-                <i class="fas fa-clipboard-list"></i>
-                <h1>รายละเอียดการจอง</h1>
-            </div>
-            <div class="user-section">
-                <i class="fas fa-bell notification-icon" onclick="toggleNotifications()" title="การแจ้งเตือน"></i>
-                <div class="profile-dropdown">
-                    <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar" id="userAvatar">A</div>
-                        <div class="user-details">
-                            <strong>สวัสดี ผู้ดูแลระบบ</strong>
-                            <small>Admin</small>
-                        </div>
-                        <i class="fas fa-caret-down"></i>
-                    </div>
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
-                        <hr />
-                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
-                    </div>
-                </div>
-            </div>
+    <!-- Content -->
+    <div class="content">
+      <div class="alert alert-success" id="successAlert">
+        <i class="fas fa-check-circle"></i>
+        <span id="successMessage"></span>
+      </div>
+
+      <div class="alert alert-error" id="errorAlert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage"></span>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">กำลังโหลดข้อมูล...</div>
+      </div>
+
+      <!-- Content Area -->
+      <div id="appointmentContent" style="display:none;">
+        <div class="date-header">
+          <button class="back-btn" onclick="window.location.href='/admin/appointments'" title="กลับ">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="page-header">
+            <h2>รายละเอียดการจอง</h2>
+            <p>ข้อมูลการนัดหมายและรายละเอียดการรักษา</p>
+          </div>
         </div>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="alert alert-success" id="successAlert">
-                <i class="fas fa-check-circle"></i>
-                <span id="successMessage"></span>
+        <div class="content-card">
+          <div class="booking-id">
+            <strong>รหัสคำขอจอง:</strong> <span id="bookingId">#Y-000000</span>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-user"></i> ชื่อผู้ป่วย</div>
+              <div class="info-value" id="patientName">-</div>
             </div>
 
-            <div class="alert alert-error" id="errorAlert">
-                <i class="fas fa-exclamation-circle"></i>
-                <span id="errorMessage"></span>
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-id-card"></i> รหัสผู้ป่วย</div>
+              <div class="info-value" id="patientId">-</div>
             </div>
 
-            <!-- Loading -->
-            <div id="loading" class="loading">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">กำลังโหลดข้อมูล...</div>
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-phone"></i> เบอร์โทร</div>
+              <div class="info-value" id="phone">-</div>
             </div>
 
-            <!-- Content Area -->
-            <div id="appointmentContent" style="display: none;">
-                <!-- Date Header with Back Button -->
-                <div class="date-header">
-                    <button class="back-btn" onclick="window.location.href='/admin/appointments'" title="กลับ">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="page-header">
-                        <h2>รายละเอียดการจอง</h2>
-                        <p>ข้อมูลการนัดหมายและรายละเอียดการรักษา</p>
-                    </div>
-                </div>
-
-                <!-- Content Card -->
-                <div class="content-card">
-                    <div class="booking-id">
-                        <strong>Booking Request ID:</strong> <span id="bookingId">#Y-000000</span>
-                    </div>
-
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-user"></i>
-                                Patient Name:
-                            </div>
-                            <div class="info-value" id="patientName">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-id-card"></i>
-                                Patient ID:
-                            </div>
-                            <div class="info-value" id="patientId">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-phone"></i>
-                                Phone:
-                            </div>
-                            <div class="info-value" id="phone">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-tooth"></i>
-                                Treatment needed:
-                            </div>
-                            <div class="info-value" id="treatment">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-clock"></i>
-                                Requested Time:
-                            </div>
-                            <div class="info-value" id="requestedTime">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-user-md"></i>
-                                Preferred Dentist:
-                            </div>
-                            <div class="info-value" id="preferredDentist">-</div>
-                        </div>
-
-                        <div class="info-item full-width">
-                            <div class="info-label">
-                                <i class="fas fa-notes-medical"></i>
-                                Symptom Details:
-                            </div>
-                            <div class="info-value" id="symptoms">-</div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-info-circle"></i>
-                                Current Status:
-                            </div>
-                            <div class="info-value">
-                                <span class="status-badge" id="status">
-                                    <i class="fas fa-clock"></i>
-                                    Pending
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="action-buttons" id="actionButtons">
-                        <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
-                            <i class="fas fa-check"></i>
-                            ยืนยันการจอง
-                        </button>
-                        <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
-                            <i class="fas fa-times"></i>
-                            ยกเลิกการจอง
-                        </button>
-                    </div>
-                </div>
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-tooth"></i> การรักษาที่ต้องการ</div>
+              <div class="info-value" id="treatment">-</div>
             </div>
+
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-clock"></i> เวลาที่ต้องการเข้ารับบริการ</div>
+              <div class="info-value" id="requestedTime">-</div>
+            </div>
+
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-user-md"></i> ทันตแพทย์ที่ต้องการ</div>
+              <div class="info-value" id="preferredDentist">-</div>
+            </div>
+
+            <div class="info-item full-width">
+              <div class="info-label"><i class="fas fa-notes-medical"></i> อาการ/รายละเอียด</div>
+              <div class="info-value" id="symptoms">-</div>
+            </div>
+
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-info-circle"></i> สถานะปัจจุบัน</div>
+              <div class="info-value">
+                <span class="status-badge" id="status"><i class="fas fa-clock"></i> รอดำเนินการ</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons" id="actionButtons">
+            <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
+              <i class="fas fa-check"></i> ยืนยันการจอง
+            </button>
+            <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
+              <i class="fas fa-times"></i> ยกเลิกการจอง
+            </button>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        let appointmentId = <%= appointmentId || 'null' %>;
-        let appointmentData = null;
+  <script>
+    // รับค่าจาก EJS หรือจาก router param
+    let appointmentId = <%= appointmentId || 'null' %>;
+    let appointmentData = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateUserAvatar();
-            if (appointmentId) {
-                loadAppointmentDetails();
-            } else {
-                showError('ไม่พบรหัสการจอง');
-                setTimeout(() => window.location.href = '/admin/appointments', 2000);
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+      updateUserAvatar();
+      if (appointmentId) {
+        loadAppointmentDetails();
+      } else {
+        showError('ไม่พบรหัสการจอง');
+        setTimeout(() => (window.location.href = '/admin/appointments'), 2000);
+      }
+    });
+
+    async function updateUserAvatar() {
+      try {
+        const res = await fetch('/admin/profile/api');
+        if (!res.ok) throw new Error('ไม่สามารถดึงโปรไฟล์ได้');
+        const data = await res.json();
+        const ch = (data && data.email ? data.email.charAt(0) : 'A').toUpperCase();
+        document.getElementById('userAvatar').textContent = ch;
+      } catch {
+        document.getElementById('userAvatar').textContent = 'A';
+      }
+    }
+
+    // ฟังก์ชัน format วันที่/เวลา เป็นรูปแบบไทย 24 ชม.
+    function formatThaiDateTime(isoString) {
+      const d = new Date(isoString);
+      // ถ้าค่าจาก DB เป็น UTC ให้ปรับตาม Timezone ของไทยโดยอัตโนมัติผ่าน toLocaleString('th-TH')
+      const datePart = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+      const timePart = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+      return `${datePart} เวลา ${timePart} น.`;
+    }
+
+    async function loadAppointmentDetails() {
+      try {
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('appointmentContent').style.display = 'none';
+
+        const res = await fetch(`/admin/api/appointments/${appointmentId}`);
+        const data = await res.json();
+        if (data.success && data.appointment) {
+          appointmentData = data.appointment;
+          displayAppointmentDetails(data.appointment);
+        } else {
+          throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลได้');
+        }
+      } catch (err) {
+        console.error('load error:', err);
+        showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + err.message);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function displayAppointmentDetails(a) {
+      document.getElementById('bookingId').textContent = `#Y-${a.queue_id}`;
+      document.getElementById('patientName').textContent = a.patient_name || '-';
+      document.getElementById('patientId').textContent = a.patient_code || (a.patient_id ? `#${a.patient_id}` : '-');
+      document.getElementById('phone').textContent = a.phone || '-';
+      document.getElementById('treatment').textContent = a.treatment_name || '-';
+      document.getElementById('requestedTime').textContent = a.time ? formatThaiDateTime(a.time) : '-';
+      document.getElementById('preferredDentist').textContent = a.dentist_name || '-';
+      document.getElementById('symptoms').textContent = a.diagnosis || a.symptoms || '-';
+
+      const statusEl = document.getElementById('status');
+      const status = (a.queue_status || 'pending').toLowerCase();
+      const statusMap = {
+        pending: { cls: 'status-pending', icon: 'fa-clock', text: 'รอดำเนินการ' },
+        confirm: { cls: 'status-confirm', icon: 'fa-check-circle', text: 'ยืนยันแล้ว' },
+        cancelled: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
+        cancel: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
+      };
+      const cfg = statusMap[status] || statusMap.pending;
+      statusEl.className = `status-badge ${cfg.cls}`;
+      statusEl.innerHTML = `<i class="fas ${cfg.icon}"></i> ${cfg.text}`;
+
+      const confirmBtn = document.getElementById('confirmBtn');
+      const cancelBtn  = document.getElementById('cancelBtn');
+      document.getElementById('actionButtons').style.display = 'flex';
+
+      if (status === 'pending') {
+        confirmBtn.style.display = 'flex';
+        cancelBtn.style.display = 'flex';
+        confirmBtn.disabled = false; cancelBtn.disabled = false;
+      } else if (status === 'confirm') {
+        confirmBtn.style.display = 'none';
+        cancelBtn.style.display = 'flex';
+        cancelBtn.disabled = false;
+      } else {
+        document.getElementById('actionButtons').style.display = 'none';
+      }
+
+      document.getElementById('appointmentContent').style.display = 'block';
+    }
+
+    async function confirmAppointment() {
+      if (!confirm('ยืนยันการจองนี้หรือไม่?\n\nเมื่อยืนยันแล้ว ระบบจะส่งข้อมูลให้ทันตแพทย์')) return;
+      try {
+        document.getElementById('confirmBtn').disabled = true;
+        document.getElementById('cancelBtn').disabled = true;
+
+        const res = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'confirm' })
         });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess('ยืนยันการจองสำเร็จ');
+          setTimeout(loadAppointmentDetails, 1000);
+        } else throw new Error(data.error || 'ยืนยันไม่สำเร็จ');
+      } catch (e) {
+        showError('เกิดข้อผิดพลาด: ' + e.message);
+        document.getElementById('confirmBtn').disabled = false;
+        document.getElementById('cancelBtn').disabled = false;
+      }
+    }
 
-        // Update user avatar
-        async function updateUserAvatar() {
-            try {
-                const res = await fetch('/admin/profile/api');
-                if (!res.ok) throw new Error('Failed to fetch profile');
-                const data = await res.json();
-                const ch = (data && data.email ? data.email.charAt(0) : 'A').toUpperCase();
-                document.getElementById('userAvatar').textContent = ch;
-            } catch (e) {
-                document.getElementById('userAvatar').textContent = 'A';
-            }
-        }
+    async function cancelAppointment() {
+      const reason = prompt('กรุณาระบุเหตุผลในการยกเลิก (ถ้ามี):');
+      if (reason === null) return;
+      try {
+        document.getElementById('confirmBtn').disabled = true;
+        document.getElementById('cancelBtn').disabled = true;
 
-        async function loadAppointmentDetails() {
-            try {
-                document.getElementById('loading').style.display = 'flex';
-                document.getElementById('appointmentContent').style.display = 'none';
-
-                const response = await fetch(`/admin/api/appointments/${appointmentId}`);
-                const data = await response.json();
-
-                if (data.success && data.appointment) {
-                    appointmentData = data.appointment;
-                    displayAppointmentDetails(data.appointment);
-                } else {
-                    throw new Error(data.error || 'ไม่สามารถโหลดข้อมูลได้');
-                }
-            } catch (error) {
-                console.error('Error loading appointment:', error);
-                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-
-        function displayAppointmentDetails(appointment) {
-            document.getElementById('bookingId').textContent = `#Y-${appointment.queue_id}`;
-            document.getElementById('patientName').textContent = `Mr. ${appointment.patient_name || 'Unknown'}`;
-            document.getElementById('patientId').textContent = 'xxxxx';
-            document.getElementById('phone').textContent = appointment.phone || '-';
-            document.getElementById('treatment').textContent = appointment.treatment_name || '-';
-
-            const appointmentDate = new Date(appointment.time);
-            const dateStr = appointmentDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-            const timeStr = appointmentDate.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-            document.getElementById('requestedTime').textContent = `${dateStr}, ${timeStr}`;
-
-            document.getElementById('preferredDentist').textContent =
-                appointment.dentist_name || '-';
-            document.getElementById('symptoms').textContent = appointment.diagnosis || '-';
-
-            const statusEl = document.getElementById('status');
-            const status = appointment.queue_status;
-            const statusConfig = {
-                'pending': { icon: 'fa-clock', text: 'Pending' },
-                'confirm': { icon: 'fa-check-circle', text: 'Confirmed' },
-                'cancel': { icon: 'fa-times-circle', text: 'Cancelled' }
-            };
-
-            const config = statusConfig[status] || statusConfig['pending'];
-            statusEl.innerHTML = `<i class="fas ${config.icon}"></i> ${config.text}`;
-            statusEl.className = 'status-badge status-' + status;
-
-            const confirmBtn = document.getElementById('confirmBtn');
-            const cancelBtn = document.getElementById('cancelBtn');
-
-            if (status === 'pending') {
-                confirmBtn.style.display = 'flex';
-                cancelBtn.style.display = 'flex';
-            } else if (status === 'confirm') {
-                confirmBtn.style.display = 'none';
-                cancelBtn.style.display = 'flex';
-            } else if (status === 'cancel') {
-                document.getElementById('actionButtons').style.display = 'none';
-            }
-
-            document.getElementById('appointmentContent').style.display = 'block';
-        }
-
-        async function confirmAppointment() {
-            if (!confirm('คุณต้องการยืนยันการจองนี้หรือไม่?\n\nเมื่อยืนยันแล้ว ระบบจะส่งข้อมูลไปยังทันตแพทย์ทันที')) {
-                return;
-            }
-
-            try {
-                document.getElementById('confirmBtn').disabled = true;
-                document.getElementById('cancelBtn').disabled = true;
-
-                const response = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'confirm' })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showSuccess('ยืนยันการจองสำเร็จ! ระบบได้ส่งข้อมูลไปยังทันตแพทย์แล้ว');
-                    setTimeout(() => loadAppointmentDetails(), 1500);
-                } else {
-                    throw new Error(data.error || 'ไม่สามารถยืนยันการจองได้');
-                }
-            } catch (error) {
-                console.error('Error confirming appointment:', error);
-                showError('เกิดข้อผิดพลาด: ' + error.message);
-                document.getElementById('confirmBtn').disabled = false;
-                document.getElementById('cancelBtn').disabled = false;
-            }
-        }
-
-        async function cancelAppointment() {
-            const reason = prompt('กรุณาระบุเหตุผลในการยกเลิก (ถ้ามี):');
-            if (reason === null) return;
-
-            try {
-                document.getElementById('confirmBtn').disabled = true;
-                document.getElementById('cancelBtn').disabled = true;
-
-                const response = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'cancel', reason: reason })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showSuccess('ยกเลิกการจองสำเร็จ! ระบบได้ส่งการแจ้งเตือนไปยังผู้ป่วยแล้ว');
-                    setTimeout(() => loadAppointmentDetails(), 1500);
-                } else {
-                    throw new Error(data.error || 'ไม่สามารถยกเลิกการจองได้');
-                }
-            } catch (error) {
-                console.error('Error canceling appointment:', error);
-                showError('เกิดข้อผิดพลาด: ' + error.message);
-                document.getElementById('confirmBtn').disabled = false;
-                document.getElementById('cancelBtn').disabled = false;
-            }
-        }
-
-        function showSuccess(message) {
-            const alert = document.getElementById('successAlert');
-            document.getElementById('successMessage').textContent = message;
-            alert.style.display = 'flex';
-            setTimeout(() => alert.style.display = 'none', 5000);
-        }
-
-        function showError(message) {
-            const alert = document.getElementById('errorAlert');
-            document.getElementById('errorMessage').textContent = message;
-            alert.style.display = 'flex';
-            setTimeout(() => alert.style.display = 'none', 5000);
-        }
-
-        // UI Functions
-        function toggleDropdown() {
-            const menu = document.getElementById('profileDropdown');
-            if (menu) {
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-            }
-        }
-
-        function toggleNotifications() {
-            window.location.href = '/admin/notifications';
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (e) {
-            const prof = document.querySelector('.profile-dropdown');
-            const dropdown = document.getElementById('profileDropdown');
-            if (prof && !prof.contains(e.target) && dropdown) {
-                dropdown.style.display = 'none';
-            }
+        const res = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'cancel', reason })
         });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess('ยกเลิกการจองสำเร็จ');
+          setTimeout(loadAppointmentDetails, 1000);
+        } else throw new Error(data.error || 'ยกเลิกไม่สำเร็จ');
+      } catch (e) {
+        showError('เกิดข้อผิดพลาด: ' + e.message);
+        document.getElementById('confirmBtn').disabled = false;
+        document.getElementById('cancelBtn').disabled = false;
+      }
+    }
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                window.location.href = '/admin/appointments';
-            }
-        });
-    </script>
+    function showSuccess(msg){const a=document.getElementById('successAlert');document.getElementById('successMessage').textContent=msg;a.style.display='flex';setTimeout(()=>a.style.display='none',4000)}
+    function showError(msg){const a=document.getElementById('errorAlert');document.getElementById('errorMessage').textContent=msg;a.style.display='flex';setTimeout(()=>a.style.display='none',6000)}
+
+    function toggleDropdown(){const m=document.getElementById('profileDropdown');if(m)m.style.display=m.style.display==='block'?'none':'block'}
+    function toggleNotifications(){window.location.href='/admin/notifications'}
+
+    document.addEventListener('click',e=>{const prof=document.querySelector('.profile-dropdown');const dd=document.getElementById('profileDropdown');if(prof&&!prof.contains(e.target)&&dd)dd.style.display='none'})
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){window.location.href='/admin/appointments'}})
+  </script>
 </body>
 </html>

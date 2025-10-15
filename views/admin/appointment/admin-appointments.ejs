@@ -1,1349 +1,597 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการนัดหมาย - Smile Clinic</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Sarabun', 'Segoe UI', sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            margin: 0;
-        }
-
-        .sidebar {
-            width: 180px;
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            position: fixed;
-            height: 100vh;
-            padding: 0;
-            color: #fff;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .sidebar .logo {
-            text-align: center;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar .logo .logo-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background: white;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 24px;
-            color: #4A90E2;
-        }
-
-        .sidebar .logo h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 10px 0;
-            margin: 0;
-        }
-
-        .sidebar ul li {
-            margin: 2px 0;
-        }
-
-        .sidebar ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sidebar ul li.active a,
-        .sidebar ul li:hover a {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 8px;
-            margin: 0 10px;
-        }
-
-        .main {
-            margin-left: 180px;
-            padding: 0;
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            background: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .search-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .search-box {
-            background: #f8f9fa;
-            border: 2px solid #e1e5e9;
-            border-radius: 25px;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            width: 300px;
-            transition: all 0.3s ease;
-        }
-
-        .search-box:focus-within {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-
-        .search-box i {
-            color: #666;
-            margin-right: 12px;
-            font-size: 16px;
-        }
-
-        .search-box input {
-            border: none;
-            background: transparent;
-            outline: none;
-            width: 100%;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification-container {
-            position: relative;
-        }
-
-        .notification-icon {
-            position: relative;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s ease;
-            font-size: 18px;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #ff4757;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .notification-badge.show {
-            display: flex;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #4A90E2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 30px;
-        }
-
-        .page-info h1 {
-            font-size: 24px;
-            color: #333;
-            margin: 0 0 5px 0;
-            font-weight: 600;
-        }
-
-        .page-info p {
-            color: #666;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
-        }
-
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #666;
-            border: 2px solid #e1e5e9;
-        }
-
-        .date-navigation {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .calendar-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .week-navigation {
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav-btn {
-            background: white;
-            border: 2px solid #e1e5e9;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            cursor: pointer;
-            font-size: 16px;
-            color: #666;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-btn:hover {
-            background: #4A90E2;
-            color: white;
-            border-color: #4A90E2;
-            transform: scale(1.05);
-        }
-
-        .date-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .date-button {
-            background: white;
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
-            padding: 15px 12px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 12px;
-            line-height: 1.3;
-            color: #666;
-            transition: all 0.3s ease;
-            min-width: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .date-button:hover {
-            background: #f8f9fa;
-            border-color: #4A90E2;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.2);
-        }
-
-        .date-button.active {
-            background: #4A90E2;
-            color: white;
-            border-color: #4A90E2;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
-        }
-
-        .date-button.today {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border-color: #10b981;
-        }
-
-        .day-name {
-            font-weight: 600;
-            font-size: 10px;
-            opacity: 0.9;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .day-number {
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .stats-bar {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
-        .stats-info {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .stat-item i {
-            color: #4A90E2;
-            font-size: 18px;
-        }
-
-        .stat-number {
-            font-weight: 700;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .filter-toggle {
-            padding: 10px 18px;
-            background: #f8f9fa;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            color: #666;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .filter-toggle:hover,
-        .filter-toggle.active {
-            background: #4A90E2;
-            color: white;
-            border-color: #4A90E2;
-            transform: translateY(-2px);
-        }
-
-        .filter-panel {
-            background: white;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            display: none;
-            overflow: hidden;
-        }
-
-        .filter-panel.show {
-            display: block;
-            animation: slideDown 0.4s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .filter-content {
-            padding: 25px;
-        }
-
-        .filter-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            align-items: end;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-group label {
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-        }
-
-        .filter-group select {
-            padding: 12px 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .filter-group select:focus {
-            outline: none;
-            border-color: #4A90E2;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-
-        .table-section {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
-        .appointments-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .appointments-table thead {
-            background: #f8f9fa;
-        }
-
-        .appointments-table th {
-            padding: 18px 20px;
-            text-align: left;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #e1e5e9;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .appointments-table td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f1f3f4;
-            color: #333;
-            vertical-align: middle;
-        }
-
-        .appointments-table tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        .appointments-table tbody tr:hover {
-            background: rgba(74, 144, 226, 0.05);
-        }
-
-        .time-cell {
-            font-family: 'Monaco', monospace;
-            color: #4A90E2;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .status-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            min-width: 90px;
-            justify-content: center;
-        }
-
-        .status-badge i {
-            font-size: 10px;
-        }
-
-        .status-pending {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            color: #856404;
-            border: 1px solid #fdcb6e;
-        }
-
-        .status-confirm {
-            background: linear-gradient(135deg, #d1f2eb, #a7f3d0);
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
-        .status-cancel {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #991b1b;
-            border: 1px solid #f87171;
-        }
-
-        .btn-view-detail {
-            background: linear-gradient(135deg, #4A90E2, #2DA8FF);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-view-detail:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
-        }
-
-        .btn-view-detail i {
-            font-size: 12px;
-        }
-
-        .appointments-table td:last-child {
-            text-align: center;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 80px 20px;
-            color: #666;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(74, 144, 226, 0.1);
-            border-top: 4px solid #4A90E2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 25px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: #666;
-            display: none;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            color: #ddd;
-            margin-bottom: 25px;
-        }
-
-        .toast {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 4000;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-            min-width: 320px;
-            display: none;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .toast.show {
-            display: flex;
-            animation: slideInRight 0.4s ease;
-        }
-
-        .toast.success {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .toast.error {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            
-            .main {
-                margin-left: 0;
-            }
-            
-            .top-bar {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .date-buttons {
-                gap: 8px;
-            }
-            
-            .date-button {
-                min-width: 65px;
-                padding: 12px 8px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>จัดการนัดหมาย - Smile Clinic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Sarabun','Segoe UI',sans-serif}
+    body{background:#f5f7fa;margin:0}
+
+    /* Sidebar */
+    .sidebar{width:180px;background:linear-gradient(135deg,#4A90E2,#2DA8FF);position:fixed;height:100vh;padding:0;color:#fff;box-shadow:2px 0 10px rgba(0,0,0,.1);z-index:1000}
+    .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .sidebar .logo .logo-icon{width:50px;height:50px;border-radius:8px;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px;color:#4A90E2}
+    .sidebar .logo h3{margin:0;font-size:16px;font-weight:600}
+    .sidebar ul{list-style:none;padding:10px 0;margin:0}
+    .sidebar ul li{margin:2px 0}
+    .sidebar ul li a{display:flex;align-items:center;gap:8px;padding:12px 20px;color:rgba(255,255,255,.9);text-decoration:none;transition:.3s;font-size:14px}
+    .sidebar ul li.active a,.sidebar ul li:hover a{background:rgba(255,255,255,.2);color:#fff;border-radius:8px;margin:0 10px}
+
+    /* Main / Top Bar (match treatments page) */
+    .main{margin-left:180px;min-height:100vh}
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .page-info h1{font-size:22px;margin:0 0 4px;color:#333;font-weight:600}
+    .page-info p{font-size:13px;color:#666;margin:0}
+    .search-section{display:flex;align-items:center;gap:15px}
+    .search-box{background:#f8f9fa;border:1px solid #e1e5e9;border-radius:20px;padding:8px 15px;display:flex;align-items:center;width:300px;transition:.3s}
+    .search-box:focus-within{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.1)}
+    .search-box i{color:#666;margin-right:8px;font-size:14px}
+    .search-box input{border:none;background:transparent;outline:none;width:100%;font-size:13px;color:#333}
+
+    .user-section{display:flex;align-items:center;gap:15px}
+    .notification-container{position:relative}
+    .notification-icon{font-size:18px;color:#666;cursor:pointer;transition:.2s}
+    .notification-icon:hover{color:#4A90E2}
+    .notification-badge{position:absolute;top:-8px;right:-8px;background:#ff4757;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+    .notification-badge.show{display:flex;animation:pulse 2s infinite}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+    .notification-dropdown{position:absolute;top:100%;right:-10px;background:#fff;border:1px solid #e1e5e9;border-radius:12px;min-width:380px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none;max-height:500px;overflow:hidden;z-index:2000}
+    .notification-dropdown.show{display:block;animation:slideDown .25s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .notification-header{padding:20px;border-bottom:1px solid #e1e5e9;background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;display:flex;justify-content:space-between;align-items:center}
+    .notification-content{max-height:400px;overflow-y:auto;padding:10px}
+    .notification-item{padding:12px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:.2s}
+    .notification-item:hover{background:#f8f9fa}
+    .notification-title{font-weight:600;color:#333;font-size:13px;margin-bottom:3px}
+    .notification-message{color:#666;font-size:12px;margin-bottom:5px;line-height:1.3}
+    .notification-time{color:#999;font-size:11px}
+    .mark-all-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+
+    .profile-dropdown{position:relative}
+    .user-info{display:flex;gap:10px;align-items:center;cursor:pointer;padding:5px;border-radius:8px;transition:.2s}
+    .user-info:hover{background:#f8f9fa}
+    .avatar{width:32px;height:32px;border-radius:50%;background:#4A90E2;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .user-details strong{display:block;font-size:13px;color:#333}
+    .user-details small{color:#666;font-size:11px}
+    .dropdown-menu{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #e1e5e9;border-radius:6px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    .dropdown-menu a{display:block;padding:10px 15px;text-decoration:none;color:#333;font-size:13px}
+    .dropdown-menu a:hover{background:#f8f9fa}
+
+    /* Content */
+    .content{padding:30px}
+
+    /* Buttons consistent */
+    .btn{padding:12px 20px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.3s}
+    .btn-primary{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(74,144,226,.3)}
+    .btn-secondary{background:#f8f9fa;color:#666;border:1px solid #e1e5e9}
+
+    /* Existing page blocks keep your styles */
+    .date-navigation{background:#fff;padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .calendar-title{font-size:18px;font-weight:600;color:#333}
+    .week-navigation{display:flex;gap:10px}
+    .nav-btn{background:#fff;border:2px solid #e1e5e9;border-radius:50%;width:44px;height:44px;cursor:pointer;font-size:16px;color:#666;transition:.3s;display:flex;align-items:center;justify-content:center}
+    .nav-btn:hover{background:#4A90E2;color:#fff;border-color:#4A90E2;transform:scale(1.05)}
+    .date-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+    .date-button{background:#fff;border:2px solid #e1e5e9;border-radius:12px;padding:15px 12px;text-align:center;cursor:pointer;font-size:12px;line-height:1.3;color:#666;transition:.3s;min-width:80px;display:flex;flex-direction:column;align-items:center}
+    .date-button:hover{background:#f8f9fa;border-color:#4A90E2;transform:translateY(-3px);box-shadow:0 6px 20px rgba(74,144,226,.2)}
+    .date-button.active{background:#4A90E2;color:#fff;border-color:#4A90E2;transform:translateY(-3px);box-shadow:0 6px 20px rgba(74,144,226,.3)}
+    .date-button.today{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:#10b981}
+    .day-name{font-weight:600;font-size:10px;opacity:.9;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+    .day-number{font-weight:700;font-size:16px}
+
+    .stats-bar{background:#fff;padding:25px;border-radius:16px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .stats-info{display:flex;align-items:center;gap:25px;color:#666;font-size:14px}
+    .stat-item{display:flex;align-items:center;gap:10px;padding:8px 15px;background:#f8f9fa;border-radius:8px}
+    .stat-item i{color:#4A90E2;font-size:18px}
+    .stat-number{font-weight:700;color:#333;font-size:16px}
+
+    .filter-toggle{padding:10px 18px;background:#f8f9fa;border:1px solid #e1e5e9;border-radius:8px;color:#666;font-size:13px;cursor:pointer;transition:.3s;font-weight:500}
+    .filter-toggle:hover,.filter-toggle.active{background:#4A90E2;color:#fff;border-color:#4A90E2;transform:translateY(-2px)}
+
+    .filter-panel{background:#fff;border-radius:16px;margin-bottom:25px;box-shadow:0 4px 20px rgba(0,0,0,.08);display:none;overflow:hidden}
+    .filter-panel.show{display:block;animation:slideDown .4s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .filter-content{padding:25px}
+    .filter-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:end}
+    .filter-group{display:flex;flex-direction:column;gap:8px}
+    .filter-group label{font-weight:600;color:#333;font-size:13px}
+    .filter-group select{padding:12px 16px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;transition:.3s;background:#f8f9fa}
+    .filter-group select:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
+
+    .table-section{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    .appointments-table{width:100%;border-collapse:collapse;font-size:14px}
+    .appointments-table thead{background:#f8f9fa}
+    .appointments-table th{padding:18px 20px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #e1e5e9;font-size:13px;white-space:nowrap}
+    .appointments-table td{padding:18px 20px;border-bottom:1px solid #f1f3f4;color:#333;vertical-align:middle}
+    .appointments-table tbody tr{transition:.2s}
+    .appointments-table tbody tr:hover{background:rgba(74,144,226,.05)}
+    .time-cell{font-family:Monaco,monospace;color:#4A90E2;font-weight:600;font-size:13px}
+    .status-badge{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:5px;min-width:90px;justify-content:center}
+    .status-pending{background:linear-gradient(135deg,#fff3cd,#ffeaa7);color:#856404;border:1px solid #fdcb6e}
+    .status-confirm{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
+    .status-cancel{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;border:1px solid #f87171}
+    .btn-view-detail{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.3s;display:inline-flex;align-items:center;gap:6px}
+    .btn-view-detail:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,144,226,.3)}
+    .appointments-table td:last-child{text-align:center}
+
+    .loading{text-align:center;padding:80px 20px;color:#666}
+    .loading-spinner{width:60px;height:60px;border:4px solid rgba(74,144,226,.1);border-top:4px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 25px}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360)}}
+
+    .empty-state{text-align:center;padding:80px 20px;color:#666;display:none}
+    .empty-icon{font-size:64px;color:#ddd;margin-bottom:25px}
+
+    .toast{position:fixed;top:25px;right:25px;padding:16px 24px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;z-index:4000;box-shadow:0 8px 30px rgba(0,0,0,.2);min-width:320px;display:none;align-items:center;gap:12px}
+    .toast.show{display:flex;animation:slideInRight .4s ease}
+    .toast.success{background:linear-gradient(135deg,#10b981,#059669)}
+    .toast.error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    @media (max-width:768px){
+      .sidebar{width:100%;height:auto;position:relative}
+      .main{margin-left:0}
+      .top-bar{flex-direction:column;gap:15px;align-items:stretch}
+      .search-box{width:100%}
+      .date-buttons{gap:8px}
+      .date-button{min-width:65px;padding:12px 8px}
+    }
+  </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo">
-            <div class="logo-icon">🦷</div>
-            <h3>Smile Clinic</h3>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🦷</div>
+      <h3>Smile Clinic</h3>
+    </div>
+    <ul>
+      <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
+      <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
+      <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
+      <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
+      <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
+    </ul>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Top Bar (now identical pattern) -->
+    <div class="top-bar">
+      <div class="page-info">
+        <h1>จัดการนัดหมาย</h1>
+        <p>ค้นหา จอง และจัดการนัดหมาย</p>
+      </div>
+
+      <div class="search-section">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="ค้นหาผู้ป่วย, การรักษา, ทันตแพทย์..." id="searchInput"/>
         </div>
-        <ul>
-            <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
-            <li><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
-            <li class="active"><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
-            <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
-            <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
-            <li><a href="/admin/treatments"><i class="fas fa-tooth"></i> การรักษา</a></li>
-        </ul>
+      </div>
+
+      <div class="user-section">
+        <!-- Notifications -->
+        <div class="notification-container">
+          <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
+          <div class="notification-badge" id="notificationBadge">0</div>
+          <div id="notificationDropdown" class="notification-dropdown">
+            <div class="notification-header">
+              <strong>การแจ้งเตือน</strong>
+              <button class="mark-all-btn" onclick="markAllAsRead()">อ่านทั้งหมด</button>
+            </div>
+            <div id="notificationContent" class="notification-content">
+              <div style="text-align:center;color:#666;padding:20px;">
+                <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+                <p>ยังไม่มีการแจ้งเตือนใหม่</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile dropdown -->
+        <div class="profile-dropdown">
+          <div class="user-info" onclick="toggleProfileDropdown()">
+            <div class="avatar" id="userAvatar">A</div>
+            <div class="user-details">
+              <strong>สวัสดี แอดมิน</strong>
+              <small>ผู้ดูแลระบบ</small>
+            </div>
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <div id="profileDropdown" class="dropdown-menu">
+            <a href="/admin/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
+            <hr/>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="main">
-        <div class="top-bar">
-            <div class="page-title">
-                <i class="fas fa-hospital"></i>
-                จัดการนัดหมาย
-            </div>
-            <div class="search-section">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="ค้นหาผู้ป่วย, การรักษา, ทันตแพทย์..." id="searchInput" />
-                </div>
-            </div>
-            <div class="user-section">
-                <div class="notification-container">
-                    <i class="fas fa-bell notification-icon"></i>
-                    <div class="notification-badge" id="notificationBadge">0</div>
-                </div>
-                <div class="avatar" id="userAvatar">A</div>
-            </div>
+    <!-- Content -->
+    <div class="content">
+      <!-- Page header -->
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px">
+        <div class="page-info">
+          <h1>ภาพรวมนัดหมาย</h1>
+          <p>ดูและจัดการนัดหมายผู้ป่วยทั้งหมด คลิกที่วันที่เพื่อดูนัดหมายในวันนั้น</p>
         </div>
-
-        <div class="content">
-            <div class="page-header">
-                <div class="page-info">
-                    <h1>ภาพรวมนัดหมาย</h1>
-                    <p>ดูและจัดการนัดหมายผู้ป่วยทั้งหมด คลิกที่วันที่เพื่อดูนัดหมายในวันนั้น</p>
-                </div>
-                <div class="page-actions">
-                    <a href="/admin/appointments/add" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        จองนัดหมายใหม่
-                    </a>
-                </div>
-            </div>
-
-            <div class="date-navigation">
-                <div class="calendar-header">
-                    <div class="calendar-title">
-                        <i class="fas fa-calendar-week"></i>
-                        ภาพรวมสัปดาห์
-                        <small style="font-weight: normal; color: #666; font-size: 12px; margin-left: 8px;">
-                            เลือกวันที่เพื่อดูนัดหมาย
-                        </small>
-                    </div>
-                    <div class="week-navigation">
-                        <button id="prevWeek" class="nav-btn" title="สัปดาห์ก่อนหน้า">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button id="nextWeek" class="nav-btn" title="สัปดาห์ถัดไป">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="date-buttons" id="dateButtons"></div>
-                
-                <div style="text-align: center; margin-top: 15px; color: #666; font-size: 13px;">
-                    <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
-                    คลิกที่วันที่เพื่อดูนัดหมายในวันนั้น
-                </div>
-            </div>
-
-            <div class="stats-bar">
-                <div class="stats-info">
-                    <div class="stat-item">
-                        <i class="fas fa-calendar-check"></i>
-                        <div>
-                            <span class="stat-number" id="appointmentCount">0</span>
-                            <span>นัดหมาย<span id="selectedDateText">วันนี้</span></span>
-                        </div>
-                    </div>
-                    <div class="stat-item" id="pendingStatItem" style="display: none;">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                            <span class="stat-number" id="pendingCount">0</span>
-                            <span>รออนุมัติ</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="tools-section">
-                    <button class="filter-toggle" onclick="toggleFilters()" id="filterToggle">
-                        <i class="fas fa-filter"></i> ตัวกรอง
-                    </button>
-                    <button class="btn-secondary btn" onclick="refreshAppointments()">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="filter-panel" id="filterPanel">
-                <div class="filter-content">
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label>สถานะ</label>
-                            <select id="filterStatus">
-                                <option value="">ทุกสถานะ</option>
-                                <option value="pending">รออนุมัติ</option>
-                                <option value="confirm">ยืนยันแล้ว</option>
-                                <option value="cancel">ยกเลิกแล้ว</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>ทันตแพทย์</label>
-                            <select id="filterDentist">
-                                <option value="">ทุกคน</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>การรักษา</label>
-                            <select id="filterTreatment">
-                                <option value="">ทั้งหมด</option>
-                            </select>
-                        </div>
-                        <div class="filter-actions" style="grid-column: 1 / -1; display: flex; gap: 12px; justify-content: flex-end; margin-top: 15px;">
-                            <button class="btn btn-primary" onclick="applyFilters()">
-                                <i class="fas fa-search"></i> ค้นหา
-                            </button>
-                            <button class="btn btn-secondary" onclick="clearFilters()">
-                                <i class="fas fa-times"></i> ล้างตัวกรอง
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="loading" id="loading">
-                <div class="loading-spinner"></div>
-                <h3>กำลังโหลดนัดหมาย</h3>
-                <p>กรุณารอสักครู่...</p>
-            </div>
-
-            <div class="table-section" id="tableSection" style="display: none;">
-                <div class="table-container">
-                    <table class="appointments-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-clock"></i> เวลา</th>
-                                <th><i class="fas fa-user"></i> ชื่อผู้ป่วย</th>
-                                <th><i class="fas fa-tooth"></i> การรักษา</th>
-                                <th><i class="fas fa-user-md"></i> ทันตแพทย์</th>
-                                <th><i class="fas fa-phone"></i> เบอร์โทร</th>
-                                <th><i class="fas fa-info-circle"></i> สถานะ</th>
-                                <th style="text-align: center;"><i class="fas fa-cogs"></i> จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="appointmentTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="empty-state" id="emptyState">
-                <div class="empty-icon">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-                <h3>ไม่พบนัดหมาย</h3>
-                <p>ไม่มีนัดหมายสำหรับวันที่เลือกและตัวกรองปัจจุบัน</p>
-                <a href="/admin/appointments/add" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    สร้างนัดหมายใหม่
-                </a>
-            </div>
+        <div class="page-actions">
+          <a href="/admin/appointments/add" class="btn btn-primary">
+            <i class="fas fa-plus"></i> จองนัดหมายใหม่
+          </a>
         </div>
+      </div>
+
+      <!-- Week nav -->
+      <div class="date-navigation">
+        <div class="calendar-header">
+          <div class="calendar-title">
+            <i class="fas fa-calendar-week"></i> ภาพรวมสัปดาห์
+            <small style="font-weight:normal;color:#666;font-size:12px;margin-left:8px;">เลือกวันที่เพื่อดูนัดหมาย</small>
+          </div>
+          <div class="week-navigation">
+            <button id="prevWeek" class="nav-btn" title="สัปดาห์ก่อนหน้า"><i class="fas fa-chevron-left"></i></button>
+            <button id="nextWeek" class="nav-btn" title="สัปดาห์ถัดไป"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="date-buttons" id="dateButtons"></div>
+        <div style="text-align:center;margin-top:15px;color:#666;font-size:13px;">
+          <i class="fas fa-info-circle" style="margin-right:5px;"></i> คลิกที่วันที่เพื่อดูนัดหมายในวันนั้น
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stats-info">
+          <div class="stat-item">
+            <i class="fas fa-calendar-check"></i>
+            <div>
+              <span class="stat-number" id="appointmentCount">0</span>
+              <span>นัดหมาย <span id="selectedDateText">วันนี้</span></span>
+            </div>
+          </div>
+          <div class="stat-item" id="pendingStatItem" style="display:none;">
+            <i class="fas fa-clock"></i>
+            <div>
+              <span class="stat-number" id="pendingCount">0</span>
+              <span>รออนุมัติ</span>
+            </div>
+          </div>
+        </div>
+        <div class="tools-section">
+          <button class="filter-toggle" onclick="toggleFilters()" id="filterToggle"><i class="fas fa-filter"></i> ตัวกรอง</button>
+          <button class="btn btn-secondary" onclick="refreshAppointments()" title="โหลดใหม่"><i class="fas fa-sync-alt"></i></button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-panel" id="filterPanel">
+        <div class="filter-content">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>สถานะ</label>
+              <select id="filterStatus">
+                <option value="">ทุกสถานะ</option>
+                <option value="pending">รออนุมัติ</option>
+                <option value="confirm">ยืนยันแล้ว</option>
+                <option value="cancel">ยกเลิกแล้ว</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>ทันตแพทย์</label>
+              <select id="filterDentist"><option value="">ทุกคน</option></select>
+            </div>
+            <div class="filter-group">
+              <label>การรักษา</label>
+              <select id="filterTreatment"><option value="">ทั้งหมด</option></select>
+            </div>
+            <div class="filter-actions" style="grid-column:1 / -1; display:flex; gap:12px; justify-content:flex-end; margin-top:15px;">
+              <button class="btn btn-primary" onclick="applyFilters()"><i class="fas fa-search"></i> ค้นหา</button>
+              <button class="btn btn-secondary" onclick="clearFilters()"><i class="fas fa-times"></i> ล้างตัวกรอง</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <h3>กำลังโหลดนัดหมาย</h3>
+        <p>กรุณารอสักครู่...</p>
+      </div>
+
+      <!-- Table -->
+      <div class="table-section" id="tableSection" style="display:none;">
+        <div class="table-container">
+          <table class="appointments-table">
+            <thead>
+              <tr>
+                <th><i class="fas fa-clock"></i> เวลา</th>
+                <th><i class="fas fa-user"></i> ชื่อผู้ป่วย</th>
+                <th><i class="fas fa-tooth"></i> การรักษา</th>
+                <th><i class="fas fa-user-md"></i> ทันตแพทย์</th>
+                <th><i class="fas fa-phone"></i> เบอร์โทร</th>
+                <th><i class="fas fa-info-circle"></i> สถานะ</th>
+                <th style="text-align:center;"><i class="fas fa-cogs"></i> จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="appointmentTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+        <h3>ไม่พบนัดหมาย</h3>
+        <p>ไม่มีนัดหมายสำหรับวันที่เลือกและตัวกรองปัจจุบัน</p>
+        <a href="/admin/appointments/add" class="btn btn-primary"><i class="fas fa-plus"></i> สร้างนัดหมายใหม่</a>
+      </div>
     </div>
+  </div>
 
-    <div class="toast" id="toastMessage">
-        <i class="fas fa-check-circle"></i>
-        <span></span>
-    </div>
+  <!-- Toast -->
+  <div class="toast" id="toastMessage"><i class="fas fa-check-circle"></i><span></span></div>
 
-    <script>
-        let weekOffset = 0;
-        let selectedDate = null;
-        let appointmentsData = [];
-        let originalAppointmentsData = [];
-        let filtersActive = false;
+  <script>
+    // ======= State =======
+    let weekOffset = 0;
+    let selectedDate = null;
+    let appointmentsData = [];
+    let originalAppointmentsData = [];
+    let filtersActive = false;
 
-        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        const thaiDays = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+    const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const thaiDays = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+    const TH_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const TH_DAYS_FULL = ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date();
-            selectedDate = formatDateForAPI(today);
-            
-            initializePage();
-            setupEventListeners();
-            generateDateButtons();
-            loadFilterOptions();
-            loadAppointments();
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const today = new Date();
+      selectedDate = formatDateForAPI(today);
 
-            // Auto refresh every 30 seconds
-            setInterval(function() {
-                loadAppointments();
-            }, 30000);
-            
-            console.log('Auto-refresh enabled: Appointments will refresh every 30 seconds');
+      initializePage();
+      setupEventListeners();
+      generateDateButtons();
+      loadFilterOptions();
+      loadAppointments();
+
+      // Setup UI (Topbar additions)
+      updateUserAvatar();
+      loadNotifications();
+      setupGlobalClickClose();
+
+      // Auto refresh appointments every 30s
+      setInterval(()=>{ loadAppointments(); }, 30000);
+    });
+
+    // ======= Topbar helpers (match treatments page) =======
+    function toggleNotifications(){
+      document.getElementById('notificationDropdown').classList.toggle('show');
+    }
+    function toggleProfileDropdown(){
+      const el = document.getElementById('profileDropdown');
+      el.style.display = (el.style.display==='block'?'none':'block');
+    }
+    function setupGlobalClickClose(){
+      document.addEventListener('click', (e)=>{
+        const pd = document.querySelector('.profile-dropdown');
+        if(pd && !pd.contains(e.target)){ const m=document.getElementById('profileDropdown'); if(m) m.style.display='none'; }
+        const nc = document.querySelector('.notification-container');
+        if(nc && !nc.contains(e.target)){ const dd=document.getElementById('notificationDropdown'); if(dd) dd.classList.remove('show'); }
+      });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ document.getElementById('notificationDropdown')?.classList.remove('show'); const m=document.getElementById('profileDropdown'); if(m) m.style.display='none'; }});
+    }
+    async function updateUserAvatar(){
+      try{
+        const res = await fetch('/admin/profile/api');
+        if(res.ok){
+          const data = await res.json();
+          if(data.success && data.email){
+            document.getElementById('userAvatar').textContent = data.email.charAt(0).toUpperCase();
+          }
+        }
+      }catch(e){ document.getElementById('userAvatar').textContent = 'A'; }
+    }
+    async function loadNotifications(){
+      try{
+        const res = await fetch('/admin/api/notifications?limit=20');
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        const list = data.notifications || [];
+        const badge = document.getElementById('notificationBadge');
+        const unread = list.filter(x=>x.is_read===0).length;
+        if(unread>0){ badge.textContent = unread>99?'99+':unread; badge.classList.add('show'); } else { badge.classList.remove('show'); }
+        const wrap = document.getElementById('notificationContent');
+        if(list.length===0){
+          wrap.innerHTML = `<div style="text-align:center;color:#666;padding:20px;">
+            <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:10px;color:#ccc;"></i>
+            <p>ยังไม่มีการแจ้งเตือนใหม่</p></div>`;
+          return;
+        }
+        wrap.innerHTML = list.map(n=>`
+          <div class="notification-item ${n.is_read? '' : 'unread'}">
+            <div class="notification-title">${escapeHtml(n.title||'การแจ้งเตือน')}</div>
+            <div class="notification-message">${escapeHtml(n.message||'-')}</div>
+            <div class="notification-time">${fmtDateTime24(n.created_at||new Date())}</div>
+          </div>
+        `).join('');
+      }catch(e){
+        document.getElementById('notificationContent').innerHTML = '<div style="padding:16px;color:#b91c1c;"><i class="fas fa-triangle-exclamation"></i> โหลดการแจ้งเตือนล้มเหลว</div>';
+      }
+    }
+    function markAllAsRead(){
+      fetch('/admin/api/notifications/mark-all-read',{method:'PUT'}).then(()=>loadNotifications());
+    }
+    const TH_MONTHS = TH_MONTHS_FULL;
+    function pad2(n){return n.toString().padStart(2,'0')}
+    function fmtDateTime24(s){
+      const d = new Date(s);
+      if(isNaN(d)) return '-';
+      const dd = d.getDate(), mm = TH_MONTHS[d.getMonth()], yy = d.getFullYear()+543;
+      const hh = pad2(d.getHours()), mi = pad2(d.getMinutes());
+      return `${dd} ${mm} ${yy} • ${hh}:${mi} น.`;
+    }
+    function escapeHtml(t){const d=document.createElement('div'); d.textContent = String(t||''); return d.innerHTML;}
+
+    // ======= Existing page logic (unchanged) =======
+    function formatDateForAPI(date){const y=date.getFullYear();const m=String(date.getMonth()+1).padStart(2,'0');const d=String(date.getDate()).padStart(2,'0');return `${y}-${m}-${d}`;}
+    function parseDateFromAPI(s){const [y,m,d]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,parseInt(d));}
+    function initializePage(){updateSelectedDateText();}
+    function setupEventListeners(){
+      document.getElementById('prevWeek').addEventListener('click', ()=>{weekOffset--;generateDateButtons();loadAppointments();});
+      document.getElementById('nextWeek').addEventListener('click', ()=>{weekOffset++;generateDateButtons();loadAppointments();});
+      let t; document.getElementById('searchInput').addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>{ filterAppointments(); },300); });
+      ['filterStatus','filterDentist','filterTreatment'].forEach(id=>{ document.getElementById(id)?.addEventListener('change', applyFilters); });
+    }
+    function generateDateButtons(){
+      const container=document.getElementById('dateButtons'); const today=new Date(); container.innerHTML='';
+      for(let i=0;i<7;i++){
+        const date=new Date(); date.setDate(today.getDate()+weekOffset*7+i);
+        const iso=formatDateForAPI(date); const isToday=formatDateForAPI(today)===iso; const isSelected=selectedDate===iso;
+        const btn=document.createElement('button'); btn.className=`date-button ${isSelected?'active':''} ${isToday?'today':''}`; btn.dataset.date=iso;
+        btn.innerHTML=`<div class="day-name">${thaiDays[date.getDay()]}</div><div class="day-number">${date.getDate()}</div><div class="day-month">${thaiMonths[date.getMonth()]}</div>`;
+        btn.addEventListener('click',()=>{ document.querySelectorAll('.date-button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); selectedDate=iso; updateSelectedDateText(); loadAppointments(); });
+        container.appendChild(btn);
+      }
+    }
+    function updateSelectedDateText(){
+      try{
+        const d=parseDateFromAPI(selectedDate); const today=new Date(); const todayStr=formatDateForAPI(today); const el=document.getElementById('selectedDateText');
+        if(selectedDate===todayStr){ el.textContent='วันนี้'; }
+        else{ el.textContent = `${TH_DAYS_FULL[d.getDay()]}ที่ ${d.getDate()} ${TH_MONTHS_FULL[d.getMonth()]} ${d.getFullYear()+543}`; }
+      }catch{ document.getElementById('selectedDateText').textContent='ที่เลือก'; }
+    }
+    async function loadFilterOptions(){
+      try{
+        const dr = await fetch('/admin/api/dentists');
+        if(dr.ok){ const dj = await dr.json(); if(dj.success && dj.dentists){ const sel=document.getElementById('filterDentist'); dj.dentists.forEach(x=>{const o=document.createElement('option'); o.value=x.dentist_id; o.textContent=`ทพ. ${x.fname} ${x.lname}`; sel.appendChild(o);}); }}
+        const tr = await fetch('/admin/api/treatments');
+        if(tr.ok){ const tj = await tr.json(); if(tj.success && tj.treatments){ const sel=document.getElementById('filterTreatment'); tj.treatments.forEach(x=>{const o=document.createElement('option'); o.value=x.treatment_id; o.textContent=x.treatment_name; sel.appendChild(o);}); }}
+      }catch(e){ console.error('Error loading filter options',e); }
+    }
+    async function loadAppointments(){
+      try{
+        document.getElementById('loading').style.display='block';
+        document.getElementById('tableSection').style.display='none';
+        document.getElementById('emptyState').style.display='none';
+        const res = await fetch(`/admin/api/appointments?date=${selectedDate}`);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        if(data.success){
+          appointmentsData = data.appointments || [];
+          originalAppointmentsData = [...appointmentsData];
+          if(filtersActive){ filterAppointments(); } else { renderAppointments(appointmentsData); updateAppointmentCount(appointmentsData.length); }
+        }else{ throw new Error(data.error||'Failed to load appointments'); }
+      }catch(e){ console.error(e); showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้: '+e.message,'error'); renderEmptyState(); }
+      finally{ document.getElementById('loading').style.display='none'; }
+    }
+    function renderAppointments(list){
+      const tbody=document.getElementById('appointmentTableBody'); const tableSection=document.getElementById('tableSection'); const empty=document.getElementById('emptyState');
+      if(!list || list.length===0){ tableSection.style.display='none'; empty.style.display='block'; return; }
+      tableSection.style.display='block'; empty.style.display='none';
+      tbody.innerHTML = list.map(a=>{
+        const statusText = formatStatus(a.queue_status);
+        const formattedTime = formatDateTime(a.time);
+        const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
+        return `<tr data-id="${a.queue_id}">
+          <td class="time-cell">${formattedTime}</td>
+          <td>${escapeHtml(a.patient_name)||'ไม่ระบุ'}</td>
+          <td>${escapeHtml(a.treatment_name)||'ไม่ระบุ'}</td>
+          <td>${a.dentist_name ? 'ทพ. '+escapeHtml(a.dentist_name) : '-'}</td>
+          <td>${escapeHtml(a.phone)||'ไม่ระบุ'}</td>
+          <td><span class="status-badge status-${a.queue_status}"><i class="${icon}"></i> ${statusText}</span></td>
+          <td><button class="btn-view-detail" onclick="viewAppointmentDetail(${a.queue_id})"><i class="fas fa-eye"></i> รายละเอียด</button></td>
+        </tr>`;
+      }).join('');
+    }
+    function getStatusIcon(s){return s==='pending'?'fas fa-clock':(s==='confirm'?'fas fa-check-circle':(s==='cancel'?'fas fa-times-circle':'fas fa-question-circle'))}
+    function viewAppointmentDetail(id){window.location.href=`/admin/appointments/detail?id=${id}`;}
+    function formatDateTime(dt){
+      if(!dt) return 'ไม่ระบุ';
+      try{
+        const d=new Date(dt); if(isNaN(d.getTime())) return 'วันที่ไม่ถูกต้อง';
+        const today=new Date(); const isToday = d.toDateString()===today.toDateString();
+        const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); const t=`${hh}:${mm} น.`;
+        if(isToday) return `วันนี้ ${t}`;
+        return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${t}`;
+      }catch{ return 'วันที่ไม่ถูกต้อง'; }
+    }
+    function formatStatus(s){ if(s==='pending')return'รออนุมัติ'; if(s==='confirm')return'ยืนยันแล้ว'; if(s==='cancel')return'ยกเลิกแล้ว'; return s; }
+    function renderEmptyState(){ document.getElementById('tableSection').style.display='none'; document.getElementById('emptyState').style.display='block'; }
+    function updateAppointmentCount(total){
+      const pending = (appointmentsData||[]).filter(a=>a.queue_status==='pending').length;
+      document.getElementById('appointmentCount').textContent = total;
+      const ps = document.getElementById('pendingStatItem');
+      if(pending>0){ ps.style.display='flex'; document.getElementById('pendingCount').textContent=pending; }
+      else{ ps.style.display='none'; }
+      const badge=document.getElementById('notificationBadge');
+      if(pending>0){ badge.textContent=pending; badge.classList.add('show'); } else { badge.classList.remove('show'); }
+    }
+    function filterAppointments(){
+      let filtered=[...originalAppointmentsData];
+      const term=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+      if(term){
+        filtered = filtered.filter(a=>{
+          const patient=(a.patient_name||'').toLowerCase().includes(term);
+          const treat=(a.treatment_name||'').toLowerCase().includes(term);
+          const dentist=(a.dentist_name||'').toLowerCase().includes(term);
+          const phone=(a.phone||'').includes(term);
+          return patient||treat||dentist||phone;
         });
+      }
+      const st=document.getElementById('filterStatus').value;
+      if(st){ filtered = filtered.filter(a=>a.queue_status===st); }
+      const de=document.getElementById('filterDentist').value;
+      if(de){ filtered = filtered.filter(a=>a.dentist_id==de); }
+      const tr=document.getElementById('filterTreatment').value;
+      if(tr){ filtered = filtered.filter(a=>a.treatment_id==tr); }
+      appointmentsData = filtered;
+      renderAppointments(filtered);
+      updateAppointmentCount(filtered.length);
+      updateFilterToggleState();
+    }
+    function updateFilterToggleState(){
+      const term=document.getElementById('searchInput').value.trim();
+      const st=document.getElementById('filterStatus').value;
+      const de=document.getElementById('filterDentist').value;
+      const tr=document.getElementById('filterTreatment').value;
+      const active=[term,st,de,tr].filter(Boolean).length;
+      const btn=document.getElementById('filterToggle');
+      if(active>0){ btn.classList.add('active'); btn.innerHTML=`<i class="fas fa-filter"></i> ตัวกรอง (${active})`; filtersActive=true; }
+      else{ btn.classList.remove('active'); btn.innerHTML='<i class="fas fa-filter"></i> ตัวกรอง'; filtersActive=false; }
+    }
+    function applyFilters(){ filterAppointments(); showToast('ใช้ตัวกรองสำเร็จ','success'); }
+    function clearFilters(){
+      document.getElementById('filterStatus').value='';
+      document.getElementById('filterDentist').value='';
+      document.getElementById('filterTreatment').value='';
+      document.getElementById('searchInput').value='';
+      filtersActive=false;
+      appointmentsData=[...originalAppointmentsData];
+      renderAppointments(appointmentsData);
+      updateAppointmentCount(appointmentsData.length);
+      document.getElementById('filterToggle').classList.remove('active');
+      document.getElementById('filterToggle').innerHTML='<i class="fas fa-filter"></i> ตัวกรอง';
+      showToast('ล้างตัวกรองแล้ว','success');
+    }
+    function toggleFilters(){ document.getElementById('filterPanel').classList.toggle('show'); }
+    function refreshAppointments(){ showToast('กำลังรีเฟรชข้อมูล...','success'); loadAppointments(); }
 
-        function formatDateForAPI(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function parseDateFromAPI(dateString) {
-            const [year, month, day] = dateString.split('-');
-            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        }
-
-        function initializePage() {
-            updateSelectedDateText();
-        }
-
-        function setupEventListeners() {
-            document.getElementById('prevWeek').addEventListener('click', () => {
-                weekOffset--;
-                generateDateButtons();
-                loadAppointments();
-            });
-
-            document.getElementById('nextWeek').addEventListener('click', () => {
-                weekOffset++;
-                generateDateButtons();
-                loadAppointments();
-            });
-
-            let searchTimeout;
-            document.getElementById('searchInput').addEventListener('input', function(e) {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    filterAppointments();
-                }, 300);
-            });
-
-            ['filterStatus', 'filterDentist', 'filterTreatment'].forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('change', applyFilters);
-                }
-            });
-        }
-
-        function generateDateButtons() {
-            const container = document.getElementById('dateButtons');
-            const today = new Date();
-            container.innerHTML = '';
-            
-            for (let i = 0; i < 7; i++) {
-                const date = new Date();
-                date.setDate(today.getDate() + weekOffset * 7 + i);
-                
-                const iso = formatDateForAPI(date);
-                const isToday = formatDateForAPI(today) === iso;
-                const isSelected = selectedDate === iso;
-                
-                const button = document.createElement('button');
-                button.className = `date-button ${isSelected ? 'active' : ''} ${isToday ? 'today' : ''}`;
-                button.dataset.date = iso;
-                
-                button.innerHTML = `
-                    <div class="day-name">${thaiDays[date.getDay()]}</div>
-                    <div class="day-number">${date.getDate()}</div>
-                    <div class="day-month">${thaiMonths[date.getMonth()]}</div>
-                `;
-                
-                button.addEventListener('click', () => {
-                    document.querySelectorAll('.date-button').forEach(b => b.classList.remove('active'));
-                    button.classList.add('active');
-                    selectedDate = iso;
-                    updateSelectedDateText();
-                    loadAppointments();
-                });
-                
-                container.appendChild(button);
-            }
-        }
-
-        function updateSelectedDateText() {
-            try {
-                const date = parseDateFromAPI(selectedDate);
-                const today = new Date();
-                const todayStr = formatDateForAPI(today);
-                const textElement = document.getElementById('selectedDateText');
-                
-                if (selectedDate === todayStr) {
-                    textElement.textContent = 'วันนี้';
-                } else {
-                    const thaiDaysFull = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
-                    const thaiMonthsFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-                    textElement.textContent = `${thaiDaysFull[date.getDay()]}ที่ ${date.getDate()} ${thaiMonthsFull[date.getMonth()]} ${date.getFullYear() + 543}`;
-                }
-            } catch (error) {
-                console.error('Error updating date text:', error);
-                document.getElementById('selectedDateText').textContent = 'ที่เลือก';
-            }
-        }
-
-        async function loadFilterOptions() {
-            try {
-                const dentistResponse = await fetch('/admin/api/dentists');
-                if (dentistResponse.ok) {
-                    const dentistData = await dentistResponse.json();
-                    if (dentistData.success && dentistData.dentists) {
-                        const dentistSelect = document.getElementById('filterDentist');
-                        dentistData.dentists.forEach(dentist => {
-                            const option = document.createElement('option');
-                            option.value = dentist.dentist_id;
-                            option.textContent = `ทพ. ${dentist.fname} ${dentist.lname}`;
-                            dentistSelect.appendChild(option);
-                        });
-                    }
-                }
-
-                const treatmentResponse = await fetch('/admin/api/treatments');
-                if (treatmentResponse.ok) {
-                    const treatmentData = await treatmentResponse.json();
-                    if (treatmentData.success && treatmentData.treatments) {
-                        const treatmentSelect = document.getElementById('filterTreatment');
-                        treatmentData.treatments.forEach(treatment => {
-                            const option = document.createElement('option');
-                            option.value = treatment.treatment_id;
-                            option.textContent = treatment.treatment_name;
-                            treatmentSelect.appendChild(option);
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading filter options:', error);
-            }
-        }
-
-        async function loadAppointments() {
-            try {
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('tableSection').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'none';
-                
-                const response = await fetch(`/admin/api/appointments?date=${selectedDate}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    appointmentsData = data.appointments || [];
-                    originalAppointmentsData = [...appointmentsData];
-                    
-                    if (filtersActive) {
-                        filterAppointments();
-                    } else {
-                        renderAppointments(appointmentsData);
-                        updateAppointmentCount(appointmentsData.length);
-                    }
-                    
-                    console.log(`Loaded ${appointmentsData.length} appointments for ${selectedDate}`);
-                } else {
-                    throw new Error(data.error || 'Failed to load appointments');
-                }
-            } catch (error) {
-                console.error('Error loading appointments:', error);
-                showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้: ' + error.message, 'error');
-                renderEmptyState();
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-
-        function renderAppointments(appointments) {
-            const tbody = document.getElementById('appointmentTableBody');
-            const tableSection = document.getElementById('tableSection');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (!appointments || appointments.length === 0) {
-                tableSection.style.display = 'none';
-                emptyState.style.display = 'block';
-                return;
-            }
-            
-            tableSection.style.display = 'block';
-            emptyState.style.display = 'none';
-            
-            tbody.innerHTML = appointments.map(appointment => {
-                const statusIcon = getStatusIcon(appointment.queue_status);
-                const statusText = formatStatus(appointment.queue_status);
-                const formattedTime = formatDateTime(appointment.time);
-                
-                return `
-                    <tr data-id="${appointment.queue_id}">
-                        <td class="time-cell">${formattedTime}</td>
-                        <td>${escapeHtml(appointment.patient_name) || 'ไม่ระบุ'}</td>
-                        <td>${escapeHtml(appointment.treatment_name) || 'ไม่ระบุ'}</td>
-                        <td>${appointment.dentist_name ? 'ทพ. ' + escapeHtml(appointment.dentist_name) : '-'}</td>
-                        <td>${escapeHtml(appointment.phone) || 'ไม่ระบุ'}</td>
-                        <td>
-                            <span class="status-badge status-${appointment.queue_status}">
-                                <i class="${statusIcon}"></i>
-                                ${statusText}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn-view-detail" onclick="viewAppointmentDetail(${appointment.queue_id})" title="ดูรายละเอียดและจัดการการจอง">
-                                <i class="fas fa-eye"></i>
-                                รายละเอียด
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function getStatusIcon(status) {
-            switch(status) {
-                case 'pending': return 'fas fa-clock';
-                case 'confirm': return 'fas fa-check-circle';
-                case 'cancel': return 'fas fa-times-circle';
-                default: return 'fas fa-question-circle';
-            }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function viewAppointmentDetail(queueId) {
-            window.location.href = `/admin/appointments/detail?id=${queueId}`;
-        }
-
-        function formatDateTime(dateTime) {
-            if (!dateTime) return 'ไม่ระบุ';
-            
-            try {
-                const date = new Date(dateTime);
-                if (isNaN(date.getTime())) return 'วันที่ไม่ถูกต้อง';
-                
-                const today = new Date();
-                const isToday = date.toDateString() === today.toDateString();
-                
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const timeStr = `${hours}:${minutes} น.`;
-                
-                if (isToday) {
-                    return `วันนี้ ${timeStr}`;
-                } else {
-                    const day = date.getDate();
-                    const month = thaiMonths[date.getMonth()];
-                    return `${day} ${month} ${timeStr}`;
-                }
-            } catch (error) {
-                console.error('Error formatting date:', error);
-                return 'วันที่ไม่ถูกต้อง';
-            }
-        }
-
-        function formatStatus(status) {
-            switch(status) {
-                case 'pending': return 'รออนุมัติ';
-                case 'confirm': return 'ยืนยันแล้ว';
-                case 'cancel': return 'ยกเลิกแล้ว';
-                default: return status;
-            }
-        }
-
-        function renderEmptyState() {
-            const emptyState = document.getElementById('emptyState');
-            const tableSection = document.getElementById('tableSection');
-            tableSection.style.display = 'none';
-            emptyState.style.display = 'block';
-        }
-
-        function updateAppointmentCount(totalCount) {
-            const pendingCount = appointmentsData.filter(apt => apt.queue_status === 'pending').length;
-            
-            document.getElementById('appointmentCount').textContent = totalCount;
-            
-            const pendingElement = document.getElementById('pendingStatItem');
-            if (pendingCount > 0) {
-                pendingElement.style.display = 'flex';
-                document.getElementById('pendingCount').textContent = pendingCount;
-            } else {
-                pendingElement.style.display = 'none';
-            }
-            
-            const badge = document.getElementById('notificationBadge');
-            if (pendingCount > 0) {
-                badge.textContent = pendingCount;
-                badge.classList.add('show');
-            } else {
-                badge.classList.remove('show');
-            }
-        }
-
-        function filterAppointments() {
-            let filtered = [...originalAppointmentsData];
-            
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (searchTerm) {
-                filtered = filtered.filter(appointment => {
-                    const patientMatch = (appointment.patient_name || '').toLowerCase().includes(searchTerm);
-                    const treatmentMatch = (appointment.treatment_name || '').toLowerCase().includes(searchTerm);
-                    const dentistMatch = (appointment.dentist_name || '').toLowerCase().includes(searchTerm);
-                    const phoneMatch = (appointment.phone || '').includes(searchTerm);
-                    return patientMatch || treatmentMatch || dentistMatch || phoneMatch;
-                });
-            }
-            
-            const statusFilter = document.getElementById('filterStatus').value;
-            if (statusFilter) {
-                filtered = filtered.filter(appointment => appointment.queue_status === statusFilter);
-            }
-            
-            const dentistFilter = document.getElementById('filterDentist').value;
-            if (dentistFilter) {
-                filtered = filtered.filter(appointment => appointment.dentist_id == dentistFilter);
-            }
-            
-            const treatmentFilter = document.getElementById('filterTreatment').value;
-            if (treatmentFilter) {
-                filtered = filtered.filter(appointment => appointment.treatment_id == treatmentFilter);
-            }
-            
-            appointmentsData = filtered;
-            renderAppointments(filtered);
-            updateAppointmentCount(filtered.length);
-            updateFilterToggleState();
-        }
-
-        function updateFilterToggleState() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
-            const statusFilter = document.getElementById('filterStatus').value;
-            const dentistFilter = document.getElementById('filterDentist').value;
-            const treatmentFilter = document.getElementById('filterTreatment').value;
-            
-            const activeFilters = [searchTerm, statusFilter, dentistFilter, treatmentFilter].filter(f => f).length;
-            const filterToggle = document.getElementById('filterToggle');
-            
-            if (activeFilters > 0) {
-                filterToggle.classList.add('active');
-                filterToggle.innerHTML = `<i class="fas fa-filter"></i> ตัวกรอง (${activeFilters})`;
-                filtersActive = true;
-            } else {
-                filterToggle.classList.remove('active');
-                filterToggle.innerHTML = '<i class="fas fa-filter"></i> ตัวกรอง';
-                filtersActive = false;
-            }
-        }
-
-        function applyFilters() {
-            filterAppointments();
-            showToast('ใช้ตัวกรองสำเร็จ', 'success');
-        }
-
-        function clearFilters() {
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterDentist').value = '';
-            document.getElementById('filterTreatment').value = '';
-            document.getElementById('searchInput').value = '';
-            
-            filtersActive = false;
-            appointmentsData = [...originalAppointmentsData];
-            renderAppointments(appointmentsData);
-            updateAppointmentCount(appointmentsData.length);
-            
-            const filterToggle = document.getElementById('filterToggle');
-            filterToggle.classList.remove('active');
-            filterToggle.innerHTML = '<i class="fas fa-filter"></i> ตัวกรอง';
-            
-            showToast('ล้างตัวกรองแล้ว', 'success');
-        }
-
-        function toggleFilters() {
-            const panel = document.getElementById('filterPanel');
-            panel.classList.toggle('show');
-        }
-
-        function refreshAppointments() {
-            showToast('กำลังรีเฟรชข้อมูล...', 'success');
-            loadAppointments();
-        }
-
-        function confirmDeleteAppointment(queueId, patientName) {
-            if (confirm(`คุณต้องการยกเลิกนัดหมายของ ${patientName} หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`)) {
-                deleteAppointment(queueId);
-            }
-        }
-
-        async function deleteAppointment(queueId) {
-            try {
-                const response = await fetch(`/admin/api/appointments/${queueId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        showToast('ยกเลิกนัดหมายสำเร็จ', 'success');
-                        loadAppointments();
-                    } else {
-                        showToast(data.error || 'ไม่สามารถยกเลิกนัดหมายได้', 'error');
-                    }
-                } else {
-                    showToast('ไม่สามารถยกเลิกนัดหมายได้', 'error');
-                }
-            } catch (error) {
-                console.error('Error cancelling appointment:', error);
-                showToast('เกิดข้อผิดพลาดในการยกเลิกนัดหมาย', 'error');
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toastMessage');
-            const icon = toast.querySelector('i');
-            
-            toast.className = 'toast';
-            toast.classList.add(type, 'show');
-            
-            const iconMap = {
-                'success': 'check-circle',
-                'error': 'exclamation-circle',
-                'info': 'info-circle'
-            };
-            
-            icon.className = `fas fa-${iconMap[type] || 'info-circle'}`;
-            toast.querySelector('span').textContent = message;
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-    </script>
+    // ======= Toast =======
+    function showToast(message,type='success'){
+      const toast=document.getElementById('toastMessage'); const icon=toast.querySelector('i');
+      toast.className='toast'; toast.classList.add(type,'show');
+      const iconMap={success:'check-circle',error:'exclamation-circle',info:'info-circle'};
+      icon.className=`fas fa-${iconMap[type]||'info-circle'}`;
+      toast.querySelector('span').textContent=message;
+      setTimeout(()=>{toast.classList.remove('show');},3000);
+    }
+  </script>
 </body>
 </html>
