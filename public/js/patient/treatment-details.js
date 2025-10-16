@@ -172,15 +172,8 @@
 
                 // Next Appointment
                 const nextElement = document.getElementById('next-appointment');
-                if (treatment.next_appointment_detail && treatment.next_appointment_detail.trim()) {
-                    nextElement.innerHTML = `<div class="next-box">${treatment.next_appointment_detail}</div>`;
-                } else if (treatment.next_appointment) {
-                    const nextDate = new Date(treatment.next_appointment);
-                    nextElement.innerHTML = `<div class="next-box">นัดครั้งต่อไป: ${nextDate.toLocaleDateString('th-TH', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric'
-                    })}</div>`;
+                if (treatment.followUpdate && treatment.followUpdate.trim()) {
+                    nextElement.innerHTML = `<div class="next-box">${treatment.followUpdate}</div>`;
                 } else {
                     nextElement.textContent = 'ไม่มีนัดครั้งต่อไป';
                     nextElement.classList.add('empty');

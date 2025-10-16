@@ -388,7 +388,6 @@ class PatientAdminModel {
           th.treatment_history_id,
           th.treatment_date,
           th.treatment_notes,
-          th.next_appointment,
           t.treatment_name as treatment_name,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           qd.date as appointment_date

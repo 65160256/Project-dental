@@ -222,7 +222,6 @@ class QueueDetailModel {
         t.price,
         th.diagnosis,
         th.followUpdate,
-        th.next_appointment,
         q.queue_status,
         q.time as queue_time
        FROM queuedetail qd

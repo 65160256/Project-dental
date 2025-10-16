@@ -527,11 +527,36 @@ async function loadTimeSlots() {
     const data = await response.json();
     if (data.success && data.slots.length > 0) {
       console.log('✅ พบ', data.slots.length, 'ช่วงเวลาว่าง');
-      grid.innerHTML = data.slots.map(slot => `
-        <div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}', '${slot.end_time || ''}', ${slot.duration})" data-time="${slot.start_time}" data-end="${slot.end_time || ''}">
-          <strong style="font-size:16px;">${slot.start_time}${slot.end_time ? ' - ' + slot.end_time : ''}</strong><br>
-          <small style="color:#059669;font-weight:600;">${slot.duration} นาที</small>
-        </div>`).join('');
+      // สร้าง time slots พร้อมตรวจสอบเวลา
+      const currentTime = new Date();
+      const selectedDateOnly = new Date(selectedDate);
+      
+      grid.innerHTML = data.slots.map(slot => {
+        // สร้าง datetime object สำหรับ time slot นี้
+        const [hours, minutes] = slot.start_time.split(':').map(Number);
+        const slotDateTime = new Date(selectedDateOnly);
+        slotDateTime.setHours(hours, minutes, 0, 0);
+        
+        // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่
+        const isPastTime = slotDateTime < currentTime;
+        const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+        
+        if (isPastTime && isToday) {
+          // เวลาผ่านมาแล้ว - แสดงเป็น unavailable
+          return `
+            <div class="time-slot-btn unavailable" data-time="${slot.start_time}" data-end="${slot.end_time || ''}" title="เวลาผ่านมาแล้ว">
+              <strong style="font-size:16px; color:#999;">${slot.start_time}${slot.end_time ? ' - ' + slot.end_time : ''}</strong><br>
+              <small style="color:#999;">ผ่านมาแล้ว</small>
+            </div>`;
+        } else {
+          // เวลายังไม่ผ่าน - แสดงเป็น available
+          return `
+            <div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}', '${slot.end_time || ''}', ${slot.duration})" data-time="${slot.start_time}" data-end="${slot.end_time || ''}">
+              <strong style="font-size:16px;">${slot.start_time}${slot.end_time ? ' - ' + slot.end_time : ''}</strong><br>
+              <small style="color:#059669;font-weight:600;">${slot.duration} นาที</small>
+            </div>`;
+        }
+      }).join('');
     } else {
       console.log('⚠️ ไม่มีช่วงเวลาว่าง');
       grid.innerHTML = `
@@ -577,6 +602,21 @@ function changeSelectedDate(direction) {
 
 // Select Time Slot
 function selectTimeSlot(startTime, endTime = '', duration = 0) {
+  // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่
+  const currentTime = new Date();
+  const selectedDateOnly = new Date(selectedDate);
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const slotDateTime = new Date(selectedDateOnly);
+  slotDateTime.setHours(hours, minutes, 0, 0);
+  
+  const isPastTime = slotDateTime < currentTime;
+  const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+  
+  if (isPastTime && isToday) {
+    showToast('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วได้', 'error');
+    return;
+  }
+  
   document.querySelectorAll('.time-slot-btn.selected').forEach(btn => { btn.classList.remove('selected'); btn.classList.add('available'); });
   const button = document.querySelector(`[data-time="${startTime}"]`);
   if (button) {
@@ -681,6 +721,19 @@ function validateBeforeConfirmation() {
   
   if (hoursDiff < 24) {
     showToast('ไม่สามารถจองได้ เนื่องจากต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมงเพื่อรอการยืนยันจากแอดมิน', 'error');
+    return false;
+  }
+  
+  // ตรวจสอบว่าเวลาที่เลือกผ่านมาแล้วหรือไม่
+  const [hours, minutes] = selectedTime.split(':').map(Number);
+  const slotDateTime = new Date(selectedDateObj);
+  slotDateTime.setHours(hours, minutes, 0, 0);
+  
+  const isPastTime = slotDateTime < now;
+  const isToday = selectedDateObj.toDateString() === now.toDateString();
+  
+  if (isPastTime && isToday) {
+    showToast('ไม่สามารถจองได้ เนื่องจากเวลาที่เลือกผ่านมาแล้ว', 'error');
     return false;
   }
   

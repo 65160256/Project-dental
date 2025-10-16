@@ -155,6 +155,7 @@
     .time-slot-btn.available{border-color:#10b981;background:#d1f2eb;color:#0c5a40}
     .time-slot-btn.selected{border-color:#4A90E2;background:#4A90E2;color:#fff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(74,144,226,.3)}
     .time-slot-btn.unavailable{border-color:#ef4444;background:#fee2e2;color:#991b1b;cursor:not-allowed}
+    .time-slot-btn.unavailable:hover{transform:none;border-color:#ef4444;background:#fee2e2}
 
     /* Patient */
     .patient-section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
@@ -1094,13 +1095,34 @@ let selectedDuration = null;
       return;
     }
 
+    // สร้าง time slots พร้อมตรวจสอบเวลา
+    const currentTime = new Date();
+    const selectedDateOnly = new Date(selectedDate);
+    
     let html='';
     data.slots.forEach(slot => {
-      // ✅ แสดงช่วงเวลาแบบชัดเจน (start - end)
-      html += `<div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}', '${slot.end_time}', ${slot.duration})" data-time="${slot.start_time}" data-end="${slot.end_time}">
-        <strong style="font-size:16px;">${slot.start_time} - ${slot.end_time}</strong><br>
-        <small style="color:#059669;font-weight:600;">${slot.duration} นาที</small>
-      </div>`;
+      // สร้าง datetime object สำหรับ time slot นี้
+      const [hours, minutes] = slot.start_time.split(':').map(Number);
+      const slotDateTime = new Date(selectedDateOnly);
+      slotDateTime.setHours(hours, minutes, 0, 0);
+      
+      // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่
+      const isPastTime = slotDateTime < currentTime;
+      const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+      
+      if (isPastTime && isToday) {
+        // เวลาผ่านมาแล้ว - แสดงเป็น unavailable
+        html += `<div class="time-slot-btn unavailable" data-time="${slot.start_time}" data-end="${slot.end_time}" title="เวลาผ่านมาแล้ว">
+          <strong style="font-size:16px; color:#999;">${slot.start_time} - ${slot.end_time}</strong><br>
+          <small style="color:#999;">ผ่านมาแล้ว</small>
+        </div>`;
+      } else {
+        // เวลายังไม่ผ่าน - แสดงเป็น available
+        html += `<div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}', '${slot.end_time}', ${slot.duration})" data-time="${slot.start_time}" data-end="${slot.end_time}">
+          <strong style="font-size:16px;">${slot.start_time} - ${slot.end_time}</strong><br>
+          <small style="color:#059669;font-weight:600;">${slot.duration} นาที</small>
+        </div>`;
+      }
     });
 
     grid.innerHTML = html;
@@ -1122,6 +1144,21 @@ let selectedDuration = null;
 }
 
     function selectTimeSlot(startTime, endTime, duration){
+  // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่
+  const currentTime = new Date();
+  const selectedDateOnly = new Date(selectedDate);
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const slotDateTime = new Date(selectedDateOnly);
+  slotDateTime.setHours(hours, minutes, 0, 0);
+  
+  const isPastTime = slotDateTime < currentTime;
+  const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+  
+  if (isPastTime && isToday) {
+    showToast('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วได้', 'error');
+    return;
+  }
+  
   document.querySelectorAll('.time-slot-btn.selected').forEach(b=>{ 
     b.classList.remove('selected'); 
     b.classList.add('available'); 
@@ -1185,6 +1222,23 @@ async function confirmBooking(){
     const patientId = document.getElementById('selectedPatientId').value;
     const treatmentId = document.getElementById('treatmentSelect').value;
     const symptoms = document.getElementById('symptoms').value;
+
+    // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่ก่อนยืนยันการจอง
+    const currentTime = new Date();
+    const selectedDateOnly = new Date(selectedDate);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const slotDateTime = new Date(selectedDateOnly);
+    slotDateTime.setHours(hours, minutes, 0, 0);
+    
+    const isPastTime = slotDateTime < currentTime;
+    const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+    
+    if (isPastTime && isToday) {
+      showToast('ไม่สามารถจองได้ เนื่องจากเวลาที่เลือกผ่านมาแล้ว', 'error');
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      return;
+    }
 
     const booking = {
       patient_id: patientId,
@@ -1274,6 +1328,23 @@ async function confirmBooking(){
     const patientId = document.getElementById('selectedPatientId').value;
     const treatmentId = document.getElementById('treatmentSelect').value;
     const symptoms = document.getElementById('symptoms').value;
+
+    // ตรวจสอบว่าเวลาผ่านมาแล้วหรือไม่ก่อนยืนยันการจอง
+    const currentTime = new Date();
+    const selectedDateOnly = new Date(selectedDate);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const slotDateTime = new Date(selectedDateOnly);
+    slotDateTime.setHours(hours, minutes, 0, 0);
+    
+    const isPastTime = slotDateTime < currentTime;
+    const isToday = selectedDateOnly.toDateString() === currentTime.toDateString();
+    
+    if (isPastTime && isToday) {
+      showToast('ไม่สามารถจองได้ เนื่องจากเวลาที่เลือกผ่านมาแล้ว', 'error');
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      return;
+    }
 
     const booking = {
       patient_id: patientId,

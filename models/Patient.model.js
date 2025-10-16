@@ -670,7 +670,6 @@ class PatientModel {
         q.time,
         q.queue_status,
         th.diagnosis,
-        th.next_appointment,
         t.treatment_name,
         t.duration
       FROM queue q
@@ -777,7 +776,6 @@ class PatientModel {
         q.time,
         q.queue_status,
         th.diagnosis,
-        th.next_appointment,
         p.fname,
         p.lname,
         p.phone,
@@ -1091,7 +1089,6 @@ class PatientModel {
         q.time,
         q.queue_status,
         th.diagnosis,
-        th.next_appointment,
         d.fname as dentist_fname,
         d.lname as dentist_lname,
         d.specialty,

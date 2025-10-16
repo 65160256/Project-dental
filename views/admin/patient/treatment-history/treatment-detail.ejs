@@ -683,7 +683,6 @@
                     formattedDuration: '<%= detail && detail.formattedDuration ? detail.formattedDuration : "" %>',
                     treatment_name: '<%= detail && detail.treatment_name ? detail.treatment_name : "" %>',
                     dentist_name: '<%= detail && detail.dentist_name ? detail.dentist_name : "" %>',
-                    next_appointment: '<%= detail && detail.next_appointment ? detail.next_appointment : "" %>',
                     diagnosis: '<%= detail && detail.diagnosis ? detail.diagnosis : "" %>',
                     patient_fname: '<%= detail && detail.patient_fname ? detail.patient_fname : "" %>',
                     patient_lname: '<%= detail && detail.patient_lname ? detail.patient_lname : "" %>',
@@ -847,9 +846,9 @@
 
                 // Follow-up Recommendations
                 const followElement = document.getElementById('follow-update');
-                if (treatment.next_appointment && treatment.next_appointment.trim()) {
+                if (treatment.followUpdate && treatment.followUpdate.trim()) {
                     // แปลง \n เป็น <br> สำหรับการแสดงผล
-                    const formattedFollowUp = treatment.next_appointment.replace(/\n/g, '<br>');
+                    const formattedFollowUp = treatment.followUpdate.replace(/\n/g, '<br>');
                     followElement.innerHTML = `<div class="next-box">${formattedFollowUp}</div>`;
                 } else {
                     followElement.textContent = '-';

@@ -1246,7 +1246,6 @@ exports.viewTreatmentDetails = async (req, res) => {
       formattedDuration: `${treatment.duration} นาที`,
       // เพิ่มข้อมูลที่อาจจะไม่มีใน treatmentHistory
       diagnosis: treatment.diagnosis || '',
-      next_appointment: treatment.next_appointment || '',
       followUpdate: treatment.followUpdate || ''
     };
 
@@ -1677,7 +1676,6 @@ exports.updateAppointment = async (req, res) => {
       appointment_datetime, 
       status, 
       diagnosis, 
-      next_appointment 
     } = req.body;
 
     // Basic validation
