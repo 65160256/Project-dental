@@ -20,7 +20,14 @@ class AdminModel {
   static async getProfile(userId) {
     try {
       const [userRows] = await db.execute(`
-        SELECT u.email, u.username, u.last_login, r.rname 
+        SELECT 
+          u.user_id,
+          u.email, 
+          u.username, 
+          u.last_login, 
+          u.created_at,
+          u.role_id,
+          r.rname as role_name
         FROM user u 
         JOIN role r ON u.role_id = r.role_id 
         WHERE u.user_id = ?
@@ -131,6 +138,7 @@ class AdminModel {
                        AND ds.schedule_date <= CURDATE() + INTERVAL 60 DAY`;
       }
 
+      // ดึงข้อมูลตารางเวรที่แพทย์เข้าเวรจริงๆ
       const [scheduleData] = await db.execute(`
         SELECT 
           ds.schedule_date,
@@ -141,7 +149,12 @@ class AdminModel {
           ds.note,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           d.specialty,
-          COUNT(q.queue_id) as appointment_count
+          d.dentist_id,
+          d.fname,
+          d.lname,
+          COUNT(q.queue_id) as appointment_count,
+          ds.created_at,
+          ds.updated_at
         FROM dentist_schedule ds
         JOIN dentist d ON ds.dentist_id = d.dentist_id
         LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
@@ -149,13 +162,79 @@ class AdminModel {
           AND HOUR(q.time) = ds.hour
           AND q.queue_status IN ('pending', 'confirm')
         ${whereClause}
-        GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
+        AND ds.status = 'working'
+        GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty, d.dentist_id, ds.created_at, ds.updated_at
         ORDER BY ds.schedule_date, ds.hour
       `, params);
 
       return scheduleData;
     } catch (error) {
       console.error('Error getting schedule data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * สร้างข้อมูลตารางเวลาเริ่มต้นตามเวลาทำการของคลินิก
+   * @param {string} start - วันที่เริ่มต้น
+   * @param {string} end - วันที่สิ้นสุด
+   * @returns {Array} ข้อมูล schedule เริ่มต้น
+   */
+  static async generateDefaultScheduleData(start, end) {
+    try {
+      // ดึงรายการทันตแพทย์ทั้งหมด
+      const [dentists] = await db.execute(`
+        SELECT dentist_id, fname, lname, specialty 
+        FROM dentist 
+        WHERE status = 'active'
+        ORDER BY fname, lname
+      `);
+
+      if (dentists.length === 0) {
+        return [];
+      }
+
+      const scheduleData = [];
+      const startDate = new Date(start || new Date().toISOString().split('T')[0]);
+      const endDate = new Date(end || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+      // วนลูปผ่านแต่ละวันในช่วงเวลาที่กำหนด
+      for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        const dayOfWeek = date.getDay(); // 0=อาทิตย์, 1=จันทร์, ..., 6=เสาร์
+        const dateStr = date.toISOString().split('T')[0];
+
+        // ตรวจสอบว่าวันนี้เปิดทำการหรือไม่
+        // อาทิตย์ (0) = ปิด, ข้ามไปเลยไม่สร้างข้อมูล
+        if (dayOfWeek === 0) {
+          // วันอาทิตย์ - ข้ามไปเลย ไม่สร้างข้อมูลในปฏิทิน
+          continue;
+        } else {
+          // วันจันทร์-เสาร์ - เปิดทำการ 10:00-20:00
+          dentists.forEach(dentist => {
+            // สร้างช่วงเวลาทำงาน 10 ชั่วโมง (10:00-20:00)
+            for (let hour = 10; hour < 20; hour++) {
+              scheduleData.push({
+                schedule_date: new Date(date),
+                hour: hour,
+                start_time: `${hour.toString().padStart(2, '0')}:00:00`,
+                end_time: `${(hour + 1).toString().padStart(2, '0')}:00:00`,
+                status: 'working',
+                note: '',
+                dentist_name: `${dentist.fname} ${dentist.lname}`,
+                specialty: dentist.specialty,
+                dentist_id: dentist.dentist_id,
+                fname: dentist.fname,
+                lname: dentist.lname,
+                appointment_count: 0
+              });
+            }
+          });
+        }
+      }
+
+      return scheduleData;
+    } catch (error) {
+      console.error('Error generating default schedule data:', error);
       throw error;
     }
   }

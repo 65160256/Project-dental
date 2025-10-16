@@ -493,7 +493,7 @@
                         </h3>
                         <div class="detail-item">
                             <span class="detail-label">วันที่:</span>
-                            <span class="detail-value"><%= new Date(appointment.time).toLocaleDateString('en-GB') %></span>
+                            <span class="detail-value"><%= new Date(appointment.time).toLocaleDateString('th-TH', { day: '2-digit', month: 'long', year: 'numeric' }) %></span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">เวลา:</span>

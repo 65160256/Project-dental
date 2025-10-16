@@ -435,7 +435,7 @@
       if(isNaN(d)) return '-';
       const dd = d.getDate(), mm = TH_MONTHS[d.getMonth()], yy = d.getFullYear()+543;
       const hh = pad2(d.getHours()), mi = pad2(d.getMinutes());
-      return `${dd} ${mm} ${yy} • ${hh}:${mi} น.`;
+      return `${dd} ${mm} ${yy} • ${hh}:${mi}`;
     }
     function escapeHtml(t){const d=document.createElement('div'); d.textContent = String(t||''); return d.innerHTML;}
 
@@ -499,7 +499,7 @@
         const statusText = formatStatus(a.queue_status);
         const start = a.time ? new Date(a.time) : null;
         const end = a.time_end ? new Date(a.time_end) : null;
-        const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')} น.` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
+        const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
         const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
         return `<tr data-id="${a.queue_id}">
           <td class="time-cell">${formattedRange}</td>
@@ -519,7 +519,7 @@
       try{
         const d=new Date(dt); if(isNaN(d.getTime())) return 'วันที่ไม่ถูกต้อง';
         const today=new Date(); const isToday = d.toDateString()===today.toDateString();
-        const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); const t=`${hh}:${mm} น.`;
+        const hh=String(d.getHours()).padStart(2,'0'); const mm=String(d.getMinutes()).padStart(2,'0'); const t=`${hh}:${mm}`;
         if(isToday) return `วันนี้ ${t}`;
         return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${t}`;
       }catch{ return 'วันที่ไม่ถูกต้อง'; }

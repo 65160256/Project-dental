@@ -1126,9 +1126,9 @@
         
         // Date of Treatment
         document.getElementById('treatment-date').textContent = 
-            treatmentDate.toLocaleDateString('en-GB', {
+            treatmentDate.toLocaleDateString('th-TH', {
                 day: '2-digit',
-                month: '2-digit',
+                month: 'long',
                 year: 'numeric'
             });
 
@@ -1153,9 +1153,9 @@
         const dobElement = document.getElementById('patient-dob');
         if (treatment.dob) {
             const dob = new Date(treatment.dob);
-            dobElement.textContent = dob.toLocaleDateString('en-GB', {
+            dobElement.textContent = dob.toLocaleDateString('th-TH', {
                 day: '2-digit',
-                month: 'short',
+                month: 'long',
                 year: 'numeric'
             });
         } else {

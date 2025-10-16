@@ -293,16 +293,18 @@ exports.getScheduleAPI = async (req, res) => {
           workingBlocks.push(currentBlock);
         }
         
-        // Create FullCalendar events with Thai labels
+        // Create FullCalendar events with Thai labels for duty schedule
         workingBlocks.forEach(block => {
           if (block.type === 'dayoff') {
             events.push({
               id: `dayoff_${dentistKey}_${date}`,
-              title: `ทพ. ${dentistData.dentist}\nวันหยุด`,
+              title: `ทพ. ${dentistData.dentist} - วันหยุด`,
               start: date,
+              allDay: true,
               color: '#f5f5f5',
               textColor: '#999',
               borderColor: '#ddd',
+              display: 'block',
               extendedProps: {
                 type: 'dayoff',
                 dentist: dentistData.dentist,
@@ -314,17 +316,21 @@ exports.getScheduleAPI = async (req, res) => {
             const startTime = block.start.substring(0, 5); // HH:MM
             const endTime = block.end.substring(0, 5);
             
-            const appointmentText = block.hasAppointments 
-              ? ` (${block.appointmentCount} นัดหมาย)` 
-              : '';
+            // สร้าง title ที่เหมาะสมกับปฏิทินตารางเวร
+            let title = `ทพ. ${dentistData.dentist} - เวร`;
+            if (block.hasAppointments) {
+              title += ` (${block.appointmentCount} นัดหมาย)`;
+            }
             
             events.push({
               id: `work_${dentistKey}_${date}`,
-              title: `ทพ. ${dentistData.dentist}\n${startTime}-${endTime}${appointmentText}`,
-              start: date,
+              title: title,
+              start: `${date}T${startTime}:00`,
+              end: `${date}T${endTime}:00`,
               color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
               textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
               borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
+              display: 'block',
               extendedProps: {
                 type: 'working',
                 dentist: dentistData.dentist,
@@ -346,10 +352,10 @@ exports.getScheduleAPI = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('เกิดข้อผิดพลาดในการโหลด API ตารางเวลา:', error);
+    console.error('เกิดข้อผิดพลาดในการโหลด API ตารางเวร:', error);
     res.status(500).json({
       success: false,
-      error: 'ไม่สามารถโหลดข้อมูลตารางเวลาได้',
+      error: 'ไม่สามารถโหลดข้อมูลตารางเวรได้',
       events: []
     });
   }
@@ -2355,17 +2361,20 @@ exports.getCurrentUserAPI = async (req, res) => {
 
     res.json({
       success: true,
-      user: {
-        user_id: user.user_id,
-        email: user.email,
-        role_id: user.role_id,
-        role_name: user.role_name,
-        fname: user.fname,
-        lname: user.lname,
-        full_name: `${user.fname} ${user.lname}`.trim(),
-        dentist_id: user.dentist_id || null,
-        patient_id: user.patient_id || null
-      }
+      user_id: user.user_id,
+      email: user.email,
+      username: user.username || user.email,
+      role: user.role_name || 'ผู้ดูแลระบบ',
+      role_name: user.role_name,
+      fname: '', // ไม่มีในฐานข้อมูล
+      lname: '', // ไม่มีในฐานข้อมูล
+      full_name: user.username || user.email, // ใช้ username แทน
+      last_login: user.last_login,
+      created_at: user.created_at,
+      status: 'active', // ตั้งค่าคงที่
+      dentist_id: null, // ไม่มีในฐานข้อมูล
+      patient_id: null, // ไม่มีในฐานข้อมูล
+      role_id: user.role_id
     });
 
   } catch (error) {

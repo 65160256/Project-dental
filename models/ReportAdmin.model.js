@@ -762,6 +762,7 @@ class ReportAdminModel {
         confirmed: 0,
         pending: 0,
         cancelled: 0,
+        completed: 0,
         total: 0
       };
 
@@ -772,9 +773,16 @@ class ReportAdminModel {
           appointmentSummary.pending = stat.count;
         } else if (stat.queue_status === 'cancel') {
           appointmentSummary.cancelled = stat.count;
+        } else if (stat.queue_status === 'completed') {
+          appointmentSummary.completed = stat.count;
         }
         appointmentSummary.total += stat.count;
       });
+
+      // คำนวณ completion rate
+      appointmentSummary.completionRate = appointmentSummary.total > 0 
+        ? Math.round((appointmentSummary.completed / appointmentSummary.total) * 100) 
+        : 0;
 
       // 3. สถิติการรักษา
       const [treatmentStats] = await db.execute(`

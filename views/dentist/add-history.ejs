@@ -613,7 +613,8 @@
                                 <strong><i class="fas fa-clock"></i> เวลา:</strong>
                                 <span><%= new Date(appointment.time).toLocaleTimeString('th-TH', { 
                                     hour: '2-digit', 
-                                    minute: '2-digit' 
+                                    minute: '2-digit',
+                                    hour12: false
                                 }) %></span>
                             </p>
                             <p>

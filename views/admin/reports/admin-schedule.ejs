@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ตารางเวลาทันตแพทย์ - Smile Clinic</title>
+  <title>ตารางเวรทันตแพทย์ - Smile Clinic</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
   <style>
@@ -24,13 +24,7 @@
     .main{margin-left:180px;min-height:100vh}
 
     /* Top bar */
-    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-    .search-section{display:flex;align-items:center;gap:15px}
-    .search-section label{font-weight:500;color:#555;font-size:14px}
-    .search-box{background:#f8f9fa;border:1px solid #e1e5e9;border-radius:20px;padding:8px 15px;display:flex;align-items:center;width:250px;transition:.2s}
-    .search-box:focus-within{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.1)}
-    .search-box i{color:#666;margin-right:8px;font-size:14px}
-    .search-box input{border:none;background:transparent;outline:none;width:100%;font-size:13px}
+    .top-bar{background:#fff;padding:15px 30px;display:flex;justify-content:flex-end;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1)}
 
     .user-section{display:flex;align-items:center;gap:15px}
     .notification-container{position:relative}
@@ -74,17 +68,22 @@
     .btn-secondary{background:#f8f9fa;color:#333;border:1px solid #e1e5e9}
     .btn-secondary:hover{background:#eef1f5}
 
+
     .calendar-section{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:30px}
     .calendar-header{background:linear-gradient(135deg,rgba(74,144,226,.1),rgba(45,168,255,.1));padding:25px 30px;border-bottom:1px solid #e1e5e9;display:flex;justify-content:space-between;align-items:center}
     .calendar-header h3{font-size:18px;font-weight:600;color:#333;margin:0}
-    .calendar-controls{display:flex;gap:10px;align-items:center}
+    .calendar-controls{display:flex;gap:15px;align-items:center}
+    .calendar-actions{display:flex;gap:10px}
     .view-toggle{display:flex;background:#f8f9fa;border-radius:8px;padding:4px;gap:2px}
     .view-btn{padding:8px 12px;background:transparent;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:#666;transition:.2s}
     .view-btn.active{background:#fff;color:#4A90E2;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
-    .legend{display:flex;gap:25px;margin-bottom:25px;padding:20px 30px;background:linear-gradient(135deg,rgba(74,144,226,.05),rgba(45,168,255,.05));border-bottom:1px solid #e1e5e9}
+    /* Simple Legend */
+    .simple-legend{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;background:rgba(74,144,226,.05);border-bottom:1px solid #e1e5e9}
+    .legend-items{display:flex;gap:20px}
     .legend-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#333}
-    .legend-color{width:16px;height:16px;border-radius:4px;border:2px solid}
+    .legend-color{width:14px;height:14px;border-radius:3px;border:2px solid}
+    .legend-stats{display:flex;gap:15px;font-size:12px;color:#666}
 
     .calendar-container{padding:0}
 
@@ -95,10 +94,56 @@
     .fc-button-primary{background:#4A90E2 !important;border:1px solid #4A90E2 !important;border-radius:6px !important;font-weight:500 !important;font-size:13px !important;padding:8px 16px !important}
     .fc-button-primary:hover{background:#357abd !important;border-color:#357abd !important}
     .fc-daygrid{padding:0 30px 30px}
-    .fc-event{border-radius:6px !important;padding:4px 8px !important;font-size:11px !important;font-weight:500 !important;border:none !important;box-shadow:0 1px 3px rgba(0,0,0,.1) !important;margin-bottom:2px !important}
+    .fc-event{border-radius:6px !important;padding:4px 8px !important;font-size:11px !important;font-weight:500 !important;border:none !important;box-shadow:0 1px 3px rgba(0,0,0,.1) !important;margin-bottom:2px !important;cursor:pointer !important}
+    .fc-event:hover{transform:translateY(-1px) !important;box-shadow:0 2px 6px rgba(0,0,0,.15) !important}
     .fc-daygrid-day:hover{background:rgba(74,144,226,.05) !important}
-    .fc-day-today{background:rgba(74,144,226,.08) !important}
-    .fc-daygrid-day-number{color:#333 !important;font-weight:600 !important}
+    .fc-day-today{background:rgba(74,144,226,.08) !important;border:2px solid #4A90E2 !important}
+    .fc-daygrid-day-number{color:#333 !important;font-weight:600 !important;font-size:14px !important}
+    
+    /* ปฏิทิน Grid */
+    .fc-daygrid-body{background:#fff}
+    .fc-daygrid-day-frame{min-height:120px !important;padding:8px !important}
+    .fc-daygrid-day-events{margin-top:8px !important}
+    .fc-daygrid-day-top{flex-direction:row !important;justify-content:space-between !important}
+    .fc-daygrid-day-number{padding:4px 8px !important;border-radius:4px !important;transition:.2s}
+    .fc-daygrid-day-number:hover{background:rgba(74,144,226,.1) !important}
+    
+    /* หัวตาราง */
+    .fc-col-header{background:linear-gradient(135deg,#f8f9fa,#e9ecef) !important;border-bottom:2px solid #dee2e6 !important}
+    .fc-col-header-cell{font-weight:600 !important;color:#495057 !important;padding:12px 8px !important;font-size:14px !important}
+    
+    /* Week/Day View */
+    .fc-timegrid-slot{height:40px !important}
+    .fc-timegrid-slot-label{font-size:12px !important;color:#6c757d !important}
+    .fc-timegrid-event{border-radius:6px !important;padding:2px 6px !important;font-size:12px !important}
+    .fc-timegrid-event:hover{transform:scale(1.02) !important;z-index:1000 !important}
+    
+    /* ซ่อนวันอาทิตย์ */
+    .fc-day-sun{display:none !important}
+    .fc-col-header-cell[data-date*="Sunday"]{display:none !important}
+    
+    /* ปรับขนาดปฏิทิน */
+    .fc-daygrid-day-frame{min-height:140px !important}
+    .fc-daygrid-event{font-size:10px !important;line-height:1.2 !important;padding:2px 4px !important}
+    .fc-daygrid-event-title{font-weight:500 !important}
+    
+    /* Tooltip */
+    .fc-event[data-tooltip]:hover::after{
+      content:attr(data-tooltip);
+      position:absolute;
+      background:#333;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:6px;
+      font-size:12px;
+      white-space:pre-line;
+      z-index:1000;
+      top:100%;
+      left:50%;
+      transform:translateX(-50%);
+      box-shadow:0 4px 12px rgba(0,0,0,.15);
+      pointer-events:none;
+    }
 
     /* Event colors */
     .fc-event.working-hours{background:#e8f5e8 !important;color:#2e7d32 !important;border-left:3px solid #2e7d32 !important}
@@ -131,9 +176,9 @@
       .sidebar{width:100%;height:auto;position:relative}
       .main{margin-left:0}
       .top-bar{flex-direction:column;gap:15px;align-items:stretch}
-      .search-box{width:100%}
       .page-header{flex-direction:column;align-items:flex-start;gap:15px}
-      .legend{flex-direction:column;gap:15px}
+      .simple-legend{flex-direction:column;gap:15px;align-items:flex-start}
+      .legend-items{flex-wrap:wrap}
       .calendar-header{flex-direction:column;gap:15px;align-items:flex-start}
       .fc-toolbar{flex-direction:column !important;gap:15px !important}
       .fc-toolbar-chunk{display:flex !important;justify-content:center !important}
@@ -149,7 +194,7 @@
     </div>
     <ul>
       <li><a href="/admin/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
-      <li class="active"><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวลา</a></li>
+      <li class="active"><a href="/admin/schedule"><i class="fas fa-calendar-alt"></i> ตารางเวร</a></li>
       <li><a href="/admin/appointments"><i class="fas fa-hospital"></i> การนัดหมาย</a></li>
       <li><a href="/admin/dentists"><i class="fas fa-user-md"></i> ทันตแพทย์</a></li>
       <li><a href="/admin/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
@@ -161,13 +206,6 @@
   <div class="main">
     <!-- Top Bar -->
     <div class="top-bar">
-      <div class="search-section">
-        <label>ค้นหา:</label>
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="ทันตแพทย์, ตารางเวลา หรือวันที่..." id="searchInput" />
-        </div>
-      </div>
       <div class="user-section">
         <div class="notification-container">
           <i class="fas fa-bell notification-icon" onclick="toggleNotifications()"></i>
@@ -215,27 +253,36 @@
       <!-- Loading -->
       <div class="loading" id="loading">
         <div class="loading-spinner"></div>
-        <p>กำลังโหลดข้อมูลตารางเวลา...</p>
+        <p>กำลังโหลดข้อมูลตารางเวร...</p>
       </div>
+
 
       <!-- Calendar -->
       <div class="calendar-section" id="calendarSection" style="display:none">
         <div class="calendar-header">
-          <h3><i class="fas fa-calendar-alt"></i> ปฏิทินตารางเวลาทันตแพทย์</h3>
+          <h3><i class="fas fa-calendar-alt"></i> ปฏิทินตารางเวรทันตแพทย์</h3>
           <div class="calendar-controls">
-            <!-- คงปุ่มสลับมุมมองของเราไว้ และตัดของ FullCalendar ออกเพื่อไม่ให้ซ้ำ -->
             <div class="view-toggle">
               <button class="view-btn active" data-view="dayGridMonth">เดือน</button>
               <button class="view-btn" data-view="timeGridWeek">สัปดาห์</button>
               <button class="view-btn" data-view="timeGridDay">วัน</button>
             </div>
+            <button class="btn btn-primary" onclick="refreshSchedule()">
+              <i class="fas fa-sync"></i> รีเฟรช
+            </button>
           </div>
         </div>
 
-        <div class="legend">
-          <div class="legend-item"><div class="legend-color" style="background:#e8f5e8;border-color:#2e7d32"></div><span>เวลาทำงาน</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#fce4ec;border-color:#c2185b"></div><span>เวลาทำงาน (มีนัดหมาย)</span></div>
-          <div class="legend-item"><div class="legend-color" style="background:#f5f5f5;border-color:#999"></div><span>วันหยุด</span></div>
+        <div class="simple-legend">
+          <div class="legend-items">
+            <div class="legend-item"><div class="legend-color" style="background:#e8f5e8;border-color:#2e7d32"></div><span>เข้าเวรว่าง</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#fce4ec;border-color:#c2185b"></div><span>เข้าเวร (มีนัดหมาย)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#e3f2fd;border-color:#1976d2"></div><span>วันนี้</span></div>
+          </div>
+          <div class="legend-stats">
+            <span id="totalEvents">รวม: 0 ช่วงเวร</span>
+            <span id="totalAppointments">นัดหมาย: 0 รายการ</span>
+          </div>
         </div>
 
         <div class="calendar-container"><div id="calendar"></div></div>
@@ -243,7 +290,7 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Schedule Modal -->
   <div id="scheduleModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -254,10 +301,12 @@
     </div>
   </div>
 
+
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script>
     let notificationData = [];
     let calendar;
+    let allEvents = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       initializeCalendar();
@@ -266,7 +315,6 @@
       loadNotifications();
       setupEventListeners();
       setInterval(loadNotifications, 120000);
-      setTimeout(()=>showToast('ยินดีต้อนรับสู่ระบบตารางเวลา','info'), 800);
     });
 
     async function loadUserInfo(){
@@ -284,32 +332,117 @@
       calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'th',
         initialView: 'dayGridMonth',
-        // แก้ปุ่มซ้ำ: เอาปุ่ม view ออกจาก header ของ FullCalendar แล้วใช้ปุ่ม custom ด้านบนแทน
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
           right: ''
         },
-        buttonText: { today: 'วันนี้' },
+        buttonText: { 
+          today: 'วันนี้',
+          month: 'เดือน',
+          week: 'สัปดาห์',
+          day: 'วัน'
+        },
         height: 'auto',
         eventDisplay: 'block',
-        dayMaxEvents: 3,
+        dayMaxEvents: 4,
         moreLinkClick: 'popover',
         events: [],
         eventClick: handleCalendarEventClick,
+        dateClick: handleDateClick,
         loading: (isLoading)=>{
           document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
           document.getElementById('calendarSection').style.display = isLoading ? 'none' : 'block';
         },
         eventDidMount: (info)=>{
           const props = info.event.extendedProps;
-          if (props.type === 'dayoff') info.el.classList.add('day-off');
-          else if (props.hasAppointments) info.el.classList.add('working-hours-appointments');
-          else info.el.classList.add('working-hours');
-          info.el.title = info.event.title;
+          if (props.type === 'dayoff') {
+            info.el.classList.add('day-off');
+          } else if (props.hasAppointments) {
+            info.el.classList.add('working-hours-appointments');
+          } else {
+            info.el.classList.add('working-hours');
+          }
+          
+          // สร้าง tooltip ที่ละเอียดขึ้น
+          let tooltip = `${props.dentist || 'ทันตแพทย์'}`;
+          if (props.specialty) tooltip += `\nความเชี่ยวชาญ: ${props.specialty}`;
+          if (props.startTime && props.endTime) tooltip += `\nเวลา: ${props.startTime} - ${props.endTime}`;
+          if (props.appointmentCount > 0) tooltip += `\nนัดหมาย: ${props.appointmentCount} รายการ`;
+          
+          info.el.title = tooltip;
+          info.el.setAttribute('data-tooltip', tooltip);
+          
+          // เพิ่ม animation เมื่อ hover
+          info.el.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.zIndex = '1000';
+          });
+          
+          info.el.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.zIndex = 'auto';
+          });
         },
         eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-        datesSet: syncViewButtons // อัปเดตสถานะปุ่ม custom ให้ตรงกับมุมมองปัจจุบัน
+        datesSet: syncViewButtons,
+        dayCellDidMount: (info) => {
+          // ซ่อนวันอาทิตย์
+          if (info.date.getDay() === 0) {
+            info.el.style.display = 'none';
+            return;
+          }
+          
+          // ไฮไลท์วันนี้
+          const today = new Date();
+          if (info.date.toDateString() === today.toDateString()) {
+            info.el.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+          }
+          
+          // เพิ่มข้อมูลสถิติในแต่ละวัน
+          const dateStr = info.date.toISOString().split('T')[0];
+          const dayEvents = allEvents.filter(event => event.start && event.start.split('T')[0] === dateStr);
+          
+          if (dayEvents.length > 0) {
+            // นับจำนวนทันตแพทย์ที่ไม่ซ้ำกัน
+            const uniqueDentists = new Set(dayEvents.map(event => event.extendedProps?.dentist).filter(Boolean));
+            const totalAppointments = dayEvents.reduce((sum, event) => sum + (event.extendedProps?.appointmentCount || 0), 0);
+            
+            // เพิ่มข้อมูลสถิติในมุมขวาบนของแต่ละวัน
+            const statsElement = document.createElement('div');
+            statsElement.style.cssText = `
+              position: absolute;
+              top: 4px;
+              right: 4px;
+              font-size: 10px;
+              color: #666;
+              background: rgba(255,255,255,0.8);
+              padding: 2px 4px;
+              border-radius: 3px;
+              pointer-events: none;
+            `;
+            
+            let statsText = `${uniqueDentists.size} ทพ.`;
+            if (totalAppointments > 0) {
+              statsText += ` • ${totalAppointments} นัด`;
+            }
+            
+            statsElement.textContent = statsText;
+            info.el.appendChild(statsElement);
+          }
+        },
+        dayHeaderDidMount: (info) => {
+          // ซ่อนหัวคอลัมน์วันอาทิตย์
+          if (info.text === 'อา') {
+            info.el.style.display = 'none';
+          }
+        },
+        // ปรับแต่งการแสดงผลของปฏิทิน
+        dayMaxEventRows: 4,
+        eventMaxStack: 3,
+        eventOverlap: false,
+        slotMinTime: '08:00:00',
+        slotMaxTime: '22:00:00'
       });
       calendar.render();
     }
@@ -324,15 +457,7 @@
         });
       });
 
-      // ค้นหาแบบเบาเครื่อง (debounce)
-      let t;
-      document.getElementById('searchInput').addEventListener('input', (e)=>{
-        clearTimeout(t);
-        const term = e.target.value.trim().toLowerCase();
-        t = setTimeout(()=>{
-          if (term.length > 2) filterCalendarEvents(term); else resetCalendarFilter();
-        }, 200);
-      });
+
 
       // ปิดเมนู/โมดอลเมื่อคลิกนอก
       document.addEventListener('click', (ev)=>{
@@ -355,18 +480,25 @@
       });
     }
 
+
     async function loadScheduleData(){
       try{
         const res = await fetch('/admin/api/schedule');
         if(!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if(!data.success) throw new Error(data.error || 'ไม่สามารถโหลดตารางเวลาได้');
+        
+        allEvents = data.events || [];
+        
         calendar.removeAllEvents();
-        calendar.addEventSource(data.events);
-        showToast('โหลดตารางเวลาสำเร็จ','success');
+        calendar.addEventSource(allEvents);
+        
+        document.getElementById('loading').style.display='none';
+        document.getElementById('calendarSection').style.display='block';
+        
+        updateStatistics();
       }catch(err){
         console.error('โหลดตารางเวลา:', err);
-        showToast('ไม่สามารถโหลดตารางเวลาได้: ' + err.message, 'error');
         document.getElementById('loading').style.display='none';
         document.getElementById('calendarSection').style.display='block';
       }
@@ -431,6 +563,25 @@
       showScheduleModal(ev, p);
     }
 
+    function handleDateClick(info){
+      const clickedDate = info.dateStr;
+      const dayOfWeek = info.date.getDay();
+      
+      // ถ้าคลิกวันอาทิตย์ ให้แสดงข้อความแจ้งเตือน
+      if (dayOfWeek === 0) {
+        showToast('วันอาทิตย์เป็นวันหยุด ไม่มีการให้บริการ', 'info');
+        return;
+      }
+      
+      // แสดงเมนูการดำเนินการสำหรับวันที่คลิก
+      showDateActionMenu(clickedDate);
+    }
+
+    function showDateActionMenu(date) {
+      // แค่เปลี่ยนไปมุมมองรายวัน
+      calendar.changeView('timeGridDay', date);
+    }
+
     function showScheduleModal(event, props){
       const modal = document.getElementById('scheduleModal');
       const modalTitle = document.getElementById('modalTitle');
@@ -438,36 +589,69 @@
       modalTitle.textContent = 'รายละเอียดตารางเวลา';
       const d = new Date(event.start);
       const thaiDate = d.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      
       let html = `<div style="margin-bottom:20px">
         <h4 style="margin:0 0 15px;color:#333;border-bottom:2px solid #e1e5e9;padding-bottom:10px"><i class="fas fa-calendar-alt"></i> ข้อมูลตารางเวลา</h4>
-        <p style="margin:8px 0"><strong>หัวข้อ:</strong> ${event.title}</p>
-        <p style="margin:8px 0"><strong>วันที่:</strong> ${thaiDate}</p>`;
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+          <div>
+            <p style="margin:8px 0"><strong>หัวข้อ:</strong> ${event.title}</p>
+            <p style="margin:8px 0"><strong>วันที่:</strong> ${thaiDate}</p>`;
+      
       if (props){
         if (props.dentist) html += `<p style="margin:8px 0"><strong>ทันตแพทย์:</strong> ทพ. ${props.dentist}</p>`;
         if (props.specialty) html += `<p style="margin:8px 0"><strong>ความเชี่ยวชาญ:</strong> ${props.specialty}</p>`;
-        if (props.startTime && props.endTime) html += `<p style="margin:8px 0"><strong>เวลาทำงาน:</strong> ${props.startTime} - ${props.endTime} น.</p>`;
-        if (+props.appointmentCount > 0) html += `<p style="margin:8px 0"><strong>จำนวนนัดหมาย:</strong> ${props.appointmentCount} รายการ</p>`;
+        if (props.startTime && props.endTime) html += `<p style="margin:8px 0"><strong>ช่วงเวลาเวร:</strong> ${props.startTime} - ${props.endTime} น.</p>`;
+        if (+props.appointmentCount > 0) html += `<p style="margin:8px 0"><strong>จำนวนนัดหมาย:</strong> <span style="color:#c2185b;font-weight:bold">${props.appointmentCount} รายการ</span></p>`;
         if (props.type === 'dayoff' && props.note) html += `<p style="margin:8px 0"><strong>หมายเหตุ:</strong> ${props.note}</p>`;
       }
+      
       html += `</div>
-        <div style="text-align:right;border-top:2px solid #e1e5e9;padding-top:20px">
-          <a href="/admin/appointments" class="btn btn-primary" style="margin-right:10px"><i class="fas fa-list"></i> ดูการนัดหมาย</a>
-          <button onclick="closeScheduleModal()" class="btn btn-secondary"><i class="fas fa-times"></i> ปิด</button>
-        </div>`;
+          <div style="background:#f8f9fa;padding:15px;border-radius:8px">
+            <h5 style="margin:0 0 10px;color:#555"><i class="fas fa-info-circle"></i> สถานะ</h5>`;
+      
+      if (props?.type === 'dayoff') {
+        html += `<div style="color:#999;font-size:14px"><i class="fas fa-calendar-times"></i> วันหยุด</div>`;
+      } else if (props?.hasAppointments) {
+        html += `<div style="color:#c2185b;font-size:14px"><i class="fas fa-user-clock"></i> มีนัดหมาย</div>`;
+      } else {
+        html += `<div style="color:#2e7d32;font-size:14px"><i class="fas fa-clock"></i> เข้าเวรว่าง</div>`;
+      }
+      
+      html += `</div></div></div>`;
+      
+      // Add close button
+      html += `<div style="text-align:right;border-top:2px solid #e1e5e9;padding-top:20px">
+        <button onclick="closeScheduleModal()" class="btn btn-secondary">
+          <i class="fas fa-times"></i> ปิด
+        </button>
+      </div>`;
+      
       modalBody.innerHTML = html;
       modal.style.display = 'flex';
     }
 
+
     function closeScheduleModal(){ document.getElementById('scheduleModal').style.display='none'; }
 
-    function filterCalendarEvents(term){
-      calendar.getEvents().forEach(ev=>{
-        const t = (ev.title||'').toLowerCase();
-        const d = (ev.extendedProps?.dentist||'').toLowerCase();
-        ev.setProp('display', (t.includes(term) || d.includes(term)) ? 'auto' : 'none');
-      });
+
+
+
+    function refreshSchedule(){
+      loadScheduleData();
     }
-    function resetCalendarFilter(){ calendar.getEvents().forEach(ev=>ev.setProp('display','auto')); }
+
+    function updateStatistics(){
+      const totalEvents = allEvents.length;
+      const workingDays = new Set(allEvents.map(event => event.start)).size;
+      const totalAppointments = allEvents.reduce((sum, event) => {
+        return sum + (event.extendedProps?.appointmentCount || 0);
+      }, 0);
+      
+      document.getElementById('totalEvents').textContent = `รวม: ${totalEvents} ช่วงเวร`;
+      document.getElementById('totalAppointments').textContent = `นัดหมาย: ${totalAppointments} รายการ`;
+    }
+
+
 
     function toggleNotifications(){
       const dd = document.getElementById('notificationDropdown');
@@ -478,6 +662,7 @@
       const m = document.getElementById('profileDropdown');
       m.style.display = m.style.display === 'block' ? 'none' : 'block';
     }
+
 
     function showToast(msg,type='info'){
       document.querySelectorAll('.toast').forEach(t=>t.remove());

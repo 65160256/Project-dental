@@ -319,7 +319,7 @@
             if(isNaN(d)) return '-';
             const dd = d.getDate(), mm = TH_MONTHS[d.getMonth()], yy = d.getFullYear()+543;
             const hh = pad2(d.getHours()), mi = pad2(d.getMinutes());
-            return `${dd} ${mm} ${yy} • ${hh}:${mi} น.`;
+            return `${dd} ${mm} ${yy} • ${hh}:${mi}`;
         }
 
         function toggleNotifications(){ document.getElementById('notificationDropdown').classList.toggle('show'); }
