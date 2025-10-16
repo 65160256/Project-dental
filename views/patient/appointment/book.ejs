@@ -8,6 +8,198 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <!-- แยก CSS -->
   <link rel="stylesheet" href="/css/patient/appointment-book.css">
+  <style>
+    /* เพิ่ม CSS สำหรับ time slot ให้เหมือน admin */
+    .time-slot-btn {
+      padding: 20px 12px;
+      border: 2px solid #e9ecef;
+      background: #f8f9fa;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: .3s;
+      font-size: 14px;
+      font-weight: 500;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .time-slot-btn:hover {
+      border-color: #4A90E2;
+      background: rgba(74,144,226,.1);
+      transform: translateY(-2px);
+    }
+    .time-slot-btn.available {
+      border-color: #10b981;
+      background: #d1f2eb;
+      color: #0c5a40;
+    }
+    .time-slot-btn.selected {
+      border-color: #4A90E2;
+      background: #4A90E2;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(74,144,226,.3);
+    }
+    .time-slot-btn.unavailable {
+      border-color: #ef4444;
+      background: #fee2e2;
+      color: #991b1b;
+      cursor: not-allowed;
+    }
+
+    /* ปรับ doctor card ให้เหมือน admin */
+    .doctor-card {
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: .3s;
+      background: #f8f9fa;
+    }
+    .doctor-card:hover {
+      border-color: #4A90E2;
+      background: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(74,144,226,.2);
+    }
+    .doctor-card.selected {
+      border-color: #4A90E2;
+      background: rgba(74,144,226,.1);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(74,144,226,.3);
+    }
+    .doctor-card-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .doctor-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#4A90E2,#2DA8FF);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: 20px;
+    }
+    .doctor-details h5 {
+      margin: 0 0 5px 0;
+      color: #333;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .doctor-details p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+    .doctor-treatments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 12px 0 15px;
+    }
+    .treatment-tag {
+      background: rgba(74,144,226,.1);
+      color: #4A90E2;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .doctor-availability {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .time-slot {
+      display: inline-block;
+      background: #e8f5e8;
+      color: #2e7d32;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* ปรับ calendar day doctors ให้เหมือน admin */
+    .day-doctors {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .doctor-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 4px;
+      background: rgba(74,144,226,.1);
+      font-size: 11px;
+      transition: .2s;
+    }
+    .doctor-item:hover {
+      background: rgba(74,144,226,.2);
+      transform: scale(1.02);
+    }
+    .doctor-mini-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #4A90E2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: 9px;
+    }
+    .doctor-name-mini {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .doctor-status {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .doctor-status.busy {
+      background: #ef4444;
+    }
+
+    /* เพิ่ม CSS สำหรับวันที่ที่ใกล้เกินไป */
+    .calendar-day.too-close {
+      background: #fee2e2 !important;
+      color: #991b1b;
+      opacity: 0.6;
+      cursor: not-allowed !important;
+    }
+    .calendar-day.too-close:hover {
+      background: #fee2e2 !important;
+      border-color: #ef4444 !important;
+      transform: none !important;
+    }
+    .calendar-day.too-close .day-number {
+      color: #991b1b;
+    }
+    .calendar-day.too-close .day-number::after {
+      content: "⚠️";
+      font-size: 10px;
+      margin-left: 4px;
+      color: #ef4444;
+    }
+  </style>
 </head>
 <body>
   <!-- Sidebar -->
@@ -64,12 +256,12 @@
         <div class="progress-steps">
           <div class="step active" id="step1">
             <div class="step-number">1</div>
-            <div class="step-label">เลือกวันและหมอ</div>
+            <div class="step-label">เลือกวันที่ & ทันตแพทย์</div>
           </div>
           <div class="step-connector"></div>
           <div class="step" id="step2">
             <div class="step-number">2</div>
-            <div class="step-label">เลือกเวลาและรายละเอียด</div>
+            <div class="step-label">เลือกเวลา & รายละเอียด</div>
           </div>
           <div class="step-connector"></div>
           <div class="step" id="step3">
@@ -116,7 +308,7 @@
             <div>
               <strong>วิธีใช้งาน:</strong>
               <span id="filterInstructions">
-                สามารถจองนัดหมายล่วงหน้าอย่างน้อย 24 ชั่วโมง และคลินิกปิดวันอาทิตย์
+                <strong>ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง</strong> เพื่อรอการยืนยันจากแอดมิน และคลินิกปิดวันอาทิตย์
               </span>
             </div>
           </div>
@@ -152,10 +344,10 @@
 
         <div class="step-navigation">
           <a href="/patient/dashboard" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> กลับ
+            <i class="fas fa-arrow-left"></i> กลับไปหน้าหลัก
           </a>
           <button type="button" class="btn btn-primary" onclick="nextStep(2)" id="step1Next" disabled>
-            ต่อไป: เลือกเวลา <i class="fas fa-arrow-right"></i>
+            ถัดไป: เลือกเวลา <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
@@ -214,10 +406,10 @@
 
         <div class="step-navigation">
           <button type="button" class="btn btn-secondary" onclick="previousStep(1)">
-            <i class="fas fa-arrow-left"></i> กลับ
+            <i class="fas fa-arrow-left"></i> ย้อนกลับ
           </button>
           <button type="button" class="btn btn-primary" onclick="nextStep(3)" id="step2Next" disabled>
-            ต่อไป: ยืนยันการจอง <i class="fas fa-arrow-right"></i>
+            ถัดไป: ยืนยันการจอง <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
@@ -243,7 +435,7 @@
 
           <div class="step-navigation">
             <button type="button" class="btn btn-secondary" onclick="previousStep(2)">
-              <i class="fas fa-edit"></i> แก้ไขข้อมูล
+              <i class="fas fa-edit"></i> แก้ไขรายละเอียด
             </button>
             <button type="button" class="btn btn-success" onclick="confirmBooking()">
               <i class="fas fa-check"></i> ยืนยันการจอง

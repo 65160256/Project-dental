@@ -85,7 +85,7 @@ async function sendUpcomingAppointmentAlerts() {
 
       // แจ้งเตือนทันตแพทย์
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
@@ -136,7 +136,7 @@ async function checkMissedAppointments() {
 
       // แจ้งเตือน Admin และ Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_missed',

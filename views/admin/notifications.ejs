@@ -620,8 +620,8 @@
         }
 
         // นำทางไปยังรายละเอียดการนัดหมาย
-        if (notif.appointment_id) {
-          window.location.href = `/admin/appointments/detail?id=${notif.appointment_id}`;
+        if (notif.queue_id) {
+          window.location.href = `/admin/appointments/detail?id=${notif.queue_id}`;
         }
       }
 

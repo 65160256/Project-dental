@@ -11,7 +11,9 @@ const {
   TreatmentAdminModel,
   AppointmentAdminModel,
   NotificationAdminModel,
-  ReportAdminModel
+  ReportAdminModel,
+  QueueModel,
+  AvailableSlotsModel
 } = require('../models');
 
 // -------------------- แสดงโปรไฟล์ --------------------
@@ -448,9 +450,10 @@ exports.addDentist = async (req, res) => {
   const education = req.body.education || '';
   const address = req.body.address || '';
   const phone = req.body.phone || '';
+  const license_no = req.body.license_no || '';
 
   console.log('Processed data:', {
-    email, fname, lname, dob, id_card, specialty, education, address, phone,
+    email, fname, lname, dob, id_card, license_no, specialty, education, address, phone,
     hasPassword: !!password,
     hasFile: !!req.file
   });
@@ -527,7 +530,7 @@ exports.addDentist = async (req, res) => {
     const addressValue = address && address.trim() !== '' ? address : null;
     
     console.log('Creating dentist record with values:', {
-      fname, lname, dobValue, id_card, specialty, 
+      fname, lname, dobValue, id_card, license_no, specialty, 
       educationValue, addressValue, phone, photoFilename
     });
     
@@ -539,6 +542,7 @@ exports.addDentist = async (req, res) => {
       lname,
       dob: dobValue,
       id_card,
+      license_no,
       specialty,
       education: educationValue,
       address: addressValue,
@@ -640,21 +644,16 @@ exports.editDentist = async (req, res) => {
   console.log('📁 New file uploaded:', req.file);
 
   try {
-    const [dentistRow] = await db.execute(`
-      SELECT d.*, u.email as current_email 
-      FROM dentist d 
-      JOIN user u ON d.user_id = u.user_id 
-      WHERE d.dentist_id = ?
-    `, [id]);
-    
-    if (dentistRow.length === 0) {
+    // ใช้ Model แทนการเขียน SQL ใน controller
+    const dentist = await DentistAdminModel.getDentistById(id);
+    if (!dentist) {
       return res.status(404).json({
         success: false,
         error: 'Dentist not found'
       });
     }
 
-    const currentDentist = dentistRow[0];
+    const currentDentist = { ...dentist, current_email: dentist.email };
     const userId = currentDentist.user_id;
     const oldPhoto = currentDentist.photo;
 
@@ -678,14 +677,10 @@ exports.editDentist = async (req, res) => {
       dob = dob.trim();
     }
 
-    // ตรวจสอบอีเมลซ้ำ
+    // ตรวจสอบอีเมลซ้ำด้วย Model
     if (email && email !== currentDentist.current_email) {
-      const [existingUser] = await db.execute(
-        'SELECT COUNT(*) as count FROM user WHERE email = ? AND user_id != ?', 
-        [email, userId]
-      );
-      
-      if (existingUser[0].count > 0) {
+      const emailExists = await DentistAdminModel.checkEmailExists(email, userId);
+      if (emailExists) {
         if (req.file) {
           const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
           fs.unlink(filePath, () => {});
@@ -699,14 +694,10 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // ✅ ตรวจสอบเลขบัตรประชาชนซ้ำ
+    // ✅ ตรวจสอบเลขบัตรประชาชนซ้ำด้วย Model
     if (id_card && id_card !== currentDentist.id_card) {
-      const [existingIdCard] = await db.execute(
-        'SELECT COUNT(*) as count FROM dentist WHERE id_card = ? AND dentist_id != ?',
-        [id_card, id]
-      );
-      
-      if (existingIdCard[0].count > 0) {
+      const idCardExists = await DentistAdminModel.checkIdCardExists(id_card, id);
+      if (idCardExists) {
         if (req.file) {
           const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
           fs.unlink(filePath, () => {});
@@ -720,14 +711,10 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // ✅ ตรวจสอบเลขใบอนุญาตซ้ำ
+    // ✅ ตรวจสอบเลขใบอนุญาตซ้ำด้วย Model
     if (license_no && license_no !== currentDentist.license_no) {
-      const [existingLicense] = await db.execute(
-        'SELECT COUNT(*) as count FROM dentist WHERE license_no = ? AND dentist_id != ?',
-        [license_no, id]
-      );
-      
-      if (existingLicense[0].count > 0) {
+      const licenseExists = await DentistAdminModel.checkLicenseExists(license_no, id);
+      if (licenseExists) {
         if (req.file) {
           const filePath = path.join(__dirname, '../public/uploads/', req.file.filename);
           fs.unlink(filePath, () => {});
@@ -741,33 +728,8 @@ exports.editDentist = async (req, res) => {
       }
     }
 
-    // อัปเดต user table
-    let shouldUpdateUser = false;
-    let userUpdateQuery = 'UPDATE user SET ';
-    let userUpdateParams = [];
-    let userUpdateFields = [];
-
-    if (email && email !== currentDentist.current_email) {
-      userUpdateFields.push('email = ?');
-      userUpdateParams.push(email);
-      shouldUpdateUser = true;
-    }
-
-    if (password && password.trim() !== '') {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      userUpdateFields.push('password = ?');
-      userUpdateParams.push(hashedPassword);
-      shouldUpdateUser = true;
-    }
-
-    if (shouldUpdateUser) {
-      userUpdateQuery += userUpdateFields.join(', ') + ' WHERE user_id = ?';
-      userUpdateParams.push(userId);
-      
-      console.log('👤 Updating user table...');
-      await db.execute(userUpdateQuery, userUpdateParams);
-      console.log('✅ User table updated');
-    }
+    // สร้างข้อมูลสำหรับอัปเดตผ่าน Model
+    const hashedPassword = password && password.trim() !== '' ? await bcrypt.hash(password, 10) : undefined;
 
     // จัดการรูปภาพ
     let photoFilename = oldPhoto;
@@ -790,16 +752,21 @@ exports.editDentist = async (req, res) => {
     const educationValue = education && education.trim() !== '' ? education : null;
     const addressValue = address && address.trim() !== '' ? address : null;
 
-    // ✅ อัปเดต dentist table พร้อม license_no
-    console.log('🦷 Updating dentist table...');
-    await db.execute(`
-      UPDATE dentist SET
-        fname = ?, lname = ?, dob = ?, id_card = ?, license_no = ?,
-        specialty = ?, education = ?, address = ?, phone = ?, photo = ?
-      WHERE dentist_id = ?
-    `, [fname, lname, dobValue, id_card, license_no, specialty, educationValue, addressValue, phone, photoFilename, id]);
-
-    console.log('✅ Dentist updated successfully');
+    // อัปเดตข้อมูลผ่าน Model (รวมทั้ง user และ dentist)
+    await DentistAdminModel.updateDentist(id, {
+      email,
+      password: hashedPassword,
+      fname,
+      lname,
+      dob: dobValue,
+      id_card,
+      license_no,
+      specialty,
+      education: educationValue,
+      address: addressValue,
+      phone,
+      photo: photoFilename
+    });
     
     res.json({
       success: true,
@@ -833,7 +800,7 @@ exports.editDentist = async (req, res) => {
 exports.deleteDentist = async (req, res) => {
   const id = req.params.id;
   try {
-    await db.execute('DELETE FROM dentist WHERE dentist_id = ?', [id]);
+    await DentistAdminModel.deleteDentist(id);
     req.flash('success', 'Dentist deleted successfully.');
     res.redirect('/admin/dentists');
   } catch (err) {
@@ -852,10 +819,7 @@ exports.dentistSchedule = (req, res) => {
 // patients
 exports.getPatients = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT patient_id AS id, CONCAT(fname, ' ', lname) AS name, phone
-      FROM patient
-    `);
+    const rows = await PatientAdminModel.getAllPatients();
     res.render('admin/patient/admin-patients', { patients: rows });
   } catch (err) {
     console.error(err);
@@ -866,25 +830,7 @@ exports.getPatients = async (req, res) => {
 // API: Get all patients for the modern interface
 exports.getPatientsAPI = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT 
-        p.patient_id,
-        p.fname,
-        p.lname,
-        p.phone,
-        p.dob,
-        p.address,
-        p.id_card,
-        u.email,
-        u.last_login,
-        MAX(q.time) as last_visit,
-        COUNT(DISTINCT q.queue_id) as total_appointments
-      FROM patient p
-      LEFT JOIN user u ON p.user_id = u.user_id
-      LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
-      GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.id_card, u.email, u.last_login
-      ORDER BY p.fname, p.lname
-    `);
+    const rows = await PatientAdminModel.getAllPatientsWithDetails();
 
     // Format the data for the frontend
     const patients = rows.map(patient => ({
@@ -924,28 +870,14 @@ exports.getPatientByIdAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [rows] = await db.execute(`
-      SELECT 
-        p.*,
-        u.email,
-        u.last_login,
-        COUNT(DISTINCT q.queue_id) as total_appointments,
-        MAX(q.time) as last_visit
-      FROM patient p
-      LEFT JOIN user u ON p.user_id = u.user_id
-      LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
-      WHERE p.patient_id = ?
-      GROUP BY p.patient_id
-    `, [id]);
+    const patient = await PatientAdminModel.getPatientById(id);
 
-    if (rows.length === 0) {
+    if (!patient) {
       return res.status(404).json({
         success: false,
         error: 'Patient not found'
       });
     }
-
-    const patient = rows[0];
     
     res.json({
       success: true,
@@ -967,75 +899,21 @@ exports.deletePatientAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Get patient details before deletion for notification
-    const [patientData] = await db.execute(`
-      SELECT p.*, u.email 
-      FROM patient p 
-      LEFT JOIN user u ON p.user_id = u.user_id 
-      WHERE p.patient_id = ?
-    `, [id]);
-
-    if (patientData.length === 0) {
+    // ใช้ Model แทนการเขียน SQL ใน controller
+    const patient = await PatientAdminModel.getPatientById(id);
+    if (!patient) {
       return res.status(404).json({
         success: false,
         error: 'Patient not found'
       });
     }
 
-    const patient = patientData[0];
-    
-    // Start transaction to ensure data integrity
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Update any existing appointments to cancelled status instead of deleting
-      await db.execute(`
-        UPDATE queue 
-        SET queue_status = 'cancel' 
-        WHERE patient_id = ? AND queue_status IN ('pending', 'confirm')
-      `, [id]);
-      
-      // Delete treatment history first
-      await db.execute(`
-        DELETE th FROM treatmentHistory th
-        JOIN queuedetail qd ON th.queuedetail_id = qd.queuedetail_id
-        WHERE qd.patient_id = ?
-      `, [id]);
-      
-      // Delete queue details
-      await db.execute('DELETE FROM queuedetail WHERE patient_id = ?', [id]);
-      
-      // Delete the patient record
-      await db.execute('DELETE FROM patient WHERE patient_id = ?', [id]);
-      
-      // Delete the associated user account if exists
-      if (patient.user_id) {
-        await db.execute('DELETE FROM user WHERE user_id = ?', [patient.user_id]);
-      }
-      
-      // Commit transaction
-      await db.query('COMMIT');
-      
-      // Create notification for deletion
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, is_read, is_new)
-        VALUES (?, ?, ?, 0, 1)
-      `, [
-        'patient',
-        'Patient Record Deleted',
-        `Patient ${patient.fname || 'Unknown'} ${patient.lname || 'Patient'} has been removed from the system`
-      ]);
+    await PatientAdminModel.deletePatient(id);
 
       res.json({
         success: true,
         message: `${patient.fname || 'Unknown'} ${patient.lname || 'Patient'} deleted successfully`
       });
-
-    } catch (error) {
-      // Rollback transaction on error
-      await db.query('ROLLBACK');
-      throw error;
-    }
 
   } catch (error) {
     console.error('Error deleting patient:', error);
@@ -1071,9 +949,9 @@ exports.addPatient = async (req, res) => {
   }
 
   try {
-    // Check if email already exists
-    const [existingUser] = await db.execute('SELECT COUNT(*) as count FROM user WHERE email = ?', [email]);
-    if (existingUser[0].count > 0) {
+    // ตรวจสอบอีเมลซ้ำผ่าน Model
+    const emailExists = await PatientAdminModel.checkEmailExists(email);
+    if (emailExists) {
       return res.status(400).json({
         success: false,
         error: 'Email address is already in use'
@@ -1082,49 +960,19 @@ exports.addPatient = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Create user record first (role_id = 3 for patients)
-      const [userResult] = await db.execute(
-        `INSERT INTO user (email, password, role_id) VALUES (?, ?, 3)`,
-        [email, hashedPassword]
-      );
-      const userId = userResult.insertId;
-      
-      // ✅ Create patient record with new fields
-      const [patientResult] = await db.execute(`
-        INSERT INTO patient (
-          user_id, fname, lname, dob, id_card, phone, address,
-          gender, chronic_disease, allergy_history
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          userId, fname, lname, dob, id_card, phone, address || '',
-          gender || null,
-          chronic_disease || null,
-          drug_allergy || null  // ✅ Note: ฐานข้อมูลใช้ชื่อ allergy_history
-        ]
-      );
-      
-      const patientId = patientResult.insertId;
-      
-      await db.query('COMMIT');
-      
-      // Create notification
-      try {
-        await db.execute(`
-          INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, 0, 1)
-        `, [
-          'patient',
-          'New Patient Registered',
-          `New patient ${fname} ${lname} has been added to the system`,
-          patientId
-        ]);
-      } catch (notificationError) {
-        console.warn('Could not create notification:', notificationError.message);
-      }
+    await PatientAdminModel.createPatient({
+      email,
+      hashedPassword,
+      fname,
+      lname,
+      dob,
+      id_card,
+      phone,
+      address: address || '',
+      gender: gender || null,
+      chronic_disease: chronic_disease || null,
+      allergy_history: drug_allergy || null
+    });
 
       console.log('✅ Patient created successfully');
       
@@ -1133,11 +981,6 @@ exports.addPatient = async (req, res) => {
         message: 'Patient added successfully',
         redirect: '/admin/patients'
       });
-      
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
     
   } catch (error) {
     console.error('❌ Error creating patient:', error);
@@ -1158,8 +1001,8 @@ exports.addPatient = async (req, res) => {
 // Helper function to get unread notification count
 async function getUnreadNotificationCount() {
   try {
-    const [result] = await db.execute('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0');
-    return result[0].count;
+    const count = await NotificationAdminModel.getUnreadCount();
+    return count;
   } catch (error) {
     console.error('Error getting unread count:', error);
     return 0;
@@ -1170,16 +1013,8 @@ async function getUnreadNotificationCount() {
 exports.showEditPatientForm = async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.execute(`
-      SELECT p.*, u.email
-      FROM patient p
-      JOIN user u ON p.user_id = u.user_id
-      WHERE p.patient_id = ?
-    `, [id]);
-
-    if (rows.length === 0) return res.status(404).send('Patient not found');
-
-    const patient = rows[0];
+    const patient = await PatientAdminModel.getPatientById(id);
+    if (!patient) return res.status(404).send('Patient not found');
     if (patient.dob) {
       patient.dob = new Date(patient.dob).toISOString().split('T')[0];
     }
@@ -1198,12 +1033,9 @@ exports.editPatient = async (req, res) => {
   const { fname, lname, dob, phone, address } = req.body;
 
   try {
-    await db.execute(`
-      UPDATE patient
-      SET fname = ?, lname = ?, dob = ?, phone = ?, address = ?
-      WHERE patient_id = ?`,
-      [fname, lname, dob || null, phone || '', address || '', id]
-    );
+    await PatientAdminModel.updatePatient(id, {
+      fname, lname, dob: dob || null, phone: phone || '', address: address || ''
+    });
     req.flash('success', 'Patient updated successfully.');
     res.redirect('/admin/patients');
   } catch (err) {
@@ -1217,16 +1049,9 @@ exports.viewPatient = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [rows] = await db.execute(`
-      SELECT p.*, u.email
-      FROM patient p
-      JOIN user u ON p.user_id = u.user_id
-      WHERE p.patient_id = ?
-    `, [id]);
-
-    if (rows.length === 0) return res.status(404).send('Patient not found');
-
-    res.render('admin/patient/view-patient', { patient: rows[0] });
+    const patient = await PatientAdminModel.getPatientById(id);
+    if (!patient) return res.status(404).send('Patient not found');
+    res.render('admin/patient/view-patient', { patient });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1240,11 +1065,7 @@ exports.deletePatient = async (req, res) => {
   console.log('🧨 DELETE PATIENT ID:', id); // สำหรับ debug
 
   try {
-    // ลบข้อมูลใน queue ที่อ้างอิงถึง patient นี้
-    await db.execute('DELETE FROM queue WHERE patient_id = ?', [id]);
-
-    // จากนั้นลบ patient
-    await db.execute('DELETE FROM patient WHERE patient_id = ?', [id]);
+    await PatientAdminModel.deletePatient(id);
 
     req.flash('success', 'Patient deleted successfully.');
     res.redirect('/admin/patients');
@@ -1263,137 +1084,35 @@ exports.updatePatientAPI = async (req, res) => {
     console.log('📝 Updating patient:', id, 'with data:', updateData);
     
     // ตรวจสอบว่าผู้ป่วยมีอยู่จริง
-    const [currentPatient] = await db.execute(`
-      SELECT p.*, u.email, u.user_id 
-      FROM patient p 
-      LEFT JOIN user u ON p.user_id = u.user_id 
-      WHERE p.patient_id = ?
-    `, [id]);
-
-    if (currentPatient.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Patient not found'
-      });
+    const patient = await PatientAdminModel.getPatientById(id);
+    if (!patient) {
+      return res.status(404).json({ success: false, error: 'Patient not found' });
     }
 
-    const patient = currentPatient[0];
-    
-    await db.query('START TRANSACTION');
-    
-    try {
-      // ตรวจสอบอีเมลซ้ำ (ถ้ามีการเปลี่ยนแปลงอีเมล)
-      if (updateData.email && updateData.email !== patient.email) {
-        const [existingEmail] = await db.execute(
-          'SELECT COUNT(*) as count FROM user WHERE email = ? AND user_id != ?', 
-          [updateData.email, patient.user_id]
-        );
-        
-        if (existingEmail[0].count > 0) {
-          await db.query('ROLLBACK');
-          return res.status(400).json({
-            success: false,
-            error: 'Email address is already in use'
-          });
-        }
-      }
-
-      // อัปเดตตาราง user (email และ password)
-      if (updateData.email || updateData.password) {
-        let userUpdateQuery = 'UPDATE user SET ';
-        let userUpdateParams = [];
-        let userUpdateFields = [];
-
-        if (updateData.email) {
-          userUpdateFields.push('email = ?');
-          userUpdateParams.push(updateData.email);
-        }
-
-        if (updateData.password) {
+    // เตรียม payload และ hash password ถ้ามี
           const bcrypt = require('bcrypt');
-          const hashedPassword = await bcrypt.hash(updateData.password, 10);
-          userUpdateFields.push('password = ?');
-          userUpdateParams.push(hashedPassword);
-        }
+    const payload = { ...updateData };
+    if (updateData.password) {
+      payload.password = await bcrypt.hash(updateData.password, 10);
+    }
 
-        if (userUpdateFields.length > 0) {
-          userUpdateQuery += userUpdateFields.join(', ') + ' WHERE user_id = ?';
-          userUpdateParams.push(patient.user_id);
-          
-          await db.execute(userUpdateQuery, userUpdateParams);
-          console.log('✅ User table updated');
-        }
-      }
+    // อัปเดตผ่านโมเดล
+    await PatientAdminModel.updatePatient(id, payload);
 
-      // ✅ อัปเดตตาราง patient รวมฟิลด์ใหม่
-      const patientFields = [
-        'fname', 'lname', 'dob', 'id_card', 'phone', 'address',
-        'gender', 'chronic_disease'  // ✅ เพิ่มฟิลด์ใหม่
-      ];
-      let patientUpdateFields = [];
-      let patientUpdateParams = [];
+    // สร้าง notification ผ่านโมเดล
+    await NotificationAdminModel.createNotification({
+      type: 'patient_update',
+      title: 'Patient Information Updated',
+      message: `Patient ${updateData.fname || patient.fname} ${updateData.lname || patient.lname}'s information has been updated`,
+      patient_id: Number(id),
+      is_read: 0,
+      is_new: 1
+    });
 
-      patientFields.forEach(field => {
-        if (updateData.hasOwnProperty(field)) {
-          patientUpdateFields.push(`${field} = ?`);
-          if (field === 'dob' && (!updateData[field] || updateData[field] === 'null')) {
-            patientUpdateParams.push(null);
-          } else {
-            patientUpdateParams.push(updateData[field] || null);
-          }
-        }
-      });
-
-      // ✅ จัดการ drug_allergy แยกเพราะชื่อฟิลด์ต่างกัน (form ใช้ drug_allergy, DB ใช้ allergy_history)
-      if (updateData.hasOwnProperty('drug_allergy')) {
-        patientUpdateFields.push('allergy_history = ?');
-        patientUpdateParams.push(updateData.drug_allergy || null);
-      }
-
-      if (patientUpdateFields.length > 0) {
-        const patientUpdateQuery = `UPDATE patient SET ${patientUpdateFields.join(', ')} WHERE patient_id = ?`;
-        patientUpdateParams.push(id);
-        
-        await db.execute(patientUpdateQuery, patientUpdateParams);
-        console.log('✅ Patient table updated');
-      }
-      
-      await db.query('COMMIT');
-      console.log('✅ Transaction committed');
-      
-      // สร้าง notification สำหรับการอัปเดต
-      try {
-        await db.execute(`
-          INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, 0, 1)
-        `, [
-          'patient_update',
-          'Patient Information Updated',
-          `Patient ${updateData.fname || patient.fname} ${updateData.lname || patient.lname}'s information has been updated`,
-          id
-        ]);
-        console.log('✅ Notification created');
-      } catch (notificationError) {
-        console.warn('⚠️ Could not create notification:', notificationError.message);
-      }
-
-      res.json({
-        success: true,
-        message: 'Patient updated successfully'
-      });
+    res.json({ success: true, message: 'Patient updated successfully' });
 
     } catch (error) {
-      await db.query('ROLLBACK');
-      console.error('❌ Transaction rolled back due to error');
-      throw error;
-    }
-
-  } catch (error) {
-    console.error('❌ Error updating patient:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update patient: ' + error.message
-    });
+    return res.status(500).json({ success: false, error: 'Failed to update patient: ' + error.message });
   }
 };
 
@@ -1410,17 +1129,9 @@ exports.checkPatientEmailAvailability = async (req, res) => {
       });
     }
 
-    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
-    let params = [email];
-
-    // ถ้าเป็นการตรวจสอบสำหรับผู้ป่วยเฉพาะ ให้ยกเว้นอีเมลปัจจุบันของเขา
-    if (patient_id) {
-      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
-      params.push(patient_id);
-    }
-
-    const [result] = await db.execute(query, params);
-    const exists = result[0].count > 0;
+    // ใช้โมเดลเพื่อตรวจสอบอีเมล
+    const availability = await PatientAdminModel.checkEmailAvailability(email);
+    const exists = !availability.available;
 
     res.json({
       success: true,
@@ -1441,26 +1152,13 @@ exports.showEditPatientFormModern = async (req, res) => {
   const id = req.params.id;
   
   try {
-    const [rows] = await db.execute(`
-      SELECT 
-        p.*,
-        u.email,
-        u.last_login,
-        u.created_at,
-        u.updated_at as user_updated_at
-      FROM patient p
-      LEFT JOIN user u ON p.user_id = u.user_id
-      WHERE p.patient_id = ?
-    `, [id]);
-
-    if (rows.length === 0) {
+    const patient = await PatientAdminModel.getPatientById(id);
+    if (!patient) {
       return res.status(404).render('error', { 
         message: 'Patient not found',
         backUrl: '/admin/patients'
       });
     }
-
-    const patient = rows[0];
     
     // Format date สำหรับ HTML input
     if (patient.dob) {
@@ -1468,18 +1166,9 @@ exports.showEditPatientFormModern = async (req, res) => {
     }
 
     // เพิ่มสถิติ
-    const [appointmentStats] = await db.execute(`
-      SELECT 
-        COUNT(*) as total_appointments,
-        COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed_appointments,
-        COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending_appointments,
-        COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled_appointments,
-        MAX(time) as last_appointment
-      FROM queue 
-      WHERE patient_id = ?
-    `, [id]);
-
-    patient.stats = appointmentStats[0];
+    // นับสถิตินัดหมายด้วย QueueModel
+    const total = await QueueModel.count({ patientId: Number(id) });
+    patient.stats = { total_appointments: total };
 
     // ใช้ template ใหม่
     res.render('admin/patient/edit-patient-modern', { patient });
@@ -1497,32 +1186,7 @@ exports.viewPatientTreatmentHistory = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [rows] = await db.execute(`
-      SELECT qd.date, t.treatment_name, q.queue_id
-      FROM queuedetail qd
-      JOIN treatment t ON qd.treatment_id = t.treatment_id
-      JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
-      WHERE qd.patient_id = ?
-      ORDER BY qd.date DESC
-    `, [id]);
-
-    const groupedHistory = {};
-
-    rows.forEach(row => {
-      const dateObj = new Date(row.date);
-      const year = dateObj.getFullYear();
-      const day = dateObj.getDate();
-      const month = dateObj.toLocaleString('default', { month: 'short' });
-
-      if (!groupedHistory[year]) groupedHistory[year] = [];
-      groupedHistory[year].push({
-        date: dateObj.toISOString().split('T')[0],
-        day,
-        month,
-        treatment: row.treatment_name,
-        queueId: row.queue_id
-      });
-    });
+    const groupedHistory = await PatientAdminModel.getPatientTreatmentHistoryGrouped(id);
 
     res.render('admin/patient/treatment-history/patient-treatment', {
       groupedHistory,
@@ -1579,7 +1243,11 @@ exports.viewTreatmentDetails = async (req, res) => {
       formattedDate: `${day} ${month} ${year}`,
       formattedTime: `${startHours}:${startMinutes} น.`,
       formattedTimeRange: `${startHours}:${startMinutes} - ${endHours}:${endMinutes} น.`,
-      formattedDuration: `${treatment.duration} นาที`
+      formattedDuration: `${treatment.duration} นาที`,
+      // เพิ่มข้อมูลที่อาจจะไม่มีใน treatmentHistory
+      diagnosis: treatment.diagnosis || '',
+      next_appointment: treatment.next_appointment || '',
+      followUpdate: treatment.followUpdate || ''
     };
 
     res.render('admin/patient/treatment-history/treatment-detail', {
@@ -1598,8 +1266,8 @@ exports.viewTreatmentDetails = async (req, res) => {
 // ---treatments
 exports.listTreatments = async (req, res) => {
   try {
-    const [rows] = await db.execute(`SELECT * FROM treatment ORDER BY treatment_name ASC`);
-    res.render('admin/treatment/admin-treatments', { treatments: rows });
+    const treatments = await TreatmentAdminModel.getAllTreatments();
+    res.render('admin/treatment/admin-treatments', { treatments });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading treatments');
@@ -1610,21 +1278,10 @@ exports.viewTreatment = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await db.execute(`
-      SELECT 
-        t.treatment_name AS name,
-        t.duration,
-        GROUP_CONCAT(CONCAT(d.fname, ' ', d.lname) SEPARATOR ', ') AS dentists
-      FROM treatment t
-      LEFT JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
-      LEFT JOIN dentist d ON dt.dentist_id = d.dentist_id
-      WHERE t.treatment_id = ?
-      GROUP BY t.treatment_id
-    `, [id]);
+    const treatment = await TreatmentAdminModel.getTreatmentByIdForAPI(id);
 
-    if (rows.length === 0) return res.status(404).send('Treatment not found');
+    if (!treatment) return res.status(404).send('Treatment not found');
 
-    const treatment = rows[0];
     res.render('admin/treatment/view-treatment', { treatment });
 
   } catch (err) {
@@ -1635,7 +1292,7 @@ exports.viewTreatment = async (req, res) => {
 
 exports.showAddTreatmentForm = async (req, res) => {
   try {
-    const [dentists] = await db.execute('SELECT dentist_id, fname, lname FROM dentist');
+    const dentists = await TreatmentAdminModel.getAvailableDentists();
     res.render('admin/treatment/add-treatment', { dentists });
   } catch (err) {
     console.error(err);
@@ -1645,19 +1302,12 @@ exports.showAddTreatmentForm = async (req, res) => {
 exports.addTreatment = async (req, res) => {
   const { name, duration, dentist_id } = req.body;
   try {
-    // เพิ่ม treatment
-    const [result] = await db.execute(
-      `INSERT INTO treatment (treatment_name, duration) VALUES (?, ?)`,
-      [name, duration]
-    );
-
-    const treatmentId = result.insertId;
-
-    // เชื่อมกับ dentist ในตารางสัมพันธ์ (กรณีใช้ many-to-many)
-    await db.execute(
-      `INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)`,
-      [dentist_id, treatmentId]
-    );
+    await TreatmentAdminModel.createTreatment({
+      name,
+      duration,
+      description: null,
+      dentist_ids: dentist_id ? [Number(dentist_id)] : []
+    });
 
     req.flash('success', 'Treatment added successfully.');
     res.redirect('/admin/treatments');
@@ -1673,18 +1323,11 @@ exports.showEditTreatmentForm = async (req, res) => {
   const treatmentId = req.params.id;
 
   try {
-    const [treatmentRows] = await db.execute('SELECT * FROM treatment WHERE treatment_id = ?', [treatmentId]);
-    const [dentistRows] = await db.execute('SELECT dentist_id, fname, lname FROM dentist');
-    const [mappedRows] = await db.execute('SELECT dentist_id FROM dentist_treatment WHERE treatment_id = ?', [treatmentId]);
-
-    if (treatmentRows.length === 0) {
+    const treatment = await TreatmentAdminModel.getTreatmentByIdForAPI(treatmentId);
+    const dentistRows = await TreatmentAdminModel.getAvailableDentists();
+    if (!treatment) {
       return res.status(404).send('Treatment not found');
     }
-
-    // เตรียม array ของ dentist_id ที่เคยเชื่อม
-    const dentistIds = mappedRows.map(row => row.dentist_id);
-    const treatment = treatmentRows[0];
-    treatment.dentist_ids = dentistIds;
 
     res.render('admin/treatment/edit-treatment', {
       treatment,
@@ -1705,33 +1348,18 @@ exports.updateTreatment = async (req, res) => {
   const { treatment_name, duration, dentist_ids } = req.body;
 
   try {
-    // อัปเดตตาราง treatment
-    await db.execute(
-      'UPDATE treatment SET treatment_name = ?, duration = ? WHERE treatment_id = ?',
-      [treatment_name, duration, treatmentId]
-    );
+    const ids = Array.isArray(dentist_ids)
+      ? dentist_ids.map(Number)
+      : dentist_ids
+        ? [Number(dentist_ids)]
+        : [];
 
-    // ลบ dentist ที่เคยผูกไว้กับ treatment นี้
-    await db.execute(
-      'DELETE FROM dentist_treatment WHERE treatment_id = ?',
-      [treatmentId]
-    );
-
-    // เพิ่ม dentist ใหม่ที่ถูกเลือก
-    if (Array.isArray(dentist_ids)) {
-      for (const dentistId of dentist_ids) {
-        await db.execute(
-          'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
-          [dentistId, treatmentId]
-        );
-      }
-    } else if (dentist_ids) {
-      // กรณีเลือกมาแค่คนเดียว (ไม่เป็น array)
-      await db.execute(
-        'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
-        [dentist_ids, treatmentId]
-      );
-    }
+    await TreatmentAdminModel.updateTreatment(treatmentId, {
+      name: treatment_name,
+      duration,
+      description: null,
+      dentist_ids: ids
+    });
 
     req.flash('success', 'Treatment updated successfully.');
     res.redirect('/admin/treatments');
@@ -1745,24 +1373,9 @@ exports.deleteTreatment = async (req, res) => {
   const treatmentId = req.params.id;
   
   try {
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Delete dentist-treatment relationships first
-      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [treatmentId]);
-      
-      // Delete the treatment
-      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [treatmentId]);
-      
-      await db.query('COMMIT');
-      
+    await TreatmentAdminModel.deleteTreatment(treatmentId);
       req.flash('success', 'Treatment deleted successfully.');
-      res.redirect('/admin/treatments'); // ✅ ตอนนี้ route นี้มีแล้ว
-      
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
+    res.redirect('/admin/treatments');
     
   } catch (error) {
     console.error('Error deleting treatment:', error);
@@ -1789,31 +1402,11 @@ exports.getNotifications = async (req, res) => {
       whereClause = 'WHERE n.is_read = 0';
     }
 
-    // Build query without placeholders for LIMIT/OFFSET (MySQL issue with prepared statements)
-    const query =
-      'SELECT ' +
-      'n.id, n.type, n.title, n.message, n.is_read, n.is_new, ' +
-      'n.appointment_id, n.dentist_id, n.patient_id, n.created_at, ' +
-      'p.fname as patient_fname, p.lname as patient_lname, ' +
-      'd.fname as dentist_fname, d.lname as dentist_lname ' +
-      'FROM notifications n ' +
-      'LEFT JOIN patient p ON n.patient_id = p.patient_id ' +
-      'LEFT JOIN dentist d ON n.dentist_id = d.dentist_id ' +
-      (whereClause ? whereClause + ' ' : '') +
-      'ORDER BY n.created_at DESC ' +
-      'LIMIT ' + limitNum + ' OFFSET ' + offsetNum;
-
-    console.log('🔍 Final Query:', query);
-
-    const [notifications] = await db.query(query);
-
-    // Get total count with same WHERE clause - use string concatenation
-    const countQuery = 'SELECT COUNT(*) as total FROM notifications n ' + (whereClause ? whereClause : '');
-    console.log('🔍 Count query:', countQuery);
-
-    const [countResult] = await db.execute(countQuery);
-
-    const totalCount = countResult[0].total;
+    // ใช้โมเดลดึงข้อมูล
+    const notifications = await NotificationAdminModel.getAllNotifications(
+      unread_only === 'true' ? { is_read: 0 } : {}
+    );
+    const totalCount = notifications.length;
     const unreadCount = await getUnreadNotificationCount();
 
     res.json({
@@ -1837,25 +1430,8 @@ exports.getNotifications = async (req, res) => {
 exports.getNotificationById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [notifications] = await db.execute(`
-      SELECT 
-        n.*,
-        p.fname as patient_fname,
-        p.lname as patient_lname,
-        d.fname as dentist_fname,
-        d.lname as dentist_lname,
-        q.time as appointment_time,
-        t.treatment_name
-      FROM notifications n
-      LEFT JOIN patient p ON n.patient_id = p.patient_id
-      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON n.appointment_id = q.queue_id
-      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE n.id = ?
-    `, [id]);
-
-    if (notifications.length === 0) {
+    const notification = await NotificationAdminModel.getNotificationById(id);
+    if (!notification) {
       return res.status(404).json({
         success: false,
         error: 'Notification not found'
@@ -1864,7 +1440,7 @@ exports.getNotificationById = async (req, res) => {
 
     res.json({
       success: true,
-      notification: notifications[0]
+      notification
     });
 
   } catch (error) {
@@ -1881,19 +1457,7 @@ exports.getNotificationById = async (req, res) => {
 exports.markNotificationAsRead = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [result] = await db.execute(`
-      UPDATE notifications 
-      SET is_read = 1, is_new = 0, updated_at = CURRENT_TIMESTAMP 
-      WHERE id = ?
-    `, [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Notification not found'
-      });
-    }
+    await NotificationAdminModel.markAsRead(id);
 
     res.json({
       success: true,
@@ -1913,15 +1477,10 @@ exports.markNotificationAsRead = async (req, res) => {
 // Mark all notifications as read
 exports.markAllNotificationsAsRead = async (req, res) => {
   try {
-    const [result] = await db.execute(`
-      UPDATE notifications 
-      SET is_read = 1, is_new = 0, updated_at = CURRENT_TIMESTAMP 
-      WHERE is_read = 0
-    `);
-
+    const result = await NotificationAdminModel.markAllAsRead();
     res.json({
       success: true,
-      message: `${result.affectedRows} notifications marked as read`
+      message: `${result.updatedCount} notifications marked as read`
     });
 
   } catch (error) {
@@ -1938,15 +1497,7 @@ exports.markAllNotificationsAsRead = async (req, res) => {
 exports.deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [result] = await db.execute('DELETE FROM notifications WHERE id = ?', [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Notification not found'
-      });
-    }
+    await NotificationAdminModel.deleteNotification(id);
 
     res.json({
       success: true,
@@ -1970,7 +1521,7 @@ exports.createNotification = async (req, res) => {
       type, 
       title, 
       message, 
-      appointment_id = null, 
+        queue_id = null,
       dentist_id = null, 
       patient_id = null 
     } = req.body;
@@ -1982,15 +1533,21 @@ exports.createNotification = async (req, res) => {
       });
     }
 
-    const [result] = await db.execute(`
-      INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-      VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-    `, [type, title, message, appointment_id, dentist_id, patient_id]);
+    const result = await NotificationAdminModel.createNotification({
+      type,
+      title,
+      message,
+      queue_id,
+      dentist_id,
+      patient_id,
+      is_read: 0,
+      is_new: 1
+    });
 
     res.json({
       success: true,
       message: 'Notification created successfully',
-      notification_id: result.insertId
+      notification_id: result.notification_id
     });
 
   } catch (error) {
@@ -2006,8 +1563,7 @@ exports.createNotification = async (req, res) => {
 // Helper function to get unread notification count
 async function getUnreadNotificationCount() {
   try {
-    const [result] = await db.execute('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0');
-    return result[0].count;
+    return await NotificationAdminModel.getUnreadCount();
   } catch (error) {
     console.error('Error getting unread count:', error);
     return 0;
@@ -2019,26 +1575,7 @@ async function getUnreadNotificationCount() {
 // Create notification when new appointment is made
 async function createAppointmentNotification(appointmentId, patientId, dentistId) {
   try {
-    // Get patient and dentist names
-    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
-    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
-    
-    if (patientData.length > 0 && dentistData.length > 0) {
-      const patient = patientData[0];
-      const dentist = dentistData[0];
-      
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-      `, [
-        'appointment',
-        'New Appointment Request',
-        `Appointment from: ${patient.fname} ${patient.lname} with Dr. ${dentist.fname} ${dentist.lname}`,
-        appointmentId,
-        dentistId,
-        patientId
-      ]);
-    }
+    await NotificationAdminModel.createAppointmentNotification(appointmentId, patientId, dentistId);
   } catch (error) {
     console.error('Error creating appointment notification:', error);
   }
@@ -2047,25 +1584,7 @@ async function createAppointmentNotification(appointmentId, patientId, dentistId
 // Create notification when appointment is cancelled
 async function createCancellationNotification(appointmentId, patientId, dentistId) {
   try {
-    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
-    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
-    
-    if (patientData.length > 0 && dentistData.length > 0) {
-      const patient = patientData[0];
-      const dentist = dentistData[0];
-      
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-      `, [
-        'cancellation',
-        'Appointment Cancelled',
-        `${patient.fname} ${patient.lname} cancelled appointment with Dr. ${dentist.fname} ${dentist.lname}`,
-        appointmentId,
-        dentistId,
-        patientId
-      ]);
-    }
+    await NotificationAdminModel.createCancellationNotification(appointmentId, patientId, dentistId);
   } catch (error) {
     console.error('Error creating cancellation notification:', error);
   }
@@ -2074,21 +1593,14 @@ async function createCancellationNotification(appointmentId, patientId, dentistI
 // Create notification when dentist updates schedule
 async function createScheduleUpdateNotification(dentistId, date, action) {
   try {
-    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
-    
-    if (dentistData.length > 0) {
-      const dentist = dentistData[0];
-      
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, dentist_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, 0, 1)
-      `, [
-        'schedule_update',
-        'Schedule Updated',
-        `Dr. ${dentist.fname} ${dentist.lname} ${action} schedule for ${date}`,
-        dentistId
-      ]);
-    }
+    await NotificationAdminModel.createNotification({
+      type: 'schedule_update',
+      title: 'Schedule Updated',
+      message: `Dr. ${dentistId} ${action} schedule for ${date}`,
+      dentist_id: dentistId,
+      is_read: 0,
+      is_new: 1
+    });
   } catch (error) {
     console.error('Error creating schedule update notification:', error);
   }
@@ -2106,28 +1618,7 @@ module.exports.notificationUtils = {
 exports.getAppointmentsAPI = async (req, res) => {
   try {
     const { date = new Date().toISOString().split('T')[0] } = req.query;
-    
-    const [appointments] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        th.diagnosis,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        p.phone,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty as dentist_specialty,
-        t.treatment_name,
-        t.duration as treatment_duration
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE DATE(q.time) = ?
-      ORDER BY q.time ASC
-    `, [date]);
+    const appointments = await AppointmentAdminModel.getAllAppointments({ date });
 
     res.json({
       success: true,
@@ -2150,39 +1641,16 @@ exports.getAppointmentsAPI = async (req, res) => {
 exports.getAppointmentById = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [appointments] = await db.execute(`
-      SELECT 
-        q.*,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        p.phone,
-        p.dob as patient_dob,
-        p.address as patient_address,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty as dentist_specialty,
-        t.treatment_name,
-        t.duration as treatment_duration,
-        th.diagnosis as treatment_diagnosis,
-        th.followUpdate as follow_update
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.queue_id = ?
-    `, [id]);
-
-    if (appointments.length === 0) {
+    const appointment = await AppointmentAdminModel.getAppointmentById(id);
+    if (!appointment) {
       return res.status(404).json({
         success: false,
         error: 'Appointment not found'
       });
     }
-
     res.json({
       success: true,
-      appointment: appointments[0]
+      appointment
     });
 
   } catch (error) {
@@ -2223,17 +1691,9 @@ exports.updateAppointment = async (req, res) => {
 
     // Check if appointment exists
     console.log('🔍 Checking if appointment exists...');
-    const [existingAppointment] = await db.execute(`
-      SELECT 
-        q.*,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        p.phone as patient_phone
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.queue_id = ?
-    `, [id]);
+    const currentAppointment = await AppointmentAdminModel.getAppointmentById(id);
 
-    if (existingAppointment.length === 0) {
+    if (!currentAppointment) {
       console.log('❌ Appointment not found');
       return res.status(404).json({
         success: false,
@@ -2241,95 +1701,43 @@ exports.updateAppointment = async (req, res) => {
       });
     }
 
-    console.log('✅ Appointment found:', existingAppointment[0]);
-    const currentAppointment = existingAppointment[0];
+    console.log('✅ Appointment found:', currentAppointment);
 
-    // Simple update query
-    console.log('📝 Updating appointment...');
-    const [updateResult] = await db.execute(`
-      UPDATE queue 
-      SET dentist_id = ?, 
-          treatment_id = ?, 
-          time = ?, 
-          queue_status = ?, 
-          diagnosis = ?, 
-          next_appointment = ?
-      WHERE queue_id = ?
-    `, [
+    // Update via model to keep SQL out of controller
+    console.log('📝 Updating appointment via model...');
+    await AppointmentAdminModel.updateAppointment(id, {
+      patient_id: currentAppointment.patient_id,
       dentist_id, 
       treatment_id, 
-      appointment_datetime, 
-      status || 'pending', 
-      diagnosis || null, 
-      next_appointment || null, 
-      id
-    ]);
-
-    console.log('📊 Update result:', updateResult);
-
-    if (updateResult.affectedRows === 0) {
-      console.log('❌ No rows affected');
-      return res.status(400).json({
-        success: false,
-        error: 'No changes were made'
-      });
-    }
-
-    // Try to update queuedetail if it exists
-    if (currentAppointment.queuedetail_id) {
-      try {
-        const appointmentDate = new Date(appointment_datetime).toISOString().split('T')[0];
-        await db.execute(`
-          UPDATE queuedetail 
-          SET dentist_id = ?, 
-              treatment_id = ?, 
-              date = ?
-          WHERE queuedetail_id = ?
-        `, [dentist_id, treatment_id, appointmentDate, currentAppointment.queuedetail_id]);
-        console.log('✅ QueueDetail updated');
-      } catch (queueDetailError) {
-        console.log('⚠️ QueueDetail update failed (but continuing):', queueDetailError.message);
-      }
-    }
+      date: new Date(appointment_datetime).toISOString().split('T')[0],
+      time: appointment_datetime,
+      status: status || 'pending'
+    });
 
     // Create a simple notification
     try {
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-      `, [
-        'appointment_updated',
-        'Appointment Updated',
-        `Appointment updated for ${currentAppointment.patient_name}`,
-        id,
-        dentist_id,
-        currentAppointment.patient_id
-      ]);
+      await NotificationAdminModel.createNotification({
+        type: 'appointment_updated',
+        title: 'Appointment Updated',
+        message: `Appointment updated for ${currentAppointment.patient_name}`,
+        patient_id: currentAppointment.patient_id,
+        is_read: 0,
+        is_new: 1
+      });
       console.log('✅ Notification created');
     } catch (notificationError) {
       console.log('⚠️ Notification creation failed (but continuing):', notificationError.message);
     }
 
     // Get updated appointment data
-    const [updatedAppointment] = await db.execute(`
-      SELECT 
-        q.*,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        t.treatment_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.queue_id = ?
-    `, [id]);
+    const updated = await AppointmentAdminModel.getAppointmentById(currentAppointment.queuedetail_id);
 
     console.log('✅ Update successful');
     
     res.json({
       success: true,
       message: 'Appointment updated successfully',
-      appointment: updatedAppointment[0] || {
+      appointment: updated || {
         queue_id: id,
         patient_name: currentAppointment.patient_name,
         status: status || 'pending'
@@ -2370,25 +1778,8 @@ exports.getDentistSchedule = async (req, res) => {
       });
     }
 
-    // Get dentist schedule for the specified date
-    const [scheduleData] = await db.execute(`
-      SELECT 
-        ds.hour,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        COUNT(q.queue_id) as booked_count
-      FROM dentist_schedule ds
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      WHERE ds.dentist_id = ? 
-        AND ds.schedule_date = ?
-        AND ds.status = 'working'
-      GROUP BY ds.hour, ds.start_time, ds.end_time, ds.status
-      ORDER BY ds.hour
-    `, [id, date]);
+    // Get dentist schedule for the specified date via model
+    const scheduleData = await AppointmentAdminModel.getDentistSchedule(id, date);
 
     // Generate time slots based on schedule
     const timeSlots = [];
@@ -2491,7 +1882,7 @@ async function sendAppointmentUpdateEmail(email, appointment, oldStatus, newStat
 // Validate appointment time conflicts
 exports.validateAppointmentTime = async (req, res) => {
   try {
-    const { dentist_id, appointment_datetime, exclude_appointment_id } = req.query;
+    const { dentist_id, appointment_datetime, exclude_queue_id } = req.query;
 
     if (!dentist_id || !appointment_datetime) {
       return res.status(400).json({
@@ -2500,22 +1891,12 @@ exports.validateAppointmentTime = async (req, res) => {
       });
     }
 
-    // Check for conflicts
-    const [conflicts] = await db.execute(`
-      SELECT 
-        q.queue_id,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        q.time
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.dentist_id = ? 
-        AND q.time = ? 
-        AND q.queue_status IN ('pending', 'confirm')
-        ${exclude_appointment_id ? 'AND q.queue_id != ?' : ''}
-    `, exclude_appointment_id ? 
-      [dentist_id, appointment_datetime, exclude_appointment_id] : 
-      [dentist_id, appointment_datetime]
-    );
+    // Check for conflicts via model
+    const conflicts = await AppointmentAdminModel.validateAppointmentTime({
+      dentist_id,
+      appointment_datetime,
+      exclude_queue_id
+    });
 
     res.json({
       success: true,
@@ -2551,32 +1932,14 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     // Get current appointment details for notification
-    const [appointmentData] = await db.execute(`
-      SELECT 
-        q.*,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        p.phone as patient_phone,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty as dentist_specialty,
-        t.treatment_name,
-        t.duration as treatment_duration,
-        u.email as patient_email
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN user u ON p.user_id = u.user_id
-      WHERE q.queue_id = ?
-    `, [id]);
+    const appointment = await AppointmentAdminModel.getAppointmentById(id);
 
-    if (appointmentData.length === 0) {
+    if (!appointment) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบการจองที่ระบุ'
       });
     }
-
-    const appointment = appointmentData[0];
     const oldStatus = appointment.queue_status;
 
     // Don't update if status is the same
@@ -2587,24 +1950,8 @@ exports.updateAppointmentStatus = async (req, res) => {
       });
     }
 
-    // Start transaction
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Update appointment status
-      const [updateResult] = await db.execute(`
-  UPDATE queue 
-  SET queue_status = ?
-  WHERE queue_id = ?
-`, [status, id]);
-
-      if (updateResult.affectedRows === 0) {
-        await db.query('ROLLBACK');
-        return res.status(404).json({
-          success: false,
-          error: 'ไม่สามารถอัปเดตสถานะการจองได้'
-        });
-      }
+    // Update appointment status via model
+    await AppointmentAdminModel.updateAppointmentStatus(id, status);
 
       // Create notification for the patient
       const notificationTitle = status === 'confirm' 
@@ -2618,37 +1965,33 @@ exports.updateAppointmentStatus = async (req, res) => {
         notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} ถูกยกเลิก${reason ? ` เหตุผล: ${reason}` : ''}`;
       }
 
-      // Insert notification for patient
-      await db.execute(`
-        INSERT INTO notifications (
-          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-      `, [
-        status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
-        notificationTitle,
-        notificationMessage,
-        id,
-        appointment.dentist_id,
-        appointment.patient_id
-      ]);
+      // Create notification for patient
+      await NotificationAdminModel.createNotification({
+        type: status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+        title: notificationTitle,
+        message: notificationMessage,
+        queue_id: id,
+        dentist_id: appointment.dentist_id,
+        patient_id: appointment.patient_id,
+        is_read: 0,
+        is_new: 1
+      });
 
       // Create admin notification for tracking
       const adminNotificationMessage = status === 'confirm'
         ? `ยืนยันการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`
         : `ยกเลิกการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
 
-      await db.execute(`
-        INSERT INTO notifications (
-          type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-      `, [
-        'admin_action',
-        'การดำเนินการโดยแอดมิน',
-        adminNotificationMessage,
-        id,
-        appointment.dentist_id,
-        appointment.patient_id
-      ]);
+      await NotificationAdminModel.createNotification({
+        type: 'admin_action',
+        title: 'การดำเนินการโดยแอดมิน',
+        message: adminNotificationMessage,
+        queue_id: id,
+        dentist_id: appointment.dentist_id,
+        patient_id: appointment.patient_id,
+        is_read: 0,
+        is_new: 1
+      });
 
       // Send email notification to patient (if email exists)
       if (appointment.patient_email) {
@@ -2678,9 +2021,6 @@ exports.updateAppointmentStatus = async (req, res) => {
         }
       }
 
-      // Commit transaction
-      await db.query('COMMIT');
-
       // สร้าง notification ตามสถานะ
 if (status === 'confirm') {
   await NotificationHelper.createConfirmationNotification(id, appointment.patient_id, appointment.dentist_id);
@@ -2706,12 +2046,6 @@ if (status === 'confirm') {
           appointment_time: appointment.time
         }
       });
-
-    } catch (error) {
-      // Rollback transaction on error
-      await db.query('ROLLBACK');
-      throw error;
-    }
 
   } catch (error) {
     console.error('Error updating appointment status:', error);
@@ -2742,61 +2076,22 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    // Check if dentist is available at the requested time
-    const appointmentDate = new Date(appointment_time);
-    const dateStr = appointmentDate.toISOString().split('T')[0];
-    const hour = appointmentDate.getHours();
+    // Create appointment via model
+    const appointment = await AppointmentAdminModel.createAppointment({
+      patient_id,
+      treatment_id,
+      dentist_id,
+      appointment_time,
+      notes
+    });
 
-    const [scheduleCheck] = await db.execute(`
-      SELECT COUNT(*) as schedule_exists
-      FROM dentist_schedule 
-      WHERE dentist_id = ? AND schedule_date = ? AND hour = ? AND status = 'working'
-    `, [dentist_id, dateStr, hour]);
-
-    if (scheduleCheck[0].schedule_exists === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Dentist is not available at the requested time'
-      });
-    }
-
-    // Check for existing appointments at the same time
-    const [existingAppointment] = await db.execute(`
-      SELECT COUNT(*) as appointment_exists
-      FROM queue 
-      WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
-    `, [dentist_id, appointment_time]);
-
-    if (existingAppointment[0].appointment_exists > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Time slot is already booked'
-      });
-    }
-
-    // Create queuedetail first
-    const [queueDetailResult] = await db.execute(`
-      INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `, [patient_id, treatment_id, dentist_id, dateStr]);
-
-    const queueDetailId = queueDetailResult.insertId;
-
-    // Create queue entry
-    const [queueResult] = await db.execute(`
-      INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-      VALUES (?, ?, ?, ?, ?, 'pending')
-    `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
-
-    const queueId = queueResult.insertId;
-
-    // Create notification (this will be handled by the trigger, but we can also create manually)
-    await createAppointmentNotification(queueId, patient_id, dentist_id);
+    // Create notification
+    await createAppointmentNotification(appointment.queue_id, patient_id, dentist_id);
 
     res.json({
       success: true,
       message: 'Appointment created successfully',
-      appointment_id: queueId
+      queue_id: appointment.queue_id
     });
 
   } catch (error) {
@@ -2814,44 +2109,27 @@ exports.deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Get appointment details for notification
-    const [appointmentData] = await db.execute(`
-      SELECT q.*, p.fname, p.lname, d.fname as dentist_fname, d.lname as dentist_lname
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE q.queue_id = ?
-    `, [id]);
-
-    if (appointmentData.length === 0) {
+    // Get appointment data before deletion
+    const appointment = await AppointmentAdminModel.getAppointmentById(id);
+    if (!appointment) {
       return res.status(404).json({
         success: false,
         error: 'Appointment not found'
       });
     }
 
-    // Delete the appointment
-    const [result] = await db.execute('DELETE FROM queue WHERE queue_id = ?', [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Appointment not found'
-      });
-    }
+    // Delete appointment via model
+    await AppointmentAdminModel.deleteAppointment(id);
 
     // Create deletion notification
-    const appointment = appointmentData[0];
-    await db.execute(`
-      INSERT INTO notifications (type, title, message, dentist_id, patient_id, is_read, is_new)
-      VALUES (?, ?, ?, ?, ?, 0, 1)
-    `, [
-      'deletion',
-      'Appointment Deleted',
-      `Appointment deleted: ${appointment.fname} ${appointment.lname} with Dr. ${appointment.dentist_fname} ${appointment.dentist_lname}`,
-      appointment.dentist_id,
-      appointment.patient_id
-    ]);
+    await NotificationAdminModel.createNotification({
+      type: 'deletion',
+      title: 'Appointment Deleted',
+      message: `Appointment deleted: ${appointment.patient_name} with Dr. ${appointment.dentist_name}`,
+      patient_id: appointment.patient_id,
+      is_read: 0,
+      is_new: 1
+    });
 
     res.json({
       success: true,
@@ -2875,54 +2153,13 @@ exports.getAppointmentStats = async (req, res) => {
     const startDate = start_date || new Date().toISOString().split('T')[0];
     const endDate = end_date || new Date().toISOString().split('T')[0];
 
-    // Get total appointments
-    const [totalResult] = await db.execute(`
-      SELECT COUNT(*) as total FROM queue 
-      WHERE DATE(time) BETWEEN ? AND ?
-    `, [startDate, endDate]);
-
-    // Get appointments by status
-    const [statusResult] = await db.execute(`
-      SELECT 
-        queue_status,
-        COUNT(*) as count
-      FROM queue 
-      WHERE DATE(time) BETWEEN ? AND ?
-      GROUP BY queue_status
-    `, [startDate, endDate]);
-
-    // Get appointments by dentist
-    const [dentistResult] = await db.execute(`
-      SELECT 
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        COUNT(*) as appointment_count
-      FROM queue q
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE DATE(q.time) BETWEEN ? AND ?
-      GROUP BY q.dentist_id, d.fname, d.lname
-      ORDER BY appointment_count DESC
-    `, [startDate, endDate]);
-
-    // Get popular treatments
-    const [treatmentResult] = await db.execute(`
-      SELECT 
-        t.treatment_name,
-        COUNT(*) as booking_count
-      FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE DATE(q.time) BETWEEN ? AND ?
-      GROUP BY q.treatment_id, t.treatment_name
-      ORDER BY booking_count DESC
-      LIMIT 10
-    `, [startDate, endDate]);
+    // Compute stats via model
+    const stats = await AppointmentAdminModel.getAppointmentStats({ start_date: startDate, end_date: endDate });
 
     res.json({
       success: true,
       stats: {
-        total_appointments: totalResult[0].total,
-        by_status: statusResult,
-        by_dentist: dentistResult,
-        popular_treatments: treatmentResult,
+        ...stats,
         date_range: { start_date: startDate, end_date: endDate }
       }
     });
@@ -2942,30 +2179,19 @@ exports.getAppointmentStats = async (req, res) => {
 // Create appointment status change notification
 async function createAppointmentStatusNotification(queueId, action) {
   try {
-    const [appointmentData] = await db.execute(`
-      SELECT q.*, 
-             CONCAT(p.fname, ' ', p.lname) as patient_name,
-             CONCAT(d.fname, ' ', d.lname) as dentist_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE q.queue_id = ?
-    `, [queueId]);
-
-    if (appointmentData.length > 0) {
-      const appointment = appointmentData[0];
-      
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-      `, [
-        'status_change',
-        `Appointment ${action}`,
-        `${appointment.patient_name}'s appointment with Dr. ${appointment.dentist_name} has been ${action}`,
-        queueId,
-        appointment.dentist_id,
-        appointment.patient_id
-      ]);
+    const appointment = await AppointmentAdminModel.getAppointmentById(queueId);
+    
+    if (appointment) {
+      await NotificationAdminModel.createNotification({
+        type: 'status_change',
+        title: `Appointment ${action}`,
+        message: `${appointment.patient_name}'s appointment with Dr. ${appointment.dentist_name} has been ${action}`,
+        queue_id: queueId,
+        dentist_id: appointment.dentist_id,
+        patient_id: appointment.patient_id,
+        is_read: 0,
+        is_new: 1
+      });
     }
   } catch (error) {
     console.error('Error creating status notification:', error);
@@ -2975,25 +2201,7 @@ async function createAppointmentStatusNotification(queueId, action) {
 // Enhanced appointment notification creation
 async function createAppointmentNotification(queueId, patientId, dentistId) {
   try {
-    const [patientData] = await db.execute('SELECT fname, lname FROM patient WHERE patient_id = ?', [patientId]);
-    const [dentistData] = await db.execute('SELECT fname, lname FROM dentist WHERE dentist_id = ?', [dentistId]);
-    
-    if (patientData.length > 0 && dentistData.length > 0) {
-      const patient = patientData[0];
-      const dentist = dentistData[0];
-      
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-      `, [
-        'appointment',
-        'New Appointment Request',
-        `New appointment from: ${patient.fname} ${patient.lname} with Dr. ${dentist.fname} ${dentist.lname}`,
-        queueId,
-        dentistId,
-        patientId
-      ]);
-    }
+    await NotificationAdminModel.createAppointmentNotification(queueId, patientId, dentistId);
   } catch (error) {
     console.error('Error creating appointment notification:', error);
   }
@@ -3004,49 +2212,7 @@ async function createAppointmentNotification(queueId, patientId, dentistId) {
 // API: Get all dentists for the modern interface
 exports.getDentistsAPI = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT 
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.phone,
-        d.specialty,
-        d.education,
-        d.address,
-        d.dob,
-        d.id_card,
-        d.photo,
-        u.email,
-        u.last_login,
-        COUNT(DISTINCT ds.schedule_id) as total_schedules,
-        COUNT(DISTINCT q.queue_id) as total_appointments
-      FROM dentist d
-      JOIN user u ON d.user_id = u.user_id
-      LEFT JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id AND ds.schedule_date >= CURDATE()
-      LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('pending', 'confirm')
-      GROUP BY d.dentist_id, d.fname, d.lname, d.phone, d.specialty, d.education, d.address, d.dob, d.id_card, d.photo, u.email, u.last_login
-      ORDER BY d.fname, d.lname
-    `);
-
-    // Format the data for the frontend
-    const dentists = rows.map(dentist => ({
-      dentist_id: dentist.dentist_id,
-      fname: dentist.fname,
-      lname: dentist.lname,
-      email: dentist.email,
-      phone: dentist.phone,
-      specialty: dentist.specialty,
-      education: dentist.education,
-      address: dentist.address,
-      dob: dentist.dob,
-      id_card: dentist.id_card,
-      photo: dentist.photo,
-      last_login: dentist.last_login,
-      stats: {
-        total_schedules: dentist.total_schedules,
-        total_appointments: dentist.total_appointments
-      }
-    }));
+    const dentists = await DentistAdminModel.getDentistsForAPI();
 
     res.json({
       success: true,
@@ -3065,34 +2231,18 @@ exports.getDentistsAPI = async (req, res) => {
 };
 
 // API: Get single dentist details
-// API: Get single dentist details
 exports.getDentistByIdAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [rows] = await db.execute(`
-      SELECT 
-        d.*,
-        u.email,
-        u.last_login,
-        COUNT(DISTINCT ds.schedule_id) as total_schedules,
-        COUNT(DISTINCT q.queue_id) as total_appointments
-      FROM dentist d
-      JOIN user u ON d.user_id = u.user_id
-      LEFT JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id AND ds.schedule_date >= CURDATE()
-      LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('pending', 'confirm')
-      WHERE d.dentist_id = ?
-      GROUP BY d.dentist_id
-    `, [id]);
+    const dentist = await DentistAdminModel.getDentistByIdForAPI(id);
 
-    if (rows.length === 0) {
+    if (!dentist) {
       return res.status(404).json({
         success: false,
         error: 'Dentist not found'
       });
     }
-
-    const dentist = rows[0];
     
     // ✅ เพิ่มส่วนนี้เพื่อแปลง license_no เป็นหลายรูปแบบเพื่อรองรับ frontend
     if (dentist.license_no) {
@@ -3113,7 +2263,7 @@ exports.getDentistByIdAPI = async (req, res) => {
         dentist.photo = null;
         
         // อัปเดต database ให้ตรงกับความเป็นจริง
-        await db.execute('UPDATE dentist SET photo = NULL WHERE dentist_id = ?', [id]);
+        await DentistAdminModel.updateDentist(id, { photo: null });
       }
     }
 
@@ -3136,69 +2286,22 @@ exports.deleteDentistAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Get dentist details before deletion for notification
-    const [dentistData] = await db.execute(`
-      SELECT d.*, u.email 
-      FROM dentist d 
-      JOIN user u ON d.user_id = u.user_id 
-      WHERE d.dentist_id = ?
-    `, [id]);
-
-    if (dentistData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Dentist not found'
-      });
-    }
-
-    const dentist = dentistData[0];
-    
-    // Start transaction to ensure data integrity
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Delete related schedules first (due to foreign key constraints)
-      await db.execute('DELETE FROM dentist_schedule WHERE dentist_id = ?', [id]);
-      
-      // Update any existing appointments to cancelled status instead of deleting
-      await db.execute(`
-        UPDATE queue 
-        SET queue_status = 'cancel' 
-        WHERE dentist_id = ? AND queue_status IN ('pending', 'confirm')
-      `, [id]);
-      
-      // Delete dentist-treatment relationships
-      await db.execute('DELETE FROM dentist_treatment WHERE dentist_id = ?', [id]);
-      
-      // Delete the dentist record
-      await db.execute('DELETE FROM dentist WHERE dentist_id = ?', [id]);
-      
-      // Delete the associated user account
-      await db.execute('DELETE FROM user WHERE user_id = ?', [dentist.user_id]);
-      
-      // Commit transaction
-      await db.query('COMMIT');
+    // Delete dentist via model
+    await DentistAdminModel.deleteDentist(id);
       
       // Create notification for deletion
-      await db.execute(`
-        INSERT INTO notifications (type, title, message, is_read, is_new)
-        VALUES (?, ?, ?, 0, 1)
-      `, [
-        'system',
-        'Dentist Account Deleted',
-        `Dr. ${dentist.fname} ${dentist.lname}'s account has been removed from the system`
-      ]);
+      await NotificationAdminModel.createNotification({
+        type: 'system',
+        title: 'Dentist Account Deleted',
+        message: `Dentist account has been removed from the system`,
+        is_read: 0,
+        is_new: 1
+      });
 
       res.json({
         success: true,
-        message: `Dr. ${dentist.fname} ${dentist.lname} deleted successfully`
+        message: `Dentist deleted successfully`
       });
-
-    } catch (error) {
-      // Rollback transaction on error
-      await db.query('ROLLBACK');
-      throw error;
-    }
 
   } catch (error) {
     console.error('Error deleting dentist:', error);
@@ -3213,14 +2316,7 @@ exports.deleteDentistAPI = async (req, res) => {
 // API: Get dentist specialties for filter dropdown
 exports.getDentistSpecialtiesAPI = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT DISTINCT specialty 
-      FROM dentist 
-      WHERE specialty IS NOT NULL AND specialty != ''
-      ORDER BY specialty
-    `);
-
-    const specialties = rows.map(row => row.specialty);
+    const specialties = await DentistAdminModel.getDentistSpecialties();
 
     res.json({
       success: true,
@@ -3250,35 +2346,14 @@ exports.getCurrentUserAPI = async (req, res) => {
     }
 
     // ดึงข้อมูล user
-    const [users] = await db.execute(`
-      SELECT 
-        u.user_id,
-        u.email,
-        u.role_id,
-        CASE 
-          WHEN u.role_id = 1 THEN 'Admin'
-          WHEN u.role_id = 2 THEN 'Dentist'
-          WHEN u.role_id = 3 THEN 'Patient'
-          ELSE 'Unknown'
-        END as role_name,
-        COALESCE(d.fname, p.fname, 'Admin') as fname,
-        COALESCE(d.lname, p.lname, '') as lname,
-        d.dentist_id,
-        p.patient_id
-      FROM user u
-      LEFT JOIN dentist d ON u.user_id = d.user_id
-      LEFT JOIN patient p ON u.user_id = p.user_id
-      WHERE u.user_id = ?
-    `, [userId]);
+    const user = await AdminModel.getProfile(userId);
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: 'ไม่พบข้อมูลผู้ใช้'
       });
     }
-
-    const user = users[0];
 
     res.json({
       success: true,
@@ -3307,17 +2382,7 @@ exports.getCurrentUserAPI = async (req, res) => {
 // Get treatments API
 exports.getTreatmentsAPI = async (req, res) => {
   try {
-    const [treatments] = await db.execute(`
-      SELECT 
-        t.treatment_id,
-        t.treatment_name,
-        t.duration,
-        COUNT(dt.dentist_id) as dentist_count
-      FROM treatment t
-      LEFT JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
-      GROUP BY t.treatment_id, t.treatment_name, t.duration
-      ORDER BY t.treatment_name
-    `);
+    const treatments = await TreatmentAdminModel.getTreatmentsForAPI();
 
     res.json({
       success: true,
@@ -3337,26 +2402,12 @@ exports.deleteTreatmentAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Delete dentist-treatment relationships
-      await db.execute('DELETE FROM dentist_treatment WHERE treatment_id = ?', [id]);
-      
-      // Delete the treatment
-      await db.execute('DELETE FROM treatment WHERE treatment_id = ?', [id]);
-      
-      await db.query('COMMIT');
+    await TreatmentAdminModel.deleteTreatment(id);
       
       res.json({
         success: true,
         message: 'Treatment deleted successfully'
       });
-      
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
     
   } catch (error) {
     console.error('Error deleting treatment:', error);
@@ -3372,13 +2423,9 @@ exports.getTreatmentByIdAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [treatments] = await db.execute(`
-      SELECT treatment_id, treatment_name, duration
-      FROM treatment 
-      WHERE treatment_id = ?
-    `, [id]);
+    const treatment = await TreatmentAdminModel.getTreatmentById(id);
 
-    if (treatments.length === 0) {
+    if (!treatment) {
       return res.status(404).json({
         success: false,
         error: 'Treatment not found'
@@ -3387,7 +2434,7 @@ exports.getTreatmentByIdAPI = async (req, res) => {
 
     res.json({
       success: true,
-      treatment: treatments[0]
+      treatment: treatment
     });
 
   } catch (error) {
@@ -3404,18 +2451,7 @@ exports.getTreatmentDentistsAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [dentists] = await db.execute(`
-      SELECT 
-        d.dentist_id, 
-        d.fname, 
-        d.lname, 
-        d.specialty,
-        d.phone
-      FROM dentist d
-      JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id
-      WHERE dt.treatment_id = ?
-      ORDER BY d.fname, d.lname
-    `, [id]);
+    const dentists = await TreatmentAdminModel.getDentistsForTreatment(id);
 
     res.json({
       success: true,
@@ -3446,41 +2482,16 @@ exports.updateTreatmentAPI = async (req, res) => {
       });
     }
 
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Update treatment
-      await db.execute(`
-        UPDATE treatment 
-        SET treatment_name = ?, duration = ? 
-        WHERE treatment_id = ?
-      `, [treatment_name, parseInt(duration), id]);
-
-      // Delete existing dentist assignments
-      await db.execute(
-        'DELETE FROM dentist_treatment WHERE treatment_id = ?',
-        [id]
-      );
-
-      // Add new dentist assignments
-      for (const dentistId of dentist_ids) {
-        await db.execute(
-          'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
-          [dentistId, id]
-        );
-      }
-
-      await db.query('COMMIT');
+    await TreatmentAdminModel.updateTreatment(id, {
+      treatment_name,
+      duration: parseInt(duration),
+      dentist_ids
+    });
       
       res.json({
         success: true,
         message: 'Treatment updated successfully'
       });
-
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
 
   } catch (error) {
     console.error('Error updating treatment:', error);
@@ -3504,37 +2515,17 @@ exports.createTreatmentAPI = async (req, res) => {
       });
     }
 
-    await db.query('START TRANSACTION');
-    
-    try {
-      // Create treatment
-      const [treatmentResult] = await db.execute(`
-        INSERT INTO treatment (treatment_name, duration) 
-        VALUES (?, ?)
-      `, [name.trim(), parseInt(duration)]);
-
-      const treatmentId = treatmentResult.insertId;
-
-      // Add dentist assignments
-      for (const dentistId of dentist_ids) {
-        await db.execute(
-          'INSERT INTO dentist_treatment (dentist_id, treatment_id) VALUES (?, ?)',
-          [dentistId, treatmentId]
-        );
-      }
-
-      await db.query('COMMIT');
+    const treatment = await TreatmentAdminModel.createTreatment({
+      treatment_name: name.trim(),
+      duration: parseInt(duration),
+      dentist_ids
+    });
       
       res.json({
         success: true,
         message: 'Treatment created successfully',
-        treatment_id: treatmentId
+      treatment_id: treatment.treatment_id
       });
-
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
 
   } catch (error) {
     console.error('Error creating treatment:', error);
@@ -3547,16 +2538,11 @@ exports.createTreatmentAPI = async (req, res) => {
 
 exports.getPendingAppointmentsCount = async (req, res) => {
   try {
-    const [result] = await db.execute(`
-      SELECT COUNT(*) as pending_count 
-      FROM queue 
-      WHERE queue_status = 'pending' 
-      AND DATE(time) >= CURDATE()
-    `);
+    const count = await AppointmentAdminModel.getPendingAppointmentsCount();
 
     res.json({
       success: true,
-      pending_count: result[0].pending_count
+      pending_count: count
     });
 
   } catch (error) {
@@ -3652,71 +2638,20 @@ async function sendSMSNotification(phone, message) {
 exports.getAppointmentStatistics = async (req, res) => {
   try {
     const { start_date, end_date } = req.query;
-    const startDate = start_date || new Date().toISOString().split('T')[0];
-    const endDate = end_date || new Date().toISOString().split('T')[0];
-
-    // Get total appointments by status
-    const [statusStats] = await db.execute(`
-      SELECT 
-        queue_status,
-        COUNT(*) as count,
-        ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM queue WHERE DATE(time) BETWEEN ? AND ?)), 2) as percentage
-      FROM queue 
-      WHERE DATE(time) BETWEEN ? AND ?
-      GROUP BY queue_status
-    `, [startDate, endDate, startDate, endDate]);
-
-    // Get daily appointment trends
-    const [dailyTrends] = await db.execute(`
-      SELECT 
-        DATE(time) as date,
-        COUNT(*) as total_appointments,
-        COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending,
-        COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed,
-        COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled
-      FROM queue 
-      WHERE DATE(time) BETWEEN ? AND ?
-      GROUP BY DATE(time)
-      ORDER BY date
-    `, [startDate, endDate]);
-
-    // Get top treatments
-    const [topTreatments] = await db.execute(`
-      SELECT 
-        t.treatment_name,
-        COUNT(*) as booking_count,
-        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
-      FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE DATE(q.time) BETWEEN ? AND ?
-      GROUP BY t.treatment_id, t.treatment_name
-      ORDER BY booking_count DESC
-      LIMIT 10
-    `, [startDate, endDate]);
-
-    // Get dentist performance
-    const [dentistStats] = await db.execute(`
-      SELECT 
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        d.specialty,
-        COUNT(*) as total_bookings,
-        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_bookings,
-        ROUND((COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) * 100.0 / COUNT(*)), 2) as confirmation_rate
-      FROM queue q
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE DATE(q.time) BETWEEN ? AND ?
-      GROUP BY q.dentist_id, d.fname, d.lname, d.specialty
-      ORDER BY total_bookings DESC
-    `, [startDate, endDate]);
+    
+    const statistics = await ReportAdminModel.getDetailedAppointmentStatistics({
+      start_date,
+      end_date
+    });
 
     res.json({
       success: true,
       statistics: {
-        status_distribution: statusStats,
-        daily_trends: dailyTrends,
-        top_treatments: topTreatments,
-        dentist_performance: dentistStats,
-        date_range: { start_date: startDate, end_date: endDate }
+        status_distribution: statistics.statusStats,
+        daily_trends: statistics.dailyTrends,
+        top_treatments: statistics.topTreatments,
+        dentist_performance: statistics.dentistStats,
+        date_range: { start_date: start_date || new Date().toISOString().split('T')[0], end_date: end_date || new Date().toISOString().split('T')[0] }
       }
     });
 
@@ -3733,9 +2668,9 @@ exports.getAppointmentStatistics = async (req, res) => {
 // Bulk update appointment status
 exports.bulkUpdateAppointmentStatus = async (req, res) => {
   try {
-    const { appointment_ids, status, reason } = req.body;
+    const { queue_ids, status, reason } = req.body;
     
-    if (!appointment_ids || !Array.isArray(appointment_ids) || appointment_ids.length === 0) {
+    if (!queue_ids || !Array.isArray(queue_ids) || queue_ids.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'กรุณาระบุรายการการจองที่ต้องการอัปเดต'
@@ -3755,16 +2690,16 @@ exports.bulkUpdateAppointmentStatus = async (req, res) => {
     const results = [];
 
     // Process each appointment
-    for (const appointmentId of appointment_ids) {
+    for (const queueId of queue_ids) {
       try {
         // Call the single update function
-        await updateSingleAppointmentStatus(appointmentId, status, reason);
+        await updateSingleAppointmentStatus(queueId, status, reason);
         successCount++;
-        results.push({ appointment_id: appointmentId, success: true });
+        results.push({ queue_id: queueId, success: true });
       } catch (error) {
         failureCount++;
         results.push({ 
-          appointment_id: appointmentId, 
+          queue_id: queueId, 
           success: false, 
           error: error.message 
         });
@@ -3776,7 +2711,7 @@ exports.bulkUpdateAppointmentStatus = async (req, res) => {
       message: `อัปเดตสำเร็จ ${successCount} รายการ${failureCount > 0 ? `, ล้มเหลว ${failureCount} รายการ` : ''}`,
       results: results,
       summary: {
-        total: appointment_ids.length,
+        total: queue_ids.length,
         success: successCount,
         failure: failureCount
       }
@@ -3794,34 +2729,14 @@ exports.bulkUpdateAppointmentStatus = async (req, res) => {
 // Helper function for single appointment status update
 async function updateSingleAppointmentStatus(appointmentId, status, reason) {
   // Get appointment details
-  const [appointmentData] = await db.execute(`
-    SELECT 
-      q.*,
-      CONCAT(p.fname, ' ', p.lname) as patient_name,
-      CONCAT(d.fname, ' ', d.lname) as dentist_name,
-      t.treatment_name,
-      u.email as patient_email,
-      p.phone as patient_phone
-    FROM queue q
-    JOIN patient p ON q.patient_id = p.patient_id
-    JOIN dentist d ON q.dentist_id = d.dentist_id
-    JOIN treatment t ON q.treatment_id = t.treatment_id
-    LEFT JOIN user u ON p.user_id = u.user_id
-    WHERE q.queue_id = ?
-  `, [appointmentId]);
+  const appointment = await AppointmentAdminModel.getAppointmentById(appointmentId);
 
-  if (appointmentData.length === 0) {
+  if (!appointment) {
     throw new Error(`ไม่พบการจอง ID: ${appointmentId}`);
   }
 
-  const appointment = appointmentData[0];
-
   // Update status
-  await db.execute(`
-    UPDATE queue 
-    SET queue_status = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE queue_id = ?
-  `, [status, appointmentId]);
+  await AppointmentAdminModel.updateAppointmentStatus(appointmentId, status);
 
   // Create notification
   const notificationTitle = status === 'confirm' 
@@ -3836,18 +2751,16 @@ async function updateSingleAppointmentStatus(appointmentId, status, reason) {
   }
 
   // Insert notification
-  await db.execute(`
-    INSERT INTO notifications (
-      type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, 0, 1, CURRENT_TIMESTAMP)
-  `, [
-    status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
-    notificationTitle,
-    notificationMessage,
-    appointmentId,
-    appointment.dentist_id,
-    appointment.patient_id
-  ]);
+  await NotificationAdminModel.createNotification({
+    type: status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+    title: notificationTitle,
+    message: notificationMessage,
+    queue_id: appointmentId,
+    dentist_id: appointment.dentist_id,
+    patient_id: appointment.patient_id,
+    is_read: 0,
+    is_new: 1
+  });
 
   return true;
 }
@@ -3863,11 +2776,9 @@ exports.showEditAppointmentForm = async (req, res) => {
     }
     
     // Verify appointment exists
-    const [appointments] = await db.execute(`
-      SELECT queue_id FROM queue WHERE queue_id = ?
-    `, [appointmentId]);
+    const appointment = await AppointmentAdminModel.getAppointmentById(appointmentId);
     
-    if (appointments.length === 0) {
+    if (!appointment) {
       req.flash('error', 'Appointment not found');
       return res.redirect('/admin/appointments');
     }
@@ -3921,86 +2832,34 @@ exports.createAppointmentAPI = async (req, res) => {
     const dateStr = appointmentDate.toISOString().split('T')[0];
     const hour = appointmentDate.getHours();
 
-    // Check if dentist is available at the requested time
-    const [scheduleCheck] = await db.execute(`
-      SELECT COUNT(*) as schedule_exists
-      FROM dentist_schedule 
-      WHERE dentist_id = ? AND schedule_date = ? AND hour = ? AND status = 'working'
-    `, [dentist_id, dateStr, hour]);
+    // Create appointment via model (includes validation and transaction handling)
+    const result = await AppointmentAdminModel.createAppointment({
+      patient_id,
+      treatment_id,
+      dentist_id,
+      appointment_time,
+      notes
+    });
 
-    if (scheduleCheck[0].schedule_exists === 0) {
+    if (!result.success) {
       return res.status(400).json({
         success: false,
-        error: 'Dentist is not available at the requested time'
+        error: result.error
       });
     }
-
-    // Check for existing appointments at the same time
-    const [existingAppointment] = await db.execute(`
-      SELECT COUNT(*) as appointment_exists
-      FROM queue 
-      WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
-    `, [dentist_id, appointment_time]);
-
-    if (existingAppointment[0].appointment_exists > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Time slot is already booked'
-      });
-    }
-
-    // Start transaction
-    await db.query('START TRANSACTION');
-
-    try {
-      // Create queuedetail first
-      const [queueDetailResult] = await db.execute(`
-        INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `, [patient_id, treatment_id, dentist_id, dateStr]);
-
-      const queueDetailId = queueDetailResult.insertId;
-
-      // Create queue entry
-      const [queueResult] = await db.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-        VALUES (?, ?, ?, ?, ?, 'pending')
-      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
-
-      const queueId = queueResult.insertId;
-
-      // Commit transaction
-      await db.query('COMMIT');
-
-      // Get appointment details for response
-      const [appointmentDetails] = await db.execute(`
-        SELECT 
-          q.queue_id,
-          q.time,
-          q.queue_status,
-          CONCAT(p.fname, ' ', p.lname) as patient_name,
-          CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          t.treatment_name
-        FROM queue q
-        JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.queue_id = ?
-      `, [queueId]);
 
       // Create success notification
       try {
-        await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
-        `, [
-          'appointment',
-          'New Appointment Created',
-          `New appointment created for ${appointmentDetails[0].patient_name} with Dr. ${appointmentDetails[0].dentist_name}`,
-          queueId,
-          dentist_id,
-          patient_id
-        ]);
+      await NotificationAdminModel.createNotification({
+        type: 'appointment',
+        title: 'New Appointment Created',
+        message: `New appointment created for ${result.appointment.patient_name} with Dr. ${result.appointment.dentist_name}`,
+        queue_id: result.appointment.id,
+        dentist_id: dentist_id,
+        patient_id: patient_id,
+        is_read: 0,
+        is_new: 1
+      });
       } catch (notificationError) {
         console.error('Failed to create notification:', notificationError);
         // Don't fail the entire operation if notification fails
@@ -4009,20 +2868,8 @@ exports.createAppointmentAPI = async (req, res) => {
       res.json({
         success: true,
         message: 'Appointment created successfully',
-        appointment: {
-          id: queueId,
-          time: appointment_time,
-          patient_name: appointmentDetails[0].patient_name,
-          dentist_name: appointmentDetails[0].dentist_name,
-          treatment_name: appointmentDetails[0].treatment_name,
-          status: 'pending'
-        }
-      });
-
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
+      appointment: result.appointment
+    });
 
   } catch (error) {
     console.error('Error creating appointment:', error);
@@ -4047,24 +2894,10 @@ exports.getDentistScheduleAPI = async (req, res) => {
     }
 
     // Get dentist schedule for the specified date
-    const [scheduleData] = await db.execute(`
-      SELECT 
-        ds.hour,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        COUNT(q.queue_id) as booked_count
-      FROM dentist_schedule ds
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-        AND DATE(q.time) = ds.schedule_date 
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      WHERE ds.dentist_id = ? 
-        AND ds.schedule_date = ?
-        AND ds.status = 'working'
-      GROUP BY ds.hour, ds.start_time, ds.end_time, ds.status
-      ORDER BY ds.hour
-    `, [id, date]);
+    const scheduleData = await AppointmentAdminModel.getDentistScheduleForAPI({
+      dentistId: id,
+      date: date
+    });
 
     // Generate time slots based on schedule
     const timeSlots = [];
@@ -4117,23 +2950,7 @@ exports.getPatientTreatmentHistoryAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [treatments] = await db.execute(`
-      SELECT
-        q.queue_id,
-        q.time as date,
-        q.queue_status,
-        th.diagnosis,
-        t.treatment_name,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        th.followUpdate as follow_update
-      FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.patient_id = ?
-      ORDER BY q.time DESC
-    `, [id]);
+    const treatments = await PatientAdminModel.getPatientTreatmentHistoryForAPI(id);
 
     res.json({
       success: true,
@@ -4153,132 +2970,7 @@ exports.getPatientTreatmentHistoryAPI = async (req, res) => {
 // Enhanced Dashboard with Reports
 exports.getReportsDashboard = async (req, res) => {
   try {
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
-    const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
-    const lastDayOfMonth = new Date(currentYear, currentMonth, 0);
-
-    // 1. นับจำนวนผู้ป่วยทั้งหมด
-    const [totalPatientsResult] = await db.execute(`
-      SELECT COUNT(*) as total_patients FROM patient
-    `);
-    const totalPatients = totalPatientsResult[0].total_patients;
-
-    // 2. สถิติการนัดหมายตามสถานะ
-    const [appointmentStats] = await db.execute(`
-      SELECT 
-        queue_status,
-        COUNT(*) as count
-      FROM queue 
-      WHERE DATE(time) BETWEEN ? AND ?
-      GROUP BY queue_status
-    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
-
-    const appointmentSummary = {
-      confirmed: 0,
-      pending: 0,
-      cancelled: 0,
-      total: 0
-    };
-
-    appointmentStats.forEach(stat => {
-      if (stat.queue_status === 'confirm') {
-        appointmentSummary.confirmed = stat.count;
-      } else if (stat.queue_status === 'pending') {
-        appointmentSummary.pending = stat.count;
-      } else if (stat.queue_status === 'cancel') {
-        appointmentSummary.cancelled = stat.count;
-      }
-      appointmentSummary.total += stat.count;
-    });
-
-    // 3. สถิติการรักษา
-    const [treatmentStats] = await db.execute(`
-      SELECT 
-        t.treatment_name,
-        COUNT(q.queue_id) as count
-      FROM treatment t
-      LEFT JOIN queue q ON t.treatment_id = q.treatment_id 
-        AND DATE(q.time) BETWEEN ? AND ?
-      GROUP BY t.treatment_id, t.treatment_name
-      ORDER BY count DESC
-      LIMIT 10
-    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
-
-    // 4. สถิติผู้ป่วยต่อทันตแพทย์
-    const [doctorStats] = await db.execute(`
-      SELECT 
-        d.dentist_id,
-        CONCAT(d.fname, ' ', d.lname) as doctor_name,
-        d.specialty,
-        COUNT(DISTINCT q.patient_id) as unique_patients,
-        COUNT(q.queue_id) as total_appointments
-      FROM dentist d
-      LEFT JOIN queue q ON d.dentist_id = q.dentist_id 
-        AND DATE(q.time) BETWEEN ? AND ?
-      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
-      ORDER BY total_appointments DESC
-    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
-
-    // 5. ทันตแพทย์ที่ทำงานวันนี้
-    const [todaysDoctors] = await db.execute(`
-      SELECT DISTINCT
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        d.photo
-      FROM dentist d
-      JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
-      WHERE ds.schedule_date = CURDATE() AND ds.status = 'working'
-      ORDER BY d.fname, d.lname
-    `);
-
-    // 6. การนัดหมายที่จะมาถึงใน 7 วันข้างหน้า
-    const nextWeek = new Date();
-    nextWeek.setDate(today.getDate() + 7);
-    
-    const [upcomingAppointments] = await db.execute(`
-      SELECT 
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        CONCAT(d.fname, ' ', d.lname) as doctor_name,
-        t.treatment_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE DATE(q.time) BETWEEN CURDATE() AND ?
-        AND q.queue_status IN ('pending', 'confirm')
-      ORDER BY q.time ASC
-      LIMIT 10
-    `, [nextWeek.toISOString().split('T')[0]]);
-
-    // 7. ข้อมูลแนวโน้มรายเดือน
-    const [monthlyTrends] = await db.execute(`
-      SELECT 
-        DATE(time) as appointment_date,
-        COUNT(*) as daily_count
-      FROM queue
-      WHERE DATE(time) BETWEEN ? AND ?
-      GROUP BY DATE(time)
-      ORDER BY appointment_date
-    `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
-
-    // เตรียมข้อมูล
-    const dashboardData = {
-      totalPatients,
-      appointmentSummary,
-      treatmentStats,
-      doctorStats,
-      todaysDoctors,
-      upcomingAppointments,
-      monthlyTrends,
-      currentMonth: today.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
-    };
+    const dashboardData = await ReportAdminModel.getReportsDashboardData();
 
     res.render('admin/reports/admin-reports-dashboard', { 
       dashboardData,
@@ -4311,43 +3003,15 @@ exports.getAppointmentStatsAPI = async (req, res) => {
   try {
     const { period = 'month', status } = req.query;
     
-    let dateFilter = '';
-    let params = [];
-    
-    if (period === 'today') {
-      dateFilter = 'DATE(time) = CURDATE()';
-    } else if (period === 'week') {
-      dateFilter = 'DATE(time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
-    } else if (period === 'month') {
-      dateFilter = 'MONTH(time) = MONTH(CURDATE()) AND YEAR(time) = YEAR(CURDATE())';
-    }
-    
-    let statusFilter = '';
-    if (status && status !== 'all') {
-      statusFilter = 'AND queue_status = ?';
-      params.push(status);
-    }
-
-    const [appointments] = await db.execute(`
-      SELECT 
-        q.queue_id,
-        q.time,
-        q.queue_status,
-        CONCAT(p.fname, ' ', p.lname) as patient_name,
-        CONCAT(d.fname, ' ', d.lname) as dentist_name,
-        t.treatment_name
-      FROM queue q
-      JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE ${dateFilter} ${statusFilter}
-      ORDER BY q.time DESC
-    `, params);
+    const result = await ReportAdminModel.getAppointmentStatsAPI({
+      period,
+      status
+    });
 
     res.json({
       success: true,
-      appointments,
-      total: appointments.length,
+      appointments: result.appointments,
+      total: result.appointments.length,
       period,
       status: status || 'all'
     });
@@ -4367,33 +3031,13 @@ exports.getTreatmentStatsAPI = async (req, res) => {
   try {
     const { period = 'month' } = req.query;
     
-    let dateFilter = '';
-    if (period === 'today') {
-      dateFilter = 'AND DATE(q.time) = CURDATE()';
-    } else if (period === 'week') {
-      dateFilter = 'AND DATE(q.time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
-    } else if (period === 'month') {
-      dateFilter = 'AND MONTH(q.time) = MONTH(CURDATE()) AND YEAR(q.time) = YEAR(CURDATE())';
-    } else if (period === 'year') {
-      dateFilter = 'AND YEAR(q.time) = YEAR(CURDATE())';
-    }
-
-    const [treatmentStats] = await db.execute(`
-      SELECT 
-        t.treatment_name,
-        COUNT(q.queue_id) as count,
-        COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
-      FROM treatment t
-      LEFT JOIN queue q ON t.treatment_id = q.treatment_id ${dateFilter}
-      GROUP BY t.treatment_id, t.treatment_name
-      HAVING count > 0
-      ORDER BY count DESC
-      LIMIT 10
-    `);
+    const result = await ReportAdminModel.getTreatmentStatsAPI({
+      period
+    });
 
     res.json({
       success: true,
-      treatments: treatmentStats,
+      treatments: result.treatments,
       period
     });
 
@@ -4419,48 +3063,11 @@ exports.getDentistScheduleData = async (req, res) => {
       });
     }
 
-    // หมายเหตุ: DAYOFWEEK() ใน MySQL => อาทิตย์=1, จันทร์=2, ... เสาร์=7
-    // เราคัดวันอาทิตย์ทิ้ง (<> 1) เพื่อให้ “อาทิตย์ปิด” เสมอ
-    const [rows] = await db.execute(
-      `
-      SELECT 
-        ds.schedule_date,
-        ds.hour,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        ds.note,
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        COUNT(q.queue_id) as appointment_count
-      FROM dentist_schedule ds
-      JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q 
-        ON q.dentist_id = ds.dentist_id
-       AND DATE(q.time) = ds.schedule_date
-       AND HOUR(q.time) = ds.hour
-       AND q.queue_status IN ('pending','confirm')
-      WHERE ds.dentist_id = ?
-        AND ds.schedule_date BETWEEN ? AND ?
-        AND DAYOFWEEK(ds.schedule_date) <> 1    -- << อาทิตย์ปิด
-      GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.dentist_id, d.fname, d.lname, d.specialty
-      ORDER BY ds.schedule_date, ds.hour
-      `,
-      [dentistId, start_date, end_date]
-    );
-
-    // แปลงให้ง่ายต่อการแสดงผลในปฏิทิน (รวมช่วงเวลาทำงานต่อเนื่อง)
-    const schedules = rows.map(r => ({
-      schedule_date: r.schedule_date.toISOString().split('T')[0],
-      hour: r.hour,
-      start_time: r.start_time.substring(0,5), // HH:MM
-      end_time: r.end_time.substring(0,5),
-      status: r.status, // 'working' หรือ 'dayoff'
-      note: r.note || null,
-      appointment_count: r.appointment_count || 0
-    }));
+    const schedules = await AppointmentAdminModel.getDentistScheduleData({
+      dentistId,
+      start_date,
+      end_date
+    });
 
     return res.json({ success: true, schedules });
   } catch (err) {
@@ -4474,20 +3081,7 @@ exports.getDentistScheduleData = async (req, res) => {
 
 exports.getDentistTreatmentMappingAPI = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
-      SELECT 
-        dt.dentist_id,
-        dt.treatment_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        t.treatment_name,
-        t.duration
-      FROM dentist_treatment dt
-      JOIN dentist d ON dt.dentist_id = d.dentist_id
-      JOIN treatment t ON dt.treatment_id = t.treatment_id
-      ORDER BY d.fname, d.lname, t.treatment_name
-    `);
+    const rows = await TreatmentAdminModel.getDentistTreatmentMappings();
 
     // จัดกลุ่มข้อมูลตาม dentist_id
     const mappings = {};
@@ -4530,16 +3124,7 @@ exports.getDentistTreatmentsAPI = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [treatments] = await db.execute(`
-      SELECT 
-        t.treatment_id,
-        t.treatment_name,
-        t.duration
-      FROM treatment t
-      JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
-      WHERE dt.dentist_id = ?
-      ORDER BY t.treatment_name
-    `, [id]);
+    const treatments = await TreatmentAdminModel.getDentistTreatments(id);
 
     res.json({
       success: true,
@@ -4579,50 +3164,14 @@ exports.checkid_cardAvailability = async (req, res) => {
       });
     }
 
-    let dentistExists = false;
-    let patientExists = false;
-
-    // Check in dentist table
-    let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE id_card = ?';
-    let dentistParams = [id_card];
-    
-    if (exclude_dentist_id) {
-      dentistQuery += ' AND dentist_id != ?';
-      dentistParams.push(exclude_dentist_id);
-    }
-    
-    const [dentistResult] = await db.execute(dentistQuery, dentistParams);
-    dentistExists = dentistResult[0].count > 0;
-
-    // Check in patient table  
-    let patientQuery = 'SELECT COUNT(*) as count FROM patient WHERE id_card = ?';
-    let patientParams = [id_card];
-    
-    if (exclude_patient_id) {
-      patientQuery += ' AND patient_id != ?';
-      patientParams.push(exclude_patient_id);
-    }
-    
-    const [patientResult] = await db.execute(patientQuery, patientParams);
-    patientExists = patientResult[0].count > 0;
-
-    const exists = dentistExists || patientExists;
-    let foundIn = '';
-    
-    if (dentistExists && patientExists) {
-      foundIn = 'both dentist and patient records';
-    } else if (dentistExists) {
-      foundIn = 'dentist records';
-    } else if (patientExists) {
-      foundIn = 'patient records';
-    }
+    const result = await AdminModel.checkIdCardAvailability({ id_card, exclude_dentist_id, exclude_patient_id });
 
     res.json({
       success: true,
-      exists: exists,
+      exists: result.exists,
       valid: true,
-      foundIn: foundIn,
-      message: exists ? `ID card already exists in ${foundIn}` : 'ID card is available'
+      foundIn: result.foundIn,
+      message: result.exists ? `ID card already exists in ${result.foundIn}` : 'ID card is available'
     });
 
   } catch (error) {
@@ -4657,35 +3206,13 @@ exports.checkEmailAvailabilityEnhanced = async (req, res) => {
       });
     }
 
-    let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
-    let params = [email];
-
-    // Exclude by user_id if provided
-    if (exclude_user_id) {
-      query += ' AND user_id != ?';
-      params.push(exclude_user_id);
-    }
-
-    // Exclude by dentist_id if provided
-    if (exclude_dentist_id) {
-      query += ' AND user_id != (SELECT user_id FROM dentist WHERE dentist_id = ?)';
-      params.push(exclude_dentist_id);
-    }
-
-    // Exclude by patient_id if provided  
-    if (exclude_patient_id) {
-      query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
-      params.push(exclude_patient_id);
-    }
-
-    const [result] = await db.execute(query, params);
-    const exists = result[0].count > 0;
+    const result = await AdminModel.checkEmailAvailabilityEnhanced({ email, exclude_user_id, exclude_dentist_id, exclude_patient_id });
 
     res.json({
       success: true,
-      exists: exists,
+      exists: result.exists,
       valid: true,
-      message: exists ? 'Email address is already in use' : 'Email is available'
+      message: result.exists ? 'Email address is already in use' : 'Email is available'
     });
 
   } catch (error) {
@@ -4734,22 +3261,13 @@ exports.checkLicenseAvailability = async (req, res) => {
       });
     }
 
-let query = 'SELECT COUNT(*) as count FROM dentist WHERE license_no = ?';
-    let params = [license];
-    
-    if (exclude_dentist_id) {
-      query += ' AND dentist_id != ?';
-      params.push(exclude_dentist_id);
-    }
-    
-    const [result] = await db.execute(query, params);
-    const exists = result[0].count > 0;
+    const result = await DentistAdminModel.checkLicenseAvailability({ license, exclude_dentist_id });
 
     res.json({
       success: true,
-      exists: exists,
+      exists: result.exists,
       valid: true,
-      message: exists ? 'เลขใบประกอบวิชาชีพนี้มีในระบบแล้ว' : 'เลขใบประกอบวิชาชีพสามารถใช้ได้'
+      message: result.exists ? 'เลขใบประกอบวิชาชีพนี้มีในระบบแล้ว' : 'เลขใบประกอบวิชาชีพสามารถใช้ได้'
     });
 
   } catch (error) {
@@ -4786,71 +3304,12 @@ exports.getAvailableDentistsForAdmin = async (req, res) => {
       });
     }
 
-    // Query หาทันตแพทย์ที่มี available slots
-    let query = `
-      SELECT 
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        d.phone,
-        d.education,
-        d.license_no,
-        CASE 
-          WHEN d.photo IS NULL OR d.photo = '' OR d.photo = 'default-avatar.png' 
-          THEN NULL
-          ELSE d.photo 
-        END as photo,
-        COUNT(DISTINCT s.slot_id) as total_slots,
-        COUNT(DISTINCT CASE 
-          WHEN s.is_available = 1 
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q 
-            WHERE q.dentist_id = s.dentist_id 
-            AND DATE(q.time) = s.date 
-            AND TIME(q.time) = s.start_time 
-            AND q.queue_status IN ('pending', 'confirm')
-          ) THEN s.slot_id 
-        END) as available_slots
-      FROM dentist d
-      INNER JOIN available_slots s ON d.dentist_id = s.dentist_id
-      WHERE s.date = ?
-      AND d.user_id IS NOT NULL
-    `;
-
-    let queryParams = [date];
-
-    if (treatment_id) {
-      query += ` AND EXISTS (
-        SELECT 1 FROM dentist_treatment dt 
-        WHERE dt.dentist_id = d.dentist_id 
-        AND dt.treatment_id = ?
-      )`;
-      queryParams.push(treatment_id);
-    }
-
-    query += `
-      GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.education, d.license_no, d.photo
-      HAVING available_slots > 0
-      ORDER BY d.fname, d.lname
-    `;
-
-    const [availableDentists] = await db.execute(query, queryParams);
+    const availableDentists = await DentistAdminModel.getAvailableDentistsForBooking({
+      date,
+      treatment_id
+    });
     
     console.log('✅ Found', availableDentists.length, 'dentists with available slots');
-
-    // ดึงข้อมูลการรักษาของแต่ละทันตแพทย์
-    for (let dentist of availableDentists) {
-      const [treatments] = await db.execute(`
-        SELECT t.treatment_id, t.treatment_name, t.duration
-        FROM dentist_treatment dt
-        JOIN treatment t ON dt.treatment_id = t.treatment_id
-        WHERE dt.dentist_id = ?
-        ORDER BY t.treatment_name
-      `, [dentist.dentist_id]);
-      
-      dentist.treatments = treatments;
-    }
 
     res.json({
       success: true,
@@ -4882,91 +3341,30 @@ exports.getAvailableSlotsForAdmin = async (req, res) => {
 
     console.log('⏰ Admin getting time slots:', { date, dentistId, treatmentId });
 
-    // ดึง duration ของการรักษา
-    const [treatmentData] = await db.execute(
-      'SELECT duration FROM treatment WHERE treatment_id = ?',
-      [treatmentId]
-    );
+    // Get available slots via model
+    const result = await AvailableSlotsModel.getAvailableSlotsForAdmin({
+      date,
+      dentistId,
+      treatmentId
+    });
 
-    if (treatmentData.length === 0) {
+    if (!result.success) {
       return res.status(404).json({
         success: false,
-        error: 'ไม่พบข้อมูลการรักษา'
+        error: result.error
       });
     }
 
-    const duration = treatmentData[0].duration;
-    const requiredSlots = Math.ceil(duration / 30);
-
-    // ดึง available slots
-    const [slots] = await db.execute(`
-      SELECT 
-        s.slot_id,
-        s.start_time,
-        s.end_time,
-        TIME_FORMAT(s.start_time, '%H:%i') as formatted_start_time,
-        TIME_FORMAT(s.end_time, '%H:%i') as formatted_end_time
-      FROM available_slots s
-      WHERE s.dentist_id = ?
-      AND s.date = ?
-      AND s.is_available = 1
-      AND NOT EXISTS (
-        SELECT 1 FROM queue q
-        WHERE q.dentist_id = s.dentist_id 
-        AND DATE(q.time) = s.date 
-        AND TIME(q.time) = s.start_time
-        AND q.queue_status IN ('pending', 'confirm')
-      )
-      ORDER BY s.start_time
-    `, [dentistId, date]);
-
-    console.log('Found', slots.length, 'available slots');
-
-    // กรอง slots ที่เพียงพอและต่อเนื่อง
-    const validSlots = [];
-    
-    for (let i = 0; i < slots.length; i++) {
-      let hasEnoughTime = true;
-      let consecutiveSlots = 1;
-      
-      for (let j = 1; j < requiredSlots && (i + j) < slots.length; j++) {
-        const currentSlot = slots[i + j - 1];
-        const nextSlot = slots[i + j];
-        
-        if (currentSlot.end_time === nextSlot.start_time) {
-          consecutiveSlots++;
-        } else {
-          hasEnoughTime = false;
-          break;
-        }
-      }
-      
-      if (hasEnoughTime && consecutiveSlots >= requiredSlots) {
-        const startDateTime = new Date(`${date} ${slots[i].formatted_start_time}:00`);
-        const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
-        const endHours = String(endDateTime.getHours()).padStart(2, '0');
-        const endMinutes = String(endDateTime.getMinutes()).padStart(2, '0');
-        
-        validSlots.push({
-          start_time: slots[i].formatted_start_time,
-          end_time: `${endHours}:${endMinutes}`,
-          display: `${slots[i].formatted_start_time} - ${endHours}:${endMinutes}`,
-          duration: duration,
-          slots_needed: requiredSlots
-        });
-      }
-    }
-
-    console.log('✅ Valid slots for admin:', validSlots.length);
+    console.log('✅ Valid slots for admin:', result.validSlots.length);
 
     res.json({
       success: true,
-      slots: validSlots,
+      slots: result.validSlots,
       date: date,
       dentistId: dentistId,
       treatmentId: treatmentId,
-      treatment_duration: duration,
-      total_slots: validSlots.length
+      treatment_duration: result.duration,
+      total_slots: result.validSlots.length
     });
 
   } catch (error) {
@@ -4980,8 +3378,6 @@ exports.getAvailableSlotsForAdmin = async (req, res) => {
 
 // Book appointment for walk-in patient (admin)
 exports.bookAppointmentForPatient = async (req, res) => {
-  let connection;
-  
   try {
     const { patient_id, dentist_id, treatment_id, date, start_time, note } = req.body;
 
@@ -4994,166 +3390,17 @@ exports.bookAppointmentForPatient = async (req, res) => {
       });
     }
 
-    // ตรวจสอบวันอาทิตย์
-    const appointmentDateTime = new Date(`${date} ${start_time}:00`);
-    if (appointmentDateTime.getDay() === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'คลินิกปิดทำการวันอาทิตย์'
-      });
+    const result = await QueueModel.bookAppointmentForPatient({ patient_id, dentist_id, treatment_id, date, start_time, note });
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: result.error });
     }
-
-    // ดึง duration
-    const [treatmentData] = await db.execute(
-      'SELECT duration FROM treatment WHERE treatment_id = ?',
-      [treatment_id]
-    );
-
-    if (treatmentData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'ไม่พบข้อมูลการรักษา'
-      });
-    }
-
-    const duration = treatmentData[0].duration;
-    const requiredSlots = Math.ceil(duration / 30);
-
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-
-    try {
-      const dentistIdInt = parseInt(dentist_id);
-      const requiredSlotsInt = Math.max(1, parseInt(requiredSlots));
-
-      // ดึง available slots
-      const [allSlots] = await connection.execute(`
-        SELECT s.slot_id, s.start_time, s.end_time
-        FROM available_slots s
-        WHERE s.dentist_id = ?
-        AND s.date = ?
-        AND s.start_time >= ?
-        AND s.is_available = 1
-        ORDER BY s.start_time
-      `, [dentistIdInt, date, start_time]);
-
-      console.log('📊 Found potential slots:', allSlots.length);
-
-      // ตรวจสอบว่า slot ไหนมี booking แล้ว
-      const slotsCheck = [];
-      for (const slot of allSlots) {
-        if (slotsCheck.length >= requiredSlotsInt) break;
-        
-        const slotDateTime = `${date} ${slot.start_time}`;
-        
-        const [existingBooking] = await connection.execute(`
-          SELECT queue_id
-          FROM queue
-          WHERE dentist_id = ?
-          AND time = ?
-          AND queue_status IN ('pending', 'confirm')
-        `, [dentistIdInt, slotDateTime]);
-        
-        if (existingBooking.length === 0) {
-          slotsCheck.push(slot);
-        }
-      }
-
-      console.log('✅ Available slots:', slotsCheck.length, '/ Required:', requiredSlotsInt);
-
-      if (slotsCheck.length < requiredSlotsInt) {
-        await connection.rollback();
-        return res.status(400).json({ 
-          success: false, 
-          error: `ช่วงเวลานี้ไม่เพียงพอสำหรับการรักษา (ต้องการ ${requiredSlotsInt} ช่วง, มีว่าง ${slotsCheck.length} ช่วง)` 
-        });
-      }
-
-      // ตรวจสอบว่า slots ต่อเนื่อง
-      for (let i = 0; i < slotsCheck.length - 1; i++) {
-        if (slotsCheck[i].end_time !== slotsCheck[i + 1].start_time) {
-          await connection.rollback();
-          return res.status(400).json({
-            success: false,
-            error: 'ช่วงเวลาที่เลือกไม่ต่อเนื่องกัน'
-          });
-        }
-      }
-
-      // สร้าง queuedetail
-      const [queueDetailResult] = await connection.execute(`
-        INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-        VALUES (?, ?, ?, ?, NOW())
-      `, [patient_id, treatment_id, dentistIdInt, date]);
-
-      const queueDetailId = queueDetailResult.insertId;
-
-      // ✅ สร้าง queue โดยใช้ 'confirm' แทน 'pending' เพราะเป็น admin จอง
-      const [queueResult] = await connection.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-        VALUES (?, ?, ?, ?, ?, 'confirm')
-      `, [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
-
-      const queueId = queueResult.insertId;
-
-      // อัพเดท slots เป็น not available
-      for (const slot of slotsCheck) {
-        await connection.execute(`
-          UPDATE available_slots
-          SET treatment_id = ?, is_available = 0
-          WHERE slot_id = ?
-        `, [treatment_id, slot.slot_id]);
-      }
-
-      // ดึงรายละเอียดการจอง
-      const [bookingDetails] = await connection.execute(`
-        SELECT 
-          q.queue_id,
-          q.time,
-          CONCAT(p.fname, ' ', p.lname) as patient_name,
-          p.phone as patient_phone,
-          CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          d.license_no,
-          t.treatment_name,
-          t.duration
-        FROM queue q
-        JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        WHERE q.queue_id = ?
-      `, [queueId]);
-
-      // ✅ คำนวณเวลาสิ้นสุด
-      const endDateTime = new Date(appointmentDateTime.getTime() + (duration * 60000));
-      const endTime = `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`;
-
-      await connection.commit();
-
-      console.log('✅ Admin booking successful:', queueId);
 
       res.json({
         success: true,
         message: 'จองนัดหมายสำเร็จ (ยืนยันแล้ว)',
-        booking: {
-          queue_id: queueId,
-          appointment_time: appointmentDateTime,
-          appointment_date: date,
-          start_time: start_time,
-          end_time: endTime,
-          patient_name: bookingDetails[0]?.patient_name,
-          patient_phone: bookingDetails[0]?.patient_phone,
-          dentist_name: bookingDetails[0]?.dentist_name,
-          dentist_license: bookingDetails[0]?.license_no,
-          treatment_name: bookingDetails[0]?.treatment_name,
-          duration: bookingDetails[0]?.duration,
-          status: 'confirm'
-        }
-      });
-
-    } catch (error) {
-      if (connection) await connection.rollback();
-      throw error;
-    }
+      booking: result.booking
+    });
 
   } catch (error) {
     console.error('❌ Error in bookAppointmentForPatient:', error);
@@ -5161,8 +3408,6 @@ exports.bookAppointmentForPatient = async (req, res) => {
       success: false,
       error: 'เกิดข้อผิดพลาดในการจองนัดหมาย: ' + error.message
     });
-  } finally {
-    if (connection) connection.release();
   }
 };
 
@@ -5178,97 +3423,11 @@ exports.getCalendarDataForAdmin = async (req, res) => {
       });
     }
     
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
-    
-    console.log('📅 Admin getting calendar data:', { year, month, startDate, endDate, treatment_id });
-    
-    let mainQuery = `
-      SELECT 
-        s.date,
-        DATE_FORMAT(s.date, '%Y-%m-%d') as date_string,
-        d.dentist_id,
-        d.fname,
-        d.lname,
-        d.specialty,
-        d.photo,
-        COUNT(DISTINCT s.slot_id) as dentist_total_slots,
-        COUNT(DISTINCT CASE 
-          WHEN s.is_available = 1 
-          AND NOT EXISTS (
-            SELECT 1 FROM queue q 
-            WHERE q.dentist_id = s.dentist_id 
-            AND DATE(q.time) = s.date 
-            AND TIME(q.time) = s.start_time 
-            AND q.queue_status IN ('pending', 'confirm')
-          ) 
-          THEN s.slot_id 
-        END) as dentist_available_slots
-      FROM available_slots s
-      JOIN dentist d ON s.dentist_id = d.dentist_id
-      WHERE s.date BETWEEN ? AND ?
-      AND d.user_id IS NOT NULL
-    `;
-    
-    let queryParams = [
-      startDate.toISOString().split('T')[0],
-      endDate.toISOString().split('T')[0]
-    ];
-    
-    if (treatment_id) {
-      mainQuery += ` AND EXISTS (
-        SELECT 1 FROM dentist_treatment dt 
-        WHERE dt.dentist_id = d.dentist_id 
-        AND dt.treatment_id = ?
-      )`;
-      queryParams.push(treatment_id);
-    }
-    
-    mainQuery += `
-      GROUP BY s.date, d.dentist_id, d.fname, d.lname, d.specialty, d.photo
-      HAVING dentist_available_slots > 0
-      ORDER BY s.date, d.fname, d.lname
-    `;
-    
-    const [rawData] = await db.execute(mainQuery, queryParams);
-    
-    console.log('✅ Admin calendar data:', rawData.length, 'records');
-    
-    const groupedByDate = {};
-    
-    rawData.forEach(row => {
-      const dateStr = row.date_string;
-      
-      if (!groupedByDate[dateStr]) {
-        groupedByDate[dateStr] = {
-          date: dateStr,
-          available_dentists: 0,
-          total_slots: 0,
-          available_slots: 0,
-          dentists: []
-        };
-      }
-      
-      groupedByDate[dateStr].available_dentists++;
-      groupedByDate[dateStr].total_slots += parseInt(row.dentist_total_slots);
-      groupedByDate[dateStr].available_slots += parseInt(row.dentist_available_slots);
-      
-      groupedByDate[dateStr].dentists.push({
-        dentist_id: row.dentist_id,
-        name: `${row.fname} ${row.lname}`,
-        fname: row.fname,
-        lname: row.lname,
-        specialty: row.specialty || 'ทันตแพทย์ทั่วไป',
-        photo: row.photo,
-        available_slots: parseInt(row.dentist_available_slots)
-      });
-    });
-    
-    const calendarData = Object.values(groupedByDate);
+    const result = await ReportAdminModel.getCalendarDataForAdmin({ year, month, treatment_id });
     
     res.json({
       success: true,
-      calendar_data: calendarData,
+      calendar_data: result.calendarData,
       year: parseInt(year),
       month: parseInt(month)
     });

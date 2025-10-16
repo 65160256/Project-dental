@@ -19,14 +19,14 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           t.treatment_id,
-          t.name,
+          t.treatment_name,
           t.duration,
-          t.description,
+          '' as description,
           COUNT(dt.dentist_id) as dentist_count
         FROM treatment t
         LEFT JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
-        GROUP BY t.treatment_id, t.name, t.duration, t.description
-        ORDER BY t.name
+        GROUP BY t.treatment_id, t.treatment_name, t.duration
+        ORDER BY t.treatment_id ASC
       `);
 
       return rows;
@@ -73,14 +73,13 @@ class TreatmentAdminModel {
     try {
       await connection.beginTransaction();
 
-      // สร้าง treatment record
+      // สร้าง treatment record - แปลง undefined เป็น null
       const [treatmentResult] = await connection.execute(`
-        INSERT INTO treatment (name, duration, description)
-        VALUES (?, ?, ?)
+        INSERT INTO treatment (treatment_name, duration)
+        VALUES (?, ?)
       `, [
-        treatmentData.name,
-        treatmentData.duration,
-        treatmentData.description
+        (treatmentData.treatment_name || treatmentData.name) || null,
+        treatmentData.duration || null
       ]);
 
       const treatmentId = treatmentResult.insertId;
@@ -124,15 +123,14 @@ class TreatmentAdminModel {
     try {
       await connection.beginTransaction();
 
-      // อัปเดต treatment table
+      // อัปเดต treatment table - แปลง undefined เป็น null
       await connection.execute(`
         UPDATE treatment SET
-          name = ?, duration = ?, description = ?
+          treatment_name = ?, duration = ?
         WHERE treatment_id = ?
       `, [
-        updateData.name,
-        updateData.duration,
-        updateData.description,
+        (updateData.treatment_name || updateData.name) || null,
+        updateData.duration || null,
         treatmentId
       ]);
 
@@ -246,14 +244,14 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           t.treatment_id,
-          t.name,
+          t.treatment_name,
           t.duration,
-          t.description,
+          '' as description,
           COUNT(dt.dentist_id) as dentist_count
         FROM treatment t
         LEFT JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
-        GROUP BY t.treatment_id, t.name, t.duration, t.description
-        ORDER BY t.name
+        GROUP BY t.treatment_id, t.treatment_name, t.duration
+        ORDER BY t.treatment_id ASC
       `);
 
       return rows;
@@ -273,9 +271,9 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           t.treatment_id,
-          t.name,
+          t.treatment_name,
           t.duration,
-          t.description,
+          '' as description,
           GROUP_CONCAT(d.dentist_id SEPARATOR ',') as dentist_ids,
           GROUP_CONCAT(CONCAT(d.fname, ' ', d.lname) SEPARATOR ', ') as dentist_names
         FROM treatment t
@@ -332,13 +330,13 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           t.treatment_id,
-          t.name,
+          t.treatment_name,
           t.duration,
-          t.description
+          '' as description
         FROM treatment t
         JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
         WHERE dt.dentist_id = ?
-        ORDER BY t.name
+        ORDER BY t.treatment_name
       `, [dentistId]);
 
       return rows;
@@ -358,13 +356,13 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           t.treatment_id,
-          t.name,
+          t.treatment_name,
           t.duration,
-          t.description
+          '' as description
         FROM treatment t
         JOIN dentist_treatment dt ON t.treatment_id = dt.treatment_id
         WHERE dt.dentist_id = ?
-        ORDER BY t.name
+        ORDER BY t.treatment_name
       `, [dentistId]);
 
       return rows;
@@ -385,11 +383,12 @@ class TreatmentAdminModel {
           dt.dentist_id,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           dt.treatment_id,
-          t.name as treatment_name
+          t.treatment_name as treatment_name,
+          t.duration as duration
         FROM dentist_treatment dt
         JOIN dentist d ON dt.dentist_id = d.dentist_id
         JOIN treatment t ON dt.treatment_id = t.treatment_id
-        ORDER BY d.fname, d.lname, t.name
+        ORDER BY d.fname, d.lname, t.treatment_name
       `);
 
       return rows;

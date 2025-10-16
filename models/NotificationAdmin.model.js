@@ -65,7 +65,7 @@ class NotificationAdminModel {
           CONCAT(p.fname, ' ', p.lname) as patient_name
         FROM notifications n
         LEFT JOIN patient p ON n.patient_id = p.patient_id
-        WHERE n.notification_id = ?
+        WHERE n.id = ?
       `, [notificationId]);
 
       return rows[0] || null;
@@ -83,13 +83,14 @@ class NotificationAdminModel {
   static async createNotification(notificationData) {
     try {
       const [result] = await db.execute(`
-        INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO notifications (type, title, message, patient_id, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `, [
         notificationData.type,
         notificationData.title,
         notificationData.message,
         notificationData.patient_id || null,
+        notificationData.queue_id || null,
         notificationData.is_read || 0,
         notificationData.is_new || 1
       ]);
@@ -148,7 +149,7 @@ class NotificationAdminModel {
       values.push(notificationId);
 
       await db.execute(`
-        UPDATE notifications SET ${updateFields.join(', ')} WHERE notification_id = ?
+        UPDATE notifications SET ${updateFields.join(', ')} WHERE id = ?
       `, values);
 
       return {
@@ -169,7 +170,7 @@ class NotificationAdminModel {
   static async markAsRead(notificationId) {
     try {
       await db.execute(`
-        UPDATE notifications SET is_read = 1, is_new = 0 WHERE notification_id = ?
+        UPDATE notifications SET is_read = 1, is_new = 0 WHERE id = ?
       `, [notificationId]);
 
       return {
@@ -211,7 +212,7 @@ class NotificationAdminModel {
   static async deleteNotification(notificationId) {
     try {
       await db.execute(
-        'DELETE FROM notifications WHERE notification_id = ?',
+        'DELETE FROM notifications WHERE id = ?',
         [notificationId]
       );
 

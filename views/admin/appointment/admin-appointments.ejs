@@ -497,16 +497,18 @@
       tableSection.style.display='block'; empty.style.display='none';
       tbody.innerHTML = list.map(a=>{
         const statusText = formatStatus(a.queue_status);
-        const formattedTime = formatDateTime(a.time);
+        const start = a.time ? new Date(a.time) : null;
+        const end = a.time_end ? new Date(a.time_end) : null;
+        const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')} น.` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
         const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
         return `<tr data-id="${a.queue_id}">
-          <td class="time-cell">${formattedTime}</td>
+          <td class="time-cell">${formattedRange}</td>
           <td>${escapeHtml(a.patient_name)||'ไม่ระบุ'}</td>
           <td>${escapeHtml(a.treatment_name)||'ไม่ระบุ'}</td>
           <td>${a.dentist_name ? 'ทพ. '+escapeHtml(a.dentist_name) : '-'}</td>
-          <td>${escapeHtml(a.phone)||'ไม่ระบุ'}</td>
+          <td>${escapeHtml(a.phone||a.patient_phone)||'ไม่ระบุ'}</td>
           <td><span class="status-badge status-${a.queue_status}"><i class="${icon}"></i> ${statusText}</span></td>
-          <td><button class="btn-view-detail" onclick="viewAppointmentDetail(${a.queue_id})"><i class="fas fa-eye"></i> รายละเอียด</button></td>
+          <td><button class="btn-view-detail" onclick="viewAppointmentDetail(${a.queuedetail_id})"><i class="fas fa-eye"></i> รายละเอียด</button></td>
         </tr>`;
       }).join('');
     }

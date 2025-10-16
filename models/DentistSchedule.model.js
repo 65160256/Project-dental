@@ -864,15 +864,26 @@ class DentistScheduleModel {
       JOIN dentist d ON ds.dentist_id = d.dentist_id
       LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
         AND DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
+        AND TIME(q.time) >= ds.start_time 
+        AND TIME(q.time) < ds.end_time
         AND q.queue_status IN ('pending', 'confirm')
       WHERE YEAR(ds.schedule_date) = ?
       AND MONTH(ds.schedule_date) = ?
       AND ds.status = 'working'
       AND ds.schedule_date >= CURDATE()
       ORDER BY ds.schedule_date, ds.hour`,
-      [year, month + 1]
+      [year, month]
     );
+
+    console.log(`🔍 getAvailableAppointmentsByMonth: Found ${appointments.length} appointments for ${year}-${month}`);
+    if (appointments.length > 0) {
+      console.log('📅 Sample appointments:', appointments.slice(0, 3).map(a => ({
+        date: a.date,
+        dentist_name: a.dentist_name,
+        dentist_id: a.dentist_id,
+        status: a.status
+      })));
+    }
 
     return appointments;
   }

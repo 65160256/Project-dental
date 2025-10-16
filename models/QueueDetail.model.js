@@ -11,7 +11,7 @@ class QueueDetailModel {
    * @returns {Promise<Object>} { queuedetailId, success }
    */
   static async create(queueDetailData) {
-    const { patientId, dentistId, treatmentId, date } = queueDetailData;
+    const { patientId, dentistId, treatmentId, date, note = null } = queueDetailData;
 
     // Validate required fields
     if (!patientId || !dentistId || !treatmentId || !date) {
@@ -19,9 +19,9 @@ class QueueDetailModel {
     }
 
     const [result] = await db.execute(
-      `INSERT INTO queuedetail (patient_id, dentist_id, treatment_id, date)
-       VALUES (?, ?, ?, ?)`,
-      [patientId, dentistId, treatmentId, date]
+      `INSERT INTO queuedetail (patient_id, dentist_id, treatment_id, date, note)
+       VALUES (?, ?, ?, ?, ?)`,
+      [patientId, dentistId, treatmentId, date, note]
     );
 
     return {

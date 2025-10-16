@@ -171,7 +171,7 @@ class AdminModel {
         SELECT 
           qd.date AS time_start,
           CONCAT(p.fname, ' ', p.lname) AS name,
-          t.name AS treatment,
+          t.treatment_name AS treatment,
           CONCAT(d.fname, ' ', d.lname) AS dentist,
           p.phone,
           q.queue_status AS status
@@ -202,7 +202,7 @@ class AdminModel {
         SELECT 
           qd.date AS time_start,
           CONCAT(p.fname, ' ', p.lname) AS name,
-          t.name AS treatment,
+          t.treatment_name AS treatment,
           CONCAT(d.fname, ' ', d.lname) AS dentist,
           p.phone,
           q.queue_status AS status
@@ -218,6 +218,100 @@ class AdminModel {
       return appointments;
     } catch (error) {
       console.error('Error getting all appointments:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ตรวจสอบความพร้อมใช้งานของเลขบัตรประชาชน
+   * @param {Object} params - พารามิเตอร์การตรวจสอบ
+   * @returns {Object} ผลลัพธ์การตรวจสอบ
+   */
+  static async checkIdCardAvailability(params) {
+    try {
+      const { id_card, exclude_dentist_id, exclude_patient_id } = params;
+
+      let dentistExists = false;
+      let patientExists = false;
+
+      // Check in dentist table
+      let dentistQuery = 'SELECT COUNT(*) as count FROM dentist WHERE id_card = ?';
+      let dentistParams = [id_card];
+      
+      if (exclude_dentist_id) {
+        dentistQuery += ' AND dentist_id != ?';
+        dentistParams.push(exclude_dentist_id);
+      }
+      
+      const [dentistResult] = await db.execute(dentistQuery, dentistParams);
+      dentistExists = dentistResult[0].count > 0;
+
+      // Check in patient table  
+      let patientQuery = 'SELECT COUNT(*) as count FROM patient WHERE id_card = ?';
+      let patientParams = [id_card];
+      
+      if (exclude_patient_id) {
+        patientQuery += ' AND patient_id != ?';
+        patientParams.push(exclude_patient_id);
+      }
+      
+      const [patientResult] = await db.execute(patientQuery, patientParams);
+      patientExists = patientResult[0].count > 0;
+
+      const exists = dentistExists || patientExists;
+      let foundIn = '';
+      
+      if (dentistExists && patientExists) {
+        foundIn = 'both dentist and patient records';
+      } else if (dentistExists) {
+        foundIn = 'dentist records';
+      } else if (patientExists) {
+        foundIn = 'patient records';
+      }
+
+      return { exists, foundIn };
+    } catch (error) {
+      console.error('Error checking ID card availability:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ตรวจสอบความพร้อมใช้งานของอีเมล
+   * @param {Object} params - พารามิเตอร์การตรวจสอบ
+   * @returns {Object} ผลลัพธ์การตรวจสอบ
+   */
+  static async checkEmailAvailabilityEnhanced(params) {
+    try {
+      const { email, exclude_user_id, exclude_dentist_id, exclude_patient_id } = params;
+
+      let query = 'SELECT COUNT(*) as count FROM user WHERE email = ?';
+      let queryParams = [email];
+
+      // Exclude by user_id if provided
+      if (exclude_user_id) {
+        query += ' AND user_id != ?';
+        queryParams.push(exclude_user_id);
+      }
+
+      // Exclude by dentist_id if provided
+      if (exclude_dentist_id) {
+        query += ' AND user_id != (SELECT user_id FROM dentist WHERE dentist_id = ?)';
+        queryParams.push(exclude_dentist_id);
+      }
+
+      // Exclude by patient_id if provided  
+      if (exclude_patient_id) {
+        query += ' AND user_id != (SELECT user_id FROM patient WHERE patient_id = ?)';
+        queryParams.push(exclude_patient_id);
+      }
+
+      const [result] = await db.execute(query, queryParams);
+      const exists = result[0].count > 0;
+
+      return { exists };
+    } catch (error) {
+      console.error('Error checking email availability:', error);
       throw error;
     }
   }

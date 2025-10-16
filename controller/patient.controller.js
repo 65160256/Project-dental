@@ -150,41 +150,26 @@ exports.showNewBookingForm = async (req, res) => {
 exports.getAvailableDentistsForBooking = async (req, res) => {
   try {
     const { date, treatment_id } = req.query;
+    console.log('🚀 [PATIENT API] getAvailableDentistsForBooking called with:', { date, treatment_id });
 
     if (!date) {
+      console.log('❌ [PATIENT API] No date provided');
       return res.status(400).json({ 
         success: false, 
         error: 'กรุณาเลือกวันที่' 
       });
     }
 
-    console.log('🔍 Searching dentists for date:', date, 'treatment:', treatment_id);
+    console.log('🔍 [PATIENT API] Searching dentists for date:', date, 'treatment:', treatment_id);
 
-    // ตรวจสอบกฎ 24 ชั่วโมง
-    const appointmentDate = new Date(date);
-    const now = new Date();
-    const timeDiff = appointmentDate.getTime() - now.getTime();
-    const hoursDiff = timeDiff / (1000 * 3600);
-
-    if (hoursDiff < 24) {
-      return res.status(400).json({
-        success: false,
-        error: 'ไม่สามารถจองได้ ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง'
-      });
-    }
-
-    // ตรวจสอบวันอาทิตย์
-    if (appointmentDate.getDay() === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'คลินิกปิดทำการวันอาทิตย์'
-      });
-    }
+    // หมายเหตุ: ไม่บังคับกฎ 24 ชั่วโมง/วันอาทิตย์ที่ endpoint รายชื่อทันตแพทย์
+    // เพื่อให้ผู้ใช้เห็นรายชื่อหมอที่ว่างเหมือนฝั่งแอดมิน
+    // จะตรวจสอบข้อจำกัดเหล่านี้ในขั้นตอนเลือกช่วงเวลา/ยืนยันการจองแทน
 
     // [REFACTORED] ใช้ AvailableSlots.getAvailableDentistsForBooking แทน raw SQL
     const availableDentists = await AvailableSlots.getAvailableDentistsForBooking(date, treatment_id);
 
-    console.log('✅ Found', availableDentists.length, 'dentists with available slots');
+    console.log('✅ [PATIENT API] Found', availableDentists.length, 'dentists with available slots');
 
     res.json({
       success: true,
@@ -236,7 +221,8 @@ exports.getAvailableTimeSlots = async (req, res) => {
     // ใช้ formatted_start_time ที่ model ได้จัดรูปแบบไว้แล้ว (HH:MM)
     const formattedSlots = validSlots.map(slot => ({
       ...slot,
-      start_time: slot.formatted_start_time || slot.start_time
+      start_time: slot.formatted_start_time || slot.start_time,
+      end_time: slot.end_time || '' // เพิ่ม end_time เพื่อให้ frontend แสดงช่วงเวลาชัดเจน
     }));
 
     console.log('✅ Valid slots:', formattedSlots.length);
@@ -465,14 +451,75 @@ exports.getCalendarData = async (req, res) => {
 
     console.log('📅 Getting calendar data for:', { year, month, treatment_id });
 
-    // [REFACTORED] ใช้ AvailableSlots.getCalendarDataForMonth แทน raw SQL
-    const calendarData = await AvailableSlots.getCalendarDataForMonth(parseInt(year), parseInt(month), treatment_id);
+    // ใช้ DentistSchedule เพื่อดึงตาราง แล้วสรุปต่อวันให้ตรงกับรูปแบบที่ frontend ต้องการ
+    const raw = await DentistSchedule.getAvailableAppointmentsByMonth(parseInt(year), parseInt(month));
 
-    console.log('✅ Calendar data processed:', calendarData.length, 'days with available dentists');
+    const byDate = {};
+    for (const row of raw) {
+      // หลีกเลี่ยง timezone shift: ใช้สตริงวันที่จากฐานข้อมูลโดยตรง (YYYY-MM-DD)
+      const dateStr = (row.date || '').toString().slice(0, 10);
+      if (!byDate[dateStr]) {
+        byDate[dateStr] = {
+          date: dateStr,
+          available_dentists: 0,
+          available_slots: 0,
+          total_slots: 0,
+          dentists: [],
+          _dentistSet: new Set()
+        };
+      }
+      const d = byDate[dateStr];
+      d.total_slots += 1;
+      if (row.status === 'available') d.available_slots += 1;
+      if (row.dentist_id && !d._dentistSet.has(row.dentist_id)) {
+        d._dentistSet.add(row.dentist_id);
+        // สร้าง name จาก fname และ lname เพื่อให้สอดคล้องกับ AvailableSlots model
+        const dentistName = row.dentist_name || `${row.fname || ''} ${row.lname || ''}`.trim();
+        d.dentists.push({ 
+          dentist_id: row.dentist_id, 
+          fname: row.fname || '',
+          lname: row.lname || '',
+          name: dentistName,
+          specialty: row.specialty, 
+          available_slots: row.available_slots || 0 
+        });
+      }
+    }
+
+    const calendarDays = Object.values(byDate)
+      .map(day => ({
+        date: day.date,
+        available_dentists: day.dentists.length,
+        available_slots: day.available_slots,
+        total_slots: day.total_slots,
+        dentists: day.dentists
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    console.log('✅ Calendar data processed:', calendarDays.length, 'days with available dentists');
+    
+    // Debug: แสดงข้อมูลสำหรับวันที่มี dentists
+    const daysWithDentists = calendarDays.filter(day => day.dentists.length > 0);
+    console.log('🔍 Days with dentists:', daysWithDentists.map(day => ({
+      date: day.date,
+      available_dentists: day.available_dentists,
+      dentists: day.dentists.map(d => ({ id: d.dentist_id, name: d.name }))
+    })));
+    
+    // Debug: แสดงข้อมูลทั้งหมดที่จะส่งไปยัง frontend
+    console.log('📤 Sending to frontend:', {
+      total_days: calendarDays.length,
+      days_with_dentists: daysWithDentists.length,
+      sample_days: calendarDays.slice(0, 3).map(day => ({
+        date: day.date,
+        available_dentists: day.available_dentists,
+        dentists_count: day.dentists.length
+      }))
+    });
 
     res.json({
       success: true,
-      calendar_data: calendarData,
+      calendar_data: calendarDays,
       year: parseInt(year),
       month: parseInt(month)
     });

@@ -237,7 +237,7 @@
 
   <script>
     // รับค่าจาก EJS หรือจาก router param
-    let appointmentId = <%= appointmentId || 'null' %>;
+    let appointmentId = '<%= appointmentId %>';
     let appointmentData = null;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -293,14 +293,28 @@
     }
 
     function displayAppointmentDetails(a) {
-      document.getElementById('bookingId').textContent = `#Y-${a.queue_id}`;
+      document.getElementById('bookingId').textContent = `#Y-${a.queuedetail_id}`;
       document.getElementById('patientName').textContent = a.patient_name || '-';
       document.getElementById('patientId').textContent = a.patient_code || (a.patient_id ? `#${a.patient_id}` : '-');
       document.getElementById('phone').textContent = a.phone || '-';
       document.getElementById('treatment').textContent = a.treatment_name || '-';
-      document.getElementById('requestedTime').textContent = a.time ? formatThaiDateTime(a.time) : '-';
+      
+      // แสดงช่วงเวลา
+      const start = a.time ? new Date(a.time) : null;
+      const end = a.time_end ? new Date(a.time_end) : null;
+      let timeDisplay = '-';
+      if (start && end) {
+        const datePart = start.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const startTime = `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')}`;
+        const endTime = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
+        timeDisplay = `${datePart} เวลา ${startTime} - ${endTime} น.`;
+      } else if (a.time) {
+        timeDisplay = formatThaiDateTime(a.time);
+      }
+      document.getElementById('requestedTime').textContent = timeDisplay;
+      
       document.getElementById('preferredDentist').textContent = a.dentist_name || '-';
-      document.getElementById('symptoms').textContent = a.diagnosis || a.symptoms || '-';
+      document.getElementById('symptoms').textContent = a.note || a.diagnosis || a.symptoms || '-';
 
       const statusEl = document.getElementById('status');
       const status = (a.queue_status || 'pending').toLowerCase();

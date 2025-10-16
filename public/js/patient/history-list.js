@@ -119,6 +119,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('โหลดหน้าประวัติการนัดหมายเรียบร้อย');
       
+      // เรียงลำดับตามค่าเริ่มต้น (เก่าสุดก่อน)
+      sortAppointments();
+      
       // Add click handlers for appointment items
       document.querySelectorAll('.appointment-item').forEach(function(item) {
         item.addEventListener('click', function(e) {

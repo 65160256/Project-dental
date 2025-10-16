@@ -595,7 +595,7 @@ select.form-control:focus {
 
             try{
                 const payload = {};
-                ['fname','lname','dob','id_card','email','password','phone','address'].forEach(id=>{
+                ['fname','lname','dob','id_card','email','password','phone','address','gender','chronic_disease','drug_allergy'].forEach(id=>{
                     const el = document.getElementById(id); if (el) payload[id] = el.value.trim();
                 });
 

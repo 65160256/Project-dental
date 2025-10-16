@@ -155,14 +155,15 @@ class DentistAdminModel {
 
       // สร้าง dentist record
       await connection.execute(
-        `INSERT INTO dentist (user_id, fname, lname, dob, id_card, specialty, education, address, phone, photo)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO dentist (user_id, fname, lname, dob, id_card, license_no, specialty, education, address, phone, photo)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId, 
           dentistData.fname, 
           dentistData.lname, 
           dentistData.dob, 
           dentistData.id_card, 
+          dentistData.license_no,
           dentistData.specialty, 
           dentistData.education, 
           dentistData.address, 
@@ -230,25 +231,58 @@ class DentistAdminModel {
         );
       }
 
-      // อัปเดต dentist table
-      await connection.execute(`
-        UPDATE dentist SET
-          fname = ?, lname = ?, dob = ?, id_card = ?, license_no = ?,
-          specialty = ?, education = ?, address = ?, phone = ?, photo = ?
-        WHERE dentist_id = ?
-      `, [
-        updateData.fname, 
-        updateData.lname, 
-        updateData.dob, 
-        updateData.id_card, 
-        updateData.license_no, 
-        updateData.specialty, 
-        updateData.education, 
-        updateData.address, 
-        updateData.phone, 
-        updateData.photo, 
-        dentistId
-      ]);
+      // อัปเดต dentist table - อัปเดตเฉพาะฟิลด์ที่มีค่าจริงๆ
+      const updateFields = [];
+      const updateValues = [];
+      
+      if (updateData.fname !== undefined) {
+        updateFields.push('fname = ?');
+        updateValues.push(updateData.fname);
+      }
+      if (updateData.lname !== undefined) {
+        updateFields.push('lname = ?');
+        updateValues.push(updateData.lname);
+      }
+      if (updateData.dob !== undefined) {
+        updateFields.push('dob = ?');
+        updateValues.push(updateData.dob || null);
+      }
+      if (updateData.id_card !== undefined) {
+        updateFields.push('id_card = ?');
+        updateValues.push(updateData.id_card || null);
+      }
+      if (updateData.license_no !== undefined) {
+        updateFields.push('license_no = ?');
+        updateValues.push(updateData.license_no || null);
+      }
+      if (updateData.specialty !== undefined) {
+        updateFields.push('specialty = ?');
+        updateValues.push(updateData.specialty || null);
+      }
+      if (updateData.education !== undefined) {
+        updateFields.push('education = ?');
+        updateValues.push(updateData.education || null);
+      }
+      if (updateData.address !== undefined) {
+        updateFields.push('address = ?');
+        updateValues.push(updateData.address || null);
+      }
+      if (updateData.phone !== undefined) {
+        updateFields.push('phone = ?');
+        updateValues.push(updateData.phone || null);
+      }
+      if (updateData.photo !== undefined) {
+        updateFields.push('photo = ?');
+        updateValues.push(updateData.photo || null);
+      }
+      
+      if (updateFields.length > 0) {
+        updateValues.push(dentistId);
+        await connection.execute(`
+          UPDATE dentist SET ${updateFields.join(', ')}
+          WHERE dentist_id = ?
+        `, updateValues);
+      }
 
       await connection.commit();
       
@@ -321,6 +355,7 @@ class DentistAdminModel {
           d.fname,
           d.lname,
           d.specialty,
+          d.license_no,
           d.phone,
           d.photo,
           u.email,
@@ -330,7 +365,7 @@ class DentistAdminModel {
         FROM dentist d
         LEFT JOIN user u ON d.user_id = u.user_id
         LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('confirm', 'pending')
-        GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.photo, u.email, u.last_login
+        GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.license_no, d.phone, d.photo, u.email, u.last_login
         ORDER BY d.fname, d.lname
       `);
 
@@ -433,6 +468,113 @@ class DentistAdminModel {
       return rows;
     } catch (error) {
       console.error('Error getting available dentists:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงรายการทันตแพทย์ที่มี available slots สำหรับการจอง (สำหรับ admin)
+   * @param {Object} filters - ตัวกรองข้อมูล
+   * @returns {Array} รายการทันตแพทย์ที่มี available slots พร้อมข้อมูลการรักษา
+   */
+  static async getAvailableDentistsForBooking(filters = {}) {
+    try {
+      const { date, treatment_id } = filters;
+
+      // Query หาทันตแพทย์ที่มี available slots
+      let query = `
+        SELECT 
+          d.dentist_id,
+          d.fname,
+          d.lname,
+          d.specialty,
+          d.phone,
+          d.education,
+          d.license_no,
+          CASE 
+            WHEN d.photo IS NULL OR d.photo = '' OR d.photo = 'default-avatar.png' 
+            THEN NULL
+            ELSE d.photo 
+          END as photo,
+          COUNT(DISTINCT s.slot_id) as total_slots,
+          COUNT(DISTINCT CASE 
+            WHEN s.is_available = 1 
+            AND NOT EXISTS (
+              SELECT 1 FROM queue q 
+              WHERE q.dentist_id = s.dentist_id 
+              AND DATE(q.time) = s.date 
+              AND TIME(q.time) = s.start_time 
+              AND q.queue_status IN ('pending', 'confirm')
+            ) THEN s.slot_id 
+          END) as available_slots
+        FROM dentist d
+        INNER JOIN available_slots s ON d.dentist_id = s.dentist_id
+        WHERE s.date = ?
+        AND d.user_id IS NOT NULL
+      `;
+
+      let queryParams = [date];
+
+      if (treatment_id) {
+        query += ` AND EXISTS (
+          SELECT 1 FROM dentist_treatment dt 
+          WHERE dt.dentist_id = d.dentist_id 
+          AND dt.treatment_id = ?
+        )`;
+        queryParams.push(treatment_id);
+      }
+
+      query += `
+        GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.education, d.license_no, d.photo
+        HAVING available_slots > 0
+        ORDER BY d.fname, d.lname
+      `;
+
+      const [availableDentists] = await db.execute(query, queryParams);
+
+      // ดึงข้อมูลการรักษาของแต่ละทันตแพทย์
+      for (let dentist of availableDentists) {
+        const [treatments] = await db.execute(`
+          SELECT t.treatment_id, t.treatment_name, t.duration
+          FROM dentist_treatment dt
+          JOIN treatment t ON dt.treatment_id = t.treatment_id
+          WHERE dt.dentist_id = ?
+          ORDER BY t.treatment_name
+        `, [dentist.dentist_id]);
+        
+        dentist.treatments = treatments;
+      }
+
+      return availableDentists;
+    } catch (error) {
+      console.error('Error getting available dentists for booking:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ตรวจสอบความพร้อมใช้งานของเลขใบประกอบวิชาชีพ
+   * @param {Object} params - พารามิเตอร์การตรวจสอบ
+   * @returns {Object} ผลลัพธ์การตรวจสอบ
+   */
+  static async checkLicenseAvailability(params) {
+    try {
+      const { license, exclude_dentist_id } = params;
+
+      let query = 'SELECT COUNT(*) as count FROM dentist WHERE license_no = ?';
+      let queryParams = [license];
+      
+      if (exclude_dentist_id) {
+        query += ' AND dentist_id != ?';
+        queryParams.push(exclude_dentist_id);
+      }
+      
+      const [result] = await db.execute(query, queryParams);
+      const exists = result[0].count > 0;
+
+      return { exists };
+    } catch (error) {
+      console.error('Error checking license availability:', error);
       throw error;
     }
   }

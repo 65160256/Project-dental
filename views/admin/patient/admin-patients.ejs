@@ -89,7 +89,12 @@
     .table-header h3{margin:0;font-size:18px;font-weight:600;color:#333}
     .patients-table{width:100%;border-collapse:collapse;font-size:14px}
     .patients-table thead{background:#f8f9fa}
-    .patients-table th{padding:15px 20px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e1e5e9;position:relative}
+     .patients-table th{padding:15px 20px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e1e5e9;position:relative;cursor:pointer;user-select:none;transition:background-color .2s ease}
+     .patients-table th:hover{background-color:rgba(74,144,226,.05)}
+     .patients-table th.sortable{position:relative}
+     .patients-table th.sortable::after{content:'↕';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:#ccc;opacity:.5}
+     .patients-table th.sort-asc::after{content:'↑';color:#4A90E2;opacity:1}
+     .patients-table th.sort-desc::after{content:'↓';color:#4A90E2;opacity:1}
     .patients-table td{padding:15px 20px;border-bottom:1px solid #f1f3f4;color:#333}
     .patients-table tr:hover{background:rgba(74,144,226,.05)}
 
@@ -282,15 +287,16 @@
 
         <div style="overflow-x:auto;">
           <table class="patients-table">
-            <thead>
-              <tr>
-                <th>ผู้ป่วย</th>
-                <th>ข้อมูลติดต่อ</th>
-                <th>อายุ</th>
-                <th>มาครั้งล่าสุด</th>
-                <th>การจัดการ</th>
-              </tr>
-            </thead>
+             <thead>
+               <tr>
+                 <th class="sortable" data-sort="index" onclick="sortTable('index')">ลำดับ</th>
+                 <th class="sortable" data-sort="name" onclick="sortTable('name')">ผู้ป่วย</th>
+                 <th class="sortable" data-sort="phone" onclick="sortTable('phone')">ข้อมูลติดต่อ</th>
+                 <th class="sortable" data-sort="age" onclick="sortTable('age')">อายุ</th>
+                 <th class="sortable" data-sort="last_visit" onclick="sortTable('last_visit')">มาครั้งล่าสุด</th>
+                 <th>การจัดการ</th>
+               </tr>
+             </thead>
             <tbody id="patientsTableBody"></tbody>
           </table>
         </div>
@@ -324,11 +330,12 @@
   </div>
 
   <script>
-    // ===== Globals =====
-    let patientsData = [];
-    let filteredPatients = [];
-    let currentDeleteId = null;
-    let isLoading = false;
+     // ===== Globals =====
+     let patientsData = [];
+     let filteredPatients = [];
+     let currentDeleteId = null;
+     let isLoading = false;
+     let currentSort = { column: 'index', direction: 'asc' };
 
     document.addEventListener('DOMContentLoaded', () => {
       loadPatients();
@@ -369,11 +376,12 @@
         loading.style.display = 'none';
         if(filteredPatients.length === 0){
           emptyState.style.display = 'block';
-        }else{
-          tableSection.style.display = 'block';
-          renderPatientsTable();
-        }
-        updateStats();
+         }else{
+           tableSection.style.display = 'block';
+           renderPatientsTable();
+         }
+         updateSortHeaders();
+         updateStats();
       }
     }
 
@@ -385,7 +393,7 @@
       if(filteredPatients.length === 0){
         tbody.innerHTML = `
           <tr>
-            <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+            <td colspan="6" style="text-align:center;padding:40px;color:#666;">
               <i class="fas fa-search" style="font-size:24px;margin-bottom:10px;display:block;"></i>
               ไม่มีผู้ป่วยที่ตรงกับตัวกรองตอนนี้
             </td>
@@ -393,14 +401,21 @@
         return;
       }
 
-      tbody.innerHTML = filteredPatients.map(p=>{
-        const initials = getPatientInitials(p);
-        const ageText = formatAgeText(p.dob);
-        const lastVisit = formatRelativeDateTH(p.last_visit);
-        const fullName = getPatientName(p);
+       // Sort filtered patients before rendering
+       const sortedPatients = [...filteredPatients].sort((a, b) => {
+         return sortPatients(a, b, currentSort.column, currentSort.direction);
+       });
+
+       tbody.innerHTML = sortedPatients.map((p, index)=>{
+         const initials = getPatientInitials(p);
+         const ageText = formatAgeText(p.dob);
+         const lastVisit = formatRelativeDateTH(p.last_visit);
+         const fullName = getPatientName(p);
+         const rowNumber = index + 1;
 
         return `
           <tr data-id="${p.patient_id}" onclick="highlightRow(this)">
+            <td style="text-align:center;font-weight:600;color:#4A90E2;">${rowNumber}</td>
             <td>
               <div class="patient-info">
                 <div class="patient-avatar">${initials}</div>
@@ -435,10 +450,66 @@
               </div>
             </td>
           </tr>`;
-      }).join('');
-    }
+       }).join('');
+     }
 
-    // ===== Helpers (TH, 24h) =====
+     // ===== Sorting Functions =====
+     function sortTable(column) {
+       if (currentSort.column === column) {
+         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+       } else {
+         currentSort.column = column;
+         currentSort.direction = 'asc';
+       }
+       
+       updateSortHeaders();
+       renderPatientsTable();
+     }
+
+     function updateSortHeaders() {
+       document.querySelectorAll('.patients-table th.sortable').forEach(th => {
+         th.classList.remove('sort-asc', 'sort-desc');
+         if (th.dataset.sort === currentSort.column) {
+           th.classList.add(`sort-${currentSort.direction}`);
+         }
+       });
+     }
+
+     function sortPatients(a, b, column, direction) {
+       let aVal, bVal;
+       
+       switch (column) {
+         case 'index':
+           // Sort by patient_id (newest first by default)
+           aVal = a.patient_id;
+           bVal = b.patient_id;
+           break;
+         case 'name':
+           aVal = getPatientName(a).toLowerCase();
+           bVal = getPatientName(b).toLowerCase();
+           break;
+         case 'phone':
+           aVal = (a.phone || '').toLowerCase();
+           bVal = (b.phone || '').toLowerCase();
+           break;
+         case 'age':
+           aVal = calculateAgeNumber(a.dob);
+           bVal = calculateAgeNumber(b.dob);
+           break;
+         case 'last_visit':
+           aVal = a.last_visit ? new Date(a.last_visit).getTime() : 0;
+           bVal = b.last_visit ? new Date(b.last_visit).getTime() : 0;
+           break;
+         default:
+           return 0;
+       }
+       
+       if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+       if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+       return 0;
+     }
+
+     // ===== Helpers (TH, 24h) =====
     function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
     function highlightRow(row){
       document.querySelectorAll('.patients-table tr').forEach(tr=>tr.style.backgroundColor='');

@@ -92,15 +92,32 @@ async function loadCalendarData() {
     const data = await response.json();
     if (data.success) {
       calendarData = {};
+      console.log('📦 Raw calendar data from API:', data.calendar_data);
       data.calendar_data.forEach(day => {
-        calendarData[day.date] = {
+        // แปลง date format จาก "Fri Oct 17" เป็น "2025-10-17"
+        const year = currentCalendarDate.getFullYear(); // ใช้ปีจากปฏิทินปัจจุบัน (2025)
+        const dateObj = new Date(`${day.date}, ${year}`);
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dayNum = String(dateObj.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${dayNum}`;
+        
+        calendarData[dateString] = {
           available_dentists: day.available_dentists,
           available_slots: day.available_slots,
           total_slots: day.total_slots,
           dentists: day.dentists || []
         };
+        console.log(`📅 Processed day ${day.date} → ${dateString} (year: ${year}):`, calendarData[dateString]);
       });
       console.log('✅ Loaded calendar data:', Object.keys(calendarData).length, 'days');
+      console.log('🗂️ Final calendarData object:', calendarData);
+      
+      // Debug: แสดงรายการวันที่ที่มีข้อมูล
+      const daysWithData = Object.keys(calendarData).filter(date => {
+        const data = calendarData[date];
+        return data && (data.available_dentists > 0 || data.dentists.length > 0);
+      });
+      console.log('📋 Days with available dentists:', daysWithData);
     } else {
       console.error('❌ Failed to load calendar data:', data.error);
     }
@@ -131,7 +148,8 @@ function generateCalendar() {
   const today = new Date();
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
   for (let i = 0; i < 42; i++) {
-    const date = new Date(startDate); date.setDate(startDate.getDate() + i);
+    const date = new Date(startDate); 
+    date.setDate(startDate.getDate() + i);
     const dayElement = createDayElement(date, month, today, tomorrow);
     grid.appendChild(dayElement);
   }
@@ -150,11 +168,18 @@ function createDayElement(date, currentMonth, today, tomorrow) {
   const dayOfWeek = date.getDay();
   const compareDate = new Date(date); compareDate.setHours(0,0,0,0);
   const todayDate = new Date(today); todayDate.setHours(0,0,0,0);
-  const tomorrowDate = new Date(tomorrow); tomorrowDate.setHours(0,0,0,0);
+  
+  // คำนวณวันที่ห้ามจอง (น้อยกว่า 24 ชั่วโมง)
+  const minBookingDate = new Date(today);
+  minBookingDate.setDate(minBookingDate.getDate() + 1); // ต้องจองล่วงหน้าอย่างน้อย 1 วันเต็ม
+  minBookingDate.setHours(0,0,0,0);
 
   if (date.getMonth() !== currentMonth) day.classList.add('other-month');
-  const isPast = compareDate <= tomorrowDate;
+  const isPast = compareDate <= todayDate; // วันในอดีต
+  const isTooClose = compareDate <= minBookingDate; // วันที่ใกล้เกินไป (น้อยกว่า 24 ชั่วโมง)
+  
   if (isPast) day.classList.add('past');
+  if (isTooClose && !isPast) day.classList.add('too-close');
   if (dayOfWeek === 0) day.classList.add('unavailable');
 
   const dayNumber = document.createElement('div');
@@ -163,29 +188,70 @@ function createDayElement(date, currentMonth, today, tomorrow) {
   day.appendChild(dayNumber);
 
   const dayData = calendarData[dateString];
-  const isBookable = dayOfWeek !== 0 && date.getMonth() === currentMonth && compareDate > tomorrowDate;
-
-  if (isBookable && dayData && dayData.dentists && dayData.dentists.length > 0) {
+  
+  // Debug logging
+  if (dayData) {
+    console.log(`📅 Day ${dateString}:`, {
+      available_dentists: dayData.available_dentists,
+      available_slots: dayData.available_slots,
+      dentists: dayData.dentists,
+      dentists_length: dayData.dentists ? dayData.dentists.length : 0
+    });
+  } else {
+    console.log(`❌ No data for day ${dateString}`);
+  }
+  
+  // แสดงข้อมูลหมอ/ช่องว่างสำหรับทุกวันที่มีข้อมูล (เหมือนแอดมิน)
+  if (dayData && date.getMonth() === currentMonth && dayOfWeek !== 0) {
+    console.log(`✅ Highlighting day ${dateString} - has ${dayData.available_dentists} dentists`);
     day.style.backgroundColor = '#fff9e6';
     const dentistsContainer = document.createElement('div');
     dentistsContainer.className = 'day-doctors';
-    dayData.dentists.slice(0, 2).forEach(dentist => {
-      const dentistItem = document.createElement('div'); dentistItem.className = 'doctor-item';
-      const initial = document.createElement('div'); initial.className = 'doctor-mini-avatar';
-      initial.textContent = dentist.name.split(' ').map(n => n[0]).join('');
-      const nameSpan = document.createElement('span'); nameSpan.textContent = dentist.name;
-      dentistItem.appendChild(initial); dentistItem.appendChild(nameSpan);
+    const dentistList = (dayData.dentists && dayData.dentists.length > 0)
+      ? dayData.dentists.slice(0, 2)
+      : [];
+    dentistList.forEach(dentist => {
+      const dentistItem = document.createElement('div'); 
+      dentistItem.className = 'doctor-item';
+      const initial = document.createElement('div'); 
+      initial.className = 'doctor-mini-avatar';
+      // ตรวจสอบโครงสร้างข้อมูล dentist
+      const dentistName = dentist.name || `${dentist.fname || ''} ${dentist.lname || ''}`.trim();
+      initial.textContent = dentistName.split(' ').map(n => n[0]).join('');
+      const nameSpan = document.createElement('span'); 
+      nameSpan.className = 'doctor-name-mini';
+      nameSpan.textContent = dentistName;
+      const status = document.createElement('div'); 
+      status.className = 'doctor-status';
+      dentistItem.appendChild(initial); 
+      dentistItem.appendChild(nameSpan);
+      dentistItem.appendChild(status);
       dentistsContainer.appendChild(dentistItem);
     });
-    if (dayData.dentists.length > 2) {
+    if (dayData.dentists && dayData.dentists.length > 2) {
       const moreInfo = document.createElement('div');
       moreInfo.style.cssText = 'text-align: center; color: #666; font-size: 10px; margin-top: 2px;';
       moreInfo.textContent = `+${dayData.dentists.length - 2} more`;
       dentistsContainer.appendChild(moreInfo);
     }
+    if (dentistList.length === 0 && dayData.available_slots) {
+      const info = document.createElement('div');
+      info.style.cssText = 'text-align:center;color:#666;font-size:11px;margin-top:2px';
+      info.textContent = `${dayData.available_slots||0} ช่องว่าง`;
+      dentistsContainer.appendChild(info);
+    }
     day.appendChild(dentistsContainer);
+  }
+
+  // อนุญาตให้คลิกเฉพาะวันที่ที่ห่างจากวันนี้อย่างน้อย 24 ชั่วโมง
+  if (dayData && date.getMonth() === currentMonth && dayOfWeek !== 0 && !isTooClose && !isPast) {
+    console.log(`🖱️ Making day ${dateString} clickable`);
     day.addEventListener('click', () => selectCalendarDate(dateString, day));
     day.style.cursor = 'pointer';
+  } else if (isTooClose && !isPast) {
+    console.log(`🚫 Day ${dateString} is too close for booking`);
+    day.style.cursor = 'not-allowed';
+    day.title = 'ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง';
   }
 
   return day;
@@ -193,11 +259,8 @@ function createDayElement(date, currentMonth, today, tomorrow) {
 
 // Select Calendar Date
 function selectCalendarDate(dateStr, dayElement) {
-  const selectedDateObj = new Date(dateStr);
-  const now = new Date();
-  const timeDiff = selectedDateObj.getTime() - now.getTime();
-  const hoursDiff = timeDiff / (1000 * 3600);
-  if (hoursDiff < 24) { showToast('ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง', 'warning'); return; }
+  // อนุญาตให้เลือกวันที่ได้เหมือนแอดมิน (ไม่บังคับ 24 ชั่วโมงที่ระดับปฏิทิน)
+  // จะตรวจสอบ 24 ชั่วโมงในขั้นตอนเลือกช่วงเวลาแทน
   document.querySelectorAll('.calendar-day.selected').forEach(day => day.classList.remove('selected'));
   dayElement.classList.add('selected');
   selectedDate = dateStr;
@@ -223,10 +286,19 @@ async function showAvailableDentists(dateStr) {
 
   try {
     let url = `/patient/api/available-dentists?date=${dateStr}`;
-    if (filteredTreatmentId) url += `&treatment_id=${filteredTreatmentId}`;
+    if (filteredTreatmentId && filteredTreatmentId !== '') {
+      url += `&treatment_id=${filteredTreatmentId}`;
+    }
     console.log('👨‍⚕️ Fetching dentists from:', url);
     const response = await fetch(url);
+    console.log('📡 API Response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
+    console.log('📦 API Response data:', data);
 
     if (data.success && data.dentists && data.dentists.length > 0) {
       doctorsData = data.dentists;
@@ -256,10 +328,9 @@ async function showAvailableDentists(dateStr) {
               </div>
             </div>
             <div class="doctor-treatments">${treatmentsHTML}</div>
-            <div style="margin-top: 10px;">
-              <strong style="color:#10b981; font-size:14px;">
-                <i class="fas fa-check-circle"></i> ${doctor.available_slots} ช่วงเวลาว่าง
-              </strong>
+            <div class="doctor-availability">
+              <strong>ช่วงเวลาว่าง:</strong><br>
+              <span class="time-slot">${doctor.available_slots} ช่วงเวลาว่าง</span>
             </div>
           </div>`;
       });
@@ -277,11 +348,14 @@ async function showAvailableDentists(dateStr) {
     doctorsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
     console.error('❌ Error loading dentists:', error);
-    showToast('ไม่สามารถโหลดข้อมูลทันตแพทย์ได้', 'error');
+    console.error('❌ Error details:', error.message, error.stack);
+    showToast('ไม่สามารถโหลดข้อมูลทันตแพทย์ได้: ' + error.message, 'error');
     doctorsGrid.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
         <i class="fas fa-exclamation-circle"></i>
         <h3>เกิดข้อผิดพลาดในการโหลดข้อมูล</h3>
+        <p>กรุณาลองใหม่อีกครั้ง</p>
+        <p style="font-size: 12px; color: #666;">Error: ${error.message}</p>
       </div>`;
   }
 }
@@ -401,11 +475,41 @@ function updateSelectedDateDisplay() {
 async function loadTimeSlots() {
   const treatmentId = document.getElementById('treatmentSelect').value;
   const grid = document.getElementById('timeSlotsGrid');
+  
   if (!treatmentId) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
         <i class="fas fa-info-circle"></i>
         <h3>กรุณาเลือกการรักษาก่อน</h3>
+      </div>`;
+    return;
+  }
+
+  // ตรวจสอบกฎ 24 ชั่วโมงที่ระดับช่วงเวลา (เข้มงวดขึ้น)
+  const selectedDateObj = new Date(selectedDate);
+  const now = new Date();
+  const timeDiff = selectedDateObj.getTime() - now.getTime();
+  const hoursDiff = timeDiff / (1000 * 3600);
+  
+  if (hoursDiff < 24) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <i class="fas fa-clock"></i>
+        <h3>ไม่สามารถจองได้</h3>
+        <p><strong>ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง</strong></p>
+        <p>เนื่องจากต้องรอการยืนยันจากแอดมิน</p>
+        <p>กรุณาเลือกวันอื่นที่ห่างจากวันนี้อย่างน้อย 1 วัน</p>
+      </div>`;
+    return;
+  }
+
+  // ตรวจสอบวันอาทิตย์
+  if (selectedDateObj.getDay() === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <i class="fas fa-calendar-times"></i>
+        <h3>คลินิกปิดทำการวันอาทิตย์</h3>
+        <p>กรุณาเลือกวันอื่น</p>
       </div>`;
     return;
   }
@@ -424,9 +528,9 @@ async function loadTimeSlots() {
     if (data.success && data.slots.length > 0) {
       console.log('✅ พบ', data.slots.length, 'ช่วงเวลาว่าง');
       grid.innerHTML = data.slots.map(slot => `
-        <div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}')" data-time="${slot.start_time}">
-          <strong>${slot.start_time}</strong><br>
-          <small>${slot.duration} นาที</small>
+        <div class="time-slot-btn available" onclick="selectTimeSlot('${slot.start_time}', '${slot.end_time || ''}', ${slot.duration})" data-time="${slot.start_time}" data-end="${slot.end_time || ''}">
+          <strong style="font-size:16px;">${slot.start_time}${slot.end_time ? ' - ' + slot.end_time : ''}</strong><br>
+          <small style="color:#059669;font-weight:600;">${slot.duration} นาที</small>
         </div>`).join('');
     } else {
       console.log('⚠️ ไม่มีช่วงเวลาว่าง');
@@ -454,8 +558,16 @@ function changeSelectedDate(direction) {
   date.setDate(date.getDate() + direction);
   const now = new Date();
   const hoursDiff = (date.getTime() - now.getTime()) / (1000 * 3600);
-  if (hoursDiff < 24) { showToast('ไม่สามารถเลือกวันที่ภายใน 24 ชั่วโมงได้', 'warning'); return; }
-  if (date.getDay() === 0) { showToast('คลินิกปิดวันอาทิตย์', 'warning'); return; }
+  
+  if (hoursDiff < 24) { 
+    showToast('ไม่สามารถเลือกวันที่ภายใน 24 ชั่วโมงได้ เนื่องจากต้องรอการยืนยันจากแอดมิน', 'warning'); 
+    return; 
+  }
+  if (date.getDay() === 0) { 
+    showToast('คลินิกปิดวันอาทิตย์', 'warning'); 
+    return; 
+  }
+  
   selectedDate = date.toISOString().split('T')[0];
   updateSelectedDateDisplay();
   loadTimeSlots();
@@ -464,16 +576,17 @@ function changeSelectedDate(direction) {
 }
 
 // Select Time Slot
-function selectTimeSlot(time) {
+function selectTimeSlot(startTime, endTime = '', duration = 0) {
   document.querySelectorAll('.time-slot-btn.selected').forEach(btn => { btn.classList.remove('selected'); btn.classList.add('available'); });
-  const button = document.querySelector(`[data-time="${time}"]`);
+  const button = document.querySelector(`[data-time="${startTime}"]`);
   if (button) {
     button.classList.remove('available');
     button.classList.add('selected');
-    selectedTime = time;
-    console.log('⏰ เลือกเวลา:', selectedTime);
+    selectedTime = startTime;
+    console.log('⏰ เลือกเวลา:', selectedTime, endTime ? `- ${endTime}` : '', `(${duration} นาที)`);
     validateStep2();
-    showToast('เลือกเวลาแล้ว', 'success');
+    const timeDisplay = endTime ? `${startTime} - ${endTime}` : startTime;
+    showToast(`เลือกเวลา ${timeDisplay} แล้ว`, 'success');
   }
 }
 
@@ -526,13 +639,20 @@ async function confirmBooking() {
 
     if (response.ok && data.success) {
       console.log('✅ Booking successful:', data.booking);
-      showToast('จองนัดหมายสำเร็จ!', 'success');
-      document.querySelector('.booking-success').innerHTML = `<i class="fas fa-check-circle"></i> จองนัดหมายสำเร็จแล้ว!`;
-      document.querySelector('.booking-success').style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-      confirmBtn.innerHTML = '<i class="fas fa-check"></i> จองสำเร็จแล้ว!';
+      showToast('ส่งคำขอจองนัดหมายเรียบร้อยแล้ว! รอการยืนยันจากแอดมิน', 'success');
+      document.querySelector('.booking-success').innerHTML = `<i class="fas fa-clock"></i> ส่งคำขอจองนัดหมายเรียบร้อยแล้ว!`;
+      document.querySelector('.booking-success').style.background = 'linear-gradient(135deg, #ffc107, #ff8c00)';
+      confirmBtn.innerHTML = '<i class="fas fa-check"></i> ส่งคำขอแล้ว!';
       confirmBtn.disabled = true;
       const editBtn = document.querySelector('.confirmation-section .btn-secondary');
       if (editBtn) editBtn.style.display = 'none';
+      
+      // แสดงข้อความรอยืนยัน
+      const statusBadge = document.querySelector('.status-badge');
+      if (statusBadge) {
+        statusBadge.textContent = 'รอยืนยันจากแอดมิน';
+        statusBadge.className = 'status-badge status-pending';
+      }
     } else {
       throw new Error(data.error || 'เกิดข้อผิดพลาดในการจอง');
     }
@@ -547,10 +667,23 @@ async function confirmBooking() {
 // Validate Before Confirmation
 function validateBeforeConfirmation() {
   const treatmentId = document.getElementById('treatmentSelect').value;
+  
+  // ตรวจสอบข้อมูลพื้นฐาน
   if (!selectedDoctor || !selectedDoctor.id) { showToast('กรุณาเลือกทันตแพทย์', 'error'); return false; }
   if (!treatmentId) { showToast('กรุณาเลือกการรักษา', 'error'); return false; }
   if (!selectedDate) { showToast('กรุณาเลือกวันที่', 'error'); return false; }
   if (!selectedTime) { showToast('กรุณาเลือกเวลา', 'error'); return false; }
+  
+  // ตรวจสอบกฎ 24 ชั่วโมงอีกครั้งก่อนจอง
+  const selectedDateObj = new Date(selectedDate);
+  const now = new Date();
+  const hoursDiff = (selectedDateObj.getTime() - now.getTime()) / (1000 * 3600);
+  
+  if (hoursDiff < 24) {
+    showToast('ไม่สามารถจองได้ เนื่องจากต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมงเพื่อรอการยืนยันจากแอดมิน', 'error');
+    return false;
+  }
+  
   return true;
 }
 
@@ -582,7 +715,7 @@ function clearTreatmentFilter() {
   document.getElementById('treatmentFilter').value = '';
   const filterInstructions = document.getElementById('filterInstructions');
   if (filterInstructions) {
-    filterInstructions.innerHTML = `สามารถจองนัดหมายล่วงหน้าอย่างน้อย 24 ชั่วโมง และคลินิกปิดวันอาทิตย์`;
+    filterInstructions.innerHTML = `<strong>ต้องจองล่วงหน้าอย่างน้อย 24 ชั่วโมง</strong> เพื่อรอการยืนยันจากแอดมิน และคลินิกปิดวันอาทิตย์`;
   }
   showToast('กำลังโหลดข้อมูลทั้งหมด...', 'info');
   loadCalendarData().then(() => {

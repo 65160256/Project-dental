@@ -39,11 +39,17 @@ class AppointmentAdminModel {
         SELECT 
           qd.queuedetail_id,
           qd.date as appointment_date,
-          qd.time as appointment_time,
+          q.time as appointment_time,
+          qd.note,
+          q.time as time,
+          DATE_ADD(q.time, INTERVAL t.duration MINUTE) as time_end,
+          qd.dentist_id,
+          qd.treatment_id,
           CONCAT(p.fname, ' ', p.lname) as patient_name,
+          p.phone as phone,
           p.phone as patient_phone,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          t.name as treatment_name,
+          t.treatment_name as treatment_name,
           q.queue_status,
           q.queue_id
         FROM queuedetail qd
@@ -52,7 +58,7 @@ class AppointmentAdminModel {
         JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
         ${whereClause}
-        ORDER BY qd.date DESC, qd.time DESC
+        ORDER BY qd.date DESC, q.time DESC
       `, params);
 
       return rows;
@@ -72,12 +78,15 @@ class AppointmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           qd.*,
+          q.time,
+          DATE_ADD(q.time, INTERVAL t.duration MINUTE) as time_end,
           CONCAT(p.fname, ' ', p.lname) as patient_name,
+          p.phone as phone,
           p.phone as patient_phone,
           p.id_card as patient_id_card,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           d.specialty as dentist_specialty,
-          t.name as treatment_name,
+          t.treatment_name as treatment_name,
           t.duration as treatment_duration,
           q.queue_status,
           q.queue_id
@@ -105,39 +114,87 @@ class AppointmentAdminModel {
     const connection = await db.getConnection();
     
     try {
+      const { patient_id, treatment_id, dentist_id, appointment_time } = appointmentData;
+      
+      // Parse appointment time
+      const appointmentDate = new Date(appointment_time);
+      const dateStr = appointmentDate.toISOString().split('T')[0];
+      const hour = appointmentDate.getHours();
+
+      // Check if dentist is available at the requested time
+      const [scheduleCheck] = await connection.execute(`
+        SELECT COUNT(*) as schedule_exists
+        FROM dentist_schedule 
+        WHERE dentist_id = ? AND schedule_date = ? AND hour = ? AND status = 'working'
+      `, [dentist_id, dateStr, hour]);
+
+      if (scheduleCheck[0].schedule_exists === 0) {
+        return {
+          success: false,
+          error: 'Dentist is not available at the requested time'
+        };
+      }
+
+      // Check for existing appointments at the same time
+      const [existingAppointment] = await connection.execute(`
+        SELECT COUNT(*) as appointment_exists
+        FROM queue 
+        WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
+      `, [dentist_id, appointment_time]);
+
+      if (existingAppointment[0].appointment_exists > 0) {
+        return {
+          success: false,
+          error: 'Time slot is already booked'
+        };
+      }
+
       await connection.beginTransaction();
 
       // สร้าง queuedetail record
       const [queueDetailResult] = await connection.execute(`
-        INSERT INTO queuedetail (patient_id, dentist_id, treatment_id, date, time)
-        VALUES (?, ?, ?, ?, ?)
-      `, [
-        appointmentData.patient_id,
-        appointmentData.dentist_id,
-        appointmentData.treatment_id,
-        appointmentData.date,
-        appointmentData.time
-      ]);
+        INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `, [patient_id, treatment_id, dentist_id, dateStr]);
 
       const queueDetailId = queueDetailResult.insertId;
 
       // สร้าง queue record
-      await connection.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, dentist_id, time, queue_status)
-        VALUES (?, ?, ?, ?, ?)
-      `, [
-        queueDetailId,
-        appointmentData.patient_id,
-        appointmentData.dentist_id,
-        appointmentData.time,
-        appointmentData.status || 'pending'
-      ]);
+      const [queueResult] = await connection.execute(`
+        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+        VALUES (?, ?, ?, ?, ?, 'pending')
+      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
+
+      const queueId = queueResult.insertId;
 
       await connection.commit();
+
+      // Get appointment details for response
+      const [appointmentDetails] = await connection.execute(`
+        SELECT 
+          q.queue_id,
+          q.time,
+          q.queue_status,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          t.treatment_name
+        FROM queue q
+        JOIN patient p ON q.patient_id = p.patient_id
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        WHERE q.queue_id = ?
+      `, [queueId]);
       
       return {
         success: true,
-        queueDetailId: queueDetailId,
+        appointment: {
+          id: queueId,
+          time: appointment_time,
+          patient_name: appointmentDetails[0].patient_name,
+          dentist_name: appointmentDetails[0].dentist_name,
+          treatment_name: appointmentDetails[0].treatment_name,
+          status: 'pending'
+        },
         message: 'นัดหมายถูกสร้างเรียบร้อยแล้ว'
       };
 
@@ -162,30 +219,30 @@ class AppointmentAdminModel {
     try {
       await connection.beginTransaction();
 
-      // อัปเดต queuedetail table
+      // อัปเดต queuedetail table - แปลง undefined เป็น null
       await connection.execute(`
         UPDATE queuedetail SET
-          patient_id = ?, dentist_id = ?, treatment_id = ?, date = ?, time = ?
+          patient_id = ?, dentist_id = ?, treatment_id = ?, date = ?, note = ?
         WHERE queuedetail_id = ?
       `, [
-        updateData.patient_id,
-        updateData.dentist_id,
-        updateData.treatment_id,
-        updateData.date,
-        updateData.time,
+        updateData.patient_id || null,
+        updateData.dentist_id || null,
+        updateData.treatment_id || null,
+        updateData.date || null,
+        updateData.note || null,
         appointmentId
       ]);
 
-      // อัปเดต queue table
+      // อัปเดต queue table - แปลง undefined เป็น null
       await connection.execute(`
         UPDATE queue SET
           patient_id = ?, dentist_id = ?, time = ?, queue_status = ?
         WHERE queuedetail_id = ?
       `, [
-        updateData.patient_id,
-        updateData.dentist_id,
-        updateData.time,
-        updateData.status,
+        updateData.patient_id || null,
+        updateData.dentist_id || null,
+        updateData.time || null,
+        updateData.status || null,
         appointmentId
       ]);
 
@@ -280,7 +337,7 @@ class AppointmentAdminModel {
         FROM queuedetail qd
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
         WHERE DATE(qd.date) = ? 
-          AND HOUR(qd.time) = HOUR(?) 
+          AND HOUR(q.time) = HOUR(?) 
           AND qd.dentist_id = ?
           AND q.queue_status IN ('pending', 'confirm')
       `;
@@ -463,11 +520,11 @@ class AppointmentAdminModel {
         SELECT 
           qd.queuedetail_id,
           qd.date as start_date,
-          qd.time as start_time,
-          DATE_ADD(qd.time, INTERVAL t.duration MINUTE) as end_time,
+          q.time as start_time,
+          DATE_ADD(q.time, INTERVAL t.duration MINUTE) as end_time,
           CONCAT(p.fname, ' ', p.lname) as title,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          t.name as treatment_name,
+          t.treatment_name as treatment_name,
           q.queue_status as status
         FROM queuedetail qd
         JOIN patient p ON qd.patient_id = p.patient_id
@@ -475,12 +532,142 @@ class AppointmentAdminModel {
         JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
         WHERE DATE(qd.date) BETWEEN ? AND ?
-        ORDER BY qd.date, qd.time
+        ORDER BY qd.date, q.time
       `, [startDate, endDate]);
 
       return rows;
     } catch (error) {
       console.error('Error getting calendar data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ตรวจสอบความขัดแย้งของเวลานัดหมาย
+   * @param {Object} params - พารามิเตอร์การตรวจสอบ
+   * @returns {Array} รายการความขัดแย้ง
+   */
+  static async validateAppointmentTime(params) {
+    try {
+      const { dentist_id, appointment_datetime, exclude_queue_id } = params;
+      
+      let query = `
+        SELECT 
+          q.queue_id,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          q.time
+        FROM queue q
+        JOIN patient p ON q.patient_id = p.patient_id
+        WHERE q.dentist_id = ? 
+          AND q.time = ? 
+          AND q.queue_status IN ('pending', 'confirm')
+      `;
+      
+      let queryParams = [dentist_id, appointment_datetime];
+      
+      if (exclude_queue_id) {
+        query += ' AND q.queue_id != ?';
+        queryParams.push(exclude_queue_id);
+      }
+      
+      const [conflicts] = await db.execute(query, queryParams);
+      return conflicts;
+    } catch (error) {
+      console.error('Error validating appointment time:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงข้อมูลตารางงานของทันตแพทย์
+   * @param {Object} params - พารามิเตอร์การค้นหา
+   * @returns {Array} รายการตารางงาน
+   */
+  static async getDentistScheduleData(params) {
+    try {
+      const { dentistId, start_date, end_date } = params;
+
+      // หมายเหตุ: DAYOFWEEK() ใน MySQL => อาทิตย์=1, จันทร์=2, ... เสาร์=7
+      // เราคัดวันอาทิตย์ทิ้ง (<> 1) เพื่อให้ "อาทิตย์ปิด" เสมอ
+      const [rows] = await db.execute(
+        `
+        SELECT 
+          ds.schedule_date,
+          ds.hour,
+          ds.start_time,
+          ds.end_time,
+          ds.status,
+          ds.note,
+          d.dentist_id,
+          d.fname,
+          d.lname,
+          d.specialty,
+          COUNT(q.queue_id) as appointment_count
+        FROM dentist_schedule ds
+        JOIN dentist d ON ds.dentist_id = d.dentist_id
+        LEFT JOIN queue q 
+          ON q.dentist_id = ds.dentist_id
+         AND DATE(q.time) = ds.schedule_date
+         AND HOUR(q.time) = ds.hour
+         AND q.queue_status IN ('pending','confirm')
+        WHERE ds.dentist_id = ?
+          AND ds.schedule_date BETWEEN ? AND ?
+          AND DAYOFWEEK(ds.schedule_date) <> 1    -- << อาทิตย์ปิด
+        GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.dentist_id, d.fname, d.lname, d.specialty
+        ORDER BY ds.schedule_date, ds.hour
+        `,
+        [dentistId, start_date, end_date]
+      );
+
+      // แปลงให้ง่ายต่อการแสดงผลในปฏิทิน (รวมช่วงเวลาทำงานต่อเนื่อง)
+      const schedules = rows.map(r => ({
+        schedule_date: r.schedule_date.toISOString().split('T')[0],
+        hour: r.hour,
+        start_time: r.start_time.substring(0,5), // HH:MM
+        end_time: r.end_time.substring(0,5),
+        status: r.status, // 'working' หรือ 'dayoff'
+        note: r.note || null,
+        appointment_count: r.appointment_count || 0
+      }));
+
+      return schedules;
+    } catch (error) {
+      console.error('Error getting dentist schedule data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงข้อมูลตารางงานของทันตแพทย์สำหรับ API
+   * @param {Object} params - พารามิเตอร์การค้นหา
+   * @returns {Array} รายการตารางงาน
+   */
+  static async getDentistScheduleForAPI(params) {
+    try {
+      const { dentistId, date } = params;
+
+      const [scheduleData] = await db.execute(`
+        SELECT 
+          ds.hour,
+          ds.start_time,
+          ds.end_time,
+          ds.status,
+          COUNT(q.queue_id) as booked_count
+        FROM dentist_schedule ds
+        LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
+          AND DATE(q.time) = ds.schedule_date 
+          AND HOUR(q.time) = ds.hour
+          AND q.queue_status IN ('pending', 'confirm')
+        WHERE ds.dentist_id = ? 
+          AND ds.schedule_date = ?
+          AND ds.status = 'working'
+        GROUP BY ds.hour, ds.start_time, ds.end_time, ds.status
+        ORDER BY ds.hour
+      `, [dentistId, date]);
+
+      return scheduleData;
+    } catch (error) {
+      console.error('Error getting dentist schedule for API:', error);
       throw error;
     }
   }

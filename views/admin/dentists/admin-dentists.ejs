@@ -99,6 +99,7 @@
 
         /* ปรับ badge ให้โทนเดียว */
         .specialty-badge{padding:4px 12px;border-radius:15px;font-size:12px;font-weight:500;background:rgba(74,144,226,.1);color:#4A90E2;border:1px solid rgba(74,144,226,.2)}
+        .license-badge{padding:4px 12px;border-radius:15px;font-size:12px;font-weight:500;background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.2);font-family:monospace}
 
         /* ปุ่มย่อยให้เหมือนหน้า “ผู้ป่วย” */
         .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
@@ -391,8 +392,8 @@
                     <tr>
                         <th>ทันตแพทย์</th>
                         <th>ความเชี่ยวชาญ</th>
+                        <th>เลขที่ใบอนุญาต</th>
                         <th>ติดต่อ</th>
-                        <th>การศึกษา</th>
                         <th>จัดการ</th>
                     </tr>
                 </thead>
@@ -411,8 +412,8 @@
                                 </div>
                             </td>
                             <td><span class="specialty-badge">${escapeHtml(d.specialty||'ทันตกรรมทั่วไป')}</span></td>
+                            <td><span class="license-badge">${escapeHtml(d.license_no||'ไม่ระบุ')}</span></td>
                             <td>${escapeHtml(d.phone||'ไม่มีข้อมูล')}</td>
-                            <td>${escapeHtml(d.education||'ไม่ระบุ')}</td>
                             <td>
                                 <div class="action-buttons">
                                     <a href="/admin/dentists/${d.dentist_id}" class="btn-sm btn-view"><i class="fas fa-eye"></i> ดู</a>

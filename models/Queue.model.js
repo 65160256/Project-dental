@@ -912,7 +912,7 @@ d.specialty as dentist_specialization,
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
-      ORDER BY q.time DESC`,
+      ORDER BY q.time ASC`,
       [patientId]
     );
     return rows;
@@ -1064,9 +1064,9 @@ d.specialty as dentist_specialization,
 
     // สร้าง queuedetail
     const [queueDetailResult] = await connection.execute(
-      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-       VALUES (?, ?, ?, ?, NOW())`,
-      [patientId, treatmentId, dentistId, date]
+      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, note, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [patientId, treatmentId, dentistId, date, note]
     );
 
     const queueDetailId = queueDetailResult.insertId;
@@ -1080,15 +1080,8 @@ d.specialty as dentist_specialization,
 
     const queueId = queueResult.insertId;
 
-    // อัพเดท slots เป็น not available
-    for (const slot of slotsToBook) {
-      await connection.execute(
-        `UPDATE available_slots
-         SET treatment_id = ?, is_available = 0
-         WHERE slot_id = ?`,
-        [treatmentId, slot.slot_id]
-      );
-    }
+    // ไม่ต้องอัปเดต available_slots เพราะระบบใช้ dentist_schedule และ queue แทน
+    // slotsToBook ใช้เพื่อตรวจสอบความต่อเนื่องของเวลาก่อนหน้านี้เท่านั้น
 
     // ดึงรายละเอียดการจอง
     const [bookingDetails] = await connection.execute(
@@ -1135,19 +1128,19 @@ d.specialty as dentist_specialization,
 
   /**
    * สร้างการจองแบบ legacy (ใช้ dentist_schedule)
-   * @param {Object} bookingData - { patientId, treatmentId, dentistId, date, time }
+   * @param {Object} bookingData - { patientId, treatmentId, dentistId, date, time, note }
    * @returns {Promise<Object>} { queueId, queueDetailId, success }
    */
   static async createLegacyBooking(bookingData) {
-    const { patientId, treatmentId, dentistId, date, time } = bookingData;
+    const { patientId, treatmentId, dentistId, date, time, note } = bookingData;
 
     const appointmentTime = `${date} ${time}:00`;
 
     // Insert into queuedetail
     const [queueDetailResult] = await db.execute(
-      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-       VALUES (?, ?, ?, ?, NOW())`,
-      [patientId, treatmentId, dentistId, date]
+      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, note, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [patientId, treatmentId, dentistId, date, note]
     );
 
     const queueDetailId = queueDetailResult.insertId;
@@ -1230,7 +1223,7 @@ d.specialty as dentist_specialization,
   /**
    * สร้างประวัติการรักษาแบบเต็มรูปแบบ (queue + queuedetail + treatmentHistory)
    * สำหรับการรักษาที่ไม่ได้จองล่วงหน้า
-   * @param {Object} treatmentData - { dentistId, patientId, treatmentId, appointmentDate, diagnosis, followUpdate, followUpDate }
+   * @param {Object} treatmentData - { dentistId, patientId, treatmentId, appointmentDate, diagnosis, followUpdate, followUpDate, note }
    * @returns {Promise<Object>} { queueId, queueDetailId, treatmentHistoryId, success }
    */
   static async createFullTreatmentRecord(treatmentData) {
@@ -1241,7 +1234,8 @@ d.specialty as dentist_specialization,
       appointmentDate,
       diagnosis,
       followUpdate = '',
-      followUpDate = null
+      followUpDate = null,
+      note = null
     } = treatmentData;
 
     // Validation
@@ -1251,9 +1245,9 @@ d.specialty as dentist_specialization,
 
     // สร้าง queuedetail
     const [queueDetailResult] = await db.execute(
-      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, created_at)
-       VALUES (?, ?, ?, DATE(?), NOW())`,
-      [patientId, treatmentId, dentistId, appointmentDate]
+      `INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, note, created_at)
+       VALUES (?, ?, ?, DATE(?), ?, NOW())`,
+      [patientId, treatmentId, dentistId, appointmentDate, note]
     );
 
     const queueDetailId = queueDetailResult.insertId;
@@ -1432,6 +1426,183 @@ d.specialty as dentist_specialization,
       await connection.rollback();
       connection.release();
       throw error;
+    }
+  }
+
+  /**
+   * จองนัดหมายสำหรับผู้ป่วย (admin)
+   * @param {Object} params - พารามิเตอร์การจอง
+   * @returns {Object} ผลลัพธ์การจอง
+   */
+  static async bookAppointmentForPatient(params) {
+    const connection = await db.getConnection();
+    
+    try {
+      const { patient_id, dentist_id, treatment_id, date, start_time, note } = params;
+
+      // ตรวจสอบวันอาทิตย์
+      const appointmentDateTime = new Date(`${date} ${start_time}:00`);
+      if (appointmentDateTime.getDay() === 0) {
+        return {
+          success: false,
+          error: 'คลินิกปิดทำการวันอาทิตย์'
+        };
+      }
+
+      // ดึง duration
+      const [treatmentData] = await connection.execute(
+        'SELECT duration FROM treatment WHERE treatment_id = ?',
+        [treatment_id]
+      );
+
+      if (treatmentData.length === 0) {
+        return {
+          success: false,
+          error: 'ไม่พบข้อมูลการรักษา'
+        };
+      }
+
+      const duration = treatmentData[0].duration;
+      const requiredSlots = Math.ceil(duration / 30);
+
+      await connection.beginTransaction();
+
+      try {
+        const dentistIdInt = parseInt(dentist_id);
+        const requiredSlotsInt = Math.max(1, parseInt(requiredSlots));
+
+        // ดึง available slots
+        const [allSlots] = await connection.execute(`
+          SELECT s.slot_id, s.start_time, s.end_time
+          FROM available_slots s
+          WHERE s.dentist_id = ?
+          AND s.date = ?
+          AND s.start_time >= ?
+          AND s.is_available = 1
+          ORDER BY s.start_time
+        `, [dentistIdInt, date, start_time]);
+
+        // ตรวจสอบว่า slot ไหนมี booking แล้ว
+        const slotsCheck = [];
+        for (const slot of allSlots) {
+          if (slotsCheck.length >= requiredSlotsInt) break;
+          
+          const slotDateTime = `${date} ${slot.start_time}`;
+          
+          const [existingBooking] = await connection.execute(`
+            SELECT queue_id
+            FROM queue
+            WHERE dentist_id = ?
+            AND time = ?
+            AND queue_status IN ('pending', 'confirm')
+          `, [dentistIdInt, slotDateTime]);
+          
+          if (existingBooking.length === 0) {
+            slotsCheck.push(slot);
+          }
+        }
+
+        if (slotsCheck.length < requiredSlotsInt) {
+          await connection.rollback();
+          return {
+            success: false,
+            error: `ช่วงเวลานี้ไม่เพียงพอสำหรับการรักษา (ต้องการ ${requiredSlotsInt} ช่วง, มีว่าง ${slotsCheck.length} ช่วง)`
+          };
+        }
+
+        // ตรวจสอบว่า slots ต่อเนื่อง
+        for (let i = 0; i < slotsCheck.length - 1; i++) {
+          if (slotsCheck[i].end_time !== slotsCheck[i + 1].start_time) {
+            await connection.rollback();
+            return {
+              success: false,
+              error: 'ช่วงเวลาที่เลือกไม่ต่อเนื่องกัน'
+            };
+          }
+        }
+
+        // สร้าง queuedetail
+        const [queueDetailResult] = await connection.execute(`
+          INSERT INTO queuedetail (patient_id, treatment_id, dentist_id, date, note, created_at)
+          VALUES (?, ?, ?, ?, ?, NOW())
+        `, [patient_id, treatment_id, dentistIdInt, date, note]);
+
+        const queueDetailId = queueDetailResult.insertId;
+
+        // สร้าง queue โดยใช้ 'confirm' แทน 'pending' เพราะเป็น admin จอง
+        console.log('🔍 Inserting into queue with params:', [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
+        console.log('🔍 SQL to execute:', `
+          INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+          VALUES (?, ?, ?, ?, ?, 'confirm')
+        `);
+        const [queueResult] = await connection.execute(`
+          INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
+          VALUES (?, ?, ?, ?, ?, 'confirm')
+        `, [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
+
+        const queueId = queueResult.insertId;
+
+        // อัพเดท slots เป็น not available
+        for (const slot of slotsCheck) {
+          await connection.execute(`
+            UPDATE available_slots
+            SET treatment_id = ?, is_available = 0
+            WHERE slot_id = ?
+          `, [treatment_id, slot.slot_id]);
+        }
+
+        // ดึงรายละเอียดการจอง
+        const [bookingDetails] = await connection.execute(`
+          SELECT 
+            q.queue_id,
+            q.time,
+            CONCAT(p.fname, ' ', p.lname) as patient_name,
+            p.phone as patient_phone,
+            CONCAT(d.fname, ' ', d.lname) as dentist_name,
+            d.license_no,
+            t.treatment_name,
+            t.duration
+          FROM queue q
+          JOIN patient p ON q.patient_id = p.patient_id
+          JOIN dentist d ON q.dentist_id = d.dentist_id
+          JOIN treatment t ON q.treatment_id = t.treatment_id
+          WHERE q.queue_id = ?
+        `, [queueId]);
+
+        // คำนวณเวลาสิ้นสุด
+        const endDateTime = new Date(appointmentDateTime.getTime() + (duration * 60000));
+        const endTime = `${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}`;
+
+        await connection.commit();
+
+        return {
+          success: true,
+          booking: {
+            queue_id: queueId,
+            appointment_time: appointmentDateTime,
+            appointment_date: date,
+            start_time: start_time,
+            end_time: endTime,
+            patient_name: bookingDetails[0]?.patient_name,
+            patient_phone: bookingDetails[0]?.patient_phone,
+            dentist_name: bookingDetails[0]?.dentist_name,
+            dentist_license: bookingDetails[0]?.license_no,
+            treatment_name: bookingDetails[0]?.treatment_name,
+            duration: bookingDetails[0]?.duration,
+            status: 'confirm'
+          }
+        };
+
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      }
+
+    } catch (error) {
+      console.error('Error booking appointment for patient:', error);
+      throw error;
+    } finally {
+      connection.release();
     }
   }
 }

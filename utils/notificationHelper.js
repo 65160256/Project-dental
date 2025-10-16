@@ -50,7 +50,7 @@ const NotificationHelper = {
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'new_appointment',
@@ -63,7 +63,7 @@ const NotificationHelper = {
 
       // Notification for Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'new_appointment',
@@ -111,7 +111,7 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_confirmed',
@@ -124,7 +124,7 @@ const NotificationHelper = {
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_confirmed',
@@ -294,7 +294,7 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
@@ -307,7 +307,7 @@ const NotificationHelper = {
 
       // Notification for Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
@@ -352,7 +352,7 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'treatment_completed',
@@ -365,7 +365,7 @@ const NotificationHelper = {
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
+        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
         VALUES (?, ?, ?, ?, ?, ?, 0, 1)
       `, [
         'treatment_completed',

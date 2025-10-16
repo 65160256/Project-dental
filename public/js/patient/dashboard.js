@@ -149,7 +149,7 @@ class PatientNotificationBell {
 
   async handleNotificationClick(notif) {
     if (!notif.is_read) await this.markAsRead(notif.id);
-    if (notif.appointment_id) window.location.href = `/patient/history/details/${notif.appointment_id}`;
+    if (notif.queue_id) window.location.href = `/patient/history/details/${notif.queue_id}`;
   }
 
   async markAsRead(id) {

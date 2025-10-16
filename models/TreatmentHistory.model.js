@@ -104,12 +104,12 @@ class TreatmentHistoryModel {
         t.treatment_id,
         t.treatment_name,
         t.duration
-      FROM treatmentHistory th
-      JOIN queuedetail qd ON th.queuedetail_id = qd.queuedetail_id
-      JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
+      FROM queue q
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       JOIN patient p ON q.patient_id = p.patient_id
       JOIN dentist d ON qd.dentist_id = d.dentist_id
       JOIN treatment t ON qd.treatment_id = t.treatment_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ?`,
       [queueId]
     );

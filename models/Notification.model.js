@@ -16,7 +16,8 @@ class NotificationModel {
       title,
       message,
       type = 'info',
-      relatedId = null
+      relatedId = null,
+      queueId = null
     } = notificationData;
 
     // Validate required fields
@@ -25,9 +26,9 @@ class NotificationModel {
     }
 
     const [result] = await db.execute(
-      `INSERT INTO notification (user_id, title, message, type, related_id, is_read, created_at)
-       VALUES (?, ?, ?, ?, ?, 0, NOW())`,
-      [userId, title, message, type, relatedId]
+      `INSERT INTO notifications (user_id, title, message, type, related_id, queue_id, is_read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+      [userId, title, message, type, relatedId, queueId]
     );
 
     return {
@@ -43,7 +44,7 @@ class NotificationModel {
    */
   static async findById(notificationId) {
     const [rows] = await db.execute(
-      `SELECT * FROM notification WHERE notification_id = ?`,
+      `SELECT * FROM notifications WHERE id = ?`,
       [notificationId]
     );
     return rows.length > 0 ? rows[0] : null;
@@ -60,7 +61,7 @@ class NotificationModel {
 
     let query = `
       SELECT *
-      FROM notification
+      FROM notifications
       WHERE user_id = ?
     `;
 
@@ -84,7 +85,7 @@ class NotificationModel {
    */
   static async markAsRead(notificationId) {
     const [result] = await db.execute(
-      `UPDATE notification SET is_read = 1, read_at = NOW() WHERE notification_id = ?`,
+      `UPDATE notificationss SET is_read = 1, read_at = NOW() WHERE id = ?`,
       [notificationId]
     );
 
@@ -101,7 +102,7 @@ class NotificationModel {
    */
   static async markAllAsRead(userId) {
     const [result] = await db.execute(
-      `UPDATE notification SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0`,
+      `UPDATE notificationss SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0`,
       [userId]
     );
 
@@ -135,7 +136,7 @@ class NotificationModel {
    */
   static async deleteAllByUserId(userId) {
     const [result] = await db.execute(
-      `DELETE FROM notification WHERE user_id = ?`,
+      `DELETE FROM notifications WHERE user_id = ?`,
       [userId]
     );
 
@@ -152,7 +153,7 @@ class NotificationModel {
    */
   static async delete(notificationId) {
     const [result] = await db.execute(
-      `DELETE FROM notification WHERE notification_id = ?`,
+      `DELETE FROM notifications WHERE id = ?`,
       [notificationId]
     );
 
@@ -169,7 +170,7 @@ class NotificationModel {
    * @returns {Promise<number>}
    */
   static async count(userId, unreadOnly = false) {
-    let query = `SELECT COUNT(*) as total FROM notification WHERE user_id = ?`;
+    let query = `SELECT COUNT(*) as total FROM notifications WHERE user_id = ?`;
     const params = [userId];
 
     if (unreadOnly) {
@@ -189,7 +190,7 @@ class NotificationModel {
   static async findUnreadByUserId(userId, limit = 10) {
     const [rows] = await db.execute(
       `SELECT *
-       FROM notification
+       FROM notifications
        WHERE user_id = ? AND is_read = 0
        ORDER BY created_at DESC
        LIMIT ?`,
@@ -208,7 +209,7 @@ class NotificationModel {
   static async findLatestByUserId(userId, limit = 5) {
     const [rows] = await db.execute(
       `SELECT *
-       FROM notification
+       FROM notifications
        WHERE user_id = ?
        ORDER BY created_at DESC
        LIMIT ?`,
@@ -230,7 +231,7 @@ class NotificationModel {
 
     const [rows] = await db.execute(
       `SELECT *
-       FROM notification
+       FROM notifications
        WHERE user_id = ? AND type = ?
        ORDER BY created_at DESC
        LIMIT ? OFFSET ?`,
@@ -247,7 +248,7 @@ class NotificationModel {
    * @returns {Promise<Array>}
    */
   static async findByRelatedId(relatedId, type = null) {
-    let query = `SELECT * FROM notification WHERE related_id = ?`;
+    let query = `SELECT * FROM notifications WHERE related_id = ?`;
     const params = [relatedId];
 
     if (type) {
@@ -310,9 +311,9 @@ class NotificationModel {
     }
 
     const [result] = await db.execute(
-      `UPDATE notification
+      `UPDATE notifications
        SET title = ?, message = ?, type = ?
-       WHERE notification_id = ?`,
+       WHERE id = ?`,
       [title, message, type, notificationId]
     );
 
@@ -360,7 +361,7 @@ class NotificationModel {
       FROM notifications n
       LEFT JOIN patient p ON n.patient_id = p.patient_id
       LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON n.appointment_id = q.queue_id
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
       LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC
@@ -396,7 +397,7 @@ class NotificationModel {
         t.treatment_name
       FROM notifications n
       LEFT JOIN patient p ON n.patient_id = p.patient_id
-      LEFT JOIN queue q   ON n.appointment_id = q.queue_id
+      LEFT JOIN queue q   ON n.queue_id = q.queue_id
       LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC
@@ -433,7 +434,7 @@ class NotificationModel {
         t.treatment_name
       FROM notifications n
       LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON n.appointment_id = q.queue_id
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
       LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC

@@ -44,6 +44,9 @@ class PatientAdminModel {
           p.dob,
           p.address,
           p.id_card,
+          p.gender,
+          p.chronic_disease,
+          p.allergy_history,
           u.email,
           u.last_login,
           MAX(q.time) as last_visit,
@@ -51,8 +54,8 @@ class PatientAdminModel {
         FROM patient p
         LEFT JOIN user u ON p.user_id = u.user_id
         LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
-        GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.id_card, u.email, u.last_login
-        ORDER BY p.fname, p.lname
+        GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.id_card, p.gender, p.chronic_disease, p.allergy_history, u.email, u.last_login
+        ORDER BY p.patient_id DESC
       `);
 
       return rows;
@@ -237,24 +240,54 @@ class PatientAdminModel {
         );
       }
 
-      // อัปเดต patient table
-      await connection.execute(`
-        UPDATE patient SET
-          fname = ?, lname = ?, dob = ?, id_card = ?, phone = ?, address = ?,
-          gender = ?, chronic_disease = ?, allergy_history = ?
-        WHERE patient_id = ?
-      `, [
-        updateData.fname,
-        updateData.lname,
-        updateData.dob,
-        updateData.id_card,
-        updateData.phone,
-        updateData.address,
-        updateData.gender,
-        updateData.chronic_disease,
-        updateData.allergy_history,
-        patientId
-      ]);
+      // อัปเดต patient table - อัปเดตเฉพาะฟิลด์ที่มีค่าจริงๆ
+      const updateFields = [];
+      const updateValues = [];
+      
+      if (updateData.fname !== undefined) {
+        updateFields.push('fname = ?');
+        updateValues.push(updateData.fname);
+      }
+      if (updateData.lname !== undefined) {
+        updateFields.push('lname = ?');
+        updateValues.push(updateData.lname);
+      }
+      if (updateData.dob !== undefined) {
+        updateFields.push('dob = ?');
+        updateValues.push(updateData.dob || null);
+      }
+      if (updateData.id_card !== undefined) {
+        updateFields.push('id_card = ?');
+        updateValues.push(updateData.id_card || null);
+      }
+      if (updateData.phone !== undefined) {
+        updateFields.push('phone = ?');
+        updateValues.push(updateData.phone);
+      }
+      if (updateData.address !== undefined) {
+        updateFields.push('address = ?');
+        updateValues.push(updateData.address || null);
+      }
+      if (updateData.gender !== undefined) {
+        updateFields.push('gender = ?');
+        updateValues.push(updateData.gender || null);
+      }
+      if (updateData.chronic_disease !== undefined) {
+        updateFields.push('chronic_disease = ?');
+        updateValues.push(updateData.chronic_disease || null);
+      }
+      if (updateData.allergy_history !== undefined) {
+        updateFields.push('allergy_history = ?');
+        updateValues.push(updateData.allergy_history || null);
+      }
+      
+      if (updateFields.length > 0) {
+        updateValues.push(patientId);
+        await connection.execute(`
+          UPDATE patient SET ${updateFields.join(', ')}
+          WHERE patient_id = ?
+        `, updateValues);
+      }
 
       await connection.commit();
       
@@ -356,7 +389,7 @@ class PatientAdminModel {
           th.treatment_date,
           th.treatment_notes,
           th.next_appointment,
-          t.name as treatment_name,
+          t.treatment_name as treatment_name,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           qd.date as appointment_date
         FROM treatmentHistory th
@@ -375,6 +408,47 @@ class PatientAdminModel {
   }
 
   /**
+   * ดึงประวัติการรักษาของผู้ป่วยแบบจัดกลุ่มตามปี (สำหรับ view)
+   * @param {number} patientId - ID ของผู้ป่วย
+   * @returns {Object} ประวัติการรักษาจัดกลุ่มตามปี
+   */
+  static async getPatientTreatmentHistoryGrouped(patientId) {
+    try {
+      const [rows] = await db.execute(`
+        SELECT qd.date, t.treatment_name, q.queue_id
+        FROM queuedetail qd
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
+        JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.patient_id = ?
+        ORDER BY qd.date DESC
+      `, [patientId]);
+
+      const groupedHistory = {};
+
+      rows.forEach(row => {
+        const dateObj = new Date(row.date);
+        const year = dateObj.getFullYear();
+        const day = dateObj.getDate();
+        const month = dateObj.toLocaleString('default', { month: 'short' });
+
+        if (!groupedHistory[year]) groupedHistory[year] = [];
+        groupedHistory[year].push({
+          date: dateObj.toISOString().split('T')[0],
+          day,
+          month,
+          treatment: row.treatment_name,
+          queueId: row.queue_id
+        });
+      });
+
+      return groupedHistory;
+    } catch (error) {
+      console.error('Error getting patient treatment history grouped:', error);
+      throw error;
+    }
+  }
+
+  /**
    * ดึงรายละเอียดการรักษา
    * @param {number} patientId - ID ของผู้ป่วย
    * @param {number} queueId - ID ของคิว
@@ -385,7 +459,7 @@ class PatientAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           th.*,
-          t.name as treatment_name,
+          t.treatment_name as treatment_name,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           CONCAT(p.fname, ' ', p.lname) as patient_name,
           qd.date as appointment_date
@@ -449,6 +523,38 @@ class PatientAdminModel {
       };
     } catch (error) {
       console.error('Error checking ID card availability:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงประวัติการรักษาของผู้ป่วยสำหรับ API
+   * @param {number} patientId - ID ของผู้ป่วย
+   * @returns {Array} รายการประวัติการรักษา
+   */
+  static async getPatientTreatmentHistoryForAPI(patientId) {
+    try {
+      const [treatments] = await db.execute(`
+        SELECT
+          q.queue_id,
+          q.time as date,
+          q.queue_status,
+          th.diagnosis,
+          t.treatment_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          th.followUpdate as follow_update
+        FROM queue q
+        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+        WHERE q.patient_id = ?
+        ORDER BY q.time DESC
+      `, [patientId]);
+
+      return treatments;
+    } catch (error) {
+      console.error('Error getting patient treatment history for API:', error);
       throw error;
     }
   }
