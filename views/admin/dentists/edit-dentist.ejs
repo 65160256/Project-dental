@@ -97,6 +97,11 @@
     .field-changed{border-color:#f39c12!important;background:#fef9e7!important}
     .error-message{color:#e74c3c;font-size:12px;margin-top:4px;display:none}
     .form-group.error .form-control{border-color:#e74c3c;background:#fdf2f2}
+    
+    /* License Input Group */
+    .license-input-group{display:flex;gap:10px;align-items:stretch}
+    .license-prefix{flex:0 0 200px;min-width:180px}
+    .license-number{flex:1}
     .form-group.error .error-message{display:block}
     .form-group.success .form-control{border-color:#27ae60;background:#f0fff4}
 
@@ -273,8 +278,17 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="license_no">เลขที่ใบอนุญาตประกอบวิชาชีพ <span class="required">*</span></label>
-                  <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20"/>
-                  <div class="field-help">กรอกตามที่ปรากฏในใบอนุญาต</div>
+                  <div class="license-input-group">
+                    <select id="license_prefix" name="license_prefix" class="form-control license-prefix" required>
+                      <option value="">เลือกประเภท</option>
+                      <option value="ท.บ.">ท.บ. - ทันตแพทย์ทั่วไป</option>
+                      <option value="ท.ป.">ท.ป. - ทันตแพทย์เฉพาะทาง</option>
+                      <option value="ท.ว.">ท.ว. - ทันตแพทย์ผู้เชี่ยวชาญ</option>
+                      <option value="ท.ท.">ท.ท. - ทันตแพทย์ชั่วคราว</option>
+                    </select>
+                    <input type="text" id="license_no" name="license_no" class="form-control license-number" required maxlength="10" placeholder="กรอกตัวเลข" />
+                  </div>
+                  <div class="field-help">เลือกประเภทใบอนุญาตและกรอกตัวเลข (เช่น ท.บ. 32458)</div>
                   <div class="error-message">กรุณากรอกเลขที่ใบอนุญาต</div>
                 </div>
                 <div class="form-group">
@@ -326,7 +340,7 @@
               <div class="form-row single">
                 <div class="form-group">
                   <label for="email">อีเมล <span class="required">*</span></label>
-                  <input type="email" id="email" name="email" class="form-control" required/>
+                  <input type="email" id="email" name="email" class="form-control" required autocomplete="email"/>
                   <div class="field-help">ใช้สำหรับเข้าสู่ระบบและรับการแจ้งเตือน</div>
                   <div class="error-message">กรุณากรอกอีเมลที่ถูกต้อง</div>
                 </div>
@@ -334,13 +348,13 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="password">รหัสผ่านใหม่</label>
-                  <input type="password" id="password" name="password" class="form-control" minlength="6"/>
+                  <input type="password" id="password" name="password" class="form-control" minlength="6" autocomplete="new-password"/>
                   <div class="field-help">เว้นว่างหากไม่ต้องการเปลี่ยนรหัสผ่าน</div>
                   <div class="error-message">รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร</div>
                 </div>
                 <div class="form-group">
                   <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
-                  <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"/>
+                  <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" autocomplete="new-password"/>
                   <div class="field-help">กรอกเมื่อมีการเปลี่ยนรหัสผ่าน</div>
                   <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
                 </div>
@@ -442,9 +456,24 @@
       document.getElementById('email').value = d.email || '';
       document.getElementById('id_card').value = d.id_card || '';
       
-      // รองรับชื่อฟิลด์ต่างๆ ของ license number
+      // รองรับชื่อฟิลด์ต่างๆ ของ license number และแยก prefix กับ number
       const licenseValue = d.license_no || d.license_number || d.licenseNo || d.license || '';
-      document.getElementById('license_no').value = licenseValue;
+      if (licenseValue) {
+        // ตรวจสอบรูปแบบเก่า (ตัวเลขเท่านั้น) หรือรูปแบบใหม่ (ท.บ. 32458)
+        const thaiLicenseMatch = licenseValue.match(/^([ท]\.[บปวท]\.)\s*(\d+)$/);
+        if (thaiLicenseMatch) {
+          // รูปแบบใหม่: ท.บ. 32458
+          document.getElementById('license_prefix').value = thaiLicenseMatch[1];
+          document.getElementById('license_no').value = thaiLicenseMatch[2];
+        } else if (/^\d+$/.test(licenseValue)) {
+          // รูปแบบเก่า: ตัวเลขเท่านั้น - ให้เป็น ท.บ. (ทันตแพทย์ทั่วไป)
+          document.getElementById('license_prefix').value = 'ท.บ.';
+          document.getElementById('license_no').value = licenseValue;
+        } else {
+          // รูปแบบอื่นๆ - ใส่ในช่อง number และให้เลือก prefix
+          document.getElementById('license_no').value = licenseValue;
+        }
+      }
 
       if (d.dob){
         const date = new Date(d.dob);
@@ -541,16 +570,50 @@
         validateField(this); 
       });
 
-      // Validate เลขใบอนุญาต
-      const licenseInput = document.getElementById('license_no');
-      licenseInput.addEventListener('input', function(){ 
-        this.value = this.value.replace(/[^0-9]/g, '').substring(0, 20);
-        validateField(this); 
-      });
-      licenseInput.addEventListener('blur', async function(){
-        if (this.value) {
-          await checkDuplicateLicense(this.value, dentistId);
+      // Validate เลขใบอนุญาต - รองรับรูปแบบไทย (ท.บ., ท.ป., ท.ว., ท.ท.)
+      const licensePrefix = document.getElementById('license_prefix');
+      const licenseNumber = document.getElementById('license_no');
+      let licenseTimeout;
+
+      // Validate license number input (only digits)
+      licenseNumber.addEventListener('input', function(){ 
+        this.value = this.value.replace(/\D/g,'').substring(0,10);
+        if (licenseTimeout) clearTimeout(licenseTimeout);
+        this.parentElement.parentElement.classList.remove('error','success');
+        if (this.value.length >= 3 && licensePrefix.value) {
+          const fullLicense = licensePrefix.value + ' ' + this.value;
+          licenseTimeout = setTimeout(()=>checkDuplicateLicense(fullLicense, dentistId),800);
         }
+      });
+
+      // Validate when prefix changes
+      licensePrefix.addEventListener('change', function(){
+        if (licenseTimeout) clearTimeout(licenseTimeout);
+        this.parentElement.parentElement.classList.remove('error','success');
+        if (this.value && licenseNumber.value.length >= 3) {
+          const fullLicense = this.value + ' ' + licenseNumber.value;
+          licenseTimeout = setTimeout(()=>checkDuplicateLicense(fullLicense, dentistId),800);
+        }
+      });
+
+      licenseNumber.addEventListener('blur', async function(){
+        if (this.value && licensePrefix.value) {
+          const fullLicense = licensePrefix.value + ' ' + this.value;
+          await checkDuplicateLicense(fullLicense, dentistId);
+        }
+      });
+
+      // Track changes for license fields
+      licensePrefix.addEventListener('change', function(){
+        const fullLicense = this.value && licenseNumber.value ? this.value + ' ' + licenseNumber.value : '';
+        trackChange('license_no', fullLicense);
+        this.classList.add('field-changed');
+      });
+
+      licenseNumber.addEventListener('input', function(){
+        const fullLicense = licensePrefix.value && this.value ? licensePrefix.value + ' ' + this.value : '';
+        trackChange('license_no', fullLicense);
+        this.classList.add('field-changed');
       });
 
       // Validate อีเมล
@@ -588,20 +651,25 @@
       }
     }
 
-    async function checkDuplicateLicense(license, excludeId) {
+    async function checkDuplicateLicense(fullLicense, excludeId) {
       try {
-        const res = await fetch(`../../api/check-license?license=${license}&exclude_dentist_id=${excludeId}`);
+        const res = await fetch(`../../api/check-license?license=${encodeURIComponent(fullLicense)}&exclude_dentist_id=${excludeId}`);
         const data = await res.json();
         
-        const field = document.getElementById('license_no');
-        const group = field.parentElement;
+        const group = document.getElementById('license_no').parentElement.parentElement;
+        const errorMsg = group.querySelector('.error-message');
         
         if (data.exists) {
           group.classList.add('error');
-          group.querySelector('.error-message').textContent = 'เลขใบอนุญาตนี้มีในระบบแล้ว';
+          errorMsg.textContent = 'เลขใบอนุญาตนี้มีในระบบแล้ว';
+          return false;
+        } else if (!/^[ท]\.[บปวท]\.\s\d{3,10}$/.test(fullLicense)) {
+          group.classList.add('error');
+          errorMsg.textContent = 'รูปแบบเลขใบอนุญาตไม่ถูกต้อง (เช่น ท.บ. 32458)';
           return false;
         } else {
           group.classList.remove('error');
+          group.classList.add('success');
         }
         
         return true;
@@ -744,7 +812,7 @@
         return false; 
       }
       
-      if(field.name==='license_no' && val && val.length<6){ 
+      if(field.name==='license_no' && val && val.length<3){ 
         group.classList.add('error'); 
         return false; 
       }
@@ -769,6 +837,21 @@
       req.forEach(f=>{ 
         if(!validateField(f)) ok=false; 
       }); 
+      
+      // Validate license fields separately
+      const licensePrefix = document.getElementById('license_prefix');
+      const licenseNumber = document.getElementById('license_no');
+      if (licensePrefix && licenseNumber) {
+        if (licensePrefix.hasAttribute('required') && !licensePrefix.value) {
+          licensePrefix.parentElement.parentElement.classList.add('error');
+          ok = false;
+        }
+        if (licenseNumber.hasAttribute('required') && !licenseNumber.value) {
+          licenseNumber.parentElement.parentElement.classList.add('error');
+          ok = false;
+        }
+      }
+      
       return ok;
     }
 
@@ -824,9 +907,9 @@
       try{
         const fd = new FormData();
         
-        // รายการฟิลด์ทั้งหมดที่ต้องส่ง
+        // รายการฟิลด์ทั้งหมดที่ต้องส่ง (ไม่รวม license_no เพราะจะส่งแยก)
         const fieldsToSend = [
-          'fname', 'lname', 'dob', 'id_card', 'license_no',
+          'fname', 'lname', 'dob', 'id_card',
           'specialty', 'education', 'address', 'phone', 'email', 'password'
         ];
         
@@ -844,6 +927,14 @@
             fd.append(k, v ?? '');
           }
         });
+        
+        // ส่งข้อมูล license prefix และ number แยกกัน
+        const licensePrefix = document.getElementById('license_prefix').value;
+        const licenseNumber = document.getElementById('license_no').value;
+        if (licensePrefix && licenseNumber) {
+          fd.append('license_prefix', licensePrefix);
+          fd.append('license_no', licenseNumber);
+        }
         
         // รูปภาพ
         const photoInput = document.getElementById('photoInput');

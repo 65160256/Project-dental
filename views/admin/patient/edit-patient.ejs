@@ -997,7 +997,7 @@
                         <div class="form-row single">
                             <div class="form-group email-check">
                                 <label for="email">อีเมล <span class="required">*</span></label>
-                                <input type="email" id="email" name="email" class="form-control" required />
+                                <input type="email" id="email" name="email" class="form-control" required autocomplete="email" />
                                 <div class="email-status" id="emailStatus"></div>
                                 <div class="field-help">ใช้สำหรับเข้าสู่ระบบและรับการแจ้งเตือน</div>
                                 <div class="error-message">กรุณากรอกอีเมลที่ถูกต้อง</div>
@@ -1007,7 +1007,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="password">รหัสผ่านใหม่</label>
-                                <input type="password" id="password" name="password" class="form-control" minlength="6" />
+                                <input type="password" id="password" name="password" class="form-control" minlength="6" autocomplete="new-password" />
                                 <div class="field-help">เว้นว่างไว้หากไม่ต้องการเปลี่ยน</div>
                                 <div class="password-strength" id="passwordStrength" style="display: none;">
                                     <div class="strength-bar">
@@ -1019,7 +1019,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" />
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" autocomplete="new-password" />
                                 <div class="field-help">จำเป็นเฉพาะเมื่อต้องการเปลี่ยนรหัสผ่าน</div>
                                 <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
                             </div>

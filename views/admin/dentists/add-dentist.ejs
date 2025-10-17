@@ -105,6 +105,11 @@
         .form-group.checking::after { content:''; position:absolute; right:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; border:2px solid #3b82f6; border-top:2px solid transparent; border-radius:50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
         .form-control.invalid-input { border-color:#e74c3c!important; background:#fdf2f2!important; animation: shake 0.5s ease-in-out; }
+        
+        /* License Input Group */
+        .license-input-group { display: flex; gap: 10px; align-items: stretch; }
+        .license-prefix { flex: 0 0 200px; min-width: 180px; }
+        .license-number { flex: 1; }
         @keyframes shake { 0%,20%,40%,60%,80%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-3px)} }
         .form-group.success .form-control { border-color:#27ae60; background:#f0fff4; }
         .form-group.success::after { content:'✓'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#27ae60; font-weight:bold; font-size:16px; z-index:10; }
@@ -307,8 +312,17 @@
                             <div class="form-row">
                                 <div class="form-group">
     <label for="license_no">เลขใบอนุญาตประกอบวิชาชีพ <span class="required">*</span></label>
-    <input type="text" id="license_no" name="license_no" class="form-control" required maxlength="20" />
-    <div class="field-help">ตัวเลข 6-20 หลัก</div>
+    <div class="license-input-group">
+        <select id="license_prefix" name="license_prefix" class="form-control license-prefix" required>
+            <option value="">เลือกประเภท</option>
+            <option value="ท.บ.">ท.บ. - ทันตแพทย์ทั่วไป</option>
+            <option value="ท.ป.">ท.ป. - ทันตแพทย์เฉพาะทาง</option>
+            <option value="ท.ว.">ท.ว. - ทันตแพทย์ผู้เชี่ยวชาญ</option>
+            <option value="ท.ท.">ท.ท. - ทันตแพทย์ชั่วคราว</option>
+        </select>
+        <input type="text" id="license_no" name="license_no" class="form-control license-number" required maxlength="10" placeholder="กรอกตัวเลข" />
+    </div>
+    <div class="field-help">เลือกประเภทใบอนุญาตและกรอกตัวเลข (เช่น ท.บ. 32458)</div>
     <div class="error-message">กรุณากรอกเลขใบอนุญาตให้ถูกต้อง</div>
 </div>
                                 <div class="form-group">
@@ -368,7 +382,7 @@
                             <div class="form-row single">
                                 <div class="form-group">
                                     <label for="email">อีเมล <span class="required">*</span></label>
-                                    <input type="email" id="email" name="email" class="form-control" required />
+                                    <input type="email" id="email" name="email" class="form-control" required autocomplete="email" />
                                     <div class="field-help">ใช้งานสำหรับเข้าสู่ระบบและการแจ้งเตือน</div>
                                     <div class="error-message">กรุณากรอกอีเมลให้ถูกต้อง</div>
                                 </div>
@@ -377,7 +391,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="password">รหัสผ่าน <span class="required">*</span></label>
-                                    <input type="password" id="password" name="password" class="form-control" required minlength="6" />
+                                    <input type="password" id="password" name="password" class="form-control" required minlength="6" autocomplete="new-password" />
                                     <div class="password-strength">
                                         <div class="strength-bar">
                                             <div class="strength-fill" id="strengthFill"></div>
@@ -388,7 +402,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="confirmPassword">ยืนยันรหัสผ่าน <span class="required">*</span></label>
-                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required autocomplete="new-password" />
                                     <div class="error-message">รหัสผ่านไม่ตรงกัน</div>
                                 </div>
                             </div>
@@ -637,21 +651,38 @@
             });
 
             // เลขบัตรประกอบวิชาชีพ
-            // เลขใบอนุญาต - แก้ไขให้รองรับ 6-20 หลัก
-const license = document.getElementById('license_no');
+            // เลขใบอนุญาต - รองรับรูปแบบไทย (ท.บ., ท.ป., ท.ว., ท.ท.)
+const licensePrefix = document.getElementById('license_prefix');
+const licenseNumber = document.getElementById('license_no');
 let licenseTimeout;
-license.addEventListener('input', function(){
-    this.value = this.value.replace(/\D/g,'').substring(0,20); // เปลี่ยนจาก 10 เป็น 20
+
+// Validate license number input (only digits)
+licenseNumber.addEventListener('input', function(){
+    this.value = this.value.replace(/\D/g,'').substring(0,10);
     if (licenseTimeout) clearTimeout(licenseTimeout);
     if (isSubmitting) return;
-    this.parentElement.classList.remove('error','success');
-    if (this.value.length >= 6) {
-        licenseTimeout = setTimeout(()=>checkLicenseAvailability(this.value),800);
+    this.parentElement.parentElement.classList.remove('error','success');
+    if (this.value.length >= 3 && licensePrefix.value) {
+        const fullLicense = licensePrefix.value + ' ' + this.value;
+        licenseTimeout = setTimeout(()=>checkLicenseAvailability(fullLicense),800);
     }
 });
-license.addEventListener('blur', function(){
-    if (!isSubmitting && this.value) {
-        checkLicenseAvailability(this.value);
+
+// Validate when prefix changes
+licensePrefix.addEventListener('change', function(){
+    if (licenseTimeout) clearTimeout(licenseTimeout);
+    if (isSubmitting) return;
+    this.parentElement.parentElement.classList.remove('error','success');
+    if (this.value && licenseNumber.value.length >= 3) {
+        const fullLicense = this.value + ' ' + licenseNumber.value;
+        licenseTimeout = setTimeout(()=>checkLicenseAvailability(fullLicense),800);
+    }
+});
+
+licenseNumber.addEventListener('blur', function(){
+    if (!isSubmitting && this.value && licensePrefix.value) {
+        const fullLicense = licensePrefix.value + ' ' + this.value;
+        checkLicenseAvailability(fullLicense);
     }
 });
 
@@ -723,9 +754,15 @@ license.addEventListener('blur', function(){
             }
 
             if (field.name==='license_no' && value){
-    if (!/^\d{6,20}$/.test(value)) { // เปลี่ยนจาก 6-10 เป็น 6-20
+    const prefix = document.getElementById('license_prefix').value;
+    if (!prefix) {
         group.classList.add('error'); 
-        errorMsg.textContent = 'เลขใบอนุญาตต้องเป็นตัวเลข 6–20 หลัก'; 
+        errorMsg.textContent = 'กรุณาเลือกประเภทใบอนุญาต'; 
+        return false;
+    }
+    if (!/^\d{3,10}$/.test(value)) {
+        group.classList.add('error'); 
+        errorMsg.textContent = 'เลขใบอนุญาตต้องเป็นตัวเลข 3–10 หลัก'; 
         return false;
     }
 }
@@ -773,24 +810,24 @@ license.addEventListener('blur', function(){
             finally{ group.classList.remove('checking'); }
         }
 
-        async function checkLicenseAvailability(licenseNo){
-    if (!licenseNo || isSubmitting) return;
-    const group = document.getElementById('license_no').parentElement;
+        async function checkLicenseAvailability(fullLicense){
+    if (!fullLicense || isSubmitting) return;
+    const group = document.getElementById('license_no').parentElement.parentElement;
     const msg = group.querySelector('.error-message');
     group.classList.add('checking'); 
     group.classList.remove('error','success');
     
     try{
-        const res = await fetch(`/admin/api/check-license?license=${encodeURIComponent(licenseNo)}`);
+        const res = await fetch(`/admin/api/check-license?license=${encodeURIComponent(fullLicense)}`);
         if (res.ok){
             const data = await res.json();
             if (!data.success) { 
                 group.classList.add('error'); 
                 msg.textContent = data.error || 'ตรวจสอบเลขใบอนุญาตไม่สำเร็จ'; 
             }
-            else if (!/^\d{6,20}$/.test(licenseNo)) { 
+            else if (!/^[ท]\.[บปวท]\.\s\d{3,10}$/.test(fullLicense)) { 
                 group.classList.add('error'); 
-                msg.textContent = 'เลขใบอนุญาตต้องเป็นตัวเลข 6–20 หลัก'; 
+                msg.textContent = 'รูปแบบเลขใบอนุญาตไม่ถูกต้อง (เช่น ท.บ. 32458)'; 
             }
             else if (data.exists) { 
                 group.classList.add('error'); 
@@ -1040,16 +1077,6 @@ license.addEventListener('blur', function(){
             testid_cardAPI: async function(id){ try{ const r=await fetch(`/admin/api/check-id-card?id_card=${encodeURIComponent(id||'1234567890123')}`); return await r.json(); }catch(e){ return {error:e.message}; } },
             testLicenseAPI: async function(lic){ try{ const r=await fetch(`/admin/api/check-license?license=${encodeURIComponent(lic||'123456')}`); return await r.json(); }catch(e){ return {error:e.message}; } }
         };
-        if (['localhost','127.0.0.1'].includes(window.location.hostname)){
-            document.addEventListener('DOMContentLoaded', function(){
-                setTimeout(()=>{
-                    const btn=document.createElement('button'); btn.textContent='🐛 Debug Tests';
-                    btn.style.cssText='position:fixed; top:10px; left:10px; z-index:9999; background:#ff6b6b; color:#fff; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer;';
-                    btn.onclick=async()=>{ await window.debugDentistForm.testEmailAPI('test@example.com'); await window.debugDentistForm.testid_cardAPI('1234567890123'); await window.debugDentistForm.testLicenseAPI('123456'); showToast('ทดสอบดีบักเสร็จสิ้น ดูผลได้ในคอนโซล','info'); };
-                    document.body.appendChild(btn);
-                },2000);
-            });
-        }
     </script>
 </body>
 </html>

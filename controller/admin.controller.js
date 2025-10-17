@@ -456,7 +456,10 @@ exports.addDentist = async (req, res) => {
   const education = req.body.education || '';
   const address = req.body.address || '';
   const phone = req.body.phone || '';
-  const license_no = req.body.license_no || '';
+  // Handle new license format (prefix + number)
+  const license_prefix = req.body.license_prefix || '';
+  const license_number = req.body.license_no || '';
+  const license_no = license_prefix && license_number ? `${license_prefix} ${license_number}` : (req.body.license_no || '');
 
   console.log('Processed data:', {
     email, fname, lname, dob, id_card, license_no, specialty, education, address, phone,
@@ -673,7 +676,10 @@ exports.editDentist = async (req, res) => {
     const address = req.body.address || currentDentist.address;
     const phone = req.body.phone || currentDentist.phone;
     const id_card = req.body.id_card || currentDentist.id_card;
-    const license_no = req.body.license_no || currentDentist.license_no; // ✅ เพิ่มบรรทัดนี้
+    // Handle new license format (prefix + number)
+    const license_prefix = req.body.license_prefix || '';
+    const license_number = req.body.license_no || '';
+    const license_no = license_prefix && license_number ? `${license_prefix} ${license_number}` : (req.body.license_no || currentDentist.license_no);
     
     // จัดการ dob
     let dob = req.body.dob || currentDentist.dob;
@@ -3258,13 +3264,16 @@ exports.checkLicenseAvailability = async (req, res) => {
       });
     }
 
-    // ตรวจสอบรูปแบบ (6-10 หลัก)
-    if (!/^\d{6,10}$/.test(license)) {
+    // ตรวจสอบรูปแบบเลขใบประกอบวิชาชีพ (รองรับรูปแบบไทย: ท.บ. 32458)
+    const thaiLicensePattern = /^[ท]\.[บปวท]\.\s\d{3,10}$/;
+    const oldFormatPattern = /^\d{6,20}$/;
+    
+    if (!thaiLicensePattern.test(license) && !oldFormatPattern.test(license)) {
       return res.json({
         success: true,
         exists: false,
         valid: false,
-        message: 'เลขใบประกอบวิชาชีพต้องเป็นตัวเลข 6-10 หลัก'
+        message: 'รูปแบบเลขใบประกอบวิชาชีพไม่ถูกต้อง (เช่น ท.บ. 32458 หรือ ตัวเลข 6-20 หลัก)'
       });
     }
 

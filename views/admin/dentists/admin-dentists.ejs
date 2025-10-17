@@ -386,10 +386,18 @@
                 return;
             }
 
+            // เรียงลำดับตาม dentist_id (เก่าขึ้นก่อน)
+            const sortedList = [...list].sort((a, b) => {
+                const idA = parseInt(a.dentist_id) || 0;
+                const idB = parseInt(b.dentist_id) || 0;
+                return idA - idB; // เก่าขึ้นก่อน (ID น้อย = เก่า)
+            });
+
             const html = `
             <table>
                 <thead>
                     <tr>
+                        <th style="text-align:center;width:60px;">ลำดับ</th>
                         <th>ทันตแพทย์</th>
                         <th>ความเชี่ยวชาญ</th>
                         <th>เลขที่ใบอนุญาต</th>
@@ -398,10 +406,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    ${list.map(d=>{
+                    ${sortedList.map((d, index)=>{
                         const initials = ((d.fname||'D').charAt(0)+(d.lname||'R').charAt(0)).toUpperCase();
+                        const rowNumber = index + 1;
                         return `
                         <tr>
+                            <td style="text-align:center;font-weight:600;color:#4A90E2;">${rowNumber}</td>
                             <td>
                                 <div class="dentist-info">
                                     <div class="dentist-avatar">${initials}</div>

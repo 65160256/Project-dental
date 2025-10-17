@@ -1036,15 +1036,20 @@ updateProfile: async (req, res) => {
     // รับข้อมูลจาก form
     const {
       fname, lname, id_card, license_no, email,
-      phone, specialty, address, education, dob
+      phone, specialty, address, education, dob,
+      license_prefix
     } = req.body;
+    
+    // Handle new license format (prefix + number)
+    const license_number = license_no || '';
+    const final_license_no = license_prefix && license_number ? `${license_prefix} ${license_number}` : license_no;
 
     // จัดการไฟล์รูปภาพ (ถ้ามี)
     const photo = req.file ? req.file.filename : null;
 
     // เรียกใช้ Model method (จะทำ validation และ update ทั้งหมด)
     const result = await DentistModel.updateProfile(userId, {
-      fname, lname, id_card, license_no, email,
+      fname, lname, id_card, license_no: final_license_no, email,
       phone, specialty, address, education, dob, photo
     });
 

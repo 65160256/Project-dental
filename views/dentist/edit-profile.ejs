@@ -63,6 +63,11 @@
     .form-textarea{min-height:90px;resize:vertical}
     .readonly-warning{background:#fff3cd;border:1px solid #ffeaa7;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px}
     .field-help{font-size:11px;color:#6c757d;margin-top:4px;display:block}
+    
+    /* License Input Group */
+    .license-input-group{display:flex;gap:8px;align-items:stretch}
+    .license-prefix{flex:0 0 180px;min-width:160px}
+    .license-number{flex:1}
 
     .action-buttons{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
     .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none}
@@ -220,10 +225,18 @@
 
               <div class="form-row">
                 <label class="form-label">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม:</label>
-                <input type="text" name="license_no" class="form-input" 
-                       value="<%= dentist?.license_no || '' %>" 
-                       placeholder="กรอกเลขที่ใบอนุญาต">
-                <small class="field-help">เลขที่ใบอนุญาตจากทันตแพทยสภา</small>
+                <div class="license-input-group">
+                  <select name="license_prefix" class="form-input license-prefix">
+                    <option value="">เลือกประเภท</option>
+                    <option value="ท.บ.">ท.บ. - ทันตแพทย์ทั่วไป</option>
+                    <option value="ท.ป.">ท.ป. - ทันตแพทย์เฉพาะทาง</option>
+                    <option value="ท.ว.">ท.ว. - ทันตแพทย์ผู้เชี่ยวชาญ</option>
+                    <option value="ท.ท.">ท.ท. - ทันตแพทย์ชั่วคราว</option>
+                  </select>
+                  <input type="text" name="license_no" class="form-input license-number" 
+                         placeholder="กรอกตัวเลข">
+                </div>
+                <small class="field-help">เลือกประเภทใบอนุญาตและกรอกตัวเลข (เช่น ท.บ. 32458)</small>
               </div>
 
               <div class="form-row">
@@ -231,6 +244,7 @@
                 <input type="email" name="email" id="email" class="form-input" 
                        value="<%= dentist?.email || '' %>" 
                        required
+                       autocomplete="email"
                        placeholder="example@email.com">
                 <small class="field-help">อีเมลสำหรับเข้าสู่ระบบและติดต่อ</small>
               </div>
@@ -317,6 +331,27 @@
   </div>
 
   <script>
+    // ===== Initialize license fields =====
+    document.addEventListener('DOMContentLoaded', function() {
+      const licenseValue = '<%= dentist?.license_no || "" %>';
+      if (licenseValue) {
+        // ตรวจสอบรูปแบบเก่า (ตัวเลขเท่านั้น) หรือรูปแบบใหม่ (ท.บ. 32458)
+        const thaiLicenseMatch = licenseValue.match(/^([ท]\.[บปวท]\.)\s*(\d+)$/);
+        if (thaiLicenseMatch) {
+          // รูปแบบใหม่: ท.บ. 32458
+          document.querySelector('select[name="license_prefix"]').value = thaiLicenseMatch[1];
+          document.querySelector('input[name="license_no"]').value = thaiLicenseMatch[2];
+        } else if (/^\d+$/.test(licenseValue)) {
+          // รูปแบบเก่า: ตัวเลขเท่านั้น - ให้เป็น ท.บ. (ทันตแพทย์ทั่วไป)
+          document.querySelector('select[name="license_prefix"]').value = 'ท.บ.';
+          document.querySelector('input[name="license_no"]').value = licenseValue;
+        } else {
+          // รูปแบบอื่นๆ - ใส่ในช่อง number และให้เลือก prefix
+          document.querySelector('input[name="license_no"]').value = licenseValue;
+        }
+      }
+    });
+
     // ===== Top bar interactions =====
     function toggleDropdown(){
       const menu=document.getElementById('profileDropdown');
