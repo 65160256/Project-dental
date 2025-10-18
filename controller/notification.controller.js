@@ -39,7 +39,7 @@ const notificationController = {
     });
 
   } catch (error) {
-    console.error('❌ Error in getAdminNotifications:', error);
+    console.error('❌ เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือนแอดมิน:', error);
     res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือน',
@@ -97,7 +97,7 @@ getDentistNotifications: async (req, res) => {
       offset
     });
   } catch (error) {
-    console.error('Error in getDentistNotifications:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือนทันตแพทย์:', error);
     return res.status(500).json({ success: false, error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือน' });
   }
 },
@@ -159,7 +159,7 @@ getPatientNotifications: async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in getPatientNotifications:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือนผู้ป่วย:', error);
     res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการแจ้งเตือน'
@@ -190,7 +190,7 @@ getPatientNotifications: async (req, res) => {
       });
 
     } catch (error) {
-      console.error('Error in markAsRead:', error);
+      console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
       res.status(500).json({
         success: false,
         error: 'เกิดข้อผิดพลาด'
@@ -227,7 +227,7 @@ markAllAsRead: async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in markAllAsRead:', error);
+    console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายอ่านทั้งหมด:', error);
     res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาด'
@@ -256,7 +256,7 @@ markAllAsRead: async (req, res) => {
       });
 
     } catch (error) {
-      console.error('Error in deleteNotification:', error);
+      console.error('เกิดข้อผิดพลาดในการลบการแจ้งเตือน:', error);
       res.status(500).json({
         success: false,
         error: 'เกิดข้อผิดพลาด'
@@ -294,7 +294,7 @@ getUnreadCount: async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in getUnreadCount:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงจำนวนที่ยังไม่อ่าน:', error);
     res.status(500).json({
       success: false,
       error: 'เกิดข้อผิดพลาด'

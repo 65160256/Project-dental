@@ -302,9 +302,12 @@ class PatientModel {
   static async hasVisitedDentist(patientId, dentistId) {
     const [rows] = await db.execute(
       `SELECT COUNT(*) as count
-       FROM queue
-       WHERE patient_id = ? AND dentist_id = ?`,
-      [patientId, dentistId]
+       FROM (
+         SELECT 1 FROM queue WHERE patient_id = ? AND dentist_id = ?
+         UNION
+         SELECT 1 FROM queuedetail WHERE patient_id = ? AND dentist_id = ?
+       ) as combined`,
+      [patientId, dentistId, patientId, dentistId]
     );
     return rows[0].count > 0;
   }
@@ -322,7 +325,7 @@ class PatientModel {
       return null;
     }
 
-    // ดึงประวัติการรักษา (เฉพาะที่แอดมินยืนยันแล้ว)
+    // ดึงประวัติการรักษาทั้งหมดของผู้ป่วย (ทันตแพทย์สามารถดูได้ทุกคน)
     const [treatmentHistory] = await db.execute(
       `SELECT
         q.queue_id,
@@ -339,9 +342,9 @@ class PatientModel {
       JOIN dentist d ON q.dentist_id = d.dentist_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.patient_id = ? AND q.dentist_id = ? AND q.queue_status != 'pending'
+      WHERE q.patient_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
-      [patientId, dentistId]
+      [patientId]
     );
 
     // คำนวณสถิติ (ไม่รวม pending)
@@ -377,15 +380,15 @@ class PatientModel {
   }
 
   /**
-   * ดึงรายการผู้ป่วยทั้งหมดพร้อมสถิติการรักษา (สำหรับทันตแพทย์)
-   * @param {number} dentistId - ID ของทันตแพทย์
+   * ดึงรายการผู้ป่วยทั้งหมดพร้อมสถิติการรักษา (ทันตแพทย์สามารถดูได้ทุกคน)
+   * @param {number} dentistId - ใช้สำหรับ compatibility แต่ไม่จำกัดการเข้าถึง
    * @param {Object} options - { limit, offset }
    * @returns {Promise<Array>}
    */
   static async findAllWithStats(dentistId, options = {}) {
     const { limit = 100, offset = 0 } = options;
 
-    // ใช้ query() แทน execute() และใส่ค่าโดยตรงเพื่อหลีกเลี่ยงปัญหา prepared statement
+    // ดึงข้อมูลผู้ป่วยทั้งหมด (ไม่จำกัดตามทันตแพทย์)
     const [patients] = await db.query(
       `SELECT
         p.patient_id,
@@ -657,9 +660,9 @@ class PatientModel {
   }
 
   /**
-   * ค้นหาประวัติการรักษาของผู้ป่วยตามวันที่
+   * ค้นหาประวัติการรักษาของผู้ป่วยตามวันที่ (ทันตแพทย์สามารถดูได้ทุกคน)
    * @param {number} patientId
-   * @param {number} dentistId
+   * @param {number} dentistId - ใช้สำหรับ compatibility แต่ไม่จำกัดการเข้าถึง
    * @param {string} date - วันที่ที่ต้องการค้นหา (optional)
    * @returns {Promise<Array>}
    */
@@ -671,15 +674,18 @@ class PatientModel {
         q.queue_status,
         th.diagnosis,
         t.treatment_name,
-        t.duration
+        t.duration,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.patient_id = ? AND q.dentist_id = ?
+      WHERE q.patient_id = ?
     `;
 
-    const params = [patientId, dentistId];
+    const params = [patientId];
 
     if (date) {
       query += ` AND DATE(q.time) = ?`;
@@ -694,9 +700,9 @@ class PatientModel {
   }
 
   /**
-   * ดึงข้อมูลผู้ป่วยพร้อมข้อมูลการจองล่าสุด (สำหรับเพิ่มประวัติ)
+   * ดึงข้อมูลผู้ป่วยพร้อมข้อมูลการจองล่าสุด (สำหรับเพิ่มประวัติ) - ทันตแพทย์สามารถดูได้ทุกคน
    * @param {number} patientId
-   * @param {number} dentistId
+   * @param {number} dentistId - ใช้สำหรับ compatibility แต่ไม่จำกัดการเข้าถึง
    * @returns {Promise<Object|null>}
    */
   static async findByIdWithLatestAppointment(patientId, dentistId) {
@@ -706,7 +712,7 @@ class PatientModel {
       return null;
     }
 
-    // ดึงการจองล่าสุดที่ยังไม่ได้บันทึกประวัติ
+    // ดึงการจองล่าสุดที่ยังไม่ได้บันทึกประวัติ (ไม่จำกัดตามทันตแพทย์)
     const [latestAppointment] = await db.execute(
       `SELECT
         q.*,
@@ -715,20 +721,22 @@ class PatientModel {
         p.fname,
         p.lname,
         p.phone,
-        p.dob
+        p.dob,
+        d.fname as dentist_fname,
+        d.lname as dentist_lname
       FROM queue q
       JOIN treatment t ON q.treatment_id = t.treatment_id
       JOIN patient p ON q.patient_id = p.patient_id
+      JOIN dentist d ON q.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
-        AND q.dentist_id = ?
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time DESC
       LIMIT 1`,
-      [patientId, dentistId]
+      [patientId]
     );
 
     if (latestAppointment.length === 0) {
-      // หาการจองล่าสุดไม่ว่าสถานะ
+      // หาการจองล่าสุดไม่ว่าสถานะ (ไม่จำกัดตามทันตแพทย์)
       const [anyAppointment] = await db.execute(
         `SELECT
           q.*,
@@ -737,14 +745,17 @@ class PatientModel {
           p.fname,
           p.lname,
           p.phone,
-          p.dob
+          p.dob,
+          d.fname as dentist_fname,
+          d.lname as dentist_lname
         FROM queue q
         JOIN treatment t ON q.treatment_id = t.treatment_id
         JOIN patient p ON q.patient_id = p.patient_id
-        WHERE q.patient_id = ? AND q.dentist_id = ?
+        JOIN dentist d ON q.dentist_id = d.dentist_id
+        WHERE q.patient_id = ?
         ORDER BY q.time DESC
         LIMIT 1`,
-        [patientId, dentistId]
+        [patientId]
       );
 
       return {

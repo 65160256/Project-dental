@@ -1746,7 +1746,7 @@
                         this.renderNotifications();
                     }
                 } catch (error) {
-                    console.error('Error loading notifications:', error);
+                    console.error('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน:', error);
                 }
             }
 
@@ -1760,7 +1760,7 @@
                         this.updateBadge();
                     }
                 } catch (error) {
-                    console.error('Error loading unread count:', error);
+                    console.error('เกิดข้อผิดพลาดในการโหลดจำนวนที่ยังไม่อ่าน:', error);
                 }
             }
 
@@ -1858,7 +1858,7 @@
                         this.loadNotifications();
                     }
                 } catch (error) {
-                    console.error('Error marking notification as read:', error);
+                    console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
                 }
             }
 
@@ -1874,7 +1874,7 @@
                         this.loadNotifications();
                     }
                 } catch (error) {
-                    console.error('Error marking all as read:', error);
+                    console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายอ่านทั้งหมด:', error);
                     showToast('เกิดข้อผิดพลาด', 'error');
                 }
             }

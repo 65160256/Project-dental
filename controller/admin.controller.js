@@ -916,22 +916,32 @@ exports.deletePatientAPI = async (req, res) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        error: 'Patient not found'
+        error: 'ไม่พบข้อมูลผู้ป่วย'
       });
     }
 
     await PatientAdminModel.deletePatient(id);
 
-      res.json({
-        success: true,
-        message: `${patient.fname || 'Unknown'} ${patient.lname || 'Patient'} deleted successfully`
-      });
+    res.json({
+      success: true,
+      message: `ลบข้อมูลผู้ป่วย ${patient.fname || 'ไม่ระบุ'} ${patient.lname || ''} เรียบร้อยแล้ว`
+    });
 
   } catch (error) {
-    console.error('Error deleting patient:', error);
+    console.error('เกิดข้อผิดพลาดในการลบผู้ป่วย:', error);
+    
+    // จัดการ foreign key constraint error โดยเฉพาะ
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.errno === 1451) {
+      return res.status(409).json({
+        success: false,
+        error: 'ไม่สามารถลบผู้ป่วยได้ เนื่องจากมีข้อมูลนัดหมายหรือประวัติการรักษาที่เกี่ยวข้อง กรุณายกเลิกนัดหมายทั้งหมดก่อน',
+        code: 'FOREIGN_KEY_CONSTRAINT'
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      error: 'Failed to delete patient',
+      error: 'ไม่สามารถลบผู้ป่วยได้',
       details: error.message
     });
   }
@@ -1016,7 +1026,7 @@ async function getUnreadNotificationCount() {
     const count = await NotificationAdminModel.getUnreadCount();
     return count;
   } catch (error) {
-    console.error('Error getting unread count:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงจำนวนที่ยังไม่อ่าน:', error);
     return 0;
   }
 }
@@ -1540,7 +1550,7 @@ exports.createNotification = async (req, res) => {
     if (!type || !title || !message) {
       return res.status(400).json({
         success: false,
-        error: 'Type, title, and message are required'
+        error: 'จำเป็นต้องระบุประเภท ชื่อเรื่อง และข้อความ'
       });
     }
 
@@ -1557,15 +1567,15 @@ exports.createNotification = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Notification created successfully',
+      message: 'สร้างการแจ้งเตือนสำเร็จ',
       notification_id: result.notification_id
     });
 
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือน:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create notification',
+      error: 'ไม่สามารถสร้างการแจ้งเตือนได้',
       details: error.message
     });
   }
@@ -1576,7 +1586,7 @@ async function getUnreadNotificationCount() {
   try {
     return await NotificationAdminModel.getUnreadCount();
   } catch (error) {
-    console.error('Error getting unread count:', error);
+    console.error('เกิดข้อผิดพลาดในการดึงจำนวนที่ยังไม่อ่าน:', error);
     return 0;
   }
 }
@@ -1588,7 +1598,7 @@ async function createAppointmentNotification(appointmentId, patientId, dentistId
   try {
     await NotificationAdminModel.createAppointmentNotification(appointmentId, patientId, dentistId);
   } catch (error) {
-    console.error('Error creating appointment notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนนัดหมาย:', error);
   }
 }
 
@@ -1597,7 +1607,7 @@ async function createCancellationNotification(appointmentId, patientId, dentistI
   try {
     await NotificationAdminModel.createCancellationNotification(appointmentId, patientId, dentistId);
   } catch (error) {
-    console.error('Error creating cancellation notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนการยกเลิก:', error);
   }
 }
 
@@ -1606,14 +1616,14 @@ async function createScheduleUpdateNotification(dentistId, date, action) {
   try {
     await NotificationAdminModel.createNotification({
       type: 'schedule_update',
-      title: 'Schedule Updated',
-      message: `Dr. ${dentistId} ${action} schedule for ${date}`,
+      title: '📅 มีการอัปเดตตารางงาน',
+      message: `ทพ.${dentistId} ${action} ตารางงานสำหรับ ${date}`,
       dentist_id: dentistId,
       is_read: 0,
       is_new: 1
     });
   } catch (error) {
-    console.error('Error creating schedule update notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนการอัปเดตตารางงาน:', error);
   }
 }
 
@@ -1728,15 +1738,15 @@ exports.updateAppointment = async (req, res) => {
     try {
       await NotificationAdminModel.createNotification({
         type: 'appointment_updated',
-        title: 'Appointment Updated',
-        message: `Appointment updated for ${currentAppointment.patient_name}`,
+        title: '📝 มีการอัปเดตนัดหมาย',
+        message: `อัปเดตนัดหมายสำหรับ ${currentAppointment.patient_name}`,
         patient_id: currentAppointment.patient_id,
         is_read: 0,
         is_new: 1
       });
-      console.log('✅ Notification created');
+      console.log('✅ สร้างการแจ้งเตือนสำเร็จ');
     } catch (notificationError) {
-      console.log('⚠️ Notification creation failed (but continuing):', notificationError.message);
+      console.log('⚠️ การสร้างการแจ้งเตือนล้มเหลว (แต่ดำเนินการต่อ):', notificationError.message);
     }
 
     // Get updated appointment data
@@ -1746,7 +1756,7 @@ exports.updateAppointment = async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Appointment updated successfully',
+      message: 'อัปเดตนัดหมายสำเร็จ',
       appointment: updated || {
         queue_id: id,
         patient_name: currentAppointment.patient_name,
@@ -1766,7 +1776,7 @@ exports.updateAppointment = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: 'Failed to update appointment',
+      error: 'ไม่สามารถอัปเดตนัดหมายได้',
       details: error.message
     });
   } finally {
@@ -2013,7 +2023,7 @@ exports.updateAppointmentStatus = async (req, res) => {
             appointment
           );
         } catch (emailError) {
-          console.error('Failed to send email notification:', emailError);
+          console.error('เกิดข้อผิดพลาดในการส่งอีเมลแจ้งเตือน:', emailError);
           // Don't fail the entire operation if email fails
         }
       }
@@ -2026,7 +2036,7 @@ exports.updateAppointmentStatus = async (req, res) => {
             notificationMessage
           );
         } catch (smsError) {
-          console.error('Failed to send SMS notification:', smsError);
+          console.error('เกิดข้อผิดพลาดในการส่ง SMS แจ้งเตือน:', smsError);
           // Don't fail the entire operation if SMS fails
         }
       }
@@ -2105,7 +2115,7 @@ exports.createAppointment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating appointment:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างนัดหมาย:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create appointment',
@@ -2194,8 +2204,8 @@ async function createAppointmentStatusNotification(queueId, action) {
     if (appointment) {
       await NotificationAdminModel.createNotification({
         type: 'status_change',
-        title: `Appointment ${action}`,
-        message: `${appointment.patient_name}'s appointment with Dr. ${appointment.dentist_name} has been ${action}`,
+        title: `📝 นัดหมาย${action}`,
+        message: `นัดหมายของ ${appointment.patient_name} กับ ทพ.${appointment.dentist_name} ได้รับการ${action}`,
         queue_id: queueId,
         dentist_id: appointment.dentist_id,
         patient_id: appointment.patient_id,
@@ -2204,7 +2214,7 @@ async function createAppointmentStatusNotification(queueId, action) {
       });
     }
   } catch (error) {
-    console.error('Error creating status notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนสถานะ:', error);
   }
 }
 
@@ -2213,7 +2223,7 @@ async function createAppointmentNotification(queueId, patientId, dentistId) {
   try {
     await NotificationAdminModel.createAppointmentNotification(queueId, patientId, dentistId);
   } catch (error) {
-    console.error('Error creating appointment notification:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนนัดหมาย:', error);
   }
 }
 
@@ -2865,8 +2875,8 @@ exports.createAppointmentAPI = async (req, res) => {
       try {
       await NotificationAdminModel.createNotification({
         type: 'appointment',
-        title: 'New Appointment Created',
-        message: `New appointment created for ${result.appointment.patient_name} with Dr. ${result.appointment.dentist_name}`,
+        title: '📝 สร้างนัดหมายใหม่สำเร็จ',
+        message: `สร้างนัดหมายใหม่สำหรับ ${result.appointment.patient_name} กับ ทพ.${result.appointment.dentist_name} เรียบร้อยแล้ว`,
         queue_id: result.appointment.id,
         dentist_id: dentist_id,
         patient_id: patient_id,
@@ -2885,7 +2895,7 @@ exports.createAppointmentAPI = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating appointment:', error);
+    console.error('เกิดข้อผิดพลาดในการสร้างนัดหมาย:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create appointment: ' + error.message

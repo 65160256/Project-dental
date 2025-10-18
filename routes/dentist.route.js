@@ -141,7 +141,8 @@ router.get('/reports/monthly', requireAuth, requireDentist, dentistController.ge
 router.get('/api/appointments', requireAuth, requireDentist, dentistController.getAppointmentsAPI);
 router.get('/api/appointments/today', requireAuth, requireDentist, dentistController.getTodayAppointments);
 router.get('/api/appointments/upcoming', requireAuth, requireDentist, dentistController.getUpcomingAppointments);
-router.post('/api/appointment/confirm', requireAuth, requireDentist, dentistController.confirmAppointment);
+// ปิดการใช้งาน - แพทย์ไม่สามารถยืนยันการจองได้
+// router.post('/api/appointment/confirm', requireAuth, requireDentist, dentistController.confirmAppointment);
 router.post('/api/appointment/complete', requireAuth, requireDentist, dentistController.completeAppointment);
 
 // Calendar API

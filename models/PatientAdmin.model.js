@@ -330,20 +330,36 @@ class PatientAdminModel {
 
       const patient = patientData[0];
 
-      // ลบข้อมูลที่เกี่ยวข้อง
-      await connection.execute(`
-        UPDATE queue 
-        SET queue_status = 'cancel' 
+      // ตรวจสอบว่าผู้ป่วยมีนัดหมายที่ยังไม่เสร็จหรือไม่
+      const [activeAppointments] = await connection.execute(`
+        SELECT COUNT(*) as count 
+        FROM queue 
         WHERE patient_id = ? AND queue_status IN ('pending', 'confirm')
       `, [patientId]);
 
+      if (activeAppointments[0].count > 0) {
+        throw new Error('ไม่สามารถลบผู้ป่วยได้ เนื่องจากมีนัดหมายที่ยังไม่เสร็จ กรุณายกเลิกนัดหมายทั้งหมดก่อน');
+      }
+
+      // ลบข้อมูลที่เกี่ยวข้องตามลำดับที่ถูกต้อง (child tables ก่อน parent tables)
+      
+      // 1. ลบ treatment history ที่เกี่ยวข้อง
       await connection.execute(`
         DELETE th FROM treatmentHistory th
         JOIN queuedetail qd ON th.queuedetail_id = qd.queuedetail_id
         WHERE qd.patient_id = ?
       `, [patientId]);
 
+      // 2. ลบ notifications ที่เกี่ยวข้องกับผู้ป่วย
+      await connection.execute('DELETE FROM notifications WHERE patient_id = ?', [patientId]);
+
+      // 3. ลบ queue records ที่เกี่ยวข้อง (child ของ queuedetail)
+      await connection.execute('DELETE FROM queue WHERE patient_id = ?', [patientId]);
+
+      // 4. ลบ queuedetail records (parent ของ queue)
       await connection.execute('DELETE FROM queuedetail WHERE patient_id = ?', [patientId]);
+
+      // 5. ลบ patient record (parent ของ queuedetail)
       await connection.execute('DELETE FROM patient WHERE patient_id = ?', [patientId]);
 
       if (patient.user_id) {

@@ -406,12 +406,17 @@ d.specialty as dentist_specialization,
   }
 
   /**
-   * ยืนยันนัดหมาย (พร้อมตรวจสอบสิทธิ์)
+   * ยืนยันนัดหมาย (ปิดการใช้งานสำหรับแพทย์ - ไม่ใช่หน้าที่แพทย์)
    * @param {number} queueId
    * @param {number} dentistId
    * @returns {Promise<Object>} { success, queueData }
    */
   static async confirmAppointment(queueId, dentistId) {
+    // ปิดการใช้งาน - ไม่ใช่หน้าที่แพทย์
+    throw new Error('แพทย์ไม่สามารถยืนยันการจองได้ - กรุณาติดต่อผู้ดูแลระบบ');
+
+    // โค้ดเดิมที่ปิดการใช้งานแล้ว
+    /*
     // ตรวจสอบสิทธิ์และดึงข้อมูล
     const queue = await this.findByIdWithDentistAuth(queueId, dentistId);
 
@@ -437,6 +442,7 @@ d.specialty as dentist_specialization,
       success: true,
       queueData: queue
     };
+    */
   }
 
   /**

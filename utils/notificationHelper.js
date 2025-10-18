@@ -21,7 +21,7 @@ const NotificationHelper = {
       );
 
       if (patientData.length === 0 || dentistData.length === 0 || appointmentData.length === 0) {
-        console.error('Cannot create notification: Missing data');
+        console.error('ไม่สามารถสร้างการแจ้งเตือนได้: ข้อมูลไม่ครบถ้วน');
         return;
       }
 
@@ -74,10 +74,10 @@ const NotificationHelper = {
         patientId
       ]);
 
-      console.log(`✅ Created appointment notification for appointment ${appointmentId}`);
+      console.log(`✅ สร้างการแจ้งเตือนนัดหมายสำเร็จ รหัส: ${appointmentId}`);
 
     } catch (error) {
-      console.error('Error creating appointment notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนนัดหมาย:', error);
     }
   },
 
@@ -135,10 +135,10 @@ const NotificationHelper = {
         patientId
       ]);
 
-      console.log(`✅ Created confirmation notification for appointment ${appointmentId}`);
+      console.log(`✅ สร้างการแจ้งเตือนการยืนยันสำเร็จ รหัส: ${appointmentId}`);
 
     } catch (error) {
-      console.error('Error creating confirmation notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนการยืนยัน:', error);
     }
   },
 
@@ -255,10 +255,10 @@ const NotificationHelper = {
         ]);
       }
 
-      console.log(`✅ Created cancellation notification for appointment ${appointmentId}`);
+      console.log(`✅ สร้างการแจ้งเตือนการยกเลิกสำเร็จ รหัส: ${appointmentId}`);
 
     } catch (error) {
-      console.error('Error creating cancellation notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนการยกเลิก:', error);
     }
   },
 
@@ -318,10 +318,10 @@ const NotificationHelper = {
         patientId
       ]);
 
-      console.log(`✅ Created reminder notification for appointment ${appointmentId}`);
+      console.log(`✅ สร้างการแจ้งเตือนเตือนสำเร็จ รหัส: ${appointmentId}`);
 
     } catch (error) {
-      console.error('Error creating reminder notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนเตือน:', error);
     }
   },
 
@@ -376,10 +376,10 @@ const NotificationHelper = {
         patientId
       ]);
 
-      console.log(`✅ Created treatment record notification for appointment ${appointmentId}`);
+      console.log(`✅ สร้างการแจ้งเตือนบันทึกประวัติการรักษาสำเร็จ รหัส: ${appointmentId}`);
 
     } catch (error) {
-      console.error('Error creating treatment record notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนบันทึกประวัติการรักษา:', error);
     }
   },
 
@@ -421,10 +421,10 @@ const NotificationHelper = {
         dentistId
       ]);
 
-      console.log(`✅ Created schedule change notification for dentist ${dentistId}`);
+      console.log(`✅ สร้างการแจ้งเตือนการเปลี่ยนแปลงตารางงานสำเร็จ รหัสทันตแพทย์: ${dentistId}`);
 
     } catch (error) {
-      console.error('Error creating schedule change notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนการเปลี่ยนแปลงตารางงาน:', error);
     }
   }
 };

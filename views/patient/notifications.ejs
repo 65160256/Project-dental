@@ -481,7 +481,7 @@
             this.updatePagination(data.total);
           }
         } catch (error) {
-          console.error('Error loading notifications:', error);
+          console.error('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน:', error);
           container.innerHTML = `
             <div class="empty-state">
               <i class="fas fa-exclamation-triangle"></i>
@@ -628,7 +628,7 @@
             this.loadNotifications();
           }
         } catch (error) {
-          console.error('Error marking notification as read:', error);
+          console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
         }
       }
 

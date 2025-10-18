@@ -409,14 +409,7 @@ getPatientDetailAPI: async (req, res) => {
       return res.status(404).json({ success: false, error: 'Dentist not found' });
     }
 
-    // ตรวจสอบสิทธิ์การเข้าถึง (ผู้ป่วยต้องเคยมีนัดกับหมอคนนี้)
-    const hasAccess = await PatientModel.hasVisitedDentist(patientId, dentist.dentist_id);
-    if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        error: 'ไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้'
-      });
-    }
+    // ทันตแพทย์สามารถเข้าถึงข้อมูลผู้ป่วยได้ทุกคน
 
     // ดึงข้อมูลผู้ป่วยพร้อมประวัติการรักษา
     const data = await PatientModel.findByIdWithTreatmentHistory(patientId, dentist.dentist_id);
@@ -1651,9 +1644,17 @@ deleteTreatment: async (req, res) => {
   },
   
 // ยืนยันนัดหมาย - มีการแจ้งเตือน
-// ✅ REFACTORED: ใช้ Model แทน SQL
+// ✅ DISABLED: แพทย์ไม่สามารถยืนยันการจองได้ (ไม่ใช่หน้าที่แพทย์)
 confirmAppointment: async (req, res) => {
   try {
+    // ปิดการใช้งาน - ไม่ใช่หน้าที่แพทย์
+    return res.status(403).json({
+      success: false,
+      error: 'แพทย์ไม่สามารถยืนยันการจองได้ - กรุณาติดต่อผู้ดูแลระบบ'
+    });
+
+    // โค้ดเดิมที่ปิดการใช้งานแล้ว
+    /*
     const userId = req.session.user?.user_id || req.session.userId;
     const { queueId } = req.body;
 
@@ -1676,6 +1677,7 @@ confirmAppointment: async (req, res) => {
     );
 
     res.json({ success: true, message: 'ยืนยันนัดหมายเรียบร้อยแล้ว' });
+    */
 
   } catch (error) {
     console.error('Error in confirmAppointment:', error);

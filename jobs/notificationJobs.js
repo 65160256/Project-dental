@@ -5,7 +5,7 @@ const NotificationHelper = require('../utils/notificationHelper');
 
 // ฟังก์ชันส่งการแจ้งเตือนนัดหมายพรุ่งนี้
 async function sendAppointmentReminders() {
-  console.log('🔔 Starting appointment reminder job...');
+  console.log('🔔 เริ่มงานแจ้งเตือนนัดหมาย...');
   
   try {
     // หาวันพรุ่งนี้
@@ -18,7 +18,7 @@ async function sendAppointmentReminders() {
     
     const tomorrowDate = tomorrow.toISOString().split('T')[0];
     
-    console.log(`📅 Checking appointments for ${tomorrowDate}`);
+    console.log(`📅 ตรวจสอบนัดหมายสำหรับวันที่ ${tomorrowDate}`);
 
     // ดึงนัดหมายที่จะเกิดขึ้นพรุ่งนี้
     const [appointments] = await db.execute(`
@@ -28,7 +28,7 @@ async function sendAppointmentReminders() {
       AND queue_status IN ('pending', 'confirm')
     `, [tomorrowDate]);
 
-    console.log(`📋 Found ${appointments.length} appointments for tomorrow`);
+    console.log(`📋 พบนัดหมาย ${appointments.length} รายการสำหรับพรุ่งนี้`);
 
     // ส่งการแจ้งเตือนสำหรับแต่ละนัดหมาย
     let successCount = 0;
@@ -41,20 +41,20 @@ async function sendAppointmentReminders() {
         );
         successCount++;
       } catch (error) {
-        console.error(`❌ Error sending reminder for appointment ${appointment.queue_id}:`, error);
+        console.error(`❌ เกิดข้อผิดพลาดในการส่งการแจ้งเตือนสำหรับนัดหมาย ${appointment.queue_id}:`, error);
       }
     }
 
-    console.log(`✅ Appointment reminder job completed: ${successCount}/${appointments.length} reminders sent`);
+    console.log(`✅ งานแจ้งเตือนนัดหมายเสร็จสิ้น: ส่งได้ ${successCount}/${appointments.length} รายการ`);
 
   } catch (error) {
-    console.error('❌ Error in appointment reminder job:', error);
+    console.error('❌ เกิดข้อผิดพลาดในงานแจ้งเตือนนัดหมาย:', error);
   }
 }
 
 // ฟังก์ชันตรวจสอบและแจ้งเตือนนัดหมายที่กำลังจะมาถึง (2 ชั่วโมง)
 async function sendUpcomingAppointmentAlerts() {
-  console.log('🔔 Checking for upcoming appointments (2 hours)...');
+  console.log('🔔 ตรวจสอบนัดหมายที่กำลังจะมาถึง (2 ชั่วโมง)...');
   
   try {
     const now = new Date();
@@ -73,7 +73,7 @@ async function sendUpcomingAppointmentAlerts() {
       AND q.queue_status IN ('pending', 'confirm')
     `, [now, twoHoursLater]);
 
-    console.log(`📋 Found ${appointments.length} appointments in next 2 hours`);
+    console.log(`📋 พบนัดหมาย ${appointments.length} รายการใน 2 ชั่วโมงถัดไป`);
 
     for (const appointment of appointments) {
       const appointmentTime = new Date(appointment.time);
@@ -97,16 +97,16 @@ async function sendUpcomingAppointmentAlerts() {
       ]);
     }
 
-    console.log(`✅ Sent ${appointments.length} upcoming appointment alerts`);
+    console.log(`✅ ส่งการแจ้งเตือนนัดหมายที่กำลังมาถึง ${appointments.length} รายการ`);
 
   } catch (error) {
-    console.error('❌ Error in upcoming appointment alerts:', error);
+    console.error('❌ เกิดข้อผิดพลาดในการแจ้งเตือนนัดหมายที่กำลังมาถึง:', error);
   }
 }
 
 // ฟังก์ชันตรวจสอบและแจ้งเตือนนัดหมายที่พลาด (No-show)
 async function checkMissedAppointments() {
-  console.log('🔔 Checking for missed appointments...');
+  console.log('🔔 ตรวจสอบนัดหมายที่พลาด...');
   
   try {
     const now = new Date();
@@ -125,7 +125,7 @@ async function checkMissedAppointments() {
       AND q.queue_status = 'pending'
     `, [oneHourAgo, now]);
 
-    console.log(`📋 Found ${missedAppointments.length} potentially missed appointments`);
+    console.log(`📋 พบนัดหมายที่อาจพลาด ${missedAppointments.length} รายการ`);
 
     for (const appointment of missedAppointments) {
       const formattedTime = new Date(appointment.time).toLocaleTimeString('th-TH', {
@@ -148,16 +148,16 @@ async function checkMissedAppointments() {
       ]);
     }
 
-    console.log(`✅ Sent ${missedAppointments.length} missed appointment alerts`);
+    console.log(`✅ ส่งการแจ้งเตือนนัดหมายที่พลาด ${missedAppointments.length} รายการ`);
 
   } catch (error) {
-    console.error('❌ Error in missed appointments check:', error);
+    console.error('❌ เกิดข้อผิดพลาดในการตรวจสอบนัดหมายที่พลาด:', error);
   }
 }
 
 // ฟังก์ชันล้างการแจ้งเตือนเก่า (เก่ากว่า 30 วัน)
 async function cleanOldNotifications() {
-  console.log('🧹 Cleaning old notifications...');
+  console.log('🧹 ล้างการแจ้งเตือนเก่า...');
   
   try {
     const thirtyDaysAgo = new Date();
@@ -169,42 +169,42 @@ async function cleanOldNotifications() {
       AND is_read = 1
     `, [thirtyDaysAgo]);
 
-    console.log(`✅ Cleaned ${result.affectedRows} old notifications`);
+    console.log(`✅ ล้างการแจ้งเตือนเก่า ${result.affectedRows} รายการ`);
 
   } catch (error) {
-    console.error('❌ Error cleaning old notifications:', error);
+    console.error('❌ เกิดข้อผิดพลาดในการล้างการแจ้งเตือนเก่า:', error);
   }
 }
 
 // ตั้งค่า Cron Jobs
 function initializeNotificationJobs() {
-  console.log('🚀 Initializing notification cron jobs...');
+  console.log('🚀 กำลังเริ่มต้นงานแจ้งเตือนอัตโนมัติ...');
 
   // ส่งการแจ้งเตือนนัดหมายพรุ่งนี้ทุกวันเวลา 09:00 น.
   cron.schedule('0 9 * * *', sendAppointmentReminders, {
     timezone: 'Asia/Bangkok'
   });
-  console.log('✅ Daily reminder job scheduled at 09:00');
+  console.log('✅ กำหนดงานแจ้งเตือนรายวันเวลา 09:00 น.');
 
   // ตรวจสอบนัดหมายที่กำลังจะมาถึงทุก 30 นาที (ในเวลาทำการ 08:00-18:00)
   cron.schedule('*/30 8-18 * * *', sendUpcomingAppointmentAlerts, {
     timezone: 'Asia/Bangkok'
   });
-  console.log('✅ Upcoming appointment alerts scheduled every 30 minutes (08:00-18:00)');
+  console.log('✅ กำหนดการแจ้งเตือนนัดหมายที่กำลังมาถึงทุก 30 นาที (08:00-18:00)');
 
   // ตรวจสอบนัดหมายที่พลาดทุก 1 ชั่วโมง
   cron.schedule('0 * * * *', checkMissedAppointments, {
     timezone: 'Asia/Bangkok'
   });
-  console.log('✅ Missed appointment check scheduled every hour');
+  console.log('✅ กำหนดการตรวจสอบนัดหมายที่พลาดทุกชั่วโมง');
 
   // ล้างการแจ้งเตือนเก่าทุกวันเวลา 02:00 น.
   cron.schedule('0 2 * * *', cleanOldNotifications, {
     timezone: 'Asia/Bangkok'
   });
-  console.log('✅ Old notification cleanup scheduled at 02:00');
+  console.log('✅ กำหนดการล้างการแจ้งเตือนเก่าเวลา 02:00 น.');
 
-  console.log('✅ All notification cron jobs initialized successfully');
+  console.log('✅ เริ่มต้นงานแจ้งเตือนอัตโนมัติทั้งหมดเสร็จสิ้น');
 }
 
 // Export functions

@@ -101,7 +101,7 @@ class NotificationAdminModel {
         message: 'การแจ้งเตือนถูกสร้างเรียบร้อยแล้ว'
       };
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือน:', error);
       throw error;
     }
   }

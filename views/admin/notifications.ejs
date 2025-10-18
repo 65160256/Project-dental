@@ -484,7 +484,7 @@
             this.updatePagination(data.total || filteredNotifications.length);
           }
         } catch (error) {
-          console.error('Error loading notifications:', error);
+          console.error('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน:', error);
           container.innerHTML = `
             <div class="empty-state">
               <i class="fas fa-exclamation-triangle"></i>
@@ -636,7 +636,7 @@
             this.loadNotifications();
           }
         } catch (error) {
-          console.error('Error marking notification as read:', error);
+          console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
         }
       }
 
@@ -656,7 +656,7 @@
             this.loadNotifications();
           }
         } catch (error) {
-          console.error('Error marking all as read:', error);
+          console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายอ่านทั้งหมด:', error);
           alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
       }
@@ -676,7 +676,7 @@
             this.loadNotifications();
           }
         } catch (error) {
-          console.error('Error deleting notification:', error);
+          console.error('เกิดข้อผิดพลาดในการลบการแจ้งเตือน:', error);
           alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
       }
