@@ -688,6 +688,12 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label class="form-label">เพศ</label>
+                                <div class="form-control" style="background: #f8f9fa; color: #666;">
+                                    <%= (appointment.patient_gender || appointment.gender) === 'male' ? 'ชาย' : (appointment.patient_gender || appointment.gender) === 'female' ? 'หญิง' : 'อื่นๆ' %>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">วันเกิด</label>
                                 <div class="form-control" style="background: #f8f9fa; color: #666;">
                                     <%= (appointment.patient_dob || appointment.dob) ? new Date(appointment.patient_dob || appointment.dob).toLocaleDateString('th-TH', { 
@@ -698,15 +704,23 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">เพศ</label>
+                                <label class="form-label">อายุ</label>
                                 <div class="form-control" style="background: #f8f9fa; color: #666;">
-                                    <%= (appointment.patient_gender || appointment.gender) === 'male' ? 'ชาย' : (appointment.patient_gender || appointment.gender) === 'female' ? 'หญิง' : 'อื่นๆ' %>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">เลขบัตรประจำตัวประชาชน</label>
-                                <div class="form-control" style="background: #f8f9fa; color: #666;">
-                                    <%= appointment.patient_id_card || appointment.id_card || 'ไม่ได้ระบุ' %>
+                                    <% 
+                                        const dob = appointment.patient_dob || appointment.dob;
+                                        let age = 'ไม่ได้ระบุ';
+                                        if (dob) {
+                                            const birthDate = new Date(dob);
+                                            const today = new Date();
+                                            age = today.getFullYear() - birthDate.getFullYear();
+                                            const monthDiff = today.getMonth() - birthDate.getMonth();
+                                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                                                age--;
+                                            }
+                                            age += ' ปี';
+                                        }
+                                    %>
+                                    <%= age %>
                                 </div>
                             </div>
                             <div class="form-group">

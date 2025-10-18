@@ -820,6 +820,7 @@
                     </div>
                     <div class="patient-info">
                         <h1 id="patientName">กำลังโหลด...</h1>
+                        <span id="patientIdDisplay" style="color: #666; font-size: 16px; font-weight: normal;"></span>
                     </div>
                 </div>
                 
@@ -898,6 +899,7 @@
         // Display patient information
         function displayPatientInfo(patient) {
             document.getElementById('patientName').textContent = `${patient.fname} ${patient.lname}`;
+            document.getElementById('patientIdDisplay').textContent = `รหัสผู้ป่วย: #${patient.patient_id}`;
             
             const detailsHTML = `
                 <div class="detail-item">
@@ -919,14 +921,6 @@
                 <div class="detail-item">
                     <span class="detail-label">ที่อยู่:</span>
                     <span class="detail-value">${patient.address || 'ไม่ระบุ'}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">รหัสผู้ป่วย:</span>
-                    <span class="detail-value">#${patient.patient_id}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">บัตรประชาชน:</span>
-                    <span class="detail-value">${patient.id_card || 'ไม่ระบุ'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">เป็นผู้ป่วยตั้งแต่:</span>
