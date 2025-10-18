@@ -462,6 +462,28 @@
             color: #4A90E2;
         }
 
+        .treatment-cancelled {
+            opacity: 0.7;
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .treatment-cancelled:hover {
+            box-shadow: none;
+            transform: none;
+            border-color: #dee2e6;
+        }
+
+        .treatment-cancelled:hover .treatment-name {
+            color: #333;
+        }
+
+        .treatment-note {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+
         .treatment-date {
             font-size: 14px;
             color: #6c757d;
@@ -944,8 +966,13 @@
                     `;
                     
                     treatments.forEach(treatment => {
+                        // ตรวจสอบว่าสามารถคลิกได้หรือไม่ (ยกเลิกแล้วไม่สามารถคลิกได้)
+                        const isClickable = treatment.queue_status !== 'cancel';
+                        const clickHandler = isClickable ? `onclick="viewTreatmentDetail(${treatment.queue_id})"` : '';
+                        const cursorStyle = isClickable ? '' : 'style="cursor: not-allowed;"';
+                        
                         html += `
-                            <div class="treatment-item" onclick="viewTreatmentDetail(${treatment.queue_id})" data-queue-id="${treatment.queue_id}">
+                            <div class="treatment-item ${!isClickable ? 'treatment-cancelled' : ''}" ${clickHandler} ${cursorStyle} data-queue-id="${treatment.queue_id}">
                                 <div class="treatment-date">
                                     ${treatment.formattedDate} - ${treatment.formattedTime}
                                 </div>
@@ -959,6 +986,13 @@
                                 ${treatment.diagnosis ? `
                                     <div class="treatment-diagnosis">
                                         <strong>การวินิจฉัย:</strong> ${treatment.diagnosis}
+                                    </div>
+                                ` : ''}
+                                ${!isClickable ? `
+                                    <div class="treatment-note">
+                                        <small style="color: #dc3545; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> ไม่สามารถดูรายละเอียดได้ (การรักษายกเลิก)
+                                        </small>
                                     </div>
                                 ` : ''}
                             </div>
