@@ -322,7 +322,7 @@ class PatientModel {
       return null;
     }
 
-    // ดึงประวัติการรักษา
+    // ดึงประวัติการรักษา (เฉพาะที่แอดมินยืนยันแล้ว)
     const [treatmentHistory] = await db.execute(
       `SELECT
         q.queue_id,
@@ -339,20 +339,20 @@ class PatientModel {
       JOIN dentist d ON q.dentist_id = d.dentist_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.patient_id = ? AND q.dentist_id = ?
+      WHERE q.patient_id = ? AND q.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
       [patientId, dentistId]
     );
 
-    // คำนวณสถิติ
+    // คำนวณสถิติ (ไม่รวม pending)
     const stats = {
       total: treatmentHistory.length,
       completed: treatmentHistory.filter(t =>
-        t.queue_status === 'completed' || t.queue_status === 'confirm'
+        t.queue_status === 'completed'
       ).length,
       pending: treatmentHistory.filter(t =>
-        t.queue_status === 'pending'
-      ).length,
+        t.queue_status === 'confirm'
+      ).length, // เฉพาะ confirm เท่านั้น
       cancelled: treatmentHistory.filter(t =>
         t.queue_status === 'cancel'
       ).length

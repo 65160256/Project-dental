@@ -510,7 +510,7 @@ d.specialty as dentist_specialization,
    * @returns {Promise<Object>} { appointments, stats }
    */
   static async findAllWithStats(dentistId) {
-    // ดึงข้อมูลนัดหมายทั้งหมด เรียงจากใหม่ไปเก่า
+    // ดึงข้อมูลนัดหมายทั้งหมด เรียงจากใหม่ไปเก่า (เฉพาะที่แอดมินยืนยันแล้ว)
     const [appointments] = await db.execute(
       `SELECT
         q.queue_id,
@@ -527,38 +527,37 @@ d.specialty as dentist_specialization,
       JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ?
+      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
       [dentistId]
     );
 
-    // นับนัดหมายแต่ละสถานะ
+    // นับนัดหมายแต่ละสถานะ (ไม่รวม pending)
     const [statusCounts] = await db.execute(
       `SELECT
         queue_status,
         COUNT(*) as count
       FROM queue q
-      WHERE q.dentist_id = ?
+      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
       GROUP BY queue_status`,
       [dentistId]
     );
 
-    // นับนัดหมายวันนี้ (เฉพาะที่รอรักษา)
+    // นับนัดหมายวันนี้ (เฉพาะที่รอรักษา - ไม่รวม pending)
     const [todayCount] = await db.execute(
       `SELECT COUNT(*) as count
       FROM queue q
       WHERE q.dentist_id = ?
         AND DATE(q.time) = CURDATE()
-        AND q.queue_status IN ('pending', 'confirm')`,
+        AND q.queue_status = 'confirm'`,
       [dentistId]
     );
 
-    // คำนวณสถิติ
+    // คำนวณสถิติ (ไม่รวม pending)
     const stats = {
       total: appointments.length,
       today: todayCount[0]?.count || 0,
-      pending: (statusCounts.find(s => s.queue_status === 'pending')?.count || 0) +
-               (statusCounts.find(s => s.queue_status === 'confirm')?.count || 0),
+      pending: statusCounts.find(s => s.queue_status === 'confirm')?.count || 0, // เฉพาะ confirm เท่านั้น
       completed: statusCounts.find(s => s.queue_status === 'completed')?.count || 0,
       cancelled: statusCounts.find(s => s.queue_status === 'cancel')?.count || 0
     };
@@ -592,7 +591,7 @@ d.specialty as dentist_specialization,
    * @returns {Promise<Object>} { history, stats }
    */
   static async getTreatmentHistoryWithStats(dentistId) {
-    // ดึงประวัติการรักษาทั้งหมด
+    // ดึงประวัติการรักษาทั้งหมด (เฉพาะที่แอดมินยืนยันแล้ว)
     const [treatmentHistory] = await db.execute(
       `SELECT
         q.queue_id,
@@ -612,7 +611,7 @@ d.specialty as dentist_specialization,
       JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ?
+      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
       [dentistId]
     );
@@ -623,10 +622,9 @@ d.specialty as dentist_specialization,
       age: item.age || 0
     }));
 
-    // คำนวณสถิติ
+    // คำนวณสถิติ (ไม่รวม pending)
     const uniquePatients = new Set(mappedHistory.map(item => item.patient_id)).size;
     const completed = mappedHistory.filter(item => item.queue_status === 'completed').length;
-    const pending = mappedHistory.filter(item => item.queue_status === 'pending').length;
     const confirm = mappedHistory.filter(item => item.queue_status === 'confirm').length;
     const cancelled = mappedHistory.filter(item => item.queue_status === 'cancel').length;
 
@@ -634,7 +632,7 @@ d.specialty as dentist_specialization,
       uniquePatients,
       total: mappedHistory.length,
       completed,
-      pending: pending + confirm, // รวม pending และ confirm เป็นรอรักษา
+      pending: confirm, // เฉพาะ confirm เท่านั้น (ไม่รวม pending)
       cancelled
     };
 

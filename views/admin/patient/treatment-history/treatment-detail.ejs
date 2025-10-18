@@ -605,6 +605,10 @@
                                 <div class="info-label">ประวัติการแพ้ยา:</div>
                                 <div class="info-value" id="allergy-history"></div>
                             </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ประวัติการแพ้สารเคมี:</div>
+                                <div class="info-value" id="chemical-allergy"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -692,7 +696,8 @@
                     phone: '<%= detail && detail.phone ? detail.phone : "" %>',
                     address: '<%= detail && detail.address ? detail.address : "" %>',
                     chronic_disease: '<%= detail && detail.chronic_disease ? detail.chronic_disease : "" %>',
-                    allergy_history: '<%= detail && detail.allergy_history ? detail.allergy_history : "" %>'
+                    allergy_history: '<%= detail && detail.allergy_history ? detail.allergy_history : "" %>',
+                    chemical_allergy: '<%= detail && detail.chemical_allergy ? detail.chemical_allergy : "" %>'
                 };
 
                 if (treatment.queue_id) {
@@ -794,6 +799,11 @@
                 const allergyElement = document.getElementById('allergy-history');
                 allergyElement.textContent = treatment.allergy_history || '-';
                 if (!treatment.allergy_history) allergyElement.classList.add('empty');
+
+                // Chemical Allergy
+                const chemicalAllergyElement = document.getElementById('chemical-allergy');
+                chemicalAllergyElement.textContent = treatment.chemical_allergy || '-';
+                if (!treatment.chemical_allergy) chemicalAllergyElement.classList.add('empty');
 
                 // Appointment Date
                 if (treatment.formattedDate) {

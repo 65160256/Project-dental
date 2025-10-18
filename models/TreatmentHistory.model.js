@@ -10,7 +10,8 @@ class TreatmentHistoryModel {
     const {
       queuedetailId,
       diagnosis,
-      followUpdate = ''
+      followUpdate = '',
+      chemicalAllergy = ''
     } = historyData;
 
     // Validate required fields
@@ -31,9 +32,9 @@ class TreatmentHistoryModel {
 
     const [result] = await db.execute(
       `INSERT INTO treatmentHistory
-       (queuedetail_id, diagnosis, followUpdate)
-       VALUES (?, ?, ?)`,
-      [queuedetailId, diagnosis.trim(), followUpdate.trim()]
+       (queuedetail_id, diagnosis, followUpdate, chemical_allergy)
+       VALUES (?, ?, ?, ?)`,
+      [queuedetailId, diagnosis.trim(), followUpdate.trim(), chemicalAllergy.trim()]
     );
 
     return {
@@ -190,7 +191,7 @@ class TreatmentHistoryModel {
    * @returns {Promise<Object>} { success, affectedRows }
    */
   static async update(queuedetailId, updateData) {
-    const { diagnosis, followUpdate = '' } = updateData;
+    const { diagnosis, followUpdate = '', chemicalAllergy = '' } = updateData;
 
     // Validate required fields
     if (!diagnosis || !diagnosis.trim()) {
@@ -204,9 +205,9 @@ class TreatmentHistoryModel {
 
     const [result] = await db.execute(
       `UPDATE treatmentHistory
-       SET diagnosis = ?, followUpdate = ?
+       SET diagnosis = ?, followUpdate = ?, chemical_allergy = ?
        WHERE queuedetail_id = ?`,
-      [diagnosis.trim(), followUpdate.trim(), queuedetailId]
+      [diagnosis.trim(), followUpdate.trim(), chemicalAllergy.trim(), queuedetailId]
     );
 
     return {

@@ -165,8 +165,6 @@ router.post('/api/treatment-history/add', requireAuth, requireDentist, dentistCo
 // =================
 router.get('/treatment-history/:queueId', requireAuth, requireDentist, dentistController.getTreatmentHistoryPage);
 router.get('/api/treatment-history/:queueId', requireAuth, requireDentist, dentistController.getTreatmentHistoryDetail);
-router.put('/api/treatment-history/update/:queuedetailId', requireAuth, requireDentist, dentistController.updateTreatmentHistory);
-router.delete('/api/treatment-history/cancel/:queuedetailId', requireAuth, requireDentist, dentistController.cancelTreatmentHistory);
 
 // Error handling middleware
 router.use((err, req, res, next) => {

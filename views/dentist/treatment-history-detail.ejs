@@ -444,193 +444,7 @@
             background: #357abd;
         }
 
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 2px solid #f1f3f4;
-            justify-content: flex-end;
-        }
 
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-edit {
-            background: #4A90E2;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background: #357abd;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(74, 144, 226, 0.3);
-        }
-
-        .btn-cancel {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-cancel:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 12px;
-            max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            animation: slideDown 0.3s;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            padding: 20px 25px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .close {
-            color: #9ca3af;
-            font-size: 28px;
-            font-weight: 300;
-            cursor: pointer;
-            transition: color 0.3s;
-            line-height: 1;
-        }
-
-        .close:hover {
-            color: #4b5563;
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #374151;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 120px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-
-        .char-count {
-            text-align: right;
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-
-        .modal-footer {
-            padding: 20px 25px;
-            border-top: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        .btn-primary {
-            background: #4A90E2;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #357abd;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -670,14 +484,6 @@
                 max-width: calc(100% - 30px);
             }
 
-            .action-buttons {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
         }
     </style>
 </head>
@@ -812,6 +618,10 @@
                                 <div class="info-label">ประวัติการแพ้ยา:</div>
                                 <div class="info-value" id="allergy-history"></div>
                             </div>
+                            <div class="info-item full-width">
+                                <div class="info-label">ประวัติการแพ้สารเคมี:</div>
+                                <div class="info-value" id="chemical-allergy"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -846,97 +656,11 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button class="btn btn-edit" onclick="openEditModal()">
-                            <i class="fas fa-edit"></i>
-                            แก้ไขข้อมูลการรักษา
-                        </button>
-                        <button class="btn btn-cancel" onclick="openCancelModal()">
-                            <i class="fas fa-times-circle"></i>
-                            ยกเลิกการรักษา
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> แก้ไขข้อมูลการรักษา</h3>
-                <span class="close" onclick="closeEditModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="editForm">
-                    <div class="form-group">
-                        <label for="edit-diagnosis">ผลการรักษา <span style="color: #ef4444;">*</span></label>
-                        <textarea
-                            id="edit-diagnosis"
-                            name="diagnosis"
-                            required
-                            placeholder="กรุณากรอกผลการรักษาอย่างน้อย 20 ตัวอักษร"
-                            oninput="updateCharCount('edit-diagnosis', 'diagnosis-count')"
-                        ></textarea>
-                        <div class="char-count">
-                            <span id="diagnosis-count">0</span> / 20 ตัวอักษรขั้นต่ำ
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-follow-update">คำแนะนำ / ข้อควรระวัง</label>
-                        <textarea
-                            id="edit-follow-update"
-                            name="followUpdate"
-                            placeholder="กรอกคำแนะนำสำหรับผู้ป่วย (ถ้ามี)"
-                            oninput="updateCharCount('edit-follow-update', 'follow-count')"
-                        ></textarea>
-                        <div class="char-count">
-                            <span id="follow-count">0</span> ตัวอักษร
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeEditModal()">
-                    <i class="fas fa-times"></i>
-                    ยกเลิก
-                </button>
-                <button class="btn btn-primary" onclick="submitEdit()">
-                    <i class="fas fa-save"></i>
-                    บันทึกการเปลี่ยนแปลง
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cancel Modal -->
-    <div id="cancelModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-exclamation-triangle"></i> ยืนยันการยกเลิก</h3>
-                <span class="close" onclick="closeCancelModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 0;">
-                    คุณต้องการยกเลิกการรักษานี้ใช่หรือไม่?
-                    <br><br>
-                    <strong style="color: #ef4444;">หมายเหตุ:</strong> การยกเลิกจะลบข้อมูลประวัติการรักษานี้ออกจากระบบ และไม่สามารถกู้คืนได้
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeCancelModal()">
-                    <i class="fas fa-arrow-left"></i>
-                    กลับ
-                </button>
-                <button class="btn btn-danger" onclick="submitCancel()">
-                    <i class="fas fa-trash-alt"></i>
-                    ยืนยันการยกเลิก
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         let currentQueueId = null;
@@ -944,137 +668,8 @@
         let currentQueueDetailId = null;
         let currentTreatmentData = null;
 
-        // Modal Functions
-        function openEditModal() {
-            if (!currentTreatmentData) {
-                alert('กรุณารอโหลดข้อมูลให้เสร็จก่อน');
-                return;
-            }
 
-            // Pre-fill form with current data
-            document.getElementById('edit-diagnosis').value = currentTreatmentData.diagnosis || '';
-            document.getElementById('edit-follow-update').value = currentTreatmentData.followUpdate || '';
 
-            // Update character counts
-            updateCharCount('edit-diagnosis', 'diagnosis-count');
-            updateCharCount('edit-follow-update', 'follow-count');
-
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        function openCancelModal() {
-            document.getElementById('cancelModal').style.display = 'block';
-        }
-
-        function closeCancelModal() {
-            document.getElementById('cancelModal').style.display = 'none';
-        }
-
-        function updateCharCount(textareaId, countId) {
-            const textarea = document.getElementById(textareaId);
-            const count = document.getElementById(countId);
-            if (textarea && count) {
-                count.textContent = textarea.value.length;
-            }
-        }
-
-        // Submit Edit
-        async function submitEdit() {
-            const diagnosis = document.getElementById('edit-diagnosis').value.trim();
-            const followUpdate = document.getElementById('edit-follow-update').value.trim();
-
-            // Validation
-            if (!diagnosis) {
-                alert('กรุณากรอกผลการรักษา');
-                return;
-            }
-
-            if (diagnosis.length < 20) {
-                alert('กรุณากรอกผลการรักษาอย่างน้อย 20 ตัวอักษร');
-                return;
-            }
-
-            if (!currentQueueDetailId) {
-                alert('ไม่พบข้อมูล queuedetail_id');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/dentist/api/treatment-history/update/${currentQueueDetailId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        diagnosis,
-                        followUpdate
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert('บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว');
-                    closeEditModal();
-                    // Reload data
-                    loadTreatmentHistory(currentQueueId);
-                } else {
-                    alert(data.error || 'เกิดข้อผิดพลาดในการบันทึก');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
-            }
-        }
-
-        // Submit Cancel
-        async function submitCancel() {
-            if (!currentQueueDetailId) {
-                alert('ไม่พบข้อมูล queuedetail_id');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/dentist/api/treatment-history/cancel/${currentQueueDetailId}`, {
-                    method: 'DELETE'
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert('ยกเลิกการรักษาเรียบร้อยแล้ว');
-                    closeCancelModal();
-                    // Redirect back to patient detail
-                    if (currentPatientId) {
-                        window.location.href = `/dentist/patients/${currentPatientId}`;
-                    } else {
-                        window.location.href = '/dentist/patients';
-                    }
-                } else {
-                    alert(data.error || 'เกิดข้อผิดพลาดในการยกเลิก');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
-            }
-        }
-
-        // Close modals when clicking outside
-        window.onclick = function(event) {
-            const editModal = document.getElementById('editModal');
-            const cancelModal = document.getElementById('cancelModal');
-
-            if (event.target === editModal) {
-                closeEditModal();
-            }
-            if (event.target === cancelModal) {
-                closeCancelModal();
-            }
-        }
 
         // โหลดข้อมูลเมื่อหน้าโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
@@ -1198,6 +793,11 @@
         const allergyElement = document.getElementById('allergy-history');
         allergyElement.textContent = treatment.allergy_history || '-';
         if (!treatment.allergy_history) allergyElement.classList.add('empty');
+
+        // Chemical Allergy
+        const chemicalAllergyElement = document.getElementById('chemical-allergy');
+        chemicalAllergyElement.textContent = treatment.chemical_allergy || '-';
+        if (!treatment.chemical_allergy) chemicalAllergyElement.classList.add('empty');
 
         // Appointment Date
         document.getElementById('appointment-date').textContent = 

@@ -306,21 +306,21 @@ class DentistModel {
    * @returns {Promise<Object>}
    */
   static async getDashboardData(dentistId) {
-    // ผู้ป่วยวันนี้ (รอรักษา)
+    // ผู้ป่วยวันนี้ (รอรักษา - เฉพาะที่แอดมินยืนยันแล้ว)
     const [todayPatients] = await db.execute(
       `SELECT COUNT(DISTINCT q.patient_id) as count
        FROM queue q
        WHERE q.dentist_id = ?
          AND DATE(q.time) = CURDATE()
-         AND q.queue_status IN ('pending', 'confirm')`,
+         AND q.queue_status = 'confirm'`,
       [dentistId]
     );
 
-    // ผู้ป่วยทั้งหมด
+    // ผู้ป่วยทั้งหมด (ไม่รวม pending)
     const [totalPatients] = await db.execute(
       `SELECT COUNT(DISTINCT q.patient_id) as count
        FROM queue q
-       WHERE q.dentist_id = ?`,
+       WHERE q.dentist_id = ? AND q.queue_status != 'pending'`,
       [dentistId]
     );
 
@@ -342,7 +342,7 @@ class DentistModel {
       [dentistId]
     );
 
-    // นัดหมายล่าสุด
+    // นัดหมายล่าสุด (ไม่รวม pending)
     const [latestAppointments] = await db.execute(
       `SELECT
         q.queue_id,
@@ -358,13 +358,13 @@ class DentistModel {
       JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ?
+      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC
       LIMIT 10`,
       [dentistId]
     );
 
-    // นัดหมายที่กำลังจะมาถึง (รอรักษา)
+    // นัดหมายที่กำลังจะมาถึง (รอรักษา - เฉพาะที่แอดมินยืนยันแล้ว)
     const [upcomingAppointments] = await db.execute(
       `SELECT
         q.queue_id,
@@ -378,13 +378,13 @@ class DentistModel {
       JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE q.dentist_id = ?
         AND q.time >= NOW()
-        AND q.queue_status IN ('pending', 'confirm')
+        AND q.queue_status = 'confirm'
       ORDER BY q.time ASC
       LIMIT 5`,
       [dentistId]
     );
 
-    // เวรวันนี้
+    // เวรวันนี้ (เฉพาะที่แอดมินยืนยันแล้ว)
     const [todaySchedule] = await db.execute(
       `SELECT
         q.queue_id,
@@ -398,20 +398,20 @@ class DentistModel {
       JOIN treatment t ON q.treatment_id = t.treatment_id
       WHERE q.dentist_id = ?
         AND DATE(q.time) = CURDATE()
-        AND q.queue_status IN ('pending', 'confirm')
+        AND q.queue_status = 'confirm'
       ORDER BY q.time ASC
       LIMIT 1`,
       [dentistId]
     );
 
-    // ปฏิทินเดือนนี้
+    // ปฏิทินเดือนนี้ (เฉพาะที่แอดมินยืนยันแล้ว)
     const [monthlyAppointments] = await db.execute(
       `SELECT DAY(q.time) as day, COUNT(*) as count
       FROM queue q
       WHERE q.dentist_id = ?
         AND MONTH(q.time) = MONTH(CURDATE())
         AND YEAR(q.time) = YEAR(CURDATE())
-        AND q.queue_status IN ('pending', 'confirm')
+        AND q.queue_status = 'confirm'
       GROUP BY DAY(q.time)`,
       [dentistId]
     );

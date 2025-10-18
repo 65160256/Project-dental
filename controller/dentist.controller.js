@@ -1873,135 +1873,6 @@ getTreatmentHistoryPage: async (req, res) => {
   }
 },
 
-// API: อัปเดตประวัติการรักษา
-// ✅ REFACTORED: ใช้ Model แทน SQL
-updateTreatmentHistory: async (req, res) => {
-  try {
-    const userId = req.session.user?.user_id || req.session.userId;
-    const queuedetailId = req.params.queuedetailId;
-    const { diagnosis, followUpdate } = req.body;
-
-    // Validation
-    if (!diagnosis || !diagnosis.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: 'กรุณากรอกข้อมูลการรักษา'
-      });
-    }
-
-    if (diagnosis.trim().length < 20) {
-      return res.status(400).json({
-        success: false,
-        error: 'กรุณากรอกรายละเอียดการรักษาอย่างน้อย 20 ตัวอักษร'
-      });
-    }
-
-    // ใช้ Model ค้นหาทันตแพทย์และตรวจสอบสิทธิ์
-    const { DentistModel, TreatmentHistoryModel, QueueDetailModel } = require('../models');
-    const dentist = await DentistModel.findByUserId(userId);
-
-    if (!dentist) {
-      return res.status(404).json({
-        success: false,
-        error: 'ไม่พบข้อมูลทันตแพทย์'
-      });
-    }
-
-    // ใช้ Model ตรวจสอบว่าประวัติการรักษานี้เป็นของทันตแพทย์คนนี้หรือไม่
-    const hasPermission = await QueueDetailModel.belongsToDentist(
-      queuedetailId,
-      dentist.dentist_id
-    );
-
-    if (!hasPermission) {
-      return res.status(403).json({
-        success: false,
-        error: 'ไม่มีสิทธิ์แก้ไขข้อมูลนี้'
-      });
-    }
-
-    // ใช้ Model อัปเดตข้อมูล
-    const result = await TreatmentHistoryModel.update(queuedetailId, {
-      diagnosis: diagnosis.trim(),
-      followUpdate: followUpdate?.trim() || ''
-    });
-
-    if (result.success) {
-      res.json({
-        success: true,
-        message: 'อัปเดตประวัติการรักษาเรียบร้อยแล้ว'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: 'ไม่พบประวัติการรักษาที่ต้องการอัปเดต'
-      });
-    }
-
-  } catch (error) {
-    console.error('Error in updateTreatmentHistory:', error);
-    res.status(500).json({
-      success: false,
-      error: 'เกิดข้อผิดพลาดในการอัปเดตประวัติการรักษา'
-    });
-  }
-},
-
-// API: ยกเลิกประวัติการรักษา (ลบ)
-// ✅ REFACTORED: ใช้ Model แทน SQL
-cancelTreatmentHistory: async (req, res) => {
-  try {
-    const userId = req.session.user?.user_id || req.session.userId;
-    const queuedetailId = req.params.queuedetailId;
-
-    // ใช้ Model ค้นหาทันตแพทย์
-    const { DentistModel, TreatmentHistoryModel } = require('../models');
-    const dentist = await DentistModel.findByUserId(userId);
-
-    if (!dentist) {
-      return res.status(404).json({
-        success: false,
-        error: 'ไม่พบข้อมูลทันตแพทย์'
-      });
-    }
-
-    // ตรวจสอบว่าประวัติการรักษานี้เป็นของทันตแพทย์คนนี้หรือไม่
-    const [checkResult] = await db.execute(`
-      SELECT qd.queuedetail_id
-      FROM queuedetail qd
-      WHERE qd.queuedetail_id = ? AND qd.dentist_id = ?
-    `, [queuedetailId, dentist.dentist_id]);
-
-    if (checkResult.length === 0) {
-      return res.status(403).json({
-        success: false,
-        error: 'ไม่มีสิทธิ์ลบข้อมูลนี้'
-      });
-    }
-
-    // ใช้ Model ลบข้อมูล
-    const result = await TreatmentHistoryModel.deleteByQueueDetailId(queuedetailId);
-
-    if (result.success) {
-      res.json({
-        success: true,
-        message: 'ยกเลิกประวัติการรักษาเรียบร้อยแล้ว'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: 'ไม่พบประวัติการรักษาที่ต้องการลบ'
-      });
-    }
-
-  } catch (error) {
-    console.error('Error in cancelTreatmentHistory:', error);
-    res.status(500).json({
-      success: false,
-      error: 'เกิดข้อผิดพลาดในการยกเลิกประวัติการรักษา'
-    });
-  }
-},
   // API: ดึงนัดหมายของผู้ป่วยสำหรับเพิ่มประวัติ
   // ✅ REFACTORED: ใช้ Model แทน SQL
   getAppointmentForHistory: async (req, res) => {
@@ -2304,7 +2175,8 @@ saveAddHistory: async (req, res) => {
     const {
       queueId,
       diagnosis,
-      followUpRecommendation
+      followUpRecommendation,
+      chemicalAllergy
     } = req.body;
 
     // Basic validation
@@ -2348,7 +2220,8 @@ saveAddHistory: async (req, res) => {
     const historyResult = await TreatmentHistoryModel.createOrUpdate({
       queuedetailId: queue.queuedetail_id,
       diagnosis,
-      followUpdate: followUpRecommendation || ''
+      followUpdate: followUpRecommendation || '',
+      chemicalAllergy: chemicalAllergy || ''
     });
 
     // อัปเดตสถานะคิว
