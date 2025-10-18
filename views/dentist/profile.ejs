@@ -56,8 +56,8 @@
     .info-section{margin-bottom:30px}
     .section-title{font-size:16px;font-weight:600;color:#333;margin-bottom:15px;padding-bottom:8px;border-bottom:2px solid #f8f9fa}
     .info-row{display:flex;margin-bottom:12px;align-items:flex-start}
-    .info-label{font-weight:500;color:#555;width:200px;flex-shrink:0;font-size:14px}
-    .info-value{color:#333;flex:1;font-size:14px;line-height:1.4}
+    .info-label{font-weight:500;color:#555;min-width:200px;flex-shrink:0;font-size:14px;word-wrap:break-word}
+    .info-value{color:#333;flex:1;font-size:14px;line-height:1.4;word-wrap:break-word;overflow-wrap:break-word}
     .password-value{color:#666;font-family:monospace;font-size:16px}
 
     .action-buttons{display:flex;gap:15px;margin-top:30px;flex-wrap:wrap}
@@ -72,7 +72,7 @@
       .main{margin-left:0}
       .profile-main{flex-direction:column;align-items:center;text-align:center}
       .info-row{flex-direction:column;gap:5px}
-      .info-label{width:auto;font-weight:600}
+      .info-label{min-width:auto;font-weight:600}
       .action-buttons{flex-direction:column}
       .action-buttons button, .action-buttons a{width:100%}
     }
@@ -104,8 +104,7 @@
           <div class="user-info" onclick="toggleDropdown()">
             <div class="avatar" id="navAvatar">
               <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
-                     onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+                <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="handleImageError(this, 'navAvatar')">
               <% } else { %>
                 <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
               <% } %>
@@ -138,8 +137,7 @@
         <div class="profile-main">
           <div class="profile-avatar" id="profileAvatar">
             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-              <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
-                   onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+              <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="handleImageError(this, 'profileAvatar')">
             <% } else { %>
               <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
             <% } %>
@@ -148,31 +146,8 @@
           <div class="profile-info">
             <h2 class="dentist-name">ทพ. <%= dentist.fname %> <%= dentist.lname %></h2>
             <p class="last-login">
-              เข้าสู่ระบบล่าสุด:
-              <% if (dentist && dentist.last_login) { %>
-                <%= new Date(dentist.last_login).toLocaleDateString('th-TH', {
-                      day:'2-digit', month:'short', year:'numeric'
-                    }) %>
-                เวลา <%= new Date(dentist.last_login).toLocaleTimeString('th-TH', {
-                      hour:'2-digit', minute:'2-digit', hour12:false
-                    }) %> น.
-              <% } else { %>
-                ยังไม่เคยเข้าสู่ระบบ
-              <% } %>
+              ทันตแพทย์ประจำคลินิก
             </p>
-
-            <!-- ข้อมูลการเข้าสู่ระบบ -->
-            <div class="info-section">
-              <h3 class="section-title">ข้อมูลการเข้าสู่ระบบ</h3>
-              <div class="info-row">
-                <div class="info-label">อีเมล:</div>
-                <div class="info-value"><%= dentist.email || 'ไม่ได้ระบุ' %></div>
-              </div>
-              <div class="info-row">
-                <div class="info-label">รหัสผ่าน:</div>
-                <div class="info-value password-value">••••••</div>
-              </div>
-            </div>
 
             <!-- ข้อมูลส่วนตัว -->
             <div class="info-section">
@@ -193,28 +168,35 @@
                 <div class="info-label">เลขบัตรประชาชน:</div>
                 <div class="info-value"><%= dentist.id_card || 'ไม่ได้ระบุ' %></div>
               </div>
-              <div class="info-row">
-                <div class="info-label">เลขที่ใบอนุญาตประกอบวิชาชีพ:</div>
-                <div class="info-value"><%= dentist.license_no || 'ไม่ได้ระบุ' %></div>
-              </div>
+               <div class="info-row">
+                   <div class="info-label">เลขที่ใบอนุญาตประกอบวิชาชีพ:</div>
+                   <div class="info-value">
+                     <% 
+                       // ใช้วิธีเดียวกับ view-dentist.ejs เพื่อรองรับหลายชื่อฟิลด์
+                       const licenseVal = dentist.license_no || dentist.license_number || dentist.licenseNo || dentist.license || dentist.dental_license;
+                     %>
+                     <%= licenseVal || 'ไม่ได้ระบุ' %>
+                   </div>
+               </div>
               <div class="info-row">
                 <div class="info-label">ความเชี่ยวชาญ:</div>
                 <div class="info-value">
-                  <% if (dentist.specialty === 'General Dentistry') { %>
-                    ทันตกรรมทั่วไป
-                  <% } else if (dentist.specialty === 'Tooth Extraction') { %>
-                    ถอนฟัน
-                  <% } else if (dentist.specialty === 'Orthodontics') { %>
-                    จัดฟัน
-                  <% } else if (dentist.specialty === 'Endodontics') { %>
-                    รักษารากฟัน
-                  <% } else if (dentist.specialty === 'Periodontics') { %>
-                    ปริทันต์
-                  <% } else if (dentist.specialty === 'Oral Surgery') { %>
-                    ศัลยกรรมช่องปาก
-                  <% } else { %>
-                    <%= dentist.specialty || 'ทันตกรรมทั่วไป' %>
-                  <% } %>
+                  <% 
+                    const specialtyMap = {
+                      'General Dentistry': 'ทันตกรรมทั่วไป',
+                      'Tooth Extraction': 'ถอนฟัน',
+                      'Orthodontics': 'จัดฟัน',
+                      'Endodontics': 'รักษารากฟัน',
+                      'Periodontics': 'ปริทันต์',
+                      'Oral Surgery': 'ศัลยกรรมช่องปาก',
+                      'Prosthodontics': 'ทันตกรรมประดิษฐ์',
+                      'Pediatric Dentistry': 'ทันตกรรมเด็ก',
+                      'Oral Medicine': 'ทันตกรรมช่องปากและใบหน้า'
+                    };
+                    const specialty = dentist.specialty || 'General Dentistry';
+                    const specialtyThai = specialtyMap[specialty] || specialty;
+                  %>
+                  <%= specialtyThai %>
                 </div>
               </div>
               <div class="info-row">
@@ -222,6 +204,19 @@
                 <div class="info-value">
                   <%= dentist.education || 'ไม่ได้ระบุ' %>
                 </div>
+              </div>
+            </div>
+
+            <!-- ข้อมูลการเข้าสู่ระบบ -->
+            <div class="info-section">
+              <h3 class="section-title">ข้อมูลการเข้าสู่ระบบ</h3>
+              <div class="info-row">
+                <div class="info-label">อีเมล:</div>
+                <div class="info-value"><%= dentist.email || 'ไม่ได้ระบุ' %></div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">รหัสผ่าน:</div>
+                <div class="info-value password-value">••••••</div>
               </div>
             </div>
 
@@ -260,6 +255,13 @@
     }
     function toggleNotifications(){ 
       alert('ฟีเจอร์การแจ้งเตือนกำลังพัฒนา!'); 
+    }
+    function handleImageError(img, containerId) {
+      img.remove();
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.textContent = '<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : "DR" %>';
+      }
     }
     document.addEventListener('click',function(e){
       const prof=document.querySelector('.profile-dropdown');

@@ -142,7 +142,6 @@ router.get('/api/appointments', requireAuth, requireDentist, dentistController.g
 router.get('/api/appointments/today', requireAuth, requireDentist, dentistController.getTodayAppointments);
 router.get('/api/appointments/upcoming', requireAuth, requireDentist, dentistController.getUpcomingAppointments);
 router.post('/api/appointment/confirm', requireAuth, requireDentist, dentistController.confirmAppointment);
-router.post('/api/appointment/cancel', requireAuth, requireDentist, dentistController.cancelAppointment);
 router.post('/api/appointment/complete', requireAuth, requireDentist, dentistController.completeAppointment);
 
 // Calendar API

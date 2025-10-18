@@ -1686,42 +1686,6 @@ confirmAppointment: async (req, res) => {
   }
 },
 
-  // ✅ REFACTORED: ใช้ Model แทน SQL
-cancelAppointment: async (req, res) => {
-  try {
-    const userId = req.session.user?.user_id || req.session.userId;
-    const { queueId, reason } = req.body;
-
-    const { DentistModel, QueueModel } = require('../models');
-
-    // ใช้ Model ค้นหาทันตแพทย์
-    const dentist = await DentistModel.findByUserId(userId);
-    if (!dentist) {
-      return res.status(404).json({ success: false, error: 'ไม่พบข้อมูลทันตแพทย์' });
-    }
-
-    // ใช้ Model ยกเลิกนัดหมาย (รวมตรวจสอบสิทธิ์และ validation)
-    const result = await QueueModel.cancelAppointment(queueId, dentist.dentist_id);
-
-    // สร้างการแจ้งเตือนการยกเลิก
-    await NotificationHelper.createCancellationNotification(
-      queueId,
-      result.queueData.patient_id,
-      result.queueData.dentist_id,
-      'dentist',
-      reason
-    );
-
-    res.json({ success: true, message: 'ยกเลิกนัดหมายเรียบร้อยแล้ว' });
-
-  } catch (error) {
-    console.error('Error in cancelAppointment:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'เกิดข้อผิดพลาด'
-    });
-  }
-},
   // ทำเครื่องหมายเสร็จสิ้น - มีการแจ้งเตือน
 // ✅ REFACTORED: ใช้ Model แทน SQL
 completeAppointment: async (req, res) => {

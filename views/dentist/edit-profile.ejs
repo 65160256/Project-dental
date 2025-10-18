@@ -62,7 +62,7 @@
     .form-input[readonly],.form-input[disabled]{background:#f0f2f5;color:#6c757d;cursor:not-allowed}
     .form-textarea{min-height:90px;resize:vertical}
     .readonly-warning{background:#fff3cd;border:1px solid #ffeaa7;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px}
-    .field-help{font-size:11px;color:#6c757d;margin-top:4px;display:block}
+    .field-help{display:none}
     
     /* License Input Group */
     .license-input-group{display:flex;gap:8px;align-items:stretch}
@@ -71,8 +71,8 @@
 
     .action-buttons{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
     .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none}
-    .btn-save{background:#4CAF50;color:#fff}
-    .btn-save:hover{background:#3f9443}
+    .btn-save{background:#FFA726;color:#fff}
+    .btn-save:hover{background:#FF9800}
     .btn-password{background:#E0E0E0;color:#555}
     .btn-password:hover{background:#cfcfcf}
     .btn-cancel{background:#666;color:#fff}
@@ -192,7 +192,7 @@
 
             <!-- ข้อมูลส่วนตัว -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-user" style="color:#4A90E2"></i> ข้อมูลส่วนตัว</h3>
+              <h3 class="section-title">ข้อมูลส่วนตัว</h3>
 
               <div class="form-row">
                 <label class="form-label">ชื่อ: <span style="color:red">*</span></label>
@@ -200,7 +200,6 @@
                        value="<%= dentist?.fname || '' %>" 
                        required
                        placeholder="กรอกชื่อจริง">
-                <small class="field-help">ชื่อจริงของคุณ (ภาษาไทยหรืออังกฤษ)</small>
               </div>
 
               <div class="form-row">
@@ -209,7 +208,12 @@
                        value="<%= dentist?.lname || '' %>" 
                        required
                        placeholder="กรอกนามสกุล">
-                <small class="field-help">นามสกุลของคุณ (ภาษาไทยหรืออังกฤษ)</small>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">วันเดือนปีเกิด:</label>
+                <input type="date" name="dob" class="form-input"
+                       value="<%= (dentist && dentist.dob) ? new Date(dentist.dob).toISOString().split('T')[0] : '' %>">
               </div>
 
               <div class="form-row">
@@ -220,11 +224,10 @@
                        maxlength="13"
                        pattern="^\d{13}$"
                        placeholder="กรอก 13 หลัก">
-                <small class="field-help">เลขบัตรประชาชน 13 หลัก (ตัวเลขเท่านั้น)</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">เลขที่ใบอนุญาตประกอบวิชาชีพทันตกรรม:</label>
+                <label class="form-label">เลขที่ใบอนุญาตประกอบวิชาชีพ:</label>
                 <div class="license-input-group">
                   <select name="license_prefix" class="form-input license-prefix">
                     <option value="">เลือกประเภท</option>
@@ -236,31 +239,10 @@
                   <input type="text" name="license_no" class="form-input license-number" 
                          placeholder="กรอกตัวเลข">
                 </div>
-                <small class="field-help">เลือกประเภทใบอนุญาตและกรอกตัวเลข (เช่น ท.บ. 32458)</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">อีเมล: <span style="color:red">*</span></label>
-                <input type="email" name="email" id="email" class="form-input" 
-                       value="<%= dentist?.email || '' %>" 
-                       required
-                       autocomplete="email"
-                       placeholder="example@email.com">
-                <small class="field-help">อีเมลสำหรับเข้าสู่ระบบและติดต่อ</small>
-              </div>
-            <!-- ข้อมูลวิชาชีพ -->
-            <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-briefcase-medical" style="color:#28a745"></i> ข้อมูลวิชาชีพ</h3>
-
-              <div class="form-row">
-                <label class="form-label">วันเดือนปีเกิด:</label>
-                <input type="date" name="dob" class="form-input"
-                       value="<%= (dentist && dentist.dob) ? new Date(dentist.dob).toISOString().split('T')[0] : '' %>">
-                <small class="field-help">ใช้สำหรับคำนวณอายุและรายงานสถิติ</small>
-              </div>
-
-              <div class="form-row">
-                <label class="form-label">ความเชี่ยวชาญหลัก:</label>
+                <label class="form-label">ความเชี่ยวชาญ:</label>
                 <select name="specialty" class="form-select">
                   <option value="">เลือกความเชี่ยวชาญหลัก</option>
                   <option value="General Dentistry" <%= dentist?.specialty === 'General Dentistry' ? 'selected' : '' %>>ทันตกรรมทั่วไป</option>
@@ -270,26 +252,42 @@
                   <option value="Periodontics" <%= dentist?.specialty === 'Periodontics' ? 'selected' : '' %>>ปริทันต์</option>
                   <option value="Oral Surgery" <%= dentist?.specialty === 'Oral Surgery' ? 'selected' : '' %>>ศัลยกรรมช่องปาก</option>
                 </select>
-                <small class="field-help">ความเชี่ยวชาญหลัก แสดงให้ผู้ป่วยเห็นในการจองนัด</small>
               </div>
 
               <div class="form-row">
-                <label class="form-label">วุฒิการศึกษาและใบรับรองเพิ่มเติม:</label>
+                <label class="form-label">วุฒิการศึกษา:</label>
                 <textarea name="education" id="education" maxlength="800" class="form-textarea"
                           placeholder="กรอกวุฒิการศึกษา ใบรับรอง หรือการอบรมเพิ่มเติม..."><%= dentist?.education || '' %></textarea>
                 <div class="char-counter"><span id="eduCount">0</span>/800</div>
-                <small class="field-help">ใบรับรองเพิ่มเติม หลักสูตรอบรม หรือความเชี่ยวชาญพิเศษ</small>
+              </div>
+            </div>
+
+            <!-- ข้อมูลการเข้าสู่ระบบ -->
+            <div class="form-section">
+              <h3 class="section-title">ข้อมูลการเข้าสู่ระบบ</h3>
+
+              <div class="form-row">
+                <label class="form-label">อีเมล: <span style="color:red">*</span></label>
+                <input type="email" name="email" id="email" class="form-input" 
+                       value="<%= dentist?.email || '' %>" 
+                       required
+                       autocomplete="email"
+                       placeholder="example@email.com">
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">รหัสผ่าน:</label>
+                <input type="password" class="form-input" value="••••••" readonly>
               </div>
             </div>
 
             <!-- ข้อมูลติดต่อ -->
             <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-phone" style="color:#17a2b8"></i> ข้อมูลติดต่อ</h3>
+              <h3 class="section-title">ข้อมูลติดต่อ</h3>
 
               <div class="form-row">
                 <label class="form-label">ที่อยู่:</label>
                 <textarea name="address" class="form-textarea" placeholder="กรอกที่อยู่ปัจจุบันของคุณ..."><%= dentist?.address || '' %></textarea>
-                <small class="field-help">ที่อยู่ปัจจุบันหรือที่อยู่คลินิก</small>
               </div>
 
               <div class="form-row">
@@ -298,31 +296,17 @@
                        value="<%= dentist?.phone || '' %>"
                        placeholder="08xxxxxxxx" inputmode="numeric"
                        pattern="^0\d{8,9}$">
-                <small class="field-help">กรอกเฉพาะตัวเลข 9–10 หลัก เริ่มด้วย 0</small>
-              </div>
-            </div>
-
-            <!-- การตั้งค่าความปลอดภัย -->
-            <div class="form-section">
-              <h3 class="section-title"><i class="fas fa-shield-alt" style="color:#6f42c1"></i> การตั้งค่าความปลอดภัย</h3>
-              <div class="security-section">
-                <div class="security-header">
-                  <i class="fas fa-info-circle" style="color:#0d6efd"></i>
-                  <strong>จัดการความปลอดภัยของคุณ</strong>
-                </div>
-                <p class="security-description">คุณสามารถเปลี่ยนรหัสผ่านหรืออีเมลเข้าสู่ระบบได้จากปุ่มด้านล่าง</p>
-              </div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <a href="/dentist/profile/change-password" class="btn btn-password"><i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน</a>
               </div>
             </div>
 
             <!-- ปุ่มดำเนินการ -->
             <div class="action-buttons">
               <button type="submit" class="btn btn-save" id="saveBtn">
-                <i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง
+                <i class="fas fa-edit"></i> แก้ไข
               </button>
-              <a href="/dentist/profile" class="btn btn-cancel"><i class="fas fa-times"></i> ยกเลิก</a>
+              <a href="/dentist/profile/change-password" class="btn btn-password">
+                <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
+              </a>
             </div>
           </form>
         </div>
@@ -349,6 +333,17 @@
           // รูปแบบอื่นๆ - ใส่ในช่อง number และให้เลือก prefix
           document.querySelector('input[name="license_no"]').value = licenseValue;
         }
+      }
+      
+      // เพิ่ม event listener สำหรับ license fields
+      const licensePrefix = document.querySelector('select[name="license_prefix"]');
+      const licenseNumber = document.querySelector('input[name="license_no"]');
+      
+      if (licensePrefix) {
+        licensePrefix.addEventListener('change', () => setDirty(true));
+      }
+      if (licenseNumber) {
+        licenseNumber.addEventListener('input', () => setDirty(true));
       }
     });
 
@@ -416,6 +411,17 @@
       });
     }
 
+    // บังคับให้เลขที่ใบอนุญาตเป็นตัวเลขเท่านั้น
+    const licenseNumberInput = document.querySelector('input[name="license_no"]');
+    if(licenseNumberInput){
+      licenseNumberInput.addEventListener('input', ()=>{
+        const caret = licenseNumberInput.selectionStart;
+        licenseNumberInput.value = licenseNumberInput.value.replace(/[^0-9]/g,'');
+        licenseNumberInput.setSelectionRange(caret, caret);
+        setDirty(true);
+      });
+    }
+
     // Avatar: คลิกเพื่อเปลี่ยนรูป
     const avatar = document.getElementById('profileAvatar');
     const photoInput = document.getElementById('photoInput');
@@ -444,7 +450,7 @@
 
     // ทำเครื่องหมาย dirty สำหรับ input ทั้งหมด
     document.querySelectorAll('input[name],textarea[name],select[name]').forEach(el=>{
-      if(el.name === '_csrf') return;
+      if(el.name === '_csrf' || el.name === 'license_prefix' || el.name === 'license_no') return;
       el.addEventListener('change', ()=>setDirty(true));
       el.addEventListener('input', ()=>setDirty(true));
     });
@@ -471,6 +477,12 @@
         showAlert('เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก', 'danger'); return;
       }
 
+      // ตรวจสอบเลขที่ใบอนุญาต
+      const licenseNumber = this.querySelector('input[name="license_no"]').value;
+      if(licenseNumber && !/^\d+$/.test(licenseNumber)){
+        showAlert('เลขที่ใบอนุญาตต้องเป็นตัวเลขเท่านั้น', 'danger'); return;
+      }
+
       // ตรวจสอบฟิลด์ที่จำเป็น
       const fname = this.querySelector('input[name="fname"]');
       const lname = this.querySelector('input[name="lname"]');
@@ -487,10 +499,19 @@
       try{
         const fd = new FormData();
         // เพิ่มฟิลด์ทั้งหมด
-        ['fname','lname','id_card','license_no','email','dob','specialty','education','address','phone','_csrf'].forEach(name=>{
+        ['fname','lname','id_card','email','dob','specialty','education','address','phone','_csrf'].forEach(name=>{
           const el = this.querySelector('[name="'+name+'"]');
           if(el && el.value !== undefined){ fd.append(name, el.value); }
         });
+        
+        // จัดการ license field - รวม prefix และ number
+        const licensePrefix = this.querySelector('select[name="license_prefix"]').value;
+        const licenseNumber = this.querySelector('input[name="license_no"]').value;
+        if(licensePrefix && licenseNumber) {
+          fd.append('license_no', licensePrefix + ' ' + licenseNumber);
+        } else if(licenseNumber) {
+          fd.append('license_no', licenseNumber);
+        }
         // เพิ่มรูปถ้ามีการเลือก
         if(photoInput && photoInput.files && photoInput.files[0]){ fd.append('photo', photoInput.files[0]); }
 

@@ -1018,9 +1018,6 @@
                                             <button onclick="addHistory(<%= appointment.queue_id %>)" class="action-btn confirm" title="เพิ่มประวัติการรักษา">
                                                 <i class="fas fa-plus-circle"></i> เพิ่มประวัติ
                                             </button>
-                                            <button onclick="cancelAppointment(<%= appointment.queue_id %>)" class="action-btn danger" title="ยกเลิกนัด">
-                                                <i class="fas fa-times-circle"></i> ยกเลิก
-                                            </button>
                                         <% } else if (appointment.queue_status === 'completed') { %>
                                             <!-- นัดที่รักษาเสร็จแล้ว -->
                                             <button onclick="viewTreatmentHistory(<%= appointment.queue_id %>)" class="action-btn" title="ดูประวัติการรักษา">
@@ -1334,34 +1331,6 @@
             window.location.href = `/dentist/treatment-history/${queueId}`;
         }
 
-        function cancelAppointment(queueId) {
-            if (confirm('ยืนยันที่จะยกเลิกการนัดหมายนี้หรือไม่?')) {
-                showLoading();
-                
-                fetch('/dentist/api/appointment/cancel', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ queueId: queueId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    hideLoading();
-                    if (data.success) {
-                        showNotification('ยกเลิกการนัดหมายสำเร็จ!', 'success');
-                        updateAppointmentRow(queueId, 'cancel');
-                    } else {
-                        showNotification('เกิดข้อผิดพลาด: ' + data.error, 'error');
-                    }
-                })
-                .catch(error => {
-                    hideLoading();
-                    console.error('Error:', error);
-                    showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-                });
-            }
-        }
 
         function updateAppointmentRow(queueId, newStatus) {
             const row = document.querySelector(`tr[data-appointment-id="${queueId}"]`);
@@ -1400,9 +1369,6 @@
                         actionsCell.innerHTML = `
                             <button onclick="addHistory(${queueId})" class="action-btn confirm" title="เพิ่มประวัติการรักษา">
                                 <i class="fas fa-plus-circle"></i> เพิ่มประวัติ
-                            </button>
-                            <button onclick="cancelAppointment(${queueId})" class="action-btn danger" title="ยกเลิกนัด">
-                                <i class="fas fa-times-circle"></i> ยกเลิก
                             </button>
                         `;
                     }
