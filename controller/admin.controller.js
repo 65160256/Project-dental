@@ -1635,16 +1635,44 @@ module.exports.notificationUtils = {
   getUnreadNotificationCount
 };
 
-// Get appointments for a specific date
+// Get appointments for a specific date with filtering
 exports.getAppointmentsAPI = async (req, res) => {
   try {
-    const { date = new Date().toISOString().split('T')[0] } = req.query;
-    const appointments = await AppointmentAdminModel.getAllAppointments({ date });
+    const { 
+      date,
+      date_from,
+      date_to,
+      status,
+      dentist_id,
+      treatment_id,
+      search
+    } = req.query;
+    
+    const filters = {};
+    
+    // Handle date filtering - prioritize date range over single date
+    if (date_from || date_to) {
+      if (date_from) filters.date_from = date_from;
+      if (date_to) filters.date_to = date_to;
+    } else if (date) {
+      filters.date = date;
+    } else {
+      // Default to today if no date specified
+      filters.date = new Date().toISOString().split('T')[0];
+    }
+    
+    // Add other filters if provided
+    if (status) filters.status = status;
+    if (dentist_id) filters.dentist_id = dentist_id;
+    if (treatment_id) filters.treatment_id = treatment_id;
+    if (search) filters.search = search;
+    
+    const appointments = await AppointmentAdminModel.getAllAppointments(filters);
 
     res.json({
       success: true,
       appointments: appointments,
-      date: date,
+      filters: filters,
       total_count: appointments.length
     });
 

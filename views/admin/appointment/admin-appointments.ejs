@@ -101,6 +101,8 @@
     .filter-group label{font-weight:600;color:#333;font-size:13px}
     .filter-group select{padding:12px 16px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;transition:.3s;background:#f8f9fa}
     .filter-group select:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
+    .filter-input{padding:12px 16px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;transition:.3s;background:#f8f9fa;width:100%}
+    .filter-input:focus{outline:none;border-color:#4A90E2;background:#fff;box-shadow:0 0 0 3px rgba(74,144,226,.1)}
 
     .table-section{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)}
     .appointments-table{width:100%;border-collapse:collapse;font-size:14px}
@@ -274,6 +276,24 @@
         <div class="filter-content">
           <div class="filter-row">
             <div class="filter-group">
+              <label>ช่วงวันที่</label>
+              <select id="filterDateRange" onchange="toggleDateRangeInputs()">
+                <option value="today">วันนี้</option>
+                <option value="week">สัปดาห์นี้</option>
+                <option value="month">เดือนนี้</option>
+                <option value="custom">กำหนดเอง</option>
+                <option value="all">ทั้งหมด</option>
+              </select>
+            </div>
+            <div class="filter-group" id="customDateGroup" style="display:none;">
+              <label>วันที่เริ่มต้น</label>
+              <input type="date" id="filterDateFrom" class="filter-input">
+            </div>
+            <div class="filter-group" id="customDateToGroup" style="display:none;">
+              <label>วันที่สิ้นสุด</label>
+              <input type="date" id="filterDateTo" class="filter-input">
+            </div>
+            <div class="filter-group">
               <label>สถานะ</label>
               <select id="filterStatus">
                 <option value="">ทุกสถานะ</option>
@@ -446,8 +466,8 @@
     function setupEventListeners(){
       document.getElementById('prevWeek').addEventListener('click', ()=>{weekOffset--;generateDateButtons();loadAppointments();});
       document.getElementById('nextWeek').addEventListener('click', ()=>{weekOffset++;generateDateButtons();loadAppointments();});
-      let t; document.getElementById('searchInput').addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>{ filterAppointments(); },300); });
-      ['filterStatus','filterDentist','filterTreatment'].forEach(id=>{ document.getElementById(id)?.addEventListener('change', applyFilters); });
+      let t; document.getElementById('searchInput').addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>{ filterAppointments(); },500); });
+      ['filterStatus','filterDentist','filterTreatment','filterDateRange','filterDateFrom','filterDateTo'].forEach(id=>{ document.getElementById(id)?.addEventListener('change', filterAppointments); });
     }
     function generateDateButtons(){
       const container=document.getElementById('dateButtons'); const today=new Date(); container.innerHTML='';
@@ -480,13 +500,42 @@
         document.getElementById('loading').style.display='block';
         document.getElementById('tableSection').style.display='none';
         document.getElementById('emptyState').style.display='none';
-        const res = await fetch(`/admin/api/appointments?date=${selectedDate}`);
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        
+        // Get date range parameters
+        const dateRangeParams = getDateRangeParams();
+        if(dateRangeParams.date){
+          params.append('date', dateRangeParams.date);
+        } else if(dateRangeParams.date_from || dateRangeParams.date_to){
+          if(dateRangeParams.date_from) params.append('date_from', dateRangeParams.date_from);
+          if(dateRangeParams.date_to) params.append('date_to', dateRangeParams.date_to);
+        } else {
+          // Default to selected date if no date range is specified
+          params.append('date', selectedDate);
+        }
+        
+        // Add filter parameters if active
+        const status = document.getElementById('filterStatus').value;
+        const dentist = document.getElementById('filterDentist').value;
+        const treatment = document.getElementById('filterTreatment').value;
+        const search = document.getElementById('searchInput').value.trim();
+        
+        if(status) params.append('status', status);
+        if(dentist) params.append('dentist_id', dentist);
+        if(treatment) params.append('treatment_id', treatment);
+        if(search) params.append('search', search);
+        
+        const res = await fetch(`/admin/api/appointments?${params.toString()}`);
         if(!res.ok) throw new Error('HTTP '+res.status);
         const data = await res.json();
         if(data.success){
           appointmentsData = data.appointments || [];
           originalAppointmentsData = [...appointmentsData];
-          if(filtersActive){ filterAppointments(); } else { renderAppointments(appointmentsData); updateAppointmentCount(appointmentsData.length); }
+          renderAppointments(appointmentsData);
+          updateAppointmentCount(appointmentsData.length);
+          updateFilterToggleState();
         }else{ throw new Error(data.error||'Failed to load appointments'); }
       }catch(e){ console.error(e); showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้: '+e.message,'error'); renderEmptyState(); }
       finally{ document.getElementById('loading').style.display='none'; }
@@ -536,54 +585,110 @@
       if(pending>0){ badge.textContent=pending; badge.classList.add('show'); } else { badge.classList.remove('show'); }
     }
     function filterAppointments(){
-      let filtered=[...originalAppointmentsData];
-      const term=(document.getElementById('searchInput').value||'').toLowerCase().trim();
-      if(term){
-        filtered = filtered.filter(a=>{
-          const patient=(a.patient_name||'').toLowerCase().includes(term);
-          const treat=(a.treatment_name||'').toLowerCase().includes(term);
-          const dentist=(a.dentist_name||'').toLowerCase().includes(term);
-          const phone=(a.phone||'').includes(term);
-          return patient||treat||dentist||phone;
-        });
-      }
-      const st=document.getElementById('filterStatus').value;
-      if(st){ filtered = filtered.filter(a=>a.queue_status===st); }
-      const de=document.getElementById('filterDentist').value;
-      if(de){ filtered = filtered.filter(a=>a.dentist_id==de); }
-      const tr=document.getElementById('filterTreatment').value;
-      if(tr){ filtered = filtered.filter(a=>a.treatment_id==tr); }
-      appointmentsData = filtered;
-      renderAppointments(filtered);
-      updateAppointmentCount(filtered.length);
-      updateFilterToggleState();
+      // Use server-side filtering by reloading appointments
+      loadAppointments();
     }
     function updateFilterToggleState(){
       const term=document.getElementById('searchInput').value.trim();
       const st=document.getElementById('filterStatus').value;
       const de=document.getElementById('filterDentist').value;
       const tr=document.getElementById('filterTreatment').value;
+      const dateRange=document.getElementById('filterDateRange').value;
+      const fromDate=document.getElementById('filterDateFrom').value;
+      const toDate=document.getElementById('filterDateTo').value;
+      
       const active=[term,st,de,tr].filter(Boolean).length;
+      const dateRangeActive = dateRange !== 'today' || fromDate || toDate;
+      const totalActive = active + (dateRangeActive ? 1 : 0);
+      
       const btn=document.getElementById('filterToggle');
-      if(active>0){ btn.classList.add('active'); btn.innerHTML=`<i class="fas fa-filter"></i> ตัวกรอง (${active})`; filtersActive=true; }
-      else{ btn.classList.remove('active'); btn.innerHTML='<i class="fas fa-filter"></i> ตัวกรอง'; filtersActive=false; }
+      if(totalActive>0){ 
+        btn.classList.add('active'); 
+        btn.innerHTML=`<i class="fas fa-filter"></i> ตัวกรอง (${totalActive})`; 
+        filtersActive=true; 
+      } else { 
+        btn.classList.remove('active'); 
+        btn.innerHTML='<i class="fas fa-filter"></i> ตัวกรอง'; 
+        filtersActive=false; 
+      }
     }
-    function applyFilters(){ filterAppointments(); showToast('ใช้ตัวกรองสำเร็จ','success'); }
+    function applyFilters(){ 
+      filterAppointments(); 
+      showToast('ใช้ตัวกรองสำเร็จ','success'); 
+    }
     function clearFilters(){
       document.getElementById('filterStatus').value='';
       document.getElementById('filterDentist').value='';
       document.getElementById('filterTreatment').value='';
       document.getElementById('searchInput').value='';
+      document.getElementById('filterDateRange').value='today';
+      document.getElementById('filterDateFrom').value='';
+      document.getElementById('filterDateTo').value='';
+      toggleDateRangeInputs();
       filtersActive=false;
-      appointmentsData=[...originalAppointmentsData];
-      renderAppointments(appointmentsData);
-      updateAppointmentCount(appointmentsData.length);
       document.getElementById('filterToggle').classList.remove('active');
       document.getElementById('filterToggle').innerHTML='<i class="fas fa-filter"></i> ตัวกรอง';
+      // Reload appointments without filters
+      loadAppointments();
       showToast('ล้างตัวกรองแล้ว','success');
     }
     function toggleFilters(){ document.getElementById('filterPanel').classList.toggle('show'); }
     function refreshAppointments(){ showToast('กำลังรีเฟรชข้อมูล...','success'); loadAppointments(); }
+    
+    function toggleDateRangeInputs(){
+      const dateRange = document.getElementById('filterDateRange').value;
+      const customDateGroup = document.getElementById('customDateGroup');
+      const customDateToGroup = document.getElementById('customDateToGroup');
+      
+      if(dateRange === 'custom'){
+        customDateGroup.style.display = 'flex';
+        customDateToGroup.style.display = 'flex';
+      } else {
+        customDateGroup.style.display = 'none';
+        customDateToGroup.style.display = 'none';
+      }
+    }
+    
+    function getDateRangeParams(){
+      const dateRange = document.getElementById('filterDateRange').value;
+      const today = new Date();
+      const todayStr = formatDateForAPI(today);
+      
+      switch(dateRange){
+        case 'today':
+          return { date: todayStr };
+        case 'week':
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          return { 
+            date_from: formatDateForAPI(weekStart), 
+            date_to: formatDateForAPI(weekEnd) 
+          };
+        case 'month':
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          return { 
+            date_from: formatDateForAPI(monthStart), 
+            date_to: formatDateForAPI(monthEnd) 
+          };
+        case 'custom':
+          const fromDate = document.getElementById('filterDateFrom').value;
+          const toDate = document.getElementById('filterDateTo').value;
+          if(fromDate && toDate){
+            return { date_from: fromDate, date_to: toDate };
+          } else if(fromDate){
+            return { date_from: fromDate };
+          } else if(toDate){
+            return { date_to: toDate };
+          }
+          return {};
+        case 'all':
+        default:
+          return {};
+      }
+    }
 
     // ======= Toast =======
     function showToast(message,type='success'){

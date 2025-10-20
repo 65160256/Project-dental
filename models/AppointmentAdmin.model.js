@@ -20,7 +20,19 @@ class AppointmentAdminModel {
       let whereClause = '';
       let params = [];
 
-      if (filters.date) {
+      // Handle date filtering - prioritize date range over single date
+      if (filters.date_from || filters.date_to) {
+        if (filters.date_from && filters.date_to) {
+          whereClause = 'WHERE DATE(qd.date) BETWEEN ? AND ?';
+          params.push(filters.date_from, filters.date_to);
+        } else if (filters.date_from) {
+          whereClause = 'WHERE DATE(qd.date) >= ?';
+          params.push(filters.date_from);
+        } else if (filters.date_to) {
+          whereClause = 'WHERE DATE(qd.date) <= ?';
+          params.push(filters.date_to);
+        }
+      } else if (filters.date) {
         whereClause = 'WHERE DATE(qd.date) = ?';
         params.push(filters.date);
       }
@@ -33,6 +45,19 @@ class AppointmentAdminModel {
       if (filters.dentist_id) {
         whereClause += whereClause ? ' AND qd.dentist_id = ?' : 'WHERE qd.dentist_id = ?';
         params.push(filters.dentist_id);
+      }
+
+      if (filters.treatment_id) {
+        whereClause += whereClause ? ' AND qd.treatment_id = ?' : 'WHERE qd.treatment_id = ?';
+        params.push(filters.treatment_id);
+      }
+
+      if (filters.search) {
+        const searchTerm = `%${filters.search}%`;
+        whereClause += whereClause ? 
+          ' AND (CONCAT(p.fname, " ", p.lname) LIKE ? OR t.treatment_name LIKE ? OR CONCAT(d.fname, " ", d.lname) LIKE ? OR p.phone LIKE ?)' :
+          'WHERE (CONCAT(p.fname, " ", p.lname) LIKE ? OR t.treatment_name LIKE ? OR CONCAT(d.fname, " ", d.lname) LIKE ? OR p.phone LIKE ?)';
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
       }
 
       const [rows] = await db.execute(`

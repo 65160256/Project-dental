@@ -301,7 +301,10 @@
       <div class="step-content active" id="step1Content">
         <!-- Filter -->
         <div class="form-section">
-          <h3 class="section-title"><i class="fas fa-filter"></i> กรองตามการรักษา</h3>
+          <h3 class="section-title">
+            <i class="fas fa-filter"></i> กรองตามการรักษา
+            <span id="filterStatus" style="font-size:12px;color:#666;margin-left:10px;"></span>
+          </h3>
           <div class="form-grid">
             <div class="form-group">
               <label for="treatmentFilter">การรักษา:</label>
@@ -310,7 +313,7 @@
               </select>
             </div>
             <div class="form-group" style="display:flex;align-items:end;gap:10px;">
-              <button type="button" class="btn btn-primary" onclick="applyTreatmentFilter()"><i class="fas fa-filter"></i> ใช้ตัวกรอง</button>
+              <button type="button" class="btn btn-primary" onclick="applyTreatmentFilter()"><i class="fas fa-filter"></i> ค้นหา</button>
               <button type="button" class="btn btn-secondary" onclick="clearTreatmentFilter()"><i class="fas fa-times"></i> ล้าง</button>
             </div>
           </div>
@@ -479,6 +482,7 @@ let selectedDuration = null;
         showToast('กำลังโหลดข้อมูลคลินิก…','info');
         await Promise.all([loadTreatments(), loadPatients(), loadDentists(), loadDentistTreatmentMap(), loadUserInfo()]);
         generateCalendar();
+        updateFilterStatus();
         showToast('พร้อมสำหรับการจองนัดแล้ว','success');
       }catch(e){
         console.error(e);
@@ -744,7 +748,15 @@ let selectedDuration = null;
 
     function applyTreatmentFilter(){
       filteredTreatmentId = document.getElementById('treatmentFilter').value;
-      populateCalendarDoctors();
+      
+      // Update filter status display
+      updateFilterStatus();
+      
+      // Reload calendar data with filter
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      loadMonthSchedules(year, month);
+      
       if(filteredTreatmentId){
         const t = treatmentsData.find(x=>x.treatment_id==filteredTreatmentId);
         showToast(`กรองตาม: ${t.treatment_name}`,'success');
@@ -755,8 +767,28 @@ let selectedDuration = null;
     function clearTreatmentFilter(){
       document.getElementById('treatmentFilter').value='';
       filteredTreatmentId='';
-      populateCalendarDoctors();
+      
+      // Update filter status display
+      updateFilterStatus();
+      
+      // Reload calendar data without filter
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      loadMonthSchedules(year, month);
+      
       showToast('ล้างตัวกรองแล้ว','success');
+    }
+    
+    function updateFilterStatus(){
+      const statusEl = document.getElementById('filterStatus');
+      if(filteredTreatmentId){
+        const t = treatmentsData.find(x=>x.treatment_id==filteredTreatmentId);
+        statusEl.textContent = `(กรองตาม: ${t ? t.treatment_name : 'ไม่ทราบ'})`;
+        statusEl.style.color = '#4A90E2';
+      }else{
+        statusEl.textContent = '(แสดงทั้งหมด)';
+        statusEl.style.color = '#666';
+      }
     }
 
     function selectCalendarDate(dateStr, dayEl){
@@ -998,13 +1030,24 @@ let selectedDuration = null;
       const sel = document.getElementById('treatmentSelect');
       const ts = doctorTreatmentMap[selectedDoctor.id]||[];
       sel.innerHTML = '<option value="">เลือกการรักษา</option>';
+      
+      // If there's a filter applied, only show treatments that match the filter
+      let availableTreatments = treatmentsData;
+      if(filteredTreatmentId){
+        availableTreatments = treatmentsData.filter(t => t.treatment_id == filteredTreatmentId);
+      }
+      
       if(ts.length===0){
-        treatmentsData.forEach(t=>{
+        availableTreatments.forEach(t=>{
           const opt=document.createElement('option');
           opt.value=t.treatment_id; opt.textContent=`${t.treatment_name} (${t.duration} นาที)`; sel.appendChild(opt);
         });
       }else{
-        ts.forEach(t=>{
+        // Filter available treatments by doctor's treatments
+        const doctorTreatments = availableTreatments.filter(t => 
+          ts.some(dt => dt.treatment_id == t.treatment_id)
+        );
+        doctorTreatments.forEach(t=>{
           const opt=document.createElement('option');
           opt.value=t.treatment_id; opt.textContent=`${t.treatment_name} (${t.duration} นาที)`; sel.appendChild(opt);
         });
