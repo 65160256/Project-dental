@@ -180,8 +180,10 @@ updateAppointmentStatus: async (req, res) => {
     }
 
     // ใช้ Model อัปเดตสถานะนัดหมาย (รวมตรวจสอบสิทธิ์)
+    // เปลี่ยนสถานะเป็น 'completed' เฉพาะเมื่อส่ง status = 'completed' มาเท่านั้น
+    const finalStatus = status === 'completed' ? 'completed' : status;
     const result = await QueueModel.updateAppointmentStatus(queueId, dentist.dentist_id, {
-      status,
+      status: finalStatus,
       diagnosis,
       nextAppointment
     });
@@ -189,13 +191,13 @@ updateAppointmentStatus: async (req, res) => {
     const { oldStatus, appointment } = result;
 
     // สร้างการแจ้งเตือนตามสถานะใหม่
-    if (status === 'confirm' && oldStatus !== 'confirm') {
+    if (finalStatus === 'waiting_for_treatment' && oldStatus !== 'waiting_for_treatment') {
       await NotificationHelper.createConfirmationNotification(
         queueId,
         appointment.patient_id,
         appointment.dentist_id
       );
-    } else if (status === 'cancel' && oldStatus !== 'cancel') {
+    } else if (finalStatus === 'cancel' && oldStatus !== 'cancel') {
       await NotificationHelper.createCancellationNotification(
         queueId,
         appointment.patient_id,
@@ -203,7 +205,7 @@ updateAppointmentStatus: async (req, res) => {
         'dentist',
         diagnosis
       );
-    } else if (status === 'completed' && oldStatus !== 'completed') {
+    } else if (finalStatus === 'completed' && oldStatus !== 'completed') {
       await NotificationHelper.createTreatmentRecordNotification(
         queueId,
         appointment.patient_id,
@@ -784,10 +786,8 @@ getHistory: async (req, res) => {
     if (queueId) {
       appointment = await QueueModel.findByIdWithDetails(queueId);
 
-      // ตรวจสอบว่าเป็นของหมอคนนี้หรือไม่
-      if (appointment && appointment.dentist_id !== dentist.dentist_id) {
-        appointment = null; // ไม่มีสิทธิ์เข้าถึง
-      }
+      // แพทย์สามารถเข้าถึงข้อมูลการจองของทุกคนในคลินิกได้
+      // ไม่ต้องตรวจสอบ dentist_id
     }
 
     res.render('dentist/add-history', {
@@ -1751,13 +1751,8 @@ getTreatmentHistoryDetail: async (req, res) => {
       });
     }
 
-    // ตรวจสอบสิทธิ์: ต้องเป็นทันตแพทย์ที่ดูแลคนไข้คนนี้
-    if (treatment.dentist_id !== dentist.dentist_id) {
-      return res.status(403).json({
-        success: false,
-        error: 'ไม่มีสิทธิ์เข้าถึงข้อมูลนี้'
-      });
-    }
+    // ตรวจสอบสิทธิ์: แพทย์สามารถดูประวัติการรักษาของผู้ป่วยทุกคนในคลินิกได้
+    // ไม่ต้องตรวจสอบ dentist_id เพราะแพทย์ทุกคนในคลินิกมีสิทธิ์เข้าถึง
 
     res.json({
       success: true,
@@ -2078,12 +2073,15 @@ getAvailableSlots: async (req, res) => {
     // ใช้ Model ดึงข้อมูล appointment พร้อมตรวจสอบสิทธิ์
     const appointmentData = await QueueModel.findByIdWithDetails(queueId);
 
-    if (!appointmentData || appointmentData.dentist_id !== dentist.dentist_id) {
+    if (!appointmentData) {
       return res.status(404).json({
         success: false,
-        error: 'ไม่พบข้อมูลการจองหรือไม่มีสิทธิ์เข้าถึง'
+        error: 'ไม่พบข้อมูลการจอง'
       });
     }
+    
+    // แพทย์สามารถเข้าถึงข้อมูลการจองของทุกคนในคลินิกได้
+    // ไม่ต้องตรวจสอบ dentist_id
 
     // คำนวณอายุ (Controller responsibility)
     const age = appointmentData.patient_dob ?
@@ -2183,13 +2181,8 @@ saveAddHistory: async (req, res) => {
       });
     }
 
-    // ตรวจสอบสิทธิ์
-    if (queue.dentist_id !== dentist.dentist_id) {
-      return res.status(403).json({
-        success: false,
-        error: 'ไม่มีสิทธิ์เข้าถึงข้อมูลการจองนี้'
-      });
-    }
+    // แพทย์สามารถเข้าถึงข้อมูลการจองของทุกคนในคลินิกได้
+    // ไม่ต้องตรวจสอบ dentist_id
 
     // Model จัดการ validation และเลือก create/update อัตโนมัติ
     const historyResult = await TreatmentHistoryModel.createOrUpdate({

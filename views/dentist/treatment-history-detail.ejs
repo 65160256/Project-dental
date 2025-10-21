@@ -673,7 +673,7 @@
 
         // โหลดข้อมูลเมื่อหน้าโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
-            currentQueueId = '<%= typeof queueId !== "undefined" ? queueId : "" %>' || window.location.pathname.split('/').pop();
+            currentQueueId = '<%= typeof queueId !== "undefined" ? queueId : "" %>';
             
             if (currentQueueId && currentQueueId !== 'undefined' && currentQueueId !== '') {
                 loadTreatmentHistory(currentQueueId);

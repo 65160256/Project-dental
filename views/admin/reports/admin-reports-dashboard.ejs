@@ -2034,9 +2034,188 @@
             initializeDoctorStatsChart();
         }
 
+        function updateTreatmentChart(data) {
+            if (treatmentChart) {
+                treatmentChart.destroy();
+            }
+            
+            const ctx = document.getElementById('treatmentChart').getContext('2d');
+            
+            if (!data || data.length === 0) {
+                treatmentChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['ไม่มีข้อมูล'],
+                        datasets: [{
+                            label: 'จำนวนการรักษา',
+                            data: [0],
+                            backgroundColor: '#4A90E2',
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f3f4' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            treatmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.treatment_name),
+                    datasets: [{
+                        label: 'จำนวนการรักษา',
+                        data: data.map(item => item.count),
+                        backgroundColor: '#4A90E2',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#4A90E2',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: '#f1f3f4' },
+                            ticks: { color: '#666' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#666' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDoctorStatsChart(data) {
+            if (doctorStatsChart) {
+                doctorStatsChart.destroy();
+            }
+            
+            const ctx = document.getElementById('doctorStatsChart').getContext('2d');
+            
+            if (!data || data.length === 0) {
+                doctorStatsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['ไม่มีข้อมูล'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e0e0e0'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: { enabled: false }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            const colors = ['#4A90E2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            
+            doctorStatsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(item => item.dentist_name),
+                    datasets: [{
+                        data: data.map(item => item.appointment_count),
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#4A90E2',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAppointmentStats(data) {
+            // Update appointment statistics cards
+            if (data.total_appointments !== undefined) {
+                document.getElementById('totalAppointments').textContent = data.total_appointments;
+            }
+            if (data.completed_appointments !== undefined) {
+                document.getElementById('completedAppointments').textContent = data.completed_appointments;
+            }
+            if (data.pending_appointments !== undefined) {
+                document.getElementById('pendingAppointments').textContent = data.pending_appointments;
+            }
+            if (data.cancelled_appointments !== undefined) {
+                document.getElementById('cancelledAppointments').textContent = data.cancelled_appointments;
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                // Load treatment statistics
+                const treatmentResponse = await fetch('/admin/api/reports/treatment-stats');
+                const treatmentData = await treatmentResponse.json();
+                
+                // Load doctor statistics
+                const doctorResponse = await fetch('/admin/api/reports/doctor-stats');
+                const doctorData = await doctorResponse.json();
+                
+                // Load appointment statistics
+                const appointmentResponse = await fetch('/admin/api/reports/appointment-stats');
+                const appointmentData = await appointmentResponse.json();
+                
+                // Update charts with real data
+                updateTreatmentChart(treatmentData.success ? treatmentData.data : []);
+                updateDoctorStatsChart(doctorData.success ? doctorData.data : []);
+                updateAppointmentStats(appointmentData.success ? appointmentData.data : {});
+                
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
+                showToast('ไม่สามารถโหลดข้อมูลได้', 'error');
+            }
+        }
+
         function initializeTreatmentChart() {
             const ctx = document.getElementById('treatmentChart').getContext('2d');
-            // const treatmentData = <%- JSON.stringify(dashboardData.treatmentStats || []) %>;
             const treatmentData = [];
             
             // Use Thai treatment names directly
@@ -2601,6 +2780,18 @@
             if (profileDropdown && !profileDropdown.contains(event.target)) {
                 document.getElementById('profileDropdown').classList.remove('show');
             }
+        });
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateTime();
+            loadUserInfo();
+            initializeCharts();
+            loadDashboardData();
+            generateCalendar();
+            
+            // Update time every minute
+            setInterval(updateDateTime, 60000);
         });
 
         window.addEventListener('online', () => showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว', 'success'));

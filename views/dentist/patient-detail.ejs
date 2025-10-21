@@ -508,10 +508,14 @@
             margin-bottom: 10px;
         }
 
-        .status-completed,
-        .status-confirm {
+        .status-completed {
             background: #d1fae5;
             color: #065f46;
+        }
+
+        .status-waiting {
+            background: #dbeafe;
+            color: #1e40af;
         }
 
         .status-pending {
@@ -932,6 +936,31 @@
             document.getElementById('patientHeader').classList.add('loaded');
         }
 
+        // Status helper functions
+        function getStatusText(status) {
+            switch (status) {
+                case 'confirm': return 'รอการรักษา';
+                case 'waiting_for_treatment': return 'รอการรักษา';
+                case 'pending': return 'รอดำเนินการ';
+                case 'cancel':  return 'ยกเลิก';
+                case 'auto_cancelled': return 'ยกเลิกอัตโนมัติ';
+                case 'completed': return 'เสร็จสิ้น - ปิดการรักษา';
+                default:        return 'ไม่ทราบ';
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'confirm': return 'status-waiting';
+                case 'waiting_for_treatment': return 'status-waiting';
+                case 'pending': return 'status-pending';
+                case 'cancel':  return 'status-cancelled';
+                case 'auto_cancelled': return 'status-cancelled';
+                case 'completed': return 'status-completed';
+                default:        return 'status-pending';
+            }
+        }
+
         // Display treatment history
         function displayTreatmentHistory(treatmentsByYear) {
             const timeline = document.getElementById('treatmentTimeline');
@@ -974,8 +1003,8 @@
                                     ${treatment.treatment_name}
                                     ${treatment.duration ? `<small style="color: #666; font-weight: normal;">(${treatment.duration} นาที)</small>` : ''}
                                 </div>
-                                <span class="treatment-status status-${treatment.queue_status}">
-                                    ${treatment.queue_status === 'completed' ? 'เสร็จสิ้น - ปิดการรักษา' : treatment.statusText}
+                                <span class="treatment-status ${getStatusClass(treatment.queue_status)}">
+                                    ${getStatusText(treatment.queue_status)}
                                 </span>
                                 ${treatment.diagnosis ? `
                                     <div class="treatment-diagnosis">

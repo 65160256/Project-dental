@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controller/admin.controller');
+const reportsController = require('../controller/reports.controller');
 const db = require('../config/db'); 
 
 const upload = require('../middlewares/upload');
@@ -24,6 +25,13 @@ const checkAdminApiAuth = (req, res, next) => {
 };
 router.get('/api/current-user', checkAdminApiAuth, adminController.getCurrentUserAPI);
 router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
+
+// ==================== Reports API Routes ====================
+router.get('/api/reports/treatment-stats', checkAdminApiAuth, reportsController.getTreatmentStats);
+router.get('/api/reports/doctor-stats', checkAdminApiAuth, reportsController.getDoctorStats);
+router.get('/api/reports/appointment-stats', checkAdminApiAuth, reportsController.getAppointmentStats);
+router.get('/api/reports/calendar-appointments', checkAdminApiAuth, reportsController.getCalendarAppointments);
+router.get('/api/reports/revenue-stats', checkAdminApiAuth, reportsController.getRevenueStats);
 
 // ==================== Dashboard Routes ====================
 router.get('/dashboard', checkAdminAuth, adminController.getReportsDashboard);

@@ -76,12 +76,16 @@
     .status-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700}
     .status-pending{background:linear-gradient(135deg,#fff3cd,#ffeaa7);color:#856404;border:1px solid #fdcb6e}
     .status-confirm{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
+    .status-waiting{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af;border:1px solid #3b82f6}
+    .status-completed{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #10b981}
     .status-cancel{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;border:1px solid #f87171}
     /* Action Buttons */
     .action-buttons{display:flex;gap:15px;margin-top:30px;padding-top:25px;border-top:2px solid #f1f3f4}
     .btn{flex:1;padding:12px 24px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px}
     .btn-confirm{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
     .btn-confirm:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(16,185,129,.3)}
+    .btn-complete{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+    .btn-complete:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(59,130,246,.3)}
     .btn-cancel{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
     .btn-cancel:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 25px rgba(239,68,68,.3)}
     .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -226,6 +230,9 @@
             <button class="btn btn-confirm" id="confirmBtn" onclick="confirmAppointment()">
               <i class="fas fa-check"></i> ยืนยันการจอง
             </button>
+            <button class="btn btn-complete" id="completeBtn" onclick="completeAppointment()">
+              <i class="fas fa-check-circle"></i> รักษาเสร็จสิ้น
+            </button>
             <button class="btn btn-cancel" id="cancelBtn" onclick="cancelAppointment()">
               <i class="fas fa-times"></i> ยกเลิกการจอง
             </button>
@@ -321,6 +328,8 @@
       const statusMap = {
         pending: { cls: 'status-pending', icon: 'fa-clock', text: 'รอดำเนินการ' },
         confirm: { cls: 'status-confirm', icon: 'fa-check-circle', text: 'ยืนยันแล้ว' },
+        waiting_for_treatment: { cls: 'status-waiting', icon: 'fa-user-md', text: 'รอการรักษา' },
+        completed: { cls: 'status-completed', icon: 'fa-check-circle', text: 'เสร็จสิ้น' },
         cancelled: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
         cancel: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
       };
@@ -329,17 +338,20 @@
       statusEl.innerHTML = `<i class="fas ${cfg.icon}"></i> ${cfg.text}`;
 
       const confirmBtn = document.getElementById('confirmBtn');
+      const completeBtn = document.getElementById('completeBtn');
       const cancelBtn  = document.getElementById('cancelBtn');
       document.getElementById('actionButtons').style.display = 'flex';
 
       if (status === 'pending') {
         confirmBtn.style.display = 'flex';
+        completeBtn.style.display = 'none';
         cancelBtn.style.display = 'flex';
         confirmBtn.disabled = false; cancelBtn.disabled = false;
-      } else if (status === 'confirm') {
+      } else if (status === 'confirm' || status === 'waiting_for_treatment') {
         confirmBtn.style.display = 'none';
+        completeBtn.style.display = 'flex';
         cancelBtn.style.display = 'flex';
-        cancelBtn.disabled = false;
+        completeBtn.disabled = false; cancelBtn.disabled = false;
       } else {
         document.getElementById('actionButtons').style.display = 'none';
       }
@@ -366,6 +378,29 @@
       } catch (e) {
         showError('เกิดข้อผิดพลาด: ' + e.message);
         document.getElementById('confirmBtn').disabled = false;
+        document.getElementById('cancelBtn').disabled = false;
+      }
+    }
+
+    async function completeAppointment() {
+      if (!confirm('ยืนยันว่าการรักษาเสร็จสิ้นแล้วหรือไม่?\n\nเมื่อยืนยันแล้ว สถานะจะเปลี่ยนเป็น "เสร็จสิ้น"')) return;
+      try {
+        document.getElementById('completeBtn').disabled = true;
+        document.getElementById('cancelBtn').disabled = true;
+
+        const res = await fetch(`/admin/api/appointments/${appointmentId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess('เปลี่ยนสถานะเป็นเสร็จสิ้นสำเร็จ');
+          setTimeout(loadAppointmentDetails, 1000);
+        } else throw new Error(data.error || 'เปลี่ยนสถานะไม่สำเร็จ');
+      } catch (e) {
+        showError('เกิดข้อผิดพลาด: ' + e.message);
+        document.getElementById('completeBtn').disabled = false;
         document.getElementById('cancelBtn').disabled = false;
       }
     }

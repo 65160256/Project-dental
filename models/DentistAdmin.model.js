@@ -584,6 +584,44 @@ class DentistAdminModel {
       throw error;
     }
   }
+  /**
+   * ดึงข้อมูลตารางเวลาทันตแพทย์ทั้งหมดสำหรับแสดงในปฏิทิน admin
+   * @returns {Array} รายการตารางเวลา
+   */
+  static async getAllSchedulesForCalendar() {
+    try {
+      const [schedules] = await db.query(`
+        SELECT
+          ds.schedule_id,
+          ds.dentist_id,
+          ds.schedule_date,
+          ds.start_time,
+          ds.end_time,
+          ds.status,
+          ds.note,
+          d.fname,
+          d.lname,
+          d.specialty,
+          COUNT(q.queue_id) as appointment_count
+        FROM dentist_schedule ds
+        LEFT JOIN dentist d ON ds.dentist_id = d.dentist_id
+        LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
+          AND HOUR(q.time) = ds.hour
+          AND q.queue_status IN ('pending', 'confirm')
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+          AND qd.dentist_id = ds.dentist_id
+        WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY
+          AND ds.schedule_date <= CURDATE() + INTERVAL 90 DAY
+        GROUP BY ds.schedule_id, ds.dentist_id, ds.schedule_date, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
+        ORDER BY ds.schedule_date ASC, ds.start_time ASC
+      `);
+
+      return schedules;
+    } catch (error) {
+      console.error('Error getting all schedules for calendar:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = DentistAdminModel;

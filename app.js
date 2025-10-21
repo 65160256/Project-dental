@@ -240,6 +240,18 @@ cron.schedule('0 * * * *', async () => {
 });
 
 // ===============================
+// Auto-Cancel Appointments Job
+// ===============================
+cron.schedule('*/30 * * * *', async () => {
+  try {
+    const { autoCancelAppointments } = require('./jobs/auto-cancel-appointments');
+    await autoCancelAppointments();
+  } catch (error) {
+    console.error('Auto-cancel appointments error:', error);
+  }
+});
+
+// ===============================
 // Current User Middleware
 // ===============================
 app.use((req, res, next) => {

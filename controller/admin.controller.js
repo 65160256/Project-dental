@@ -218,32 +218,8 @@ exports.getScheduleAPI = async (req, res) => {
   }
 
   try {
-    // ดึงข้อมูลตารางเวลาทันตแพทย์ทั้งหมด
-    const [schedules] = await db.query(`
-      SELECT
-        ds.schedule_id,
-        ds.dentist_id,
-        ds.schedule_date,
-        ds.start_time,
-        ds.end_time,
-        ds.status,
-        ds.note,
-        d.fname,
-        d.lname,
-        d.specialty,
-        COUNT(q.queue_id) as appointment_count
-      FROM dentist_schedule ds
-      LEFT JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-        AND qd.dentist_id = ds.dentist_id
-      WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY
-        AND ds.schedule_date <= CURDATE() + INTERVAL 90 DAY
-      GROUP BY ds.schedule_id, ds.dentist_id, ds.schedule_date, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
-      ORDER BY ds.schedule_date ASC, ds.start_time ASC
-    `);
+    // ดึงข้อมูลตารางเวลาทันตแพทย์ทั้งหมดจาก Model
+    const schedules = await DentistAdminModel.getAllSchedulesForCalendar();
 
     console.log('📊 Raw schedules from DB:', schedules);
 
@@ -1958,11 +1934,11 @@ exports.updateAppointmentStatus = async (req, res) => {
     const { status, reason } = req.body;
     
     // Validate status
-    const validStatuses = ['pending', 'confirm', 'cancel'];
+    const validStatuses = ['pending', 'confirm', 'cancel', 'completed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        error: 'สถานะไม่ถูกต้อง ต้องเป็น pending, confirm หรือ cancel'
+        error: 'สถานะไม่ถูกต้อง ต้องเป็น pending, confirm, cancel หรือ completed'
       });
     }
 
@@ -1986,23 +1962,37 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     // Update appointment status via model
-    await AppointmentAdminModel.updateAppointmentStatus(id, status);
+    // If confirming appointment, change to 'waiting_for_treatment' instead of 'confirm'
+    const finalStatus = status === 'confirm' ? 'waiting_for_treatment' : status;
+    await AppointmentAdminModel.updateAppointmentStatus(id, finalStatus);
 
       // Create notification for the patient
-      const notificationTitle = status === 'confirm' 
-        ? 'การจองได้รับการยืนยัน' 
-        : 'การจองถูกยกเลิก';
-      
+      let notificationTitle = '';
       let notificationMessage = '';
+      
       if (status === 'confirm') {
+        notificationTitle = 'การจองได้รับการยืนยัน - รอการรักษา';
         notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} เวลา ${new Date(appointment.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} ได้รับการยืนยันแล้ว`;
+      } else if (status === 'completed') {
+        notificationTitle = 'การรักษาเสร็จสิ้น';
+        notificationMessage = `การรักษาของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} เสร็จสิ้นแล้ว`;
       } else if (status === 'cancel') {
+        notificationTitle = 'การจองถูกยกเลิก';
         notificationMessage = `การจองของคุณกับ Dr. ${appointment.dentist_name} สำหรับ ${appointment.treatment_name} ในวันที่ ${new Date(appointment.time).toLocaleDateString('th-TH')} ถูกยกเลิก${reason ? ` เหตุผล: ${reason}` : ''}`;
       }
 
       // Create notification for patient
+      let notificationType = '';
+      if (status === 'confirm') {
+        notificationType = 'appointment_confirmed';
+      } else if (status === 'completed') {
+        notificationType = 'treatment_completed';
+      } else if (status === 'cancel') {
+        notificationType = 'appointment_cancelled';
+      }
+      
       await NotificationAdminModel.createNotification({
-        type: status === 'confirm' ? 'appointment_confirmed' : 'appointment_cancelled',
+        type: notificationType,
         title: notificationTitle,
         message: notificationMessage,
         queue_id: id,
@@ -2013,9 +2003,14 @@ exports.updateAppointmentStatus = async (req, res) => {
       });
 
       // Create admin notification for tracking
-      const adminNotificationMessage = status === 'confirm'
-        ? `ยืนยันการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`
-        : `ยกเลิกการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
+      let adminNotificationMessage = '';
+      if (status === 'confirm') {
+        adminNotificationMessage = `ยืนยันการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
+      } else if (status === 'completed') {
+        adminNotificationMessage = `การรักษาเสร็จสิ้น: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
+      } else if (status === 'cancel') {
+        adminNotificationMessage = `ยกเลิกการจองสำเร็จ: ${appointment.patient_name} กับ Dr. ${appointment.dentist_name}`;
+      }
 
       await NotificationAdminModel.createNotification({
         type: 'admin_action',

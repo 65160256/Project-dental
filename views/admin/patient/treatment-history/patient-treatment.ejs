@@ -87,6 +87,7 @@
         .treatment-date{display:flex;align-items:center;gap:8px;color:#4A90E2;font-weight:600;font-size:14px}
         .treatment-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase}
         .status-completed{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #10b981}
+        .status-waiting{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af;border:1px solid #3b82f6}
         .status-pending{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border:1px solid #f59e0b}
         .status-cancelled{background:linear-gradient(135deg,#fecaca,#fca5a5);color:#991b1b;border:1px solid #ef4444}
 
@@ -483,17 +484,20 @@
 
         function getStatusClass(status) {
             switch (status) {
-                case 'confirm': return 'status-completed';
+                case 'confirm': return 'status-waiting';
+                case 'waiting_for_treatment': return 'status-waiting';
                 case 'pending': return 'status-pending';
                 case 'cancel':  return 'status-cancelled';
                 case 'auto_cancelled': return 'status-cancelled';
+                case 'completed': return 'status-completed';
                 default:        return 'status-pending';
             }
         }
 
         function getStatusText(status) {
             switch (status) {
-                case 'confirm': return 'เสร็จสิ้น - ปิดการรักษา';
+                case 'confirm': return 'รอการรักษา';
+                case 'waiting_for_treatment': return 'รอการรักษา';
                 case 'pending': return 'รอดำเนินการ';
                 case 'cancel':  return 'ยกเลิก';
                 case 'auto_cancelled': return 'ยกเลิกอัตโนมัติ';
