@@ -303,7 +303,10 @@ class PatientModel {
     const [rows] = await db.execute(
       `SELECT COUNT(*) as count
        FROM (
-         SELECT 1 FROM queue WHERE patient_id = ? AND dentist_id = ?
+         SELECT 1
+         FROM queue q
+         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+         WHERE q.patient_id = ? AND qd.dentist_id = ?
          UNION
          SELECT 1 FROM queuedetail WHERE patient_id = ? AND dentist_id = ?
        ) as combined`,
@@ -338,9 +341,9 @@ class PatientModel {
         d.fname as dentist_fname,
         d.lname as dentist_lname
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
@@ -403,17 +406,18 @@ class PatientModel {
         p.created_at as patient_since,
         TIMESTAMPDIFF(YEAR, p.dob, CURDATE()) as age,
         COUNT(DISTINCT q_all.queue_id) as total_visits_all,
-        COUNT(DISTINCT CASE WHEN q_my.dentist_id = ? THEN q_my.queue_id END) as my_visits,
+        COUNT(DISTINCT CASE WHEN qd_my.dentist_id = ? THEN q_my.queue_id END) as my_visits,
         MAX(q_all.time) as last_visit_all,
-        MAX(CASE WHEN q_my.dentist_id = ? THEN q_my.time END) as my_last_visit
+        MAX(CASE WHEN qd_my.dentist_id = ? THEN q_my.time END) as my_last_visit
       FROM patient p
       LEFT JOIN queue q_all ON p.patient_id = q_all.patient_id
-      LEFT JOIN queue q_my ON p.patient_id = q_my.patient_id AND q_my.dentist_id = ?
+      LEFT JOIN queue q_my ON p.patient_id = q_my.patient_id
+      LEFT JOIN queuedetail qd_my ON q_my.queuedetail_id = qd_my.queuedetail_id
       GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address,
                p.id_card, p.chronic_disease, p.allergy_history, p.created_at
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?`,
-      [dentistId, dentistId, dentistId, parseInt(limit), parseInt(offset)]
+      [dentistId, dentistId, parseInt(limit), parseInt(offset)]
     );
 
     // คำนวณสถานะและข้อมูลเพิ่มเติม
@@ -464,7 +468,8 @@ class PatientModel {
       `SELECT DISTINCT p.patient_id, p.fname, p.lname, p.phone
        FROM patient p
        JOIN queue q ON p.patient_id = q.patient_id
-       WHERE q.dentist_id = ?
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND (p.fname LIKE ? OR p.lname LIKE ? OR p.phone LIKE ?)
        LIMIT ?`,
       [dentistId, searchPattern, searchPattern, searchPattern, limit]
@@ -491,7 +496,7 @@ class PatientModel {
     } = filters;
 
     // สร้าง WHERE clause
-    let whereConditions = ['q.dentist_id = ?'];
+    let whereConditions = ['qd.dentist_id = ?'];
     let queryParams = [dentistId];
 
     // ค้นหาตามชื่อหรือเบอร์โทร
@@ -593,6 +598,7 @@ class PatientModel {
         TIMESTAMPDIFF(YEAR, p.dob, CURDATE()) as age
       FROM patient p
       JOIN queue q ON p.patient_id = q.patient_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       WHERE ${whereConditions.join(' AND ')}
       GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address
       ${havingConditions.length > 0 ? 'HAVING ' + havingConditions.join(' AND ') : ''}
@@ -609,6 +615,7 @@ class PatientModel {
       SELECT COUNT(DISTINCT p.patient_id) as total
       FROM patient p
       JOIN queue q ON p.patient_id = q.patient_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       WHERE ${whereConditions.join(' AND ')}
       ${havingConditions.length > 0 ? 'GROUP BY p.patient_id HAVING ' + havingConditions.join(' AND ') : ''}
     `;
@@ -650,7 +657,8 @@ class PatientModel {
         TIMESTAMPDIFF(YEAR, p.dob, CURDATE()) as age
       FROM patient p
       JOIN queue q ON p.patient_id = q.patient_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ?
       GROUP BY p.patient_id
       ORDER BY p.fname, p.lname`,
       [dentistId]
@@ -678,9 +686,9 @@ class PatientModel {
         d.fname as dentist_fname,
         d.lname as dentist_lname
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ?
     `;
@@ -725,9 +733,10 @@ class PatientModel {
         d.fname as dentist_fname,
         d.lname as dentist_lname
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time DESC
@@ -749,9 +758,10 @@ class PatientModel {
           d.fname as dentist_fname,
           d.lname as dentist_lname
         FROM queue q
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
         WHERE q.patient_id = ?
         ORDER BY q.time DESC
         LIMIT 1`,
@@ -794,11 +804,11 @@ class PatientModel {
         t.duration
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ?
-        AND q.dentist_id = ?
+        AND qd.dentist_id = ?
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time DESC
       LIMIT ?`,
@@ -831,8 +841,9 @@ class PatientModel {
       `SELECT q.queue_id, q.time, t.treatment_name AS treatment,
               CONCAT(d.fname, ' ', d.lname) AS dentist, q.queue_status
        FROM queue q
-       JOIN treatment t ON q.treatment_id = t.treatment_id
-       JOIN dentist d ON q.dentist_id = d.dentist_id
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       JOIN treatment t ON qd.treatment_id = t.treatment_id
+       JOIN dentist d ON qd.dentist_id = d.dentist_id
        WHERE q.patient_id = ? AND q.time > NOW() AND q.queue_status IN ('pending', 'confirm')
        ORDER BY q.time ASC LIMIT 1`,
       [patient.patient_id]
@@ -845,8 +856,9 @@ class PatientModel {
               q.queue_status
        FROM queue q
        JOIN patient p ON q.patient_id = p.patient_id
-       JOIN treatment t ON q.treatment_id = t.treatment_id
-       JOIN dentist d ON q.dentist_id = d.dentist_id
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       JOIN treatment t ON qd.treatment_id = t.treatment_id
+       JOIN dentist d ON qd.dentist_id = d.dentist_id
        WHERE q.patient_id = ? ORDER BY q.time DESC LIMIT 5`,
       [patient.patient_id]
     );
@@ -871,9 +883,11 @@ class PatientModel {
           d.photo,
           d.specialty
        FROM dentist d
-       JOIN available_slots s ON d.dentist_id = s.dentist_id
+       JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id
+       JOIN available_slots s ON dt.dentist_treatment_id = s.dentist_treatment_id
        WHERE s.date = CURDATE()
-       AND s.is_available = 1`
+       AND s.is_available = 0
+       AND s.dentist_treatment_id IS NOT NULL`
     );
 
     return {
@@ -1116,8 +1130,8 @@ class PatientModel {
       FROM queue q
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.patient_id = ?
       ORDER BY q.time DESC`,
       [patientId]
@@ -1148,8 +1162,8 @@ class PatientModel {
       FROM queue q
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.patient_id = ?
       AND q.time > NOW()
       AND q.queue_status IN ('pending', 'confirm')

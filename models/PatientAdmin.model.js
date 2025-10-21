@@ -174,13 +174,12 @@ class PatientAdminModel {
 
       // สร้าง notification
       await connection.execute(`
-        INSERT INTO notifications (type, title, message, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, is_read, is_new)
+        VALUES (?, ?, ?, 0, 1)
       `, [
         'welcome',
         'ยินดีต้อนรับ',
-        `สวัสดี ${patientData.fname} ${patientData.lname} ยินดีต้อนรับสู่ระบบนัดหมายทันตกรรม`,
-        patientId
+        `สวัสดี ${patientData.fname} ${patientData.lname} ยินดีต้อนรับสู่ระบบนัดหมายทันตกรรม`
       ]);
 
       await connection.commit();
@@ -351,7 +350,12 @@ class PatientAdminModel {
       `, [patientId]);
 
       // 2. ลบ notifications ที่เกี่ยวข้องกับผู้ป่วย
-      await connection.execute('DELETE FROM notifications WHERE patient_id = ?', [patientId]);
+      await connection.execute(`
+        DELETE n FROM notifications n
+        LEFT JOIN queue q ON n.queue_id = q.queue_id
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.patient_id = ?
+      `, [patientId]);
 
       // 3. ลบ queue records ที่เกี่ยวข้อง (child ของ queuedetail)
       await connection.execute('DELETE FROM queue WHERE patient_id = ?', [patientId]);
@@ -559,9 +563,9 @@ class PatientAdminModel {
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
           th.followUpdate as follow_update
         FROM queue q
-        JOIN treatment t ON q.treatment_id = t.treatment_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
         LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
         LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
         WHERE q.patient_id = ?
         ORDER BY q.time DESC

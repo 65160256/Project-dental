@@ -182,7 +182,9 @@ class TreatmentModel {
   static async delete(treatmentId) {
     // Check if treatment is being used in appointments
     const [appointments] = await db.execute(
-      `SELECT COUNT(*) as count FROM queue WHERE treatment_id = ?`,
+      `SELECT COUNT(*) as count FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.treatment_id = ?`,
       [treatmentId]
     );
 
@@ -215,8 +217,9 @@ class TreatmentModel {
 
     // Completed appointments
     const [completedAppointments] = await db.execute(
-      `SELECT COUNT(*) as total FROM queue
-       WHERE treatment_id = ? AND queue_status = 'completed'`,
+      `SELECT COUNT(*) as total FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.treatment_id = ? AND q.queue_status = 'completed'`,
       [treatmentId]
     );
 
@@ -224,8 +227,9 @@ class TreatmentModel {
     const [revenue] = await db.execute(
       `SELECT SUM(t.price) as total_revenue
        FROM queue q
-       JOIN treatment t ON q.treatment_id = t.treatment_id
-       WHERE q.treatment_id = ? AND q.queue_status = 'completed'`,
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       JOIN treatment t ON qd.treatment_id = t.treatment_id
+       WHERE qd.treatment_id = ? AND q.queue_status = 'completed'`,
       [treatmentId]
     );
 
@@ -247,7 +251,8 @@ class TreatmentModel {
         t.*,
         COUNT(q.queue_id) as appointment_count
        FROM treatment t
-       LEFT JOIN queue q ON t.treatment_id = q.treatment_id
+       LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
+       LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
        GROUP BY t.treatment_id
        ORDER BY appointment_count DESC
        LIMIT ?`,

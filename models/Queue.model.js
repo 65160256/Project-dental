@@ -10,16 +10,26 @@ class QueueModel {
     const {
       queuedetailId,
       patientId,
-      treatmentId,
-      dentistId,
       time,
       queueStatus = 'pending'
     } = queueData;
 
     // Validate required fields
-    if (!queuedetailId || !patientId || !treatmentId || !dentistId || !time) {
+    if (!queuedetailId || !patientId || !time) {
       throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
     }
+
+    // Fetch dentistId and treatmentId from queuedetail for conflict check
+    const [qdRows] = await db.execute(
+      `SELECT dentist_id, treatment_id FROM queuedetail WHERE queuedetail_id = ?`,
+      [queuedetailId]
+    );
+    if (qdRows.length === 0) {
+      throw new Error('ไม่พบข้อมูล queuedetail');
+    }
+
+    const dentistId = qdRows[0].dentist_id;
+    const treatmentId = qdRows[0].treatment_id;
 
     // Check for overlapping appointments for the same dentist
     const overlapping = await this.checkDentistConflict(dentistId, time, treatmentId);
@@ -27,11 +37,11 @@ class QueueModel {
       throw new Error('ทันตแพทย์มีนัดหมายในช่วงเวลานี้แล้ว');
     }
 
+    // Insert only normalized data; dentist/treatment are in queuedetail
     const [result] = await db.execute(
-      `INSERT INTO queue
-       (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [queuedetailId, patientId, treatmentId, dentistId, time, queueStatus]
+      `INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+       VALUES (?, ?, ?, ?)`,
+      [queuedetailId, patientId, time, queueStatus]
     );
 
     return {
@@ -66,8 +76,9 @@ class QueueModel {
     let query = `
       SELECT COUNT(*) as count
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND q.queue_status != 'cancelled'
         AND (
           (q.time < ? AND DATE_ADD(q.time, INTERVAL t.duration MINUTE) > ?) OR
@@ -104,9 +115,10 @@ class QueueModel {
         p.id_card as patient_id_card,
         p.chronic_disease,
         p.allergy_history,
+        qd.dentist_id AS dentist_id,
         d.fname as dentist_fname,
         d.lname as dentist_lname,
-d.specialty as dentist_specialization,
+        d.specialty as dentist_specialization,
         t.treatment_name,
         t.duration,
         0 AS price,
@@ -114,9 +126,9 @@ d.specialty as dentist_specialization,
         th.followUpdate
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ?`,
       [queueId]
@@ -146,9 +158,10 @@ d.specialty as dentist_specialization,
         d.lname as dentist_lname
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      WHERE q.queue_id = ? AND q.dentist_id = ?`,
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      WHERE q.queue_id = ? AND qd.dentist_id = ?`,
       [queueId, dentistId]
     );
 
@@ -187,9 +200,9 @@ d.specialty as dentist_specialization,
         th.diagnosis,
         th.followUpdate
       FROM queue q
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ?
     `;
@@ -229,10 +242,10 @@ d.specialty as dentist_specialization,
         th.followUpdate
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ?
+      WHERE qd.dentist_id = ?
     `;
 
     const params = [dentistId];
@@ -274,9 +287,9 @@ d.specialty as dentist_specialization,
         th.diagnosis
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE 1=1
     `;
@@ -397,9 +410,10 @@ d.specialty as dentist_specialization,
    */
   static async findByIdWithDentistAuth(queueId, dentistId) {
     const [rows] = await db.execute(
-      `SELECT q.queue_id, q.patient_id, q.dentist_id, q.queue_status, q.time
+      `SELECT q.queue_id, q.patient_id, q.queue_status, q.time
        FROM queue q
-       WHERE q.queue_id = ? AND q.dentist_id = ?`,
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE q.queue_id = ? AND qd.dentist_id = ?`,
       [queueId, dentistId]
     );
     return rows.length > 0 ? rows[0] : null;
@@ -530,10 +544,10 @@ d.specialty as dentist_specialization,
         t.duration
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
+      WHERE qd.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
       [dentistId]
     );
@@ -544,7 +558,8 @@ d.specialty as dentist_specialization,
         queue_status,
         COUNT(*) as count
       FROM queue q
-      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ? AND q.queue_status != 'pending'
       GROUP BY queue_status`,
       [dentistId]
     );
@@ -553,7 +568,8 @@ d.specialty as dentist_specialization,
     const [todayCount] = await db.execute(
       `SELECT COUNT(*) as count
       FROM queue q
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ?
         AND DATE(q.time) = CURDATE()
         AND q.queue_status = 'confirm'`,
       [dentistId]
@@ -614,10 +630,10 @@ d.specialty as dentist_specialization,
         TIMESTAMPDIFF(YEAR, p.dob, CURDATE()) as age
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
+      WHERE qd.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC`,
       [dentistId]
     );
@@ -710,8 +726,9 @@ d.specialty as dentist_specialization,
         t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND DATE(q.time) = CURDATE()
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time ASC`,
@@ -738,8 +755,9 @@ d.specialty as dentist_specialization,
         t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND q.time > NOW()
         AND q.queue_status IN ('pending', 'confirm')
       ORDER BY q.time ASC
@@ -766,11 +784,11 @@ d.specialty as dentist_specialization,
         th.diagnosis,
         t.treatment_name
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ?
-        AND q.dentist_id = ?
+        AND qd.dentist_id = ?
       ORDER BY q.time DESC
       LIMIT ?`,
       [patientId, dentistId, limit]
@@ -790,7 +808,8 @@ d.specialty as dentist_specialization,
     const [calendarData] = await db.execute(
       `SELECT DAY(q.time) as day, COUNT(*) as count
        FROM queue q
-       WHERE q.dentist_id = ?
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND YEAR(q.time) = ?
          AND MONTH(q.time) = ?
          AND q.queue_status IN ('pending', 'confirm')
@@ -810,8 +829,9 @@ d.specialty as dentist_specialization,
     // ผู้ป่วยวันนี้ (รอรักษา)
     const [todayPatients] = await db.execute(
       `SELECT COUNT(DISTINCT patient_id) as count
-       FROM queue
-       WHERE dentist_id = ?
+       FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND DATE(time) = CURDATE()
          AND queue_status IN ('pending', 'confirm')`,
       [dentistId]
@@ -820,24 +840,27 @@ d.specialty as dentist_specialization,
     // ผู้ป่วยทั้งหมด
     const [totalPatients] = await db.execute(
       `SELECT COUNT(DISTINCT patient_id) as count
-       FROM queue
-       WHERE dentist_id = ?`,
+       FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?`,
       [dentistId]
     );
 
     // นัดหมายที่ยกเลิก
     const [cancelled] = await db.execute(
       `SELECT COUNT(*) as count
-       FROM queue
-       WHERE dentist_id = ? AND queue_status = 'cancel'`,
+       FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ? AND queue_status = 'cancel'`,
       [dentistId]
     );
 
     // นัดหมายที่เสร็จสิ้น (confirm และเกินเวลาแล้ว)
     const [completed] = await db.execute(
       `SELECT COUNT(*) as count
-       FROM queue
-       WHERE dentist_id = ?
+       FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND queue_status = 'confirm'
          AND time < NOW()`,
       [dentistId]
@@ -863,12 +886,13 @@ d.specialty as dentist_specialization,
         q.queue_id,
         q.time,
         q.queue_status,
-        q.dentist_id,
+        qd.dentist_id,
         CONCAT(p.fname, ' ', p.lname) as patient_name,
         CONCAT(d.fname, ' ', d.lname) as dentist_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       WHERE q.queue_id = ? AND q.patient_id = ?`,
       [queueId, patientId]
     );
@@ -911,8 +935,8 @@ d.specialty as dentist_specialization,
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
       ORDER BY q.time ASC`,
       [patientId]
@@ -935,8 +959,8 @@ d.specialty as dentist_specialization,
              CONCAT(p.fname, ' ', p.lname) as patient_name
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       JOIN patient p ON q.patient_id = p.patient_id
       WHERE q.queue_id = ? AND q.patient_id = ?`,
       [queueId, patientId]
@@ -962,8 +986,8 @@ d.specialty as dentist_specialization,
              DAY(qd.date) as treatment_day
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.patient_id = ? AND (q.queue_status = 'confirm' OR th.tmh_id IS NOT NULL)
       ORDER BY qd.date DESC, q.time DESC`,
@@ -1006,8 +1030,8 @@ d.specialty as dentist_specialization,
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       WHERE q.queue_id = ? AND q.patient_id = ?`,
       [queueId, patientId]
@@ -1035,10 +1059,10 @@ d.specialty as dentist_specialization,
         t.duration
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ?
+      WHERE qd.dentist_id = ?
         AND DATE(q.time) = ?
       ORDER BY q.time ASC`,
       [dentistId, date]
@@ -1073,9 +1097,9 @@ d.specialty as dentist_specialization,
 
     // สร้าง queue (ไม่มี diagnosis column - อยู่ใน treatmentHistory)
     const [queueResult] = await connection.execute(
-      `INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [queueDetailId, patientId, treatmentId, dentistId, appointmentDateTime]
+      `INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+       VALUES (?, ?, ?, 'pending')`,
+      [queueDetailId, patientId, appointmentDateTime]
     );
 
     const queueId = queueResult.insertId;
@@ -1094,8 +1118,9 @@ d.specialty as dentist_specialization,
         t.duration
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.queue_id = ?`,
       [queueId]
     );
@@ -1147,9 +1172,9 @@ d.specialty as dentist_specialization,
 
     // Insert into queue (ไม่มี diagnosis column - อยู่ใน treatmentHistory)
     const [queueResult] = await db.execute(
-      `INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [queueDetailId, patientId, treatmentId, dentistId, appointmentTime]
+      `INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+       VALUES (?, ?, ?, 'pending')`,
+      [queueDetailId, patientId, appointmentTime]
     );
 
     const queueId = queueResult.insertId;
@@ -1254,9 +1279,9 @@ d.specialty as dentist_specialization,
 
     // สร้าง queue
     const [queueResult] = await db.execute(
-      `INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status, next_appointment)
-       VALUES (?, ?, ?, ?, ?, 'confirm', ?)`,
-      [queueDetailId, patientId, treatmentId, dentistId, appointmentDate, followUpDate]
+      `INSERT INTO queue (queuedetail_id, patient_id, time, queue_status, next_appointment)
+       VALUES (?, ?, ?, 'confirm', ?)`,
+      [queueDetailId, patientId, appointmentDate, followUpDate]
     );
 
     const queueId = queueResult.insertId;
@@ -1287,7 +1312,7 @@ d.specialty as dentist_specialization,
   static async searchTreatmentHistory(dentistId, filters = {}) {
     const { query, status, dateFrom, dateTo, limit = 100 } = filters;
 
-    let whereClause = 'WHERE q.dentist_id = ?';
+    let whereClause = 'WHERE qd.dentist_id = ?';
     const params = [dentistId];
 
     if (query) {
@@ -1326,8 +1351,8 @@ d.specialty as dentist_specialization,
         TIMESTAMPDIFF(YEAR, p.dob, CURDATE()) as age
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
       ${whereClause}
       ORDER BY q.time DESC
@@ -1357,7 +1382,8 @@ d.specialty as dentist_specialization,
     const [appointmentCheck] = await db.execute(
       `SELECT q.queue_id, q.queue_status, q.queuedetail_id
        FROM queue q
-       WHERE q.queue_id = ? AND q.dentist_id = ?`,
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE q.queue_id = ? AND qd.dentist_id = ?`,
       [queueId, dentistId]
     );
 
@@ -1475,12 +1501,12 @@ d.specialty as dentist_specialization,
         const [allSlots] = await connection.execute(`
           SELECT s.slot_id, s.start_time, s.end_time
           FROM available_slots s
-          WHERE s.dentist_id = ?
-          AND s.date = ?
+          WHERE s.date = ?
           AND s.start_time >= ?
           AND s.is_available = 1
+          AND s.dentist_treatment_id IS NULL
           ORDER BY s.start_time
-        `, [dentistIdInt, date, start_time]);
+        `, [date, start_time]);
 
         // ตรวจสอบว่า slot ไหนมี booking แล้ว
         const slotsCheck = [];
@@ -1490,11 +1516,12 @@ d.specialty as dentist_specialization,
           const slotDateTime = `${date} ${slot.start_time}`;
           
           const [existingBooking] = await connection.execute(`
-            SELECT queue_id
-            FROM queue
-            WHERE dentist_id = ?
-            AND time = ?
-            AND queue_status IN ('pending', 'confirm')
+            SELECT q.queue_id
+            FROM queue q
+            JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+            WHERE qd.dentist_id = ?
+            AND q.time = ?
+            AND q.queue_status IN ('pending', 'confirm')
           `, [dentistIdInt, slotDateTime]);
           
           if (existingBooking.length === 0) {
@@ -1530,25 +1557,29 @@ d.specialty as dentist_specialization,
         const queueDetailId = queueDetailResult.insertId;
 
         // สร้าง queue โดยใช้ 'confirm' แทน 'pending' เพราะเป็น admin จอง
-        console.log('🔍 Inserting into queue with params:', [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
+        console.log('🔍 Inserting into queue with params:', [queueDetailId, patient_id, appointmentDateTime]);
         console.log('🔍 SQL to execute:', `
-          INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-          VALUES (?, ?, ?, ?, ?, 'confirm')
+          INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+          VALUES (?, ?, ?, 'confirm')
         `);
         const [queueResult] = await connection.execute(`
-          INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-          VALUES (?, ?, ?, ?, ?, 'confirm')
-        `, [queueDetailId, patient_id, treatment_id, dentistIdInt, appointmentDateTime]);
+          INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+          VALUES (?, ?, ?, 'confirm')
+        `, [queueDetailId, patient_id, appointmentDateTime]);
 
         const queueId = queueResult.insertId;
 
-        // อัพเดท slots เป็น not available
+        // อัพเดท slots เป็น not available โดยใช้ dentist_treatment_id
         for (const slot of slotsCheck) {
           await connection.execute(`
             UPDATE available_slots
-            SET treatment_id = ?, is_available = 0
+            SET dentist_treatment_id = (
+              SELECT dentist_treatment_id 
+              FROM dentist_treatment 
+              WHERE dentist_id = ? AND treatment_id = ?
+            ), is_available = 0
             WHERE slot_id = ?
-          `, [treatment_id, slot.slot_id]);
+          `, [dentist_id, treatment_id, slot.slot_id]);
         }
 
         // ดึงรายละเอียดการจอง
@@ -1564,8 +1595,9 @@ d.specialty as dentist_specialization,
             t.duration
           FROM queue q
           JOIN patient p ON q.patient_id = p.patient_id
-          JOIN dentist d ON q.dentist_id = d.dentist_id
-          JOIN treatment t ON q.treatment_id = t.treatment_id
+          JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+          JOIN dentist d ON qd.dentist_id = d.dentist_id
+          JOIN treatment t ON qd.treatment_id = t.treatment_id
           WHERE q.queue_id = ?
         `, [queueId]);
 

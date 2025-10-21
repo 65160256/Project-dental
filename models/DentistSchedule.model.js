@@ -133,10 +133,8 @@ class DentistScheduleModel {
         COUNT(q.queue_id) as appointment_count
       FROM dentist_schedule ds
       JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-        AND DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
       WHERE 1=1
     `;
 
@@ -320,11 +318,12 @@ class DentistScheduleModel {
     }
 
     const [appointments] = await db.execute(
-      `SELECT COUNT(*) as count FROM queue
-       WHERE dentist_id = ?
-         AND DATE(time) = ?
-         AND HOUR(time) = ?
-         AND queue_status IN ('pending', 'confirm')`,
+      `SELECT COUNT(*) as count FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
+         AND DATE(q.time) = ?
+         AND HOUR(q.time) = ?
+         AND q.queue_status IN ('pending', 'confirm')`,
       [schedule.dentist_id, schedule.schedule_date, schedule.hour]
     );
 
@@ -502,10 +501,10 @@ class DentistScheduleModel {
          COUNT(DISTINCT ds.schedule_id) as total_slots,
          COUNT(DISTINCT q.queue_id) as booked_slots
        FROM dentist_schedule ds
-       LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-         AND DATE(q.time) = ds.schedule_date
+       LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
          AND HOUR(q.time) = ds.hour
          AND q.queue_status IN ('pending', 'confirm')
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
        WHERE ds.dentist_id = ?
          AND YEAR(ds.schedule_date) = ?
          AND MONTH(ds.schedule_date) = ?
@@ -585,25 +584,87 @@ class DentistScheduleModel {
           );
           insertedDays++;
         } else {
-          // บันทึกเวลาทำงาน (แยกเป็นชั่วโมง)
-          const startHour = parseInt(startTime.split(':')[0]);
-          const endHour = parseInt(endTime.split(':')[0]);
+          // บันทึกเวลาทำงาน (แยกเป็นช่วง 30 นาที)
+          const [startHour, startMinute] = startTime.split(':').map(Number);
+          const [endHour, endMinute] = endTime.split(':').map(Number);
 
-          for (let hour = startHour; hour < endHour; hour++) {
-            const hourStartTime = `${hour.toString().padStart(2, '0')}:00:00`;
-            const hourEndTime = `${(hour + 1).toString().padStart(2, '0')}:00:00`;
+          // แปลงเป็นนาทีรวม
+          let currentMinutes = startHour * 60 + startMinute;
+          const endMinutes = endHour * 60 + endMinute;
+
+          // วนลูปทุก 30 นาที
+          while (currentMinutes < endMinutes) {
+            const slotHour = Math.floor(currentMinutes / 60);
+            const slotMinute = currentMinutes % 60;
+            const nextMinutes = currentMinutes + 30;
+            const nextHour = Math.floor(nextMinutes / 60);
+            const nextMinute = nextMinutes % 60;
+
+            const slotStartTime = `${String(slotHour).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}:00`;
+            const slotEndTime = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}:00`;
 
             await connection.execute(
               `INSERT INTO dentist_schedule
                (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
                VALUES (?, ?, ?, ?, 'working', ?, ?, ?)`,
-              [dentistId, scheduleDate, dayOfWeek, hour, hourStartTime, hourEndTime, note || '']
+              [dentistId, scheduleDate, dayOfWeek, slotHour, slotStartTime, slotEndTime, note || '']
             );
+
+            currentMinutes += 30;
           }
           insertedDays++;
         }
 
         currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // สร้าง available_slots สำหรับ dentist_schedule ที่บันทึกใหม่
+      if (status === 'working') {
+        console.log('🔧 Creating available_slots for new schedule...');
+        
+        // สร้าง available_slots สำหรับทุกวันที่บันทึก
+        const createSlotsDate = new Date(startDate);
+        while (createSlotsDate <= new Date(endDate)) {
+          if (createSlotsDate.getDay() !== 0) { // ไม่ใช่วันอาทิตย์
+            const dateStr = createSlotsDate.toISOString().split('T')[0];
+            
+            // สร้าง available_slots สำหรับช่วงเวลาที่บันทึก
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            
+            let currentMinutes = startHour * 60 + startMinute;
+            const endMinutes = endHour * 60 + endMinute;
+            
+            while (currentMinutes < endMinutes) {
+              const slotHour = Math.floor(currentMinutes / 60);
+              const slotMinute = currentMinutes % 60;
+              const nextMinutes = currentMinutes + 30;
+              const nextHour = Math.floor(nextMinutes / 60);
+              const nextMinute = nextMinutes % 60;
+              
+              const slotStartTime = `${String(slotHour).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}:00`;
+              const slotEndTime = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}:00`;
+              
+              // ตรวจสอบว่า available_slot มีอยู่แล้วหรือไม่
+              const [existingSlots] = await connection.execute(
+                'SELECT slot_id FROM available_slots WHERE date = ? AND start_time = ? AND end_time = ?',
+                [dateStr, slotStartTime, slotEndTime]
+              );
+              
+              if (existingSlots.length === 0) {
+                await connection.execute(
+                  'INSERT INTO available_slots (date, start_time, end_time, is_available) VALUES (?, ?, ?, 1)',
+                  [dateStr, slotStartTime, slotEndTime]
+                );
+              }
+              
+              currentMinutes += 30;
+            }
+          }
+          createSlotsDate.setDate(createSlotsDate.getDate() + 1);
+        }
+        
+        console.log('✅ Available slots created successfully');
       }
 
       await connection.commit();
@@ -633,10 +694,11 @@ class DentistScheduleModel {
     // ตรวจสอบว่ามีนัดหมายในช่วงนี้หรือไม่
     const [appointmentCheck] = await db.execute(
       `SELECT COUNT(*) as count
-       FROM queue
-       WHERE dentist_id = ?
-         AND DATE(time) BETWEEN ? AND ?
-         AND queue_status IN ('pending', 'confirm')`,
+       FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
+         AND DATE(q.time) BETWEEN ? AND ?
+         AND q.queue_status IN ('pending', 'confirm')`,
       [dentistId, startDate, endDate]
     );
 
@@ -810,10 +872,10 @@ class DentistScheduleModel {
            ds.end_time,
            COUNT(q.queue_id) as booked_count
          FROM dentist_schedule ds
-         LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-           AND DATE(q.time) = ds.schedule_date
+         LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
            AND HOUR(q.time) = ds.hour
            AND q.queue_status IN ('pending', 'confirm')
+         LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
          WHERE ds.dentistId = ?
            AND ds.schedule_date = ?
            AND ds.status = 'working'
@@ -862,11 +924,11 @@ class DentistScheduleModel {
         END as status
       FROM dentist_schedule ds
       JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-        AND DATE(q.time) = ds.schedule_date
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
         AND TIME(q.time) >= ds.start_time 
         AND TIME(q.time) < ds.end_time
         AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
       WHERE YEAR(ds.schedule_date) = ?
       AND MONTH(ds.schedule_date) = ?
       AND ds.status = 'working'
@@ -915,10 +977,8 @@ class DentistScheduleModel {
         END as status
       FROM dentist_schedule ds
       JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-        AND DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
       WHERE ds.schedule_date BETWEEN ? AND ?
       AND ds.status = 'working'
       AND ds.schedule_date >= CURDATE()
@@ -956,10 +1016,8 @@ class DentistScheduleModel {
         END as status
       FROM dentist_schedule ds
       JOIN dentist d ON ds.dentist_id = d.dentist_id
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-        AND DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
       WHERE ds.schedule_date = ?
       AND ds.status = 'working'
       ORDER BY ds.hour`,
@@ -981,10 +1039,10 @@ class DentistScheduleModel {
     let query = `
       SELECT ds.schedule_id
       FROM dentist_schedule ds
-      LEFT JOIN queue q ON ds.dentist_id = q.dentist_id
-        AND DATE(q.time) = ds.schedule_date
-        AND HOUR(q.time) = ds.hour
-        AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date AND HOUR(q.time) = ds.hour AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
     `;
 
     const params = [dentistId, date, hour];

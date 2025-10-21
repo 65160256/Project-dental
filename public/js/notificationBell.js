@@ -381,9 +381,22 @@ class NotificationBell {
       await this.markAsRead(notif.id);
     }
 
-    // Navigate to related page
-    if (notif.appointment_id) {
-      window.location.href = `/${this.userType}/appointments/${notif.appointment_id}`;
+    // Navigate to related page based on notification type
+    if (notif.queue_id) {
+      switch (notif.type) {
+        case 'new_appointment':
+        case 'appointment_confirmed':
+        case 'appointment_cancelled':
+        case 'appointment_reminder':
+          window.location.href = `/${this.userType}/appointments/${notif.queue_id}`;
+          break;
+        case 'treatment_completed':
+          window.location.href = `/${this.userType}/history/details/${notif.queue_id}`;
+          break;
+        default:
+          // For other types, go to appointments page
+          window.location.href = `/${this.userType}/appointments`;
+      }
     }
   }
 

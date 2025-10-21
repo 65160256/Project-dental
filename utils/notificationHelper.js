@@ -16,7 +16,10 @@ const NotificationHelper = {
       );
       
       const [appointmentData] = await db.execute(
-        'SELECT time, treatment_id FROM queue WHERE queue_id = ?',
+        `SELECT q.time, qd.treatment_id
+         FROM queue q
+         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+         WHERE q.queue_id = ?`,
         [appointmentId]
       );
 
@@ -50,28 +53,24 @@ const NotificationHelper = {
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'new_appointment',
         '🆕 มีการจองนัดหมายใหม่',
         `${patient.fname} ${patient.lname} จองนัดหมายกับ ทพ.${dentist.fname} ${dentist.lname} สำหรับ${treatmentName} วันที่ ${formattedDate} เวลา ${formattedTime} น.`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       // Notification for Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'new_appointment',
         '🆕 คุณมีนัดหมายใหม่',
         `ผู้ป่วย ${patient.fname} ${patient.lname} (${patient.phone}) จองนัดหมายสำหรับ${treatmentName} วันที่ ${formattedDate} เวลา ${formattedTime} น.`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       console.log(`✅ สร้างการแจ้งเตือนนัดหมายสำเร็จ รหัส: ${appointmentId}`);
@@ -88,8 +87,9 @@ const NotificationHelper = {
         SELECT q.time, t.treatment_name, CONCAT(d.fname, ' ', d.lname) as dentist_name,
                CONCAT(p.fname, ' ', p.lname) as patient_name
         FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN patient p ON q.patient_id = p.patient_id
         WHERE q.queue_id = ?
       `, [appointmentId]);
@@ -111,28 +111,24 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_confirmed',
         '✅ การจองได้รับการยืนยันแล้ว',
         `การจองของคุณกับ ${appointment.dentist_name} สำหรับ${appointment.treatment_name} วันที่ ${formattedDate} เวลา ${formattedTime} น. ได้รับการยืนยันแล้ว`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_confirmed',
         '✅ มีการยืนยันนัดหมาย',
         `ทพ.${appointment.dentist_name} ยืนยันนัดหมายของ ${appointment.patient_name} วันที่ ${formattedDate} เวลา ${formattedTime} น.`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       console.log(`✅ สร้างการแจ้งเตือนการยืนยันสำเร็จ รหัส: ${appointmentId}`);
@@ -151,9 +147,10 @@ const NotificationHelper = {
                CONCAT(p.fname, ' ', p.lname) as patient_name,
                p.phone
         FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
         JOIN patient p ON q.patient_id = p.patient_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE q.queue_id = ?
       `, [appointmentId]);
 
@@ -177,81 +174,69 @@ const NotificationHelper = {
       if (cancelledBy === 'patient') {
         // แจ้งเตือน Admin และ Dentist
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ มีการยกเลิกนัดหมาย',
           `${appointment.patient_name} ยกเลิกนัดหมายกับ ${appointment.dentist_name} วันที่ ${formattedDate} เวลา ${formattedTime} น.${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
 
         // แจ้งเตือน Dentist
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ ผู้ป่วยยกเลิกนัดหมาย',
           `${appointment.patient_name} (${appointment.phone}) ยกเลิกนัดหมายวันที่ ${formattedDate} เวลา ${formattedTime} น.${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
       } else if (cancelledBy === 'dentist') {
         // แจ้งเตือน Patient
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ การจองถูกยกเลิก',
           `การจองของคุณกับ ${appointment.dentist_name} วันที่ ${formattedDate} เวลา ${formattedTime} น. ถูกยกเลิก${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
 
         // แจ้งเตือน Admin
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ ทันตแพทย์ยกเลิกนัดหมาย',
           `ทพ.${appointment.dentist_name} ยกเลิกนัดหมายของ ${appointment.patient_name} วันที่ ${formattedDate} เวลา ${formattedTime} น.${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
       } else {
         // ยกเลิกโดย Admin
         // แจ้งเตือน Patient
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ การจองถูกยกเลิก',
           `การจองของคุณกับ ${appointment.dentist_name} วันที่ ${formattedDate} เวลา ${formattedTime} น. ถูกยกเลิก${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
 
         // แจ้งเตือน Dentist
         await db.execute(`
-          INSERT INTO notifications (type, title, message, appointment_id, dentist_id, patient_id, is_read, is_new)
-          VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
         `, [
           'appointment_cancelled',
           '❌ นัดหมายถูกยกเลิก',
           `นัดหมายของ ${appointment.patient_name} วันที่ ${formattedDate} เวลา ${formattedTime} น. ถูกยกเลิกโดยแอดมิน${reasonText}`,
-          appointmentId,
-          dentistId,
-          patientId
+          appointmentId
         ]);
       }
 
@@ -271,8 +256,9 @@ const NotificationHelper = {
                CONCAT(p.fname, ' ', p.lname) as patient_name,
                d.specialty
         FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN patient p ON q.patient_id = p.patient_id
         WHERE q.queue_id = ?
       `, [appointmentId]);
@@ -294,28 +280,24 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
         '⏰ เตือนนัดหมายพรุ่งนี้',
         `คุณมีนัดหมายพรุ่งนี้ วันที่ ${formattedDate} เวลา ${formattedTime} น. กับ ${appointment.dentist_name} สำหรับ${appointment.treatment_name}`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       // Notification for Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
         '⏰ เตือนนัดหมายพรุ่งนี้',
         `พรุ่งนี้คุณมีนัดกับ ${appointment.patient_name} เวลา ${formattedTime} น. สำหรับ${appointment.treatment_name}`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       console.log(`✅ สร้างการแจ้งเตือนเตือนสำเร็จ รหัส: ${appointmentId}`);
@@ -334,8 +316,9 @@ const NotificationHelper = {
                CONCAT(p.fname, ' ', p.lname) as patient_name,
                q.time
         FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN patient p ON q.patient_id = p.patient_id
         WHERE q.queue_id = ?
       `, [appointmentId]);
@@ -352,28 +335,24 @@ const NotificationHelper = {
 
       // Notification for Patient
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'treatment_completed',
         '📝 บันทึกประวัติการรักษาแล้ว',
         `${appointment.dentist_name} ได้บันทึกประวัติการรักษา${appointment.treatment_name}ของคุณแล้ว คุณสามารถดูรายละเอียดได้ในประวัติการรักษา`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       // Notification for Admin
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'treatment_completed',
         '📝 มีการบันทึกประวัติการรักษา',
         `ทพ.${appointment.dentist_name} บันทึกประวัติการรักษา${appointment.treatment_name}ของ ${appointment.patient_name} เมื่อ ${formattedDate}`,
-        appointmentId,
-        dentistId,
-        patientId
+        appointmentId
       ]);
 
       console.log(`✅ สร้างการแจ้งเตือนบันทึกประวัติการรักษาสำเร็จ รหัส: ${appointmentId}`);
@@ -412,13 +391,12 @@ const NotificationHelper = {
 
       // Notification for Admin only
       await db.execute(`
-        INSERT INTO notifications (type, title, message, dentist_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, is_read, is_new)
+        VALUES (?, ?, ?, 0, 1)
       `, [
         'schedule_change',
         title,
-        message,
-        dentistId
+        message
       ]);
 
       console.log(`✅ สร้างการแจ้งเตือนการเปลี่ยนแปลงตารางงานสำเร็จ รหัสทันตแพทย์: ${dentistId}`);

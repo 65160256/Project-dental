@@ -163,8 +163,9 @@ class AppointmentAdminModel {
       // Check for existing appointments at the same time
       const [existingAppointment] = await connection.execute(`
         SELECT COUNT(*) as appointment_exists
-        FROM queue 
-        WHERE dentist_id = ? AND time = ? AND queue_status IN ('pending', 'confirm')
+        FROM queue q
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.dentist_id = ? AND q.time = ? AND q.queue_status IN ('pending', 'confirm')
       `, [dentist_id, appointment_time]);
 
       if (existingAppointment[0].appointment_exists > 0) {
@@ -186,9 +187,9 @@ class AppointmentAdminModel {
 
       // สร้าง queue record
       const [queueResult] = await connection.execute(`
-        INSERT INTO queue (queuedetail_id, patient_id, treatment_id, dentist_id, time, queue_status)
-        VALUES (?, ?, ?, ?, ?, 'pending')
-      `, [queueDetailId, patient_id, treatment_id, dentist_id, appointment_time]);
+        INSERT INTO queue (queuedetail_id, patient_id, time, queue_status)
+        VALUES (?, ?, ?, 'pending')
+      `, [queueDetailId, patient_id, appointment_time]);
 
       const queueId = queueResult.insertId;
 
@@ -205,8 +206,9 @@ class AppointmentAdminModel {
           t.treatment_name
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE q.queue_id = ?
       `, [queueId]);
       
@@ -261,11 +263,10 @@ class AppointmentAdminModel {
       // อัปเดต queue table - แปลง undefined เป็น null
       await connection.execute(`
         UPDATE queue SET
-          patient_id = ?, dentist_id = ?, time = ?, queue_status = ?
+          patient_id = ?, time = ?, queue_status = ?
         WHERE queuedetail_id = ?
       `, [
         updateData.patient_id || null,
-        updateData.dentist_id || null,
         updateData.time || null,
         updateData.status || null,
         appointmentId
@@ -583,7 +584,8 @@ class AppointmentAdminModel {
           q.time
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
-        WHERE q.dentist_id = ? 
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.dentist_id = ? 
           AND q.time = ? 
           AND q.queue_status IN ('pending', 'confirm')
       `;
@@ -631,10 +633,10 @@ class AppointmentAdminModel {
         FROM dentist_schedule ds
         JOIN dentist d ON ds.dentist_id = d.dentist_id
         LEFT JOIN queue q 
-          ON q.dentist_id = ds.dentist_id
-         AND DATE(q.time) = ds.schedule_date
+          ON DATE(q.time) = ds.schedule_date
          AND HOUR(q.time) = ds.hour
          AND q.queue_status IN ('pending','confirm')
+        LEFT JOIN queuedetail qd2 ON q.queuedetail_id = qd2.queuedetail_id AND qd2.dentist_id = ds.dentist_id
         WHERE ds.dentist_id = ?
           AND ds.schedule_date BETWEEN ? AND ?
           AND DAYOFWEEK(ds.schedule_date) <> 1    -- << อาทิตย์ปิด
@@ -679,10 +681,10 @@ class AppointmentAdminModel {
           ds.status,
           COUNT(q.queue_id) as booked_count
         FROM dentist_schedule ds
-        LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
+        LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date 
           AND HOUR(q.time) = ds.hour
           AND q.queue_status IN ('pending', 'confirm')
+        LEFT JOIN queuedetail qd2 ON q.queuedetail_id = qd2.queuedetail_id AND qd2.dentist_id = ds.dentist_id
         WHERE ds.dentist_id = ? 
           AND ds.schedule_date = ?
           AND ds.status = 'working'

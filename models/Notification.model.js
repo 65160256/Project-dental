@@ -21,14 +21,14 @@ class NotificationModel {
     } = notificationData;
 
     // Validate required fields
-    if (!userId || !title || !message) {
-      throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (userId, title, message)');
+    if (!title || !message) {
+      throw new Error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (title, message)');
     }
 
     const [result] = await db.execute(
-      `INSERT INTO notifications (user_id, title, message, type, related_id, queue_id, is_read, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
-      [userId, title, message, type, relatedId, queueId]
+      `INSERT INTO notifications (title, message, type, queue_id, is_read, is_new, created_at)
+       VALUES (?, ?, ?, ?, 0, 1, NOW())`,
+      [title, message, type, queueId]
     );
 
     return {
@@ -60,18 +60,20 @@ class NotificationModel {
     const { unreadOnly = false, limit = 50, offset = 0 } = options;
 
     let query = `
-      SELECT *
-      FROM notifications
-      WHERE user_id = ?
+      SELECT n.*
+      FROM notifications n
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.patient_id = ?
     `;
 
     const params = [userId];
 
     if (unreadOnly) {
-      query += ` AND is_read = 0`;
+      query += ` AND n.is_read = 0`;
     }
 
-    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    query += ` ORDER BY n.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const [rows] = await db.execute(query, params);
@@ -85,7 +87,7 @@ class NotificationModel {
    */
   static async markAsRead(notificationId) {
     const [result] = await db.execute(
-      `UPDATE notificationss SET is_read = 1, read_at = NOW() WHERE id = ?`,
+      `UPDATE notifications SET is_read = 1, is_new = 0, updated_at = NOW() WHERE id = ?`,
       [notificationId]
     );
 
@@ -102,7 +104,11 @@ class NotificationModel {
    */
   static async markAllAsRead(userId) {
     const [result] = await db.execute(
-      `UPDATE notificationss SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0`,
+      `UPDATE notifications n
+       LEFT JOIN queue q ON n.queue_id = q.queue_id
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       SET n.is_read = 1, n.is_new = 0, n.updated_at = NOW()
+       WHERE qd.patient_id = ? AND n.is_read = 0`,
       [userId]
     );
 
@@ -119,7 +125,7 @@ class NotificationModel {
    */
   static async deleteOld(days = 30) {
     const [result] = await db.execute(
-      `DELETE FROM notification WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
+      `DELETE FROM notifications WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)`,
       [days]
     );
 
@@ -136,7 +142,10 @@ class NotificationModel {
    */
   static async deleteAllByUserId(userId) {
     const [result] = await db.execute(
-      `DELETE FROM notifications WHERE user_id = ?`,
+      `DELETE n FROM notifications n
+       LEFT JOIN queue q ON n.queue_id = q.queue_id
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.patient_id = ?`,
       [userId]
     );
 
@@ -170,11 +179,15 @@ class NotificationModel {
    * @returns {Promise<number>}
    */
   static async count(userId, unreadOnly = false) {
-    let query = `SELECT COUNT(*) as total FROM notifications WHERE user_id = ?`;
+    let query = `SELECT COUNT(*) as total 
+                 FROM notifications n
+                 LEFT JOIN queue q ON n.queue_id = q.queue_id
+                 LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+                 WHERE qd.patient_id = ?`;
     const params = [userId];
 
     if (unreadOnly) {
-      query += ` AND is_read = 0`;
+      query += ` AND n.is_read = 0`;
     }
 
     const [rows] = await db.execute(query, params);
@@ -189,10 +202,12 @@ class NotificationModel {
    */
   static async findUnreadByUserId(userId, limit = 10) {
     const [rows] = await db.execute(
-      `SELECT *
-       FROM notifications
-       WHERE user_id = ? AND is_read = 0
-       ORDER BY created_at DESC
+      `SELECT n.*
+       FROM notifications n
+       LEFT JOIN queue q ON n.queue_id = q.queue_id
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.patient_id = ? AND n.is_read = 0
+       ORDER BY n.created_at DESC
        LIMIT ?`,
       [userId, limit]
     );
@@ -208,10 +223,12 @@ class NotificationModel {
    */
   static async findLatestByUserId(userId, limit = 5) {
     const [rows] = await db.execute(
-      `SELECT *
-       FROM notifications
-       WHERE user_id = ?
-       ORDER BY created_at DESC
+      `SELECT n.*
+       FROM notifications n
+       LEFT JOIN queue q ON n.queue_id = q.queue_id
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.patient_id = ?
+       ORDER BY n.created_at DESC
        LIMIT ?`,
       [userId, limit]
     );
@@ -230,10 +247,12 @@ class NotificationModel {
     const { limit = 50, offset = 0 } = options;
 
     const [rows] = await db.execute(
-      `SELECT *
-       FROM notifications
-       WHERE user_id = ? AND type = ?
-       ORDER BY created_at DESC
+      `SELECT n.*
+       FROM notifications n
+       LEFT JOIN queue q ON n.queue_id = q.queue_id
+       LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.patient_id = ? AND n.type = ?
+       ORDER BY n.created_at DESC
        LIMIT ? OFFSET ?`,
       [userId, type, limit, offset]
     );
@@ -248,7 +267,7 @@ class NotificationModel {
    * @returns {Promise<Array>}
    */
   static async findByRelatedId(relatedId, type = null) {
-    let query = `SELECT * FROM notifications WHERE related_id = ?`;
+    let query = `SELECT * FROM notifications WHERE queue_id = ?`;
     const params = [relatedId];
 
     if (type) {
@@ -273,20 +292,19 @@ class NotificationModel {
     }
 
     const values = notifications.map(n => [
-      n.userId,
       n.title,
       n.message,
       n.type || 'info',
-      n.relatedId || null
+      n.queueId || null
     ]);
 
-    const placeholders = values.map(() => '(?, ?, ?, ?, ?)').join(', ');
+    const placeholders = values.map(() => '(?, ?, ?, ?)').join(', ');
     const flatValues = values.flat();
 
     const [result] = await db.execute(
-      `INSERT INTO notification (user_id, title, message, type, related_id)
+      `INSERT INTO notifications (title, message, type, queue_id, is_read, is_new)
        VALUES ${placeholders}`,
-      flatValues
+      flatValues.map(v => [v[0], v[1], v[2], v[3], 0, 1]).flat()
     );
 
     return {
@@ -359,10 +377,11 @@ class NotificationModel {
         q.time as appointment_time,
         t.treatment_name
       FROM notifications n
-      LEFT JOIN patient p ON n.patient_id = p.patient_id
-      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
       LEFT JOIN queue q ON n.queue_id = q.queue_id
-      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN patient p ON qd.patient_id = p.patient_id
+      LEFT JOIN dentist d ON qd.dentist_id = d.dentist_id
+      LEFT JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC
       LIMIT ? OFFSET ?
@@ -380,7 +399,7 @@ class NotificationModel {
   static async getDentistNotifications(dentistId, filters = {}) {
     const { unread_only = false, limit = 20, offset = 0 } = filters;
 
-    let whereClause = 'n.dentist_id = ?';
+    let whereClause = 'qd.dentist_id = ?';
     const params = [dentistId];
 
     if (unread_only) {
@@ -396,9 +415,10 @@ class NotificationModel {
         q.time AS appointment_time,
         t.treatment_name
       FROM notifications n
-      LEFT JOIN patient p ON n.patient_id = p.patient_id
-      LEFT JOIN queue q   ON n.queue_id = q.queue_id
-      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN patient p ON qd.patient_id = p.patient_id
+      LEFT JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
@@ -417,7 +437,7 @@ class NotificationModel {
   static async getPatientNotifications(patientId, filters = {}) {
     const { unread_only = false, limit = 20, offset = 0 } = filters;
 
-    let whereClause = 'n.patient_id = ?';
+    let whereClause = 'qd.patient_id = ?';
     let params = [patientId];
 
     if (unread_only) {
@@ -433,9 +453,10 @@ class NotificationModel {
         q.queue_status,
         t.treatment_name
       FROM notifications n
-      LEFT JOIN dentist d ON n.dentist_id = d.dentist_id
       LEFT JOIN queue q ON n.queue_id = q.queue_id
-      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN dentist d ON qd.dentist_id = d.dentist_id
+      LEFT JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE ${whereClause}
       ORDER BY n.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
@@ -457,17 +478,19 @@ class NotificationModel {
     let params = [];
 
     if (dentist_id) {
-      whereClause = 'WHERE dentist_id = ?';
+      whereClause = 'WHERE qd.dentist_id = ?';
       params.push(dentist_id);
     } else if (patient_id) {
-      whereClause = 'WHERE patient_id = ?';
+      whereClause = 'WHERE qd.patient_id = ?';
       params.push(patient_id);
     }
 
     const [countResult] = await db.query(`
       SELECT COUNT(*) as total,
-             SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread
-      FROM notifications
+             SUM(CASE WHEN n.is_read = 0 THEN 1 ELSE 0 END) as unread
+      FROM notifications n
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
       ${whereClause}
     `, params);
 
@@ -507,16 +530,18 @@ class NotificationModel {
     let params = [];
 
     if (dentist_id) {
-      whereClause = 'WHERE dentist_id = ?';
+      whereClause = 'WHERE qd.dentist_id = ?';
       params.push(dentist_id);
     } else if (patient_id) {
-      whereClause = 'WHERE patient_id = ?';
+      whereClause = 'WHERE qd.patient_id = ?';
       params.push(patient_id);
     }
 
     const [result] = await db.execute(`
-      UPDATE notifications
-      SET is_read = 1, is_new = 0, updated_at = CURRENT_TIMESTAMP
+      UPDATE notifications n
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      SET n.is_read = 1, n.is_new = 0, n.updated_at = CURRENT_TIMESTAMP
       ${whereClause}
     `, params);
 
@@ -551,19 +576,23 @@ class NotificationModel {
   static async getUnreadCount(filters = {}) {
     const { dentist_id = null, patient_id = null } = filters;
 
-    let whereClause = 'WHERE is_read = 0';
+    let whereClause = 'WHERE n.is_read = 0';
     let params = [];
 
     if (dentist_id) {
-      whereClause = 'WHERE dentist_id = ? AND is_read = 0';
+      whereClause = 'WHERE qd.dentist_id = ? AND n.is_read = 0';
       params.push(dentist_id);
     } else if (patient_id) {
-      whereClause = 'WHERE patient_id = ? AND is_read = 0';
+      whereClause = 'WHERE qd.patient_id = ? AND n.is_read = 0';
       params.push(patient_id);
     }
 
     const [result] = await db.execute(`
-      SELECT COUNT(*) as count FROM notifications ${whereClause}
+      SELECT COUNT(*) as count 
+      FROM notifications n
+      LEFT JOIN queue q ON n.queue_id = q.queue_id
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      ${whereClause}
     `, params);
 
     return result[0].count;

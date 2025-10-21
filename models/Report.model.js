@@ -16,7 +16,8 @@ class ReportModel {
         COUNT(CASE WHEN q.queue_status = 'cancel' THEN 1 END) as cancelled,
         COUNT(DISTINCT q.patient_id) as unique_patients
       FROM queue q
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ?
         AND q.time >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
       GROUP BY YEAR(q.time), MONTH(q.time)
       ORDER BY year DESC, month DESC`,
@@ -42,8 +43,9 @@ class ReportModel {
         t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND YEAR(q.time) = ?
         AND MONTH(q.time) = ?
       ORDER BY q.time`,
@@ -66,8 +68,9 @@ class ReportModel {
         d.fname as dentist_fname,
         d.lname as dentist_lname
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
       WHERE q.patient_id = ?
       ORDER BY q.time DESC`,
       [patientId]
@@ -85,7 +88,7 @@ class ReportModel {
   static async getOverallStatistics(dentistId, filters = {}) {
     const { startDate, endDate } = filters;
 
-    let whereClause = 'WHERE q.dentist_id = ?';
+    let whereClause = 'WHERE qd.dentist_id = ?';
     const params = [dentistId];
 
     if (startDate) {
@@ -107,7 +110,8 @@ class ReportModel {
         COUNT(DISTINCT q.patient_id) as unique_patients,
         COUNT(DISTINCT t.treatment_id) as unique_treatments
       FROM queue q
-      LEFT JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatment t ON qd.treatment_id = t.treatment_id
       ${whereClause}`,
       params
     );
@@ -129,8 +133,9 @@ class ReportModel {
         COUNT(*) as count,
         COUNT(CASE WHEN q.queue_status = 'completed' THEN 1 END) as completed_count
       FROM queue q
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
       GROUP BY t.treatment_id, t.treatment_name
       ORDER BY count DESC
       LIMIT ?`,
@@ -156,7 +161,8 @@ class ReportModel {
         MAX(q.time) as last_visit
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ?
       GROUP BY p.patient_id, p.fname, p.lname
       ORDER BY visit_count DESC
       LIMIT ?`,

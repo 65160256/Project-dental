@@ -222,7 +222,9 @@ class DentistModel {
   static async delete(dentistId) {
     // Check if dentist has appointments
     const [appointments] = await db.execute(
-      `SELECT COUNT(*) as count FROM queue WHERE dentist_id = ?`,
+      `SELECT COUNT(*) as count FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?`,
       [dentistId]
     );
 
@@ -268,27 +270,33 @@ class DentistModel {
   static async getStatistics(dentistId) {
     // Total appointments
     const [totalAppointments] = await db.execute(
-      `SELECT COUNT(*) as total FROM queue WHERE dentist_id = ?`,
+      `SELECT COUNT(*) as total FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?`,
       [dentistId]
     );
 
     // Completed appointments
     const [completedAppointments] = await db.execute(
-      `SELECT COUNT(*) as total FROM queue
-       WHERE dentist_id = ? AND queue_status = 'completed'`,
+      `SELECT COUNT(*) as total FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ? AND queue_status = 'completed'`,
       [dentistId]
     );
 
     // Pending appointments
     const [pendingAppointments] = await db.execute(
-      `SELECT COUNT(*) as total FROM queue
-       WHERE dentist_id = ? AND queue_status = 'pending'`,
+      `SELECT COUNT(*) as total FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ? AND queue_status = 'pending'`,
       [dentistId]
     );
 
     // Unique patients
     const [uniquePatients] = await db.execute(
-      `SELECT COUNT(DISTINCT patient_id) as total FROM queue WHERE dentist_id = ?`,
+      `SELECT COUNT(DISTINCT q.patient_id) as total FROM queue q
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?`,
       [dentistId]
     );
 
@@ -310,7 +318,8 @@ class DentistModel {
     const [todayPatients] = await db.execute(
       `SELECT COUNT(DISTINCT q.patient_id) as count
        FROM queue q
-       WHERE q.dentist_id = ?
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND DATE(q.time) = CURDATE()
          AND q.queue_status = 'confirm'`,
       [dentistId]
@@ -320,7 +329,8 @@ class DentistModel {
     const [totalPatients] = await db.execute(
       `SELECT COUNT(DISTINCT q.patient_id) as count
        FROM queue q
-       WHERE q.dentist_id = ? AND q.queue_status != 'pending'`,
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ? AND q.queue_status != 'pending'`,
       [dentistId]
     );
 
@@ -328,7 +338,8 @@ class DentistModel {
     const [cancelled] = await db.execute(
       `SELECT COUNT(*) as count
        FROM queue q
-       WHERE q.dentist_id = ?
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND q.queue_status = 'cancel'`,
       [dentistId]
     );
@@ -337,7 +348,8 @@ class DentistModel {
     const [completed] = await db.execute(
       `SELECT COUNT(*) as count
        FROM queue q
-       WHERE q.dentist_id = ?
+       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+       WHERE qd.dentist_id = ?
          AND q.queue_status = 'completed'`,
       [dentistId]
     );
@@ -355,10 +367,10 @@ class DentistModel {
         t.duration
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.dentist_id = ? AND q.queue_status != 'pending'
+      WHERE qd.dentist_id = ? AND q.queue_status != 'pending'
       ORDER BY q.time DESC
       LIMIT 10`,
       [dentistId]
@@ -375,8 +387,9 @@ class DentistModel {
         t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND q.time >= NOW()
         AND q.queue_status = 'confirm'
       ORDER BY q.time ASC
@@ -395,8 +408,9 @@ class DentistModel {
         t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE qd.dentist_id = ?
         AND DATE(q.time) = CURDATE()
         AND q.queue_status = 'confirm'
       ORDER BY q.time ASC
@@ -408,7 +422,8 @@ class DentistModel {
     const [monthlyAppointments] = await db.execute(
       `SELECT DAY(q.time) as day, COUNT(*) as count
       FROM queue q
-      WHERE q.dentist_id = ?
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE qd.dentist_id = ?
         AND MONTH(q.time) = MONTH(CURDATE())
         AND YEAR(q.time) = YEAR(CURDATE())
         AND q.queue_status = 'confirm'
@@ -615,7 +630,8 @@ class DentistModel {
           AND ds.status = 'working'
           AND NOT EXISTS (
             SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id
+            JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+            WHERE qd.dentist_id = ds.dentist_id
             AND DATE(q.time) = ds.schedule_date
             AND HOUR(q.time) = ds.hour
             AND q.queue_status IN ('pending', 'confirm')
@@ -667,7 +683,8 @@ class DentistModel {
           AND ds.status = 'working'
           AND NOT EXISTS (
             SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id
+            JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+            WHERE qd.dentist_id = ds.dentist_id
             AND DATE(q.time) = ds.schedule_date
             AND HOUR(q.time) = ds.hour
             AND q.queue_status IN ('pending', 'confirm')
@@ -676,7 +693,8 @@ class DentistModel {
         (
           SELECT COUNT(*)
           FROM queue q
-          WHERE q.dentist_id = d.dentist_id
+          JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+          WHERE qd.dentist_id = d.dentist_id
           AND q.queue_status = 'confirm'
         ) as total_patients_treated
       FROM dentist d
@@ -708,7 +726,8 @@ class DentistModel {
         CASE
           WHEN EXISTS (
             SELECT 1 FROM queue q
-            WHERE q.dentist_id = ds.dentist_id
+            JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+            WHERE qd.dentist_id = ds.dentist_id
             AND DATE(q.time) = ds.schedule_date
             AND HOUR(q.time) = ds.hour
             AND q.queue_status IN ('pending', 'confirm')
@@ -752,7 +771,8 @@ class DentistModel {
       AND ds.status = 'working'
       AND NOT EXISTS (
         SELECT 1 FROM queue q
-        WHERE q.dentist_id = ds.dentist_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.dentist_id = ds.dentist_id
         AND DATE(q.time) = ds.schedule_date
         AND HOUR(q.time) = ds.hour
         AND q.queue_status IN ('pending', 'confirm')

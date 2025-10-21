@@ -701,33 +701,6 @@ exportPatientsData: async (req, res) => {
   }
 },
 
-  // หน้าตารางเวลา
-  // ✅ REFACTORED: ใช้ Model แทน SQL
-getSchedule: async (req, res) => {
-    try {
-      const userId = req.session.user?.user_id || req.session.userId;
-
-      const { DentistModel } = require('../models');
-
-      // ใช้ Model ค้นหาทันตแพทย์
-      const dentist = await DentistModel.findByUserId(userId);
-      if (!dentist) {
-        return res.redirect('/login');
-      }
-
-      res.render('dentist/schedule-monthly', {
-        dentist,
-        currentDate: new Date().toISOString().split('T')[0]
-      });
-
-    } catch (error) {
-      console.error('Error in getSchedule:', error);
-      res.status(500).render('error', {
-        message: 'เกิดข้อผิดพลาดในการโหลดตารางเวลา',
-        error
-      });
-    }
-  },
 
 // ✅ REFACTORED: ใช้ Model แทน SQL
 getEditProfile: async (req, res) => {
@@ -2201,8 +2174,8 @@ saveAddHistory: async (req, res) => {
       });
     }
 
-    // ดึงข้อมูลคิว
-    const queue = await QueueModel.findById(queueId);
+    // ดึงข้อมูลคิว (พร้อมรายละเอียดเพื่อใช้ dentist_id จาก queuedetail)
+    const queue = await QueueModel.findByIdWithDetails(queueId);
     if (!queue) {
       return res.status(404).json({
         success: false,

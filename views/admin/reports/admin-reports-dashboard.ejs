@@ -1837,13 +1837,45 @@
                     await this.markAsRead(notif.id);
                 }
 
-                // Navigate to related page
-                if (notif.appointment_id) {
-                    window.location.href = `/admin/appointments?highlight=${notif.appointment_id}`;
-                } else if (notif.patient_id) {
-                    window.location.href = `/admin/patients/${notif.patient_id}`;
-                } else if (notif.dentist_id) {
-                    window.location.href = `/admin/dentists/${notif.dentist_id}`;
+                // Navigate to related page based on notification type
+                if (notif.queue_id) {
+                    switch (notif.type) {
+                        case 'new_appointment':
+                        case 'appointment_confirmed':
+                        case 'appointment_cancelled':
+                        case 'appointment_reminder':
+                            window.location.href = `/admin/appointments?highlight=${notif.queue_id}`;
+                            break;
+                        case 'treatment_completed':
+                            window.location.href = `/admin/appointments?highlight=${notif.queue_id}`;
+                            break;
+                        case 'patient_update':
+                        case 'welcome':
+                            // For patient-related notifications, go to patients page
+                            window.location.href = `/admin/patients`;
+                            break;
+                        case 'system':
+                        case 'schedule_change':
+                            // For system notifications, go to dashboard
+                            window.location.href = `/admin/dashboard`;
+                            break;
+                        default:
+                            window.location.href = `/admin/appointments`;
+                    }
+                } else {
+                    // For notifications without queue_id, go to appropriate page
+                    switch (notif.type) {
+                        case 'patient_update':
+                        case 'welcome':
+                            window.location.href = `/admin/patients`;
+                            break;
+                        case 'system':
+                        case 'schedule_change':
+                            window.location.href = `/admin/dashboard`;
+                            break;
+                        default:
+                            window.location.href = `/admin/appointments`;
+                    }
                 }
             }
 

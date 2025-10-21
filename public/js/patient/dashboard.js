@@ -149,7 +149,24 @@ class PatientNotificationBell {
 
   async handleNotificationClick(notif) {
     if (!notif.is_read) await this.markAsRead(notif.id);
-    if (notif.queue_id) window.location.href = `/patient/history/details/${notif.queue_id}`;
+    
+    // Navigate to related page based on notification type
+    if (notif.queue_id) {
+      switch (notif.type) {
+        case 'new_appointment':
+        case 'appointment_confirmed':
+        case 'appointment_cancelled':
+        case 'appointment_reminder':
+          window.location.href = `/patient/appointments/${notif.queue_id}`;
+          break;
+        case 'treatment_completed':
+          window.location.href = `/patient/history/details/${notif.queue_id}`;
+          break;
+        default:
+          // For other types, go to appointments page
+          window.location.href = `/patient/appointments`;
+      }
+    }
   }
 
   async markAsRead(id) {

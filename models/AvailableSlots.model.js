@@ -35,7 +35,9 @@ class AvailableSlotsModel {
     const duration = treatmentData[0].duration;
       const requiredSlots = Math.ceil(duration / 30);
 
-      // ดึง available slots
+      // ดึง available slots ที่ว่างหรือไม่มีการจอง
+      // เนื่องจากไม่มี dentist_id แล้ว ต้องใช้วิธีอื่นในการกรอง
+      // สำหรับตอนนี้ให้ดึง slots ที่ว่างทั้งหมดก่อน แล้วกรองในโค้ด
     const [slots] = await db.execute(`
       SELECT
         s.slot_id,
@@ -44,18 +46,19 @@ class AvailableSlotsModel {
         TIME_FORMAT(s.start_time, '%H:%i') as formatted_start_time,
         TIME_FORMAT(s.end_time, '%H:%i') as formatted_end_time
       FROM available_slots s
-      WHERE s.dentist_id = ?
-      AND s.date = ?
+      WHERE s.date = ?
       AND s.is_available = 1
+      AND s.dentist_treatment_id IS NULL
       AND NOT EXISTS (
         SELECT 1 FROM queue q
-        WHERE q.dentist_id = s.dentist_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        WHERE qd.dentist_id = ?
         AND DATE(q.time) = s.date
         AND TIME(q.time) = s.start_time
         AND q.queue_status IN ('pending', 'confirm')
       )
         ORDER BY s.start_time
-      `, [dentistId, date]);
+      `, [date, dentistId]);
 
       console.log('Found', slots.length, 'available slots');
 
@@ -113,33 +116,38 @@ class AvailableSlotsModel {
    */
   static async getAvailableDentistsForBooking(date, treatmentId = null) {
     try {
-      const params = [date, date];
-
+      // ใช้ dentist_schedule แทน available_slots เพื่อให้สอดคล้องกับ calendar data
+      let params = [date, date];
       let treatmentJoin = '';
+
       if (treatmentId) {
         treatmentJoin = 'JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id AND dt.treatment_id = ?';
+        params.unshift(treatmentId);
       }
 
-      if (treatmentId) params.unshift(treatmentId);
-
       const [rows] = await db.execute(
-        `SELECT 
+        `SELECT
            d.dentist_id,
            d.fname,
            d.lname,
            d.specialty,
-           COALESCE(SUM(CASE 
-             WHEN q.queue_id IS NULL AND ds.status = 'working' AND ds.schedule_date = ? THEN 1
-             ELSE 0
-           END), 0) AS available_slots
+           COUNT(DISTINCT CASE 
+             WHEN s.is_available = 1 
+             AND s.dentist_treatment_id IS NULL
+             AND NOT EXISTS (
+               SELECT 1 FROM queue q 
+               JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+               WHERE qd.dentist_id = d.dentist_id 
+               AND DATE(q.time) = s.date 
+               AND TIME(q.time) = s.start_time 
+               AND q.queue_status IN ('pending','confirm')
+             ) THEN s.slot_id 
+           END) AS available_slots
          FROM dentist d
          ${treatmentJoin}
-         LEFT JOIN dentist_schedule ds ON ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working'
-         LEFT JOIN queue q ON q.dentist_id = d.dentist_id 
-           AND DATE(q.time) = ds.schedule_date 
-           AND TIME(q.time) >= ds.start_time 
-           AND TIME(q.time) < ds.end_time
-           AND q.queue_status IN ('pending','confirm')
+         JOIN dentist_schedule ds ON ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working'
+         LEFT JOIN available_slots s ON s.date = ?
+         WHERE d.user_id IS NOT NULL
          GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
          HAVING available_slots > 0
          ORDER BY d.fname, d.lname`
@@ -166,13 +174,14 @@ class AvailableSlotsModel {
         dentist_id: r.dentist_id,
         fname: r.fname,
         lname: r.lname,
+        name: `${r.fname} ${r.lname}`, // เพิ่ม field name
         specialty: r.specialty,
         available_slots: r.available_slots,
         treatments: treatmentsByDentist[r.dentist_id] || []
       }));
       
       console.log(`🔍 getAvailableDentistsForBooking: Found ${result.length} dentists for date ${date}`, 
-        result.map(d => ({ id: d.dentist_id, name: `${d.fname} ${d.lname}`, slots: d.available_slots })));
+        result.map(d => ({ id: d.dentist_id, name: d.name, slots: d.available_slots })));
       
       return result;
     } catch (error) {
@@ -208,9 +217,10 @@ class AvailableSlotsModel {
 
       // เวลาที่ถูกจองแล้ว
       const [bookedRows] = await db.execute(
-        `SELECT TIME_FORMAT(time, '%H:%i') as start_time
-         FROM queue
-         WHERE dentist_id = ? AND DATE(time) = ? AND queue_status IN ('pending','confirm')`,
+        `SELECT TIME_FORMAT(q.time, '%H:%i') as start_time
+         FROM queue q
+         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+         WHERE qd.dentist_id = ? AND DATE(q.time) = ? AND q.queue_status IN ('pending','confirm')`,
         [dentistId, date]
       );
       const bookedSet = new Set(bookedRows.map(r => r.start_time));
@@ -280,9 +290,10 @@ class AvailableSlotsModel {
     try {
       // เวลาที่ถูกจองแล้วในวันนั้น
       const [bookedRows] = await db.execute(
-        `SELECT TIME_FORMAT(time, '%H:%i') as start_time
-         FROM queue
-         WHERE dentist_id = ? AND DATE(time) = ? AND queue_status IN ('pending','confirm')`,
+        `SELECT TIME_FORMAT(q.time, '%H:%i') as start_time
+         FROM queue q
+         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+         WHERE qd.dentist_id = ? AND DATE(q.time) = ? AND q.queue_status IN ('pending','confirm')`,
         [dentistId, date]
       );
       const bookedSet = new Set(bookedRows.map(r => r.start_time));

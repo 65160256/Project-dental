@@ -21,17 +21,17 @@ class NotificationAdminModel {
       let params = [];
 
       if (filters.type) {
-        whereClause = 'WHERE type = ?';
+        whereClause = 'WHERE n.type = ?';
         params.push(filters.type);
       }
 
       if (filters.is_read !== undefined) {
-        whereClause += whereClause ? ' AND is_read = ?' : 'WHERE is_read = ?';
+        whereClause += whereClause ? ' AND n.is_read = ?' : 'WHERE n.is_read = ?';
         params.push(filters.is_read);
       }
 
       if (filters.patient_id) {
-        whereClause += whereClause ? ' AND patient_id = ?' : 'WHERE patient_id = ?';
+        whereClause += whereClause ? ' AND qd.patient_id = ?' : 'WHERE qd.patient_id = ?';
         params.push(filters.patient_id);
       }
 
@@ -40,7 +40,9 @@ class NotificationAdminModel {
           n.*,
           CONCAT(p.fname, ' ', p.lname) as patient_name
         FROM notifications n
-        LEFT JOIN patient p ON n.patient_id = p.patient_id
+        LEFT JOIN queue q ON n.queue_id = q.queue_id
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN patient p ON qd.patient_id = p.patient_id
         ${whereClause}
         ORDER BY n.created_at DESC
       `, params);
@@ -64,7 +66,9 @@ class NotificationAdminModel {
           n.*,
           CONCAT(p.fname, ' ', p.lname) as patient_name
         FROM notifications n
-        LEFT JOIN patient p ON n.patient_id = p.patient_id
+        LEFT JOIN queue q ON n.queue_id = q.queue_id
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        LEFT JOIN patient p ON qd.patient_id = p.patient_id
         WHERE n.id = ?
       `, [notificationId]);
 
@@ -83,13 +87,12 @@ class NotificationAdminModel {
   static async createNotification(notificationData) {
     try {
       const [result] = await db.execute(`
-        INSERT INTO notifications (type, title, message, patient_id, queue_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, ?)
       `, [
         notificationData.type,
         notificationData.title,
         notificationData.message,
-        notificationData.patient_id || null,
         notificationData.queue_id || null,
         notificationData.is_read || 0,
         notificationData.is_new || 1

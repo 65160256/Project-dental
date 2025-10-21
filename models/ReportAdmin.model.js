@@ -62,23 +62,23 @@ class ReportAdminModel {
         SELECT 
           queue_status,
           COUNT(*) as count,
-          ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM queue WHERE DATE(time) BETWEEN ? AND ?)), 2) as percentage
-        FROM queue 
-        WHERE DATE(time) BETWEEN ? AND ?
+          ROUND((COUNT(*) * 100.0 / (SELECT COUNT(*) FROM queue q2 WHERE DATE(q2.time) BETWEEN ? AND ?)), 2) as percentage
+        FROM queue q
+        WHERE DATE(q.time) BETWEEN ? AND ?
         GROUP BY queue_status
       `, [startDate, endDate, startDate, endDate]);
 
       // Get daily appointment trends
       const [dailyTrends] = await db.execute(`
         SELECT 
-          DATE(time) as date,
+          DATE(q.time) as date,
           COUNT(*) as total_appointments,
           COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending,
           COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed,
           COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled
-        FROM queue 
-        WHERE DATE(time) BETWEEN ? AND ?
-        GROUP BY DATE(time)
+        FROM queue q
+        WHERE DATE(q.time) BETWEEN ? AND ?
+        GROUP BY DATE(q.time)
         ORDER BY date
       `, [startDate, endDate]);
 
@@ -89,7 +89,8 @@ class ReportAdminModel {
           COUNT(*) as booking_count,
           COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
         FROM queue q
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE DATE(q.time) BETWEEN ? AND ?
         GROUP BY t.treatment_id, t.treatment_name
         ORDER BY booking_count DESC
@@ -106,7 +107,8 @@ class ReportAdminModel {
           COUNT(CASE WHEN q.queue_status = 'completed' THEN 1 END) as completed_appointments,
           ROUND((COUNT(CASE WHEN q.queue_status = 'completed' THEN 1 END) * 100.0 / COUNT(*)), 2) as completion_rate
         FROM queue q
-        JOIN dentist d ON q.dentist_id = d.dentist_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
         WHERE DATE(q.time) BETWEEN ? AND ?
         GROUP BY d.dentist_id, d.fname, d.lname
         ORDER BY total_appointments DESC
@@ -572,8 +574,9 @@ class ReportAdminModel {
           t.treatment_name
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE ${dateFilter} ${statusFilter}
         ORDER BY q.time DESC
       `, queryParams);
@@ -614,7 +617,8 @@ class ReportAdminModel {
           COUNT(q.queue_id) as count,
           COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
         FROM treatment t
-        LEFT JOIN queue q ON t.treatment_id = q.treatment_id ${dateFilter}
+        LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id ${dateFilter}
         GROUP BY t.treatment_id, t.treatment_name
         HAVING count > 0
         ORDER BY count DESC
@@ -654,19 +658,22 @@ class ReportAdminModel {
           COUNT(DISTINCT s.slot_id) as dentist_total_slots,
           COUNT(DISTINCT CASE 
             WHEN s.is_available = 1 
+            AND s.dentist_treatment_id IS NULL
             AND NOT EXISTS (
               SELECT 1 FROM queue q 
-              WHERE q.dentist_id = s.dentist_id 
+              JOIN queuedetail qd2 ON q.queuedetail_id = qd2.queuedetail_id
+              WHERE qd2.dentist_id = d.dentist_id 
               AND DATE(q.time) = s.date 
               AND TIME(q.time) = s.start_time 
               AND q.queue_status IN ('pending', 'confirm')
             ) 
             THEN s.slot_id 
           END) as dentist_available_slots
-        FROM available_slots s
-        JOIN dentist d ON s.dentist_id = d.dentist_id
-        WHERE s.date BETWEEN ? AND ?
-        AND d.user_id IS NOT NULL
+        FROM dentist d
+        JOIN dentist_schedule ds ON ds.dentist_id = d.dentist_id AND ds.status = 'working'
+        LEFT JOIN available_slots s ON s.date = ds.schedule_date
+        WHERE d.user_id IS NOT NULL
+        AND s.date BETWEEN ? AND ?
       `;
 
       const queryParams = [
@@ -790,7 +797,8 @@ class ReportAdminModel {
           t.treatment_name,
           COUNT(q.queue_id) as count
         FROM treatment t
-        LEFT JOIN queue q ON t.treatment_id = q.treatment_id 
+        LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id 
           AND DATE(q.time) BETWEEN ? AND ?
         GROUP BY t.treatment_id, t.treatment_name
         ORDER BY count DESC
@@ -806,7 +814,8 @@ class ReportAdminModel {
           COUNT(DISTINCT q.patient_id) as unique_patients,
           COUNT(q.queue_id) as total_appointments
         FROM dentist d
-        LEFT JOIN queue q ON d.dentist_id = q.dentist_id 
+        LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id 
           AND DATE(q.time) BETWEEN ? AND ?
         GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
         ORDER BY total_appointments DESC
@@ -840,8 +849,9 @@ class ReportAdminModel {
           t.treatment_name
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
-        JOIN dentist d ON q.dentist_id = d.dentist_id
-        JOIN treatment t ON q.treatment_id = t.treatment_id
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE DATE(q.time) BETWEEN CURDATE() AND ?
           AND q.queue_status IN ('pending', 'confirm')
         ORDER BY q.time ASC
@@ -853,9 +863,9 @@ class ReportAdminModel {
         SELECT 
           DATE(time) as appointment_date,
           COUNT(*) as daily_count
-        FROM queue
-        WHERE DATE(time) BETWEEN ? AND ?
-        GROUP BY DATE(time)
+        FROM queue q
+        WHERE DATE(q.time) BETWEEN ? AND ?
+        GROUP BY DATE(q.time)
         ORDER BY appointment_date
       `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
 

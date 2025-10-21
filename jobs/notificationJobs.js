@@ -22,10 +22,11 @@ async function sendAppointmentReminders() {
 
     // ดึงนัดหมายที่จะเกิดขึ้นพรุ่งนี้
     const [appointments] = await db.execute(`
-      SELECT queue_id, patient_id, dentist_id, time
-      FROM queue
-      WHERE DATE(time) = ?
-      AND queue_status IN ('pending', 'confirm')
+      SELECT q.queue_id, q.patient_id, q.time, qd.dentist_id
+      FROM queue q
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      WHERE DATE(q.time) = ?
+      AND q.queue_status IN ('pending', 'confirm')
     `, [tomorrowDate]);
 
     console.log(`📋 พบนัดหมาย ${appointments.length} รายการสำหรับพรุ่งนี้`);
@@ -61,14 +62,15 @@ async function sendUpcomingAppointmentAlerts() {
     const twoHoursLater = new Date(now.getTime() + (2 * 60 * 60 * 1000));
     
     const [appointments] = await db.execute(`
-      SELECT q.queue_id, q.patient_id, q.dentist_id, q.time,
+      SELECT q.queue_id, q.patient_id, q.time, qd.dentist_id,
              CONCAT(p.fname, ' ', p.lname) as patient_name,
              CONCAT(d.fname, ' ', d.lname) as dentist_name,
              t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.time BETWEEN ? AND ?
       AND q.queue_status IN ('pending', 'confirm')
     `, [now, twoHoursLater]);
@@ -85,15 +87,13 @@ async function sendUpcomingAppointmentAlerts() {
 
       // แจ้งเตือนทันตแพทย์
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_reminder',
         '⏰ นัดหมายกำลังจะมาถึง',
         `อีก 2 ชั่วโมง คุณมีนัดกับ ${appointment.patient_name} เวลา ${formattedTime} สำหรับ${appointment.treatment_name}`,
-        appointment.queue_id,
-        appointment.dentist_id,
-        appointment.patient_id
+        appointment.queue_id
       ]);
     }
 
@@ -113,14 +113,15 @@ async function checkMissedAppointments() {
     const oneHourAgo = new Date(now.getTime() - (60 * 60 * 1000));
     
     const [missedAppointments] = await db.execute(`
-      SELECT q.queue_id, q.patient_id, q.dentist_id,
+      SELECT q.queue_id, q.patient_id, qd.dentist_id,
              CONCAT(p.fname, ' ', p.lname) as patient_name,
              CONCAT(d.fname, ' ', d.lname) as dentist_name,
              q.time, t.treatment_name
       FROM queue q
       JOIN patient p ON q.patient_id = p.patient_id
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.time BETWEEN ? AND ?
       AND q.queue_status = 'pending'
     `, [oneHourAgo, now]);
@@ -136,15 +137,13 @@ async function checkMissedAppointments() {
 
       // แจ้งเตือน Admin และ Dentist
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, dentist_id, patient_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, 0, 1)
       `, [
         'appointment_missed',
         '⚠️ นัดหมายที่อาจพลาด',
         `${appointment.patient_name} อาจพลาดนัดหมายเวลา ${formattedTime} กับ ${appointment.dentist_name} สำหรับ${appointment.treatment_name}`,
-        appointment.queue_id,
-        appointment.dentist_id,
-        appointment.patient_id
+        appointment.queue_id
       ]);
     }
 

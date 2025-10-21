@@ -103,10 +103,10 @@ class AdminModel {
           COUNT(q.queue_id) as appointment_count
         FROM dentist_schedule ds
         JOIN dentist d ON ds.dentist_id = d.dentist_id
-        LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
+        LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date 
           AND HOUR(q.time) = ds.hour
           AND q.queue_status IN ('pending', 'confirm')
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
         ${whereClause}
         GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
         ORDER BY ds.schedule_date, ds.hour
@@ -157,10 +157,10 @@ class AdminModel {
           ds.updated_at
         FROM dentist_schedule ds
         JOIN dentist d ON ds.dentist_id = d.dentist_id
-        LEFT JOIN queue q ON ds.dentist_id = q.dentist_id 
-          AND DATE(q.time) = ds.schedule_date 
+        LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date 
           AND HOUR(q.time) = ds.hour
           AND q.queue_status IN ('pending', 'confirm')
+        LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id AND qd.dentist_id = ds.dentist_id
         ${whereClause}
         AND ds.status = 'working'
         GROUP BY ds.schedule_id, ds.schedule_date, ds.hour, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty, d.dentist_id, ds.created_at, ds.updated_at

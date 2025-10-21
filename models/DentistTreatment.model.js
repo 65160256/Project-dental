@@ -329,9 +329,8 @@ class DentistTreatmentModel {
         COUNT(q.queue_id) as count
        FROM dentist_treatment dt
        JOIN treatment t ON dt.treatment_id = t.treatment_id
-       LEFT JOIN queue q ON q.dentist_id = dt.dentist_id
-         AND q.treatment_id = dt.treatment_id
-         AND q.queue_status = 'completed'
+       LEFT JOIN queuedetail qd ON qd.dentist_id = dt.dentist_id AND qd.treatment_id = dt.treatment_id
+       LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id AND q.queue_status = 'completed'
        WHERE dt.dentist_id = ?
        GROUP BY t.treatment_id, t.treatment_name
        ORDER BY count DESC`,
@@ -357,9 +356,8 @@ class DentistTreatmentModel {
         COUNT(q.queue_id) as experience_count
        FROM dentist_treatment dt
        JOIN dentist d ON dt.dentist_id = d.dentist_id
-       LEFT JOIN queue q ON q.dentist_id = d.dentist_id
-         AND q.treatment_id = dt.treatment_id
-         AND q.queue_status = 'completed'
+       LEFT JOIN queuedetail qd ON qd.dentist_id = d.dentist_id AND qd.treatment_id = dt.treatment_id
+       LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id AND q.queue_status = 'completed'
        WHERE dt.treatment_id = ?
        GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
        ORDER BY experience_count DESC, d.fname, d.lname

@@ -31,7 +31,8 @@ class DentistAdminModel {
           MAX(q.time) as last_appointment
         FROM dentist d
         LEFT JOIN user u ON d.user_id = u.user_id
-        LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('confirm', 'pending')
+        LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id AND q.queue_status IN ('confirm', 'pending')
         GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.phone, d.photo, u.email, u.last_login
         ORDER BY d.fname, d.lname
       `);
@@ -364,7 +365,8 @@ class DentistAdminModel {
           MAX(q.time) as last_appointment
         FROM dentist d
         LEFT JOIN user u ON d.user_id = u.user_id
-        LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('confirm', 'pending')
+        LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id AND q.queue_status IN ('confirm', 'pending')
         GROUP BY d.dentist_id, d.fname, d.lname, d.specialty, d.license_no, d.phone, d.photo, u.email, u.last_login
         ORDER BY d.fname, d.lname
       `);
@@ -402,7 +404,8 @@ class DentistAdminModel {
           MAX(q.time) as last_appointment
         FROM dentist d
         LEFT JOIN user u ON d.user_id = u.user_id
-        LEFT JOIN queue q ON d.dentist_id = q.dentist_id AND q.queue_status IN ('confirm', 'pending')
+        LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
+        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id AND q.queue_status IN ('confirm', 'pending')
         WHERE d.dentist_id = ?
         GROUP BY d.dentist_id, d.fname, d.lname, d.dob, d.id_card, d.license_no, d.specialty, d.education, d.address, d.phone, d.photo, u.email, u.last_login
       `, [dentistId]);
@@ -456,8 +459,9 @@ class DentistAdminModel {
           AND ds.hour = HOUR(?)
           AND ds.status = 'available'
           AND d.dentist_id NOT IN (
-            SELECT DISTINCT q.dentist_id 
+            SELECT DISTINCT qd.dentist_id 
             FROM queue q 
+            JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
             WHERE DATE(q.time) = ? 
               AND HOUR(q.time) = HOUR(?)
               AND q.queue_status IN ('pending', 'confirm')
@@ -499,21 +503,23 @@ class DentistAdminModel {
           COUNT(DISTINCT s.slot_id) as total_slots,
           COUNT(DISTINCT CASE 
             WHEN s.is_available = 1 
+            AND s.dentist_treatment_id IS NULL
             AND NOT EXISTS (
               SELECT 1 FROM queue q 
-              WHERE q.dentist_id = s.dentist_id 
+              JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+              WHERE qd.dentist_id = d.dentist_id 
               AND DATE(q.time) = s.date 
               AND TIME(q.time) = s.start_time 
               AND q.queue_status IN ('pending', 'confirm')
             ) THEN s.slot_id 
           END) as available_slots
         FROM dentist d
-        INNER JOIN available_slots s ON d.dentist_id = s.dentist_id
-        WHERE s.date = ?
-        AND d.user_id IS NOT NULL
+        JOIN dentist_schedule ds ON ds.dentist_id = d.dentist_id AND ds.schedule_date = ? AND ds.status = 'working'
+        LEFT JOIN available_slots s ON s.date = ?
+        WHERE d.user_id IS NOT NULL
       `;
 
-      let queryParams = [date];
+      let queryParams = [date, date]; // เพิ่ม date อีกตัวสำหรับ available_slots
 
       if (treatment_id) {
         query += ` AND EXISTS (

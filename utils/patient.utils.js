@@ -89,11 +89,13 @@ const checkAppointmentConflicts = async (patientId, appointmentDate, excludeQueu
 const getPatientRecentHistory = async (patientId, limit = 5) => {
   try {
     const [appointments] = await db.execute(`
-      SELECT q.queue_id, q.time, q.queue_status, q.diagnosis,
+      SELECT q.queue_id, q.time, q.queue_status, th.diagnosis,
              CONCAT(d.fname,' ',d.lname) AS dentist_name, t.treatment_name
       FROM queue q
-      JOIN dentist d ON q.dentist_id = d.dentist_id
-      JOIN treatment t ON q.treatment_id = t.treatment_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
       WHERE q.patient_id = ?
       ORDER BY q.time DESC
       LIMIT ?
