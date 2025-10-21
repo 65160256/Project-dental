@@ -470,7 +470,7 @@ exports.getCalendarData = async (req, res) => {
       }
       const d = byDate[dateStr];
       d.total_slots += 1;
-      if (row.status === 'available') d.available_slots += 1;
+      if (row.status === 'working') d.available_slots += 1;
       if (row.dentist_id && !d._dentistSet.has(row.dentist_id)) {
         d._dentistSet.add(row.dentist_id);
         // สร้าง name จาก fname และ lname เพื่อให้สอดคล้องกับ AvailableSlots model

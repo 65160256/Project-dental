@@ -975,7 +975,7 @@
                                     ${treatment.duration ? `<small style="color: #666; font-weight: normal;">(${treatment.duration} นาที)</small>` : ''}
                                 </div>
                                 <span class="treatment-status status-${treatment.queue_status}">
-                                    ${treatment.statusText}
+                                    ${treatment.queue_status === 'completed' ? 'เสร็จสิ้น - ปิดการรักษา' : treatment.statusText}
                                 </span>
                                 ${treatment.diagnosis ? `
                                     <div class="treatment-diagnosis">

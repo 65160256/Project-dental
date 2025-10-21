@@ -457,7 +457,7 @@ class DentistAdminModel {
         JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
         WHERE ds.schedule_date = ?
           AND ds.hour = HOUR(?)
-          AND ds.status = 'available'
+          AND ds.status = 'working'
           AND d.dentist_id NOT IN (
             SELECT DISTINCT qd.dentist_id 
             FROM queue q 

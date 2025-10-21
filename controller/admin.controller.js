@@ -209,154 +209,141 @@ exports.getDashboard = async (req, res) => {
 };
 
 exports.getScheduleAPI = async (req, res) => {
-  try {
-    const { start, end } = req.query;
-    
-    const scheduleData = await AdminModel.getScheduleData(start, end);
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'กรุณาเข้าสู่ระบบก่อน'
+    });
+  }
 
-    // จัดรูปแบบข้อมูลสำหรับ FullCalendar
-    const events = [];
-    
-    // Group schedules by dentist and date
-    const groupedSchedules = {};
-    
-    scheduleData.forEach(schedule => {
-      const dateKey = schedule.schedule_date.toISOString().split('T')[0];
-      const dentistKey = `${schedule.fname}_${schedule.lname}_${schedule.dentist_id}`;
-      
-      if (!groupedSchedules[dateKey]) {
-        groupedSchedules[dateKey] = {};
+  try {
+    // ดึงข้อมูลตารางเวลาทันตแพทย์ทั้งหมด
+    const [schedules] = await db.query(`
+      SELECT
+        ds.schedule_id,
+        ds.dentist_id,
+        ds.schedule_date,
+        ds.start_time,
+        ds.end_time,
+        ds.status,
+        ds.note,
+        d.fname,
+        d.lname,
+        d.specialty,
+        COUNT(q.queue_id) as appointment_count
+      FROM dentist_schedule ds
+      LEFT JOIN dentist d ON ds.dentist_id = d.dentist_id
+      LEFT JOIN queue q ON DATE(q.time) = ds.schedule_date
+        AND HOUR(q.time) = ds.hour
+        AND q.queue_status IN ('pending', 'confirm')
+      LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        AND qd.dentist_id = ds.dentist_id
+      WHERE ds.schedule_date >= CURDATE() - INTERVAL 30 DAY
+        AND ds.schedule_date <= CURDATE() + INTERVAL 90 DAY
+      GROUP BY ds.schedule_id, ds.dentist_id, ds.schedule_date, ds.start_time, ds.end_time, ds.status, ds.note, d.fname, d.lname, d.specialty
+      ORDER BY ds.schedule_date ASC, ds.start_time ASC
+    `);
+
+    console.log('📊 Raw schedules from DB:', schedules);
+
+    // จัดกลุ่มตามวันที่และทันตแพทย์
+    const groupedByDate = {};
+
+    schedules.forEach(schedule => {
+      // แปลงวันที่
+      let dateStr;
+      if (schedule.schedule_date instanceof Date) {
+        const year = schedule.schedule_date.getFullYear();
+        const month = String(schedule.schedule_date.getMonth() + 1).padStart(2, '0');
+        const day = String(schedule.schedule_date.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
+      } else {
+        dateStr = String(schedule.schedule_date).split('T')[0];
       }
-      
-      if (!groupedSchedules[dateKey][dentistKey]) {
-        groupedSchedules[dateKey][dentistKey] = {
-          dentist: `${schedule.fname} ${schedule.lname}`,
+
+      const dentistKey = `${schedule.dentist_id}`;
+      const dateKey = dateStr;
+
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = {};
+      }
+
+      if (!groupedByDate[dateKey][dentistKey]) {
+        groupedByDate[dateKey][dentistKey] = {
+          dentist_id: schedule.dentist_id,
+          fname: schedule.fname,
+          lname: schedule.lname,
           specialty: schedule.specialty,
-          schedules: [],
-          hasAppointments: false
+          status: schedule.status,
+          appointment_count: 0,
+          schedules: []
         };
       }
-      
-      groupedSchedules[dateKey][dentistKey].schedules.push(schedule);
-      
-      if (schedule.appointment_count > 0) {
-        groupedSchedules[dateKey][dentistKey].hasAppointments = true;
-      }
+
+      groupedByDate[dateKey][dentistKey].schedules.push(schedule);
+      groupedByDate[dateKey][dentistKey].appointment_count += parseInt(schedule.appointment_count) || 0;
     });
 
-    // Create events for FullCalendar with Thai text
-    Object.keys(groupedSchedules).forEach(date => {
-      Object.keys(groupedSchedules[date]).forEach(dentistKey => {
-        const dentistData = groupedSchedules[date][dentistKey];
-        
-        if (dentistData.schedules.length === 0) return;
-        
-        // Sort schedules by hour
-        dentistData.schedules.sort((a, b) => a.hour - b.hour);
-        
-        // Group continuous working hours
-        const workingBlocks = [];
-        let currentBlock = null;
-        
-        dentistData.schedules.forEach(schedule => {
-          if (schedule.status === 'dayoff') {
-            if (currentBlock) {
-              workingBlocks.push(currentBlock);
-              currentBlock = null;
-            }
-            workingBlocks.push({
-              type: 'dayoff',
-              start: schedule.start_time,
-              end: schedule.end_time,
-              note: schedule.note
-            });
-          } else {
-            if (!currentBlock) {
-              currentBlock = {
-                type: 'working',
-                start: schedule.start_time,
-                end: schedule.end_time,
-                hasAppointments: schedule.appointment_count > 0,
-                appointmentCount: schedule.appointment_count
-              };
-            } else {
-              currentBlock.end = schedule.end_time;
-              if (schedule.appointment_count > 0) {
-                currentBlock.hasAppointments = true;
-                currentBlock.appointmentCount += schedule.appointment_count;
-              }
-            }
-          }
-        });
-        
-        if (currentBlock) {
-          workingBlocks.push(currentBlock);
-        }
-        
-        // Create FullCalendar events with Thai labels for duty schedule
-        workingBlocks.forEach(block => {
-          if (block.type === 'dayoff') {
-            events.push({
-              id: `dayoff_${dentistKey}_${date}`,
-              title: `ทพ. ${dentistData.dentist} - วันหยุด`,
-              start: date,
-              allDay: true,
-              color: '#f5f5f5',
-              textColor: '#999',
-              borderColor: '#ddd',
-              display: 'block',
-              extendedProps: {
-                type: 'dayoff',
-                dentist: dentistData.dentist,
-                note: block.note
-              }
-            });
-          } else {
-            // Format time to 24-hour format
-            const startTime = block.start.substring(0, 5); // HH:MM
-            const endTime = block.end.substring(0, 5);
-            
-            // สร้าง title ที่เหมาะสมกับปฏิทินตารางเวร
-            let title = `ทพ. ${dentistData.dentist} - เวร`;
-            if (block.hasAppointments) {
-              title += ` (${block.appointmentCount} นัดหมาย)`;
-            }
-            
-            events.push({
-              id: `work_${dentistKey}_${date}`,
-              title: title,
-              start: `${date}T${startTime}:00`,
-              end: `${date}T${endTime}:00`,
-              color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
-              textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
-              borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
-              display: 'block',
-              extendedProps: {
-                type: 'working',
-                dentist: dentistData.dentist,
-                specialty: dentistData.specialty,
-                startTime: startTime,
-                endTime: endTime,
-                hasAppointments: block.hasAppointments,
-                appointmentCount: block.appointmentCount || 0
-              }
-            });
+    // สร้าง events แบบแสดงทันตแพทย์ต่อวัน (ไม่แยกช่วงเวลา)
+    const events = [];
+
+    Object.keys(groupedByDate).forEach(dateStr => {
+      const dentistsOnThisDay = groupedByDate[dateStr];
+
+      Object.keys(dentistsOnThisDay).forEach(dentistKey => {
+        const dentistInfo = dentistsOnThisDay[dentistKey];
+        const scheduleList = dentistInfo.schedules;
+
+        // หาช่วงเวลาเริ่มต้นและสิ้นสุด
+        const times = scheduleList
+          .filter(s => s.status === 'working')
+          .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+        const startTime = times.length > 0 ? times[0].start_time : '00:00:00';
+        const endTime = times.length > 0 ? times[times.length - 1].end_time : '23:59:59';
+
+        const hasWorking = scheduleList.some(s => s.status === 'working');
+        const isDayOff = scheduleList.every(s => s.status === 'dayoff');
+
+        events.push({
+          id: `dentist_${dentistInfo.dentist_id}_${dateStr}`,
+          title: `ทพ. ${dentistInfo.fname} ${dentistInfo.lname}`,
+          start: dateStr,
+          end: dateStr,
+          allDay: true,
+          backgroundColor: isDayOff ? '#f5f5f5' : (dentistInfo.appointment_count > 0 ? '#fce4ec' : '#e8f5e8'),
+          borderColor: isDayOff ? '#999' : (dentistInfo.appointment_count > 0 ? '#c2185b' : '#2e7d32'),
+          textColor: isDayOff ? '#999' : (dentistInfo.appointment_count > 0 ? '#c2185b' : '#2e7d32'),
+          extendedProps: {
+            dentist: `${dentistInfo.fname} ${dentistInfo.lname}`,
+            specialty: dentistInfo.specialty || 'ทันตแพทย์ทั่วไป',
+            startTime: startTime.substring(0, 5),
+            endTime: endTime.substring(0, 5),
+            type: isDayOff ? 'dayoff' : 'working',
+            hasAppointments: dentistInfo.appointment_count > 0,
+            appointmentCount: dentistInfo.appointment_count,
+            note: scheduleList.find(s => s.note)?.note || null
           }
         });
       });
     });
 
+    console.log('📊 Total events created:', events.length);
+    console.log('📅 Events:', events);
+
     res.json({
       success: true,
-      events: events
+      events: events,
+      total: events.length
     });
-    
-  } catch (error) {
-    console.error('เกิดข้อผิดพลาดในการโหลด API ตารางเวร:', error);
+
+  } catch (err) {
+    console.error('Error fetching schedule data:', err);
     res.status(500).json({
       success: false,
-      error: 'ไม่สามารถโหลดข้อมูลตารางเวรได้',
-      events: []
+      message: 'ไม่สามารถโหลดข้อมูลตารางเวลาได้',
+      error: err.message
     });
   }
 };

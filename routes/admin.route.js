@@ -23,6 +23,7 @@ const checkAdminApiAuth = (req, res, next) => {
   next();
 };
 router.get('/api/current-user', checkAdminApiAuth, adminController.getCurrentUserAPI);
+router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
 
 // ==================== Dashboard Routes ====================
 router.get('/dashboard', checkAdminAuth, adminController.getReportsDashboard);
@@ -110,6 +111,8 @@ router.get('/api/dentists/:id/schedule', adminController.getDentistSchedule);
 
 // Add this new route for getting real dentist schedule data
 router.get('/api/dentists/:id/schedule-data', checkAdminApiAuth, adminController.getDentistScheduleData);
+
+// Debug route for schedule data - REMOVED (function not defined)
 
 // ==================== Patients Routes ====================
 router.get('/patients', checkAdminAuth, adminController.getPatients);

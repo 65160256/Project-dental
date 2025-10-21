@@ -152,7 +152,8 @@
             <%= appointment.queue_status === 'confirm' ? 'ยืนยันแล้ว' : 
                 appointment.queue_status === 'pending' ? 'รอยืนยัน' :
                 appointment.queue_status === 'cancel' ? 'ยกเลิกแล้ว' :
-                appointment.queue_status === 'completed' ? 'เสร็จสิ้นแล้ว' :
+                appointment.queue_status === 'auto_cancelled' ? 'ยกเลิกอัตโนมัติ' :
+                appointment.queue_status === 'completed' ? 'เสร็จสิ้นแล้ว - ปิดการรักษา' :
                 appointment.queue_status.charAt(0).toUpperCase() + appointment.queue_status.slice(1) %>
           </span>
         </div>

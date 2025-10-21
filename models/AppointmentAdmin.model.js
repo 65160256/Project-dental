@@ -647,15 +647,28 @@ class AppointmentAdminModel {
       );
 
       // แปลงให้ง่ายต่อการแสดงผลในปฏิทิน (รวมช่วงเวลาทำงานต่อเนื่อง)
-      const schedules = rows.map(r => ({
-        schedule_date: r.schedule_date.toISOString().split('T')[0],
-        hour: r.hour,
-        start_time: r.start_time.substring(0,5), // HH:MM
-        end_time: r.end_time.substring(0,5),
-        status: r.status, // 'working' หรือ 'dayoff'
-        note: r.note || null,
-        appointment_count: r.appointment_count || 0
-      }));
+      const schedules = rows.map(r => {
+        // แปลงวันที่โดยไม่ใช้ toISOString() เพื่อหลีกเลี่ยงปัญหา timezone
+        let dateStr;
+        if (r.schedule_date instanceof Date) {
+          const year = r.schedule_date.getFullYear();
+          const month = String(r.schedule_date.getMonth() + 1).padStart(2, '0');
+          const day = String(r.schedule_date.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          dateStr = String(r.schedule_date).split('T')[0];
+        }
+
+        return {
+          schedule_date: dateStr,
+          hour: r.hour,
+          start_time: r.start_time.substring(0,5), // HH:MM
+          end_time: r.end_time.substring(0,5),
+          status: r.status, // 'working' หรือ 'dayoff'
+          note: r.note || null,
+          appointment_count: r.appointment_count || 0
+        };
+      });
 
       return schedules;
     } catch (error) {

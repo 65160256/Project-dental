@@ -429,6 +429,12 @@
       border: 1px solid #abdde5;
     }
 
+    .status-auto_cancelled {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      border: 1px solid #f59e0b;
+    }
+
     .appointment-details {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

@@ -238,7 +238,7 @@
         </div>
         <ul>
             <li class="active"><a href="/dentist/dashboard"><i class="fas fa-chart-bar"></i> แดชบอร์ด</a></li>
-            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางทำงาน</a></li>
+            <li><a href="/dentist/schedule"><i class="fas fa-calendar-alt"></i> ตารางงาน</a></li>
             <li><a href="/dentist/appointments"><i class="fas fa-hospital"></i> นัดหมาย</a></li>
             <li><a href="/dentist/patients"><i class="fas fa-users"></i> ผู้ป่วย</a></li>
         </ul>
@@ -363,7 +363,7 @@
                         <div class="stat-trend"><i class="fas fa-arrow-up"></i> +15%</div>
                     </div>
                     <div class="stat-number"><%= stats.completedAppointments %></div>
-                    <div class="stat-label">เสร็จสิ้น</div>
+                    <div class="stat-label">เสร็จสิ้น - ปิดการรักษา</div>
                 </div>
             </div>
 
@@ -419,7 +419,7 @@
                                                 <% } else if (apt.queue_status === 'cancel') { %>
                                                     <i class="fas fa-times"></i> ยกเลิก
                                                 <% } else if (apt.queue_status === 'completed') { %>
-                                                    <i class="fas fa-check-circle"></i> เสร็จสิ้น
+                                                    <i class="fas fa-check-circle"></i> เสร็จสิ้น - ปิดการรักษา
                                                 <% } %>
                                             </span>
                                         </td>

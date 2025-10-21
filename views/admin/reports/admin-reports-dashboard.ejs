@@ -1426,9 +1426,6 @@
                         <div class="total-patients-card" onclick="window.location.href='/admin/patients'">
                             <div class="patient-number" id="totalPatientsDisplay"><%= dashboardData.totalPatients %></div>
                             <div class="patient-label">ผู้ป่วยทั้งหมด</div>
-                            <div class="patient-icon">
-                                <i class="fas fa-user-injured"></i>
-                            </div>
                         </div>
                     </div>
 
@@ -1461,7 +1458,7 @@
                             </div>
                             <div class="summary-card completed" onclick="showAppointmentDetails('completed')">
                                 <div class="summary-number" id="completedCount"><%= dashboardData.appointmentSummary.completed || 0 %></div>
-                                <div class="summary-label">เสร็จสิ้นแล้ว</div>
+                                <div class="summary-label">เสร็จสิ้นแล้ว - ปิดการรักษา</div>
                             </div>
                         </div>
                     </div>

@@ -86,9 +86,9 @@
         .treatment-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
         .treatment-date{display:flex;align-items:center;gap:8px;color:#4A90E2;font-weight:600;font-size:14px}
         .treatment-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase}
-        .status-completed{background:#e8f5e8;color:#2e7d32}
-        .status-pending{background:#fff3e0;color:#f57c00}
-        .status-cancelled{background:#ffebee;color:#d32f2f}
+        .status-completed{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #10b981}
+        .status-pending{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border:1px solid #f59e0b}
+        .status-cancelled{background:linear-gradient(135deg,#fecaca,#fca5a5);color:#991b1b;border:1px solid #ef4444}
 
         .treatment-info{display:flex;justify-content:space-between;align-items:center}
         .treatment-details h5{margin:0 0 5px 0;font-size:16px;color:#333;font-weight:600}
@@ -114,6 +114,10 @@
         .toast.error{background:#ef4444}
         .toast.info{background:#3b82f6}
         @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        /* Treatment Cancelled */
+        .treatment-cancelled{opacity:0.7;background:#f8f9fa;border-color:#dee2e6}
+        .treatment-cancelled:hover{box-shadow:none;transform:none;border-color:#dee2e6}
 
         /* Responsive */
         @media (max-width:768px){
@@ -211,7 +215,7 @@
                     <label>สถานะ:</label>
                     <select id="statusFilter" class="filter-input" onchange="applyFilters()">
                         <option value="">ทั้งหมด</option>
-                        <option value="confirm">เสร็จสิ้น</option>
+                        <option value="confirm">เสร็จสิ้น - ปิดการรักษา</option>
                         <option value="pending">รอดำเนินการ</option>
                         <option value="cancel">ยกเลิก</option>
                     </select>
@@ -409,8 +413,14 @@
                     const diag = (t.diagnosis || '').toString();
                     const diagShort = diag ? (diag.length > 100 ? diag.substring(0,100) + '…' : diag) : '';
 
+                    // ตรวจสอบว่าสามารถคลิกได้หรือไม่ (ยกเลิกแล้วไม่สามารถคลิกได้)
+                    const isClickable = t.queue_status !== 'cancel' && t.queue_status !== 'auto_cancelled';
+                    const clickHandler = isClickable ? `onclick="viewTreatmentDetails(${t.queue_id})"` : '';
+                    const cursorStyle = isClickable ? '' : 'style="cursor: not-allowed;"';
+                    const cancelledClass = !isClickable ? 'treatment-cancelled' : '';
+
                     html += `
-                        <div class="treatment-item" onclick="viewTreatmentDetails(${t.queue_id})">
+                        <div class="treatment-item ${cancelledClass}" ${clickHandler} ${cursorStyle}>
                             <div class="treatment-header">
                                 <div class="treatment-date">
                                     <i class="fas fa-calendar"></i>
@@ -424,9 +434,22 @@
                                     <p><i class="fas fa-user-md"></i> ${t.dentist_name || 'ไม่ระบุ'}</p>
                                     ${diagShort ? `<p><i class="fas fa-notes-medical"></i> ${diagShort}</p>` : ''}
                                 </div>
-                                <a href="/admin/patients/${patientId}/treatments/${t.queue_id}" class="view-details-btn">
-                                    <i class="fas fa-eye"></i> ดูรายละเอียด
-                                </a>
+                                ${isClickable ? `
+                                    <a href="/admin/patients/${patientId}/treatments/${t.queue_id}" class="view-details-btn">
+                                        <i class="fas fa-eye"></i> ดูรายละเอียด
+                                    </a>
+                                ` : `
+                                    <span class="view-details-btn" style="background: #f3f4f6; color: #9ca3af; cursor: not-allowed;">
+                                        <i class="fas fa-ban"></i> ไม่สามารถดูรายละเอียดได้
+                                    </span>
+                                `}
+                                ${!isClickable ? `
+                                    <div class="treatment-note" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9ecef;">
+                                        <small style="color: #dc3545; font-style: italic;">
+                                            <i class="fas fa-info-circle"></i> ไม่สามารถดูรายละเอียดได้ (การรักษายกเลิก)
+                                        </small>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     `;
@@ -463,15 +486,18 @@
                 case 'confirm': return 'status-completed';
                 case 'pending': return 'status-pending';
                 case 'cancel':  return 'status-cancelled';
+                case 'auto_cancelled': return 'status-cancelled';
                 default:        return 'status-pending';
             }
         }
 
         function getStatusText(status) {
             switch (status) {
-                case 'confirm': return 'เสร็จสิ้น';
+                case 'confirm': return 'เสร็จสิ้น - ปิดการรักษา';
                 case 'pending': return 'รอดำเนินการ';
                 case 'cancel':  return 'ยกเลิก';
+                case 'auto_cancelled': return 'ยกเลิกอัตโนมัติ';
+                case 'completed': return 'เสร็จสิ้น - ปิดการรักษา';
                 default:        return 'ไม่ทราบ';
             }
         }

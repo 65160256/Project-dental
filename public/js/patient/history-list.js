@@ -128,7 +128,13 @@
           // Don't navigate if clicking on action buttons
           if (!e.target.closest('.action-buttons')) {
             const appointmentId = this.querySelector('.appointment-id').textContent.match(/#Y-(\d+)/)[1];
-            window.location.href = `/patient/history/details/${appointmentId}`;
+            const statusBadge = this.querySelector('.status-badge');
+            const status = statusBadge ? statusBadge.className.match(/status-(\w+)/)[1] : '';
+            
+            // Don't navigate if status is auto_cancelled
+            if (status !== 'auto_cancelled') {
+              window.location.href = `/patient/history/details/${appointmentId}`;
+            }
           }
         });
       });

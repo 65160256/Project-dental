@@ -384,29 +384,79 @@
             if (!dentistId) return;
             const startDate = new Date(currentYear, currentMonth, 1);
             const endDate = new Date(currentYear, currentMonth + 1, 0);
-            const startDateStr = startDate.toISOString().split('T')[0];
-            const endDateStr = endDate.toISOString().split('T')[0];
 
+            // แปลงวันที่โดยไม่ใช้ toISOString() เพื่อหลีกเลี่ยงปัญหา timezone
+            const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+            const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+
+            console.log('🔍 Loading schedule data:', {
+                dentistId,
+                startDateStr,
+                endDateStr
+            });
+
+            // ใช้ API endpoint สำหรับ admin
             const res = await fetch(`/admin/api/dentists/${dentistId}/schedule-data?start_date=${startDateStr}&end_date=${endDateStr}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             if (!data.success) throw new Error(data.error || 'ไม่สามารถโหลดตารางทำงานได้');
             scheduleData = data.schedules || [];
+            
+            console.log('📅 Schedule data loaded:', scheduleData);
+        }
+
+        // ฟังก์ชัน debug สำหรับตรวจสอบข้อมูล
+        async function debugScheduleData() {
+            if (!dentistId) return;
+            const startDate = new Date(currentYear, currentMonth, 1);
+            const endDate = new Date(currentYear, currentMonth + 1, 0);
+
+            // แปลงวันที่โดยไม่ใช้ toISOString() เพื่อหลีกเลี่ยงปัญหา timezone
+            const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+            const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+
+            try {
+                console.log('🔍 Debug Schedule Data Request:', {
+                    dentistId,
+                    startDateStr,
+                    endDateStr
+                });
+
+                const response = await fetch(`/admin/api/debug/dentists/${dentistId}/schedule?start_date=${startDateStr}&end_date=${endDateStr}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('🔍 Debug Schedule Data:', data.debug);
+                    showToast('ข้อมูล debug โหลดสำเร็จ ดูใน Console', 'success');
+                } else {
+                    showToast('ไม่สามารถโหลดข้อมูล debug ได้', 'error');
+                }
+            } catch (error) {
+                console.error('Debug error:', error);
+                showToast('เกิดข้อผิดพลาดในการ debug', 'error');
+            }
         }
 
         // วาดปฏิทินจากข้อมูลจริง
         function renderCalendar() {
-  updateCurrentMonthDisplay();
-  const grid = document.getElementById('calendarGrid');
-  grid.innerHTML = '';
+            updateCurrentMonthDisplay();
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
 
-  // หัวตาราง
-  daysOfWeekTH.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'calendar-header-cell';
-    el.textContent = d;
-    grid.appendChild(el);
-  });
+            // เพิ่ม debug button
+            const debugBtn = document.createElement('button');
+            debugBtn.textContent = '🔍 Debug Data';
+            debugBtn.onclick = debugScheduleData;
+            debugBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; z-index: 1000; background: #4A90E2; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;';
+            document.querySelector('.schedule-card').appendChild(debugBtn);
+
+            // หัวตาราง
+            daysOfWeekTH.forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'calendar-header-cell';
+                el.textContent = d;
+                grid.appendChild(el);
+            });
 
   const firstDay = new Date(currentYear, currentMonth, 1);
   const lastDay  = new Date(currentYear, currentMonth + 1, 0);
@@ -434,25 +484,30 @@
     cellDate.textContent = day;
     cell.appendChild(cellDate);
 
-    // ดึงข้อมูลจาก DB สำหรับวันนั้น
-    const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
+            // ดึงข้อมูลจาก DB สำหรับวันนั้น
+            const daySchedules = scheduleData.filter(s => s.schedule_date === currentDateStr);
 
-    // ---- บังคับอาทิตย์ปิดเสมอ ----
-    if (dow === 0) {
-      cell.classList.add('day-off');
-      const indicator = document.createElement('div');
-      indicator.className = 'schedule-indicator day-off';
-      cell.appendChild(indicator);
+            // เพิ่ม debug info
+            if (daySchedules.length > 0) {
+                console.log(`📅 ${currentDateStr}:`, daySchedules);
+            }
 
-      const info = document.createElement('div');
-      info.className = 'cell-schedule';
-      info.textContent = 'ปิดคลินิก';
-      cell.appendChild(info);
+            // ---- บังคับอาทิตย์ปิดเสมอ ----
+            if (dow === 0) {
+                cell.classList.add('day-off');
+                const indicator = document.createElement('div');
+                indicator.className = 'schedule-indicator day-off';
+                cell.appendChild(indicator);
 
-      cell.addEventListener('click', () => showScheduleDetails(currentDateStr, [], true));
-      grid.appendChild(cell);
-      continue;
-    }
+                const info = document.createElement('div');
+                info.className = 'cell-schedule';
+                info.textContent = 'ปิดคลินิก';
+                cell.appendChild(info);
+
+                cell.addEventListener('click', () => showScheduleDetails(currentDateStr, [], true));
+                grid.appendChild(cell);
+                continue;
+            }
     // --------------------------------
 
     if (daySchedules.length > 0) {

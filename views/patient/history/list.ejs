@@ -82,7 +82,7 @@
               <option value="pending">รอยืนยัน</option>
               <option value="confirm">ยืนยันแล้ว</option>
               <option value="cancel">ยกเลิกแล้ว</option>
-              <option value="completed">เสร็จสิ้นแล้ว</option>
+              <option value="completed">เสร็จสิ้นแล้ว - ปิดการรักษา</option>
             </select>
           </div>
           <div class="filter-group">
@@ -126,7 +126,7 @@
                 <%= appointment.queue_status === 'confirm' ? 'ยืนยันแล้ว' : 
                     appointment.queue_status === 'pending' ? 'รอยืนยัน' :
                     appointment.queue_status === 'cancel' ? 'ยกเลิกแล้ว' :
-                    appointment.queue_status === 'completed' ? 'เสร็จสิ้นแล้ว' :
+                    appointment.queue_status === 'completed' ? 'เสร็จสิ้นแล้ว - ปิดการรักษา' :
                     appointment.queue_status.charAt(0).toUpperCase() + appointment.queue_status.slice(1) %>
               </div>
             </div>
@@ -183,9 +183,15 @@
             </div>
             
             <div class="action-buttons">
-              <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-primary">
-                <i class="fas fa-eye"></i> ดูรายละเอียด
-              </a>
+              <% if (appointment.queue_status === 'auto_cancelled') { %>
+                <span class="btn btn-disabled" style="background: #f3f4f6; color: #9ca3af; cursor: not-allowed;">
+                  <i class="fas fa-ban"></i> ไม่สามารถดูรายละเอียดได้
+                </span>
+              <% } else { %>
+                <a href="/patient/history/details/<%= appointment.queue_id %>" class="btn btn-primary">
+                  <i class="fas fa-eye"></i> ดูรายละเอียด
+                </a>
+              <% } %>
               <!-- <% if (appointment.queue_status === 'pending' || appointment.queue_status === 'confirm') { %>
                 <a href="/patient/history/edit/<%= appointment.queue_id %>" class="btn btn-outline">
                   <i class="fas fa-edit"></i> แก้ไข

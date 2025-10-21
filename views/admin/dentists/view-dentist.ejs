@@ -185,7 +185,6 @@
             <div class="left-panel">
                 <img id="dentistPhoto" src="/uploads/default-avatar.png" alt="รูปทันตแพทย์" class="dentist-photo">
                 <div class="dentist-id-badge" id="dentistIdBadge">รหัส: 001</div>
-                <div class="status-badge">ปฏิบัติงาน</div>
             </div>
 
             <!-- Right Panel -->
@@ -415,8 +414,8 @@ const licenseVal = dentist.license_no || dentist.license_number || dentist.licen
         }
         function showAvatarFallback(dentist) {
             const photoElement = document.getElementById('dentistPhoto');
-            const initials = (dentist.fname && dentist.lname)
-                ? (dentist.fname.charAt(0) + dentist.lname.charAt(0)).toUpperCase() : 'DR';
+            const initials = dentist.fname 
+                ? dentist.fname.charAt(0).toUpperCase() : 'DR';
             const svg = `
                 <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
                     <rect width="200" height="200" fill="#4A90E2" rx="12"/>

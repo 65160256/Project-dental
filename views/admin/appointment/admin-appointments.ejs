@@ -179,7 +179,7 @@
       <div class="search-section">
         <div class="search-box">
           <i class="fas fa-search"></i>
-          <input type="text" placeholder="ค้นหาผู้ป่วย, การรักษา, ทันตแพทย์..." id="searchInput"/>
+          <input type="text" placeholder="ค้นหาผู้ป่วย..." id="searchInput"/>
         </div>
       </div>
 
@@ -353,9 +353,6 @@
               <tr>
                 <th><i class="fas fa-clock"></i> เวลา</th>
                 <th><i class="fas fa-user"></i> ชื่อผู้ป่วย</th>
-                <th><i class="fas fa-tooth"></i> การรักษา</th>
-                <th><i class="fas fa-user-md"></i> ทันตแพทย์</th>
-                <th><i class="fas fa-phone"></i> เบอร์โทร</th>
                 <th><i class="fas fa-info-circle"></i> สถานะ</th>
                 <th style="text-align:center;"><i class="fas fa-cogs"></i> จัดการ</th>
               </tr>
@@ -635,11 +632,6 @@
           <td>
             <div class="patient-name">${escapeHtml(a.patient_name)||'ไม่ระบุ'}</div>
           </td>
-          <td>
-            <div class="treatment-name">${escapeHtml(a.treatment_name)||'ไม่ระบุ'}</div>
-          </td>
-          <td>${a.dentist_name ? 'ทพ. '+escapeHtml(a.dentist_name) : '-'}</td>
-          <td>${escapeHtml(a.phone||a.patient_phone)||'ไม่ระบุ'}</td>
           <td><span class="status-badge status-${a.queue_status}"><i class="${icon}"></i> ${statusText}</span></td>
           <td><button class="btn-view-detail" onclick="viewAppointmentDetail(${a.queuedetail_id})"><i class="fas fa-eye"></i> รายละเอียด</button></td>
         </tr>`;

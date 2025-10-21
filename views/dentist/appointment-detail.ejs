@@ -452,7 +452,7 @@
                         รายละเอียดการนัดหมาย
                     </h1>
                     <span class="status-badge status-<%= appointment.queue_status %>">
-                        <%= appointment.queue_status === 'completed' || appointment.queue_status === 'confirm' ? 'รักษาแล้ว' : 
+                        <%= appointment.queue_status === 'completed' ? 'เสร็จสิ้น - ปิดการรักษา' : appointment.queue_status === 'confirm' ? 'รักษาแล้ว' : 
                             appointment.queue_status === 'pending' ? 'ยังไม่ได้รักษา' : 
                             appointment.queue_status === 'cancel' ? 'ยกเลิก' : appointment.queue_status %>
                     </span>

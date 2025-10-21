@@ -13,7 +13,7 @@ class DentistScheduleModel {
       hour,
       startTime,
       endTime,
-      status = 'available',
+      status = 'working',
       note = ''
     } = scheduleData;
 
@@ -28,9 +28,9 @@ class DentistScheduleModel {
     }
 
     // Validate status
-    const validStatuses = ['available', 'unavailable', 'booked'];
+    const validStatuses = ['working', 'dayoff'];
     if (status && !validStatuses.includes(status)) {
-      throw new Error('สถานะไม่ถูกต้อง (available, unavailable, booked)');
+      throw new Error('สถานะไม่ถูกต้อง (working, dayoff)');
     }
 
     // Check for duplicate schedule
@@ -234,7 +234,7 @@ class DentistScheduleModel {
 
     // Validate status if provided
     if (status) {
-      const validStatuses = ['available', 'unavailable', 'booked'];
+      const validStatuses = ['working', 'dayoff'];
       if (!validStatuses.includes(status)) {
         throw new Error('สถานะไม่ถูกต้อง');
       }
@@ -285,11 +285,11 @@ class DentistScheduleModel {
   /**
    * อัปเดตสถานะตารางเวลา
    * @param {number} scheduleId
-   * @param {string} status - 'available', 'unavailable', 'booked'
+   * @param {string} status - 'working', 'dayoff'
    * @returns {Promise<Object>} { success, affectedRows }
    */
   static async updateStatus(scheduleId, status) {
-    const validStatuses = ['available', 'unavailable', 'booked'];
+    const validStatuses = ['working', 'dayoff'];
     if (!validStatuses.includes(status)) {
       throw new Error('สถานะไม่ถูกต้อง');
     }
@@ -417,7 +417,7 @@ class DentistScheduleModel {
    */
   static async isAvailable(dentistId, scheduleDate, hour) {
     const schedule = await this.findByDentistDateAndHour(dentistId, scheduleDate, hour);
-    return schedule && schedule.status === 'available';
+    return schedule && schedule.status === 'working';
   }
 
   /**
@@ -433,7 +433,7 @@ class DentistScheduleModel {
        WHERE dentist_id = ?
          AND schedule_date >= ?
          AND schedule_date <= ?
-         AND status = 'available'
+         AND status = 'working'
        ORDER BY schedule_date ASC, hour ASC`,
       [dentistId, startDate, endDate]
     );
@@ -460,7 +460,7 @@ class DentistScheduleModel {
         hour,
         startTime,
         endTime,
-        status = 'available',
+        status = 'working',
         note = ''
       } = schedule;
 
@@ -579,7 +579,13 @@ class DentistScheduleModel {
           await connection.execute(
             `INSERT INTO dentist_schedule
              (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
-             VALUES (?, ?, ?, 0, 'dayoff', '00:00:00', '23:59:59', ?)`,
+             VALUES (?, ?, ?, 0, 'dayoff', '00:00:00', '23:59:59', ?)
+             ON DUPLICATE KEY UPDATE
+             status = VALUES(status),
+             start_time = VALUES(start_time),
+             end_time = VALUES(end_time),
+             note = VALUES(note),
+             updated_at = CURRENT_TIMESTAMP`,
             [dentistId, scheduleDate, dayOfWeek, note || 'วันหยุดพิเศษ']
           );
           insertedDays++;
@@ -603,11 +609,20 @@ class DentistScheduleModel {
             const slotStartTime = `${String(slotHour).padStart(2, '0')}:${String(slotMinute).padStart(2, '0')}:00`;
             const slotEndTime = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}:00`;
 
+            // ใช้ hour + minute เพื่อให้ unique
+            const uniqueHour = slotHour * 100 + slotMinute;
+
             await connection.execute(
               `INSERT INTO dentist_schedule
                (dentist_id, schedule_date, day_of_week, hour, status, start_time, end_time, note)
-               VALUES (?, ?, ?, ?, 'working', ?, ?, ?)`,
-              [dentistId, scheduleDate, dayOfWeek, slotHour, slotStartTime, slotEndTime, note || '']
+               VALUES (?, ?, ?, ?, 'working', ?, ?, ?)
+               ON DUPLICATE KEY UPDATE
+               status = VALUES(status),
+               start_time = VALUES(start_time),
+               end_time = VALUES(end_time),
+               note = VALUES(note),
+               updated_at = CURRENT_TIMESTAMP`,
+              [dentistId, scheduleDate, dayOfWeek, uniqueHour, slotStartTime, slotEndTime, note || '']
             );
 
             currentMinutes += 30;

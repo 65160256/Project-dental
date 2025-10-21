@@ -293,7 +293,6 @@
                  <th class="sortable" data-sort="name" onclick="sortTable('name')">ผู้ป่วย</th>
                  <th class="sortable" data-sort="phone" onclick="sortTable('phone')">ข้อมูลติดต่อ</th>
                  <th class="sortable" data-sort="age" onclick="sortTable('age')">อายุ</th>
-                 <th class="sortable" data-sort="last_visit" onclick="sortTable('last_visit')">มาครั้งล่าสุด</th>
                  <th>การจัดการ</th>
                </tr>
              </thead>
@@ -393,7 +392,7 @@
       if(filteredPatients.length === 0){
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" style="text-align:center;padding:40px;color:#666;">
+            <td colspan="5" style="text-align:center;padding:40px;color:#666;">
               <i class="fas fa-search" style="font-size:24px;margin-bottom:10px;display:block;"></i>
               ไม่มีผู้ป่วยที่ตรงกับตัวกรองตอนนี้
             </td>
@@ -409,7 +408,6 @@
        tbody.innerHTML = sortedPatients.map((p, index)=>{
          const initials = getPatientInitials(p);
          const ageText = formatAgeText(p.dob);
-         const lastVisit = formatRelativeDateTH(p.last_visit);
          const fullName = getPatientName(p);
          const rowNumber = index + 1;
 
@@ -430,7 +428,6 @@
               <div style="font-size:12px;color:#666;margin-top:2px;">${p.email || 'ยังไม่ระบุอีเมล'}</div>
             </td>
             <td><span class="specialty-badge">${ageText}</span></td>
-            <td>${lastVisit}</td>
             <td>
               <div class="action-buttons">
                 <a href="/admin/patients/${p.patient_id}" class="btn-sm btn-view" title="ดูรายละเอียดผู้ป่วย">

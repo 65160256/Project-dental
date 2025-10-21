@@ -646,6 +646,12 @@
             border: 1px solid #ef4444;
         }
 
+        .status-badge.auto_cancelled {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
         .actions-cell {
             display: flex;
             gap: 8px;
@@ -999,13 +1005,15 @@
                                 <td>
                                     <span class="status-badge <%= appointment.queue_status %>">
                                         <% if (appointment.queue_status === 'completed') { %>
-                                            <i class="fas fa-check-circle"></i> รักษาเสร็จแล้ว
+                                            <i class="fas fa-check-circle"></i> เสร็จสิ้น - ปิดการรักษา
                                         <% } else if (appointment.queue_status === 'confirm') { %>
                                             <i class="fas fa-user-md"></i> รอรักษา
                                         <% } else if (appointment.queue_status === 'pending') { %>
                                             <i class="fas fa-clock"></i> รอยืนยัน
                                         <% } else if (appointment.queue_status === 'cancel') { %>
                                             <i class="fas fa-times-circle"></i> ยกเลิก
+                                        <% } else if (appointment.queue_status === 'auto_cancelled') { %>
+                                            <i class="fas fa-exclamation-triangle"></i> ยกเลิกอัตโนมัติ
                                         <% } else { %>
                                             <%= appointment.queue_status %>
                                         <% } %>

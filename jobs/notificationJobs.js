@@ -154,6 +154,70 @@ async function checkMissedAppointments() {
   }
 }
 
+// ฟังก์ชันตรวจสอบและยกเลิกอัตโนมัติสำหรับนัดหมายที่หมอไม่ได้กรอกการรักษา
+async function autoCancelMissedAppointments() {
+  console.log('🔔 ตรวจสอบนัดหมายที่หมอไม่ได้กรอกการรักษา...');
+  
+  try {
+    const now = new Date();
+    // ตรวจสอบนัดหมายที่ผ่านไปแล้ว 1 ชั่วโมงขึ้นไป และยังไม่ได้กรอกการรักษา
+    const oneHourAgo = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+    
+    const [missedAppointments] = await db.execute(`
+      SELECT q.queue_id, q.patient_id, qd.dentist_id,
+             CONCAT(p.fname, ' ', p.lname) as patient_name,
+             CONCAT(d.fname, ' ', d.lname) as dentist_name,
+             q.time, t.treatment_name
+      FROM queue q
+      JOIN patient p ON q.patient_id = p.patient_id
+      JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+      JOIN dentist d ON qd.dentist_id = d.dentist_id
+      JOIN treatment t ON qd.treatment_id = t.treatment_id
+      WHERE q.time < ?
+      AND q.queue_status IN ('confirm', 'pending')
+      AND NOT EXISTS (
+        SELECT 1 FROM treatmentHistory th 
+        WHERE th.queuedetail_id = qd.queuedetail_id
+      )
+    `, [oneHourAgo]);
+
+    console.log(`📋 พบนัดหมายที่หมอไม่ได้กรอกการรักษา ${missedAppointments.length} รายการ`);
+
+    let autoCancelledCount = 0;
+    for (const appointment of missedAppointments) {
+      try {
+        // เปลี่ยนสถานะเป็น auto_cancelled
+        await db.execute(`
+          UPDATE queue 
+          SET queue_status = 'auto_cancelled'
+          WHERE queue_id = ?
+        `, [appointment.queue_id]);
+
+        // สร้างการแจ้งเตือน
+        await db.execute(`
+          INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
+          VALUES (?, ?, ?, ?, 0, 1)
+        `, [
+          'appointment_auto_cancelled',
+          '⚠️ นัดหมายถูกยกเลิกอัตโนมัติ',
+          `นัดหมายของ ${appointment.patient_name} กับ ${appointment.dentist_name} ถูกยกเลิกอัตโนมัติเนื่องจากหมอไม่ได้กรอกการรักษาหลังจากเวลานัด`,
+          appointment.queue_id
+        ]);
+
+        autoCancelledCount++;
+        console.log(`✅ ยกเลิกอัตโนมัติ: ${appointment.patient_name} - ${appointment.dentist_name}`);
+      } catch (error) {
+        console.error(`❌ เกิดข้อผิดพลาดในการยกเลิกอัตโนมัติสำหรับนัดหมาย ${appointment.queue_id}:`, error);
+      }
+    }
+
+    console.log(`✅ ยกเลิกอัตโนมัติ ${autoCancelledCount}/${missedAppointments.length} รายการ`);
+
+  } catch (error) {
+    console.error('❌ เกิดข้อผิดพลาดในการตรวจสอบนัดหมายที่หมอไม่ได้กรอกการรักษา:', error);
+  }
+}
+
 // ฟังก์ชันล้างการแจ้งเตือนเก่า (เก่ากว่า 30 วัน)
 async function cleanOldNotifications() {
   console.log('🧹 ล้างการแจ้งเตือนเก่า...');
@@ -197,6 +261,12 @@ function initializeNotificationJobs() {
   });
   console.log('✅ กำหนดการตรวจสอบนัดหมายที่พลาดทุกชั่วโมง');
 
+  // ตรวจสอบและยกเลิกอัตโนมัติสำหรับนัดหมายที่หมอไม่ได้กรอกการรักษาทุกชั่วโมง
+  cron.schedule('0 * * * *', autoCancelMissedAppointments, {
+    timezone: 'Asia/Bangkok'
+  });
+  console.log('✅ กำหนดการตรวจสอบและยกเลิกอัตโนมัติทุกชั่วโมง');
+
   // ล้างการแจ้งเตือนเก่าทุกวันเวลา 02:00 น.
   cron.schedule('0 2 * * *', cleanOldNotifications, {
     timezone: 'Asia/Bangkok'
@@ -212,5 +282,6 @@ module.exports = {
   sendAppointmentReminders,
   sendUpcomingAppointmentAlerts,
   checkMissedAppointments,
+  autoCancelMissedAppointments,
   cleanOldNotifications
 };
