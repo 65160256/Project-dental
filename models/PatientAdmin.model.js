@@ -558,14 +558,18 @@ class PatientAdminModel {
           q.queue_id,
           q.time as date,
           q.queue_status,
-          th.diagnosis,
-          t.treatment_name,
-          CONCAT(d.fname, ' ', d.lname) as dentist_name,
-          th.followUpdate as follow_update
+          COALESCE(th.diagnosis, '') as diagnosis,
+          COALESCE(t.treatment_name, 'ไม่ระบุ') as treatment_name,
+          COALESCE(CONCAT(d.fname, ' ', d.lname), 'ไม่ระบุ') as dentist_name,
+          COALESCE(th.followUpdate, '') as follow_update,
+          th.tmh_id,
+          qd.queuedetail_id,
+          qd.treatment_id,
+          qd.dentist_id
         FROM queue q
         LEFT JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
-        JOIN treatment t ON qd.treatment_id = t.treatment_id
-        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        LEFT JOIN treatment t ON qd.treatment_id = t.treatment_id
+        LEFT JOIN dentist d ON qd.dentist_id = d.dentist_id
         LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
         WHERE q.patient_id = ?
         ORDER BY q.time DESC

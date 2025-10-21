@@ -1841,16 +1841,17 @@
             generateCalendar();
             setupEventListeners();
             loadUserInfo();
-            
+            loadDashboardData();
+
             // Initialize notification manager
             notificationManager = new NotificationManager();
-            
+
             // Load initial calendar appointments
             loadCalendarAppointments();
-            
+
             // Debug: Log dashboard data
             // console.log('Dashboard Data:', <%- JSON.stringify(dashboardData) %>);
-            
+
             // Set up auto-refresh intervals
             setInterval(updateDateTime, 60000); // Update time every minute
             setInterval(refreshDashboardData, 300000); // Refresh data every 5 minutes
@@ -2174,18 +2175,25 @@
         }
 
         function updateAppointmentStats(data) {
-            // Update appointment statistics cards
-            if (data.total_appointments !== undefined) {
-                document.getElementById('totalAppointments').textContent = data.total_appointments;
+            // Update appointment statistics cards with null checks
+            const totalEl = document.getElementById('totalAppointments');
+            if (totalEl && data.total_appointments !== undefined) {
+                totalEl.textContent = data.total_appointments;
             }
-            if (data.completed_appointments !== undefined) {
-                document.getElementById('completedAppointments').textContent = data.completed_appointments;
+
+            const completedEl = document.getElementById('completedAppointments');
+            if (completedEl && data.completed_appointments !== undefined) {
+                completedEl.textContent = data.completed_appointments;
             }
-            if (data.pending_appointments !== undefined) {
-                document.getElementById('pendingAppointments').textContent = data.pending_appointments;
+
+            const pendingEl = document.getElementById('pendingAppointments');
+            if (pendingEl && data.pending_appointments !== undefined) {
+                pendingEl.textContent = data.pending_appointments;
             }
-            if (data.cancelled_appointments !== undefined) {
-                document.getElementById('cancelledAppointments').textContent = data.cancelled_appointments;
+
+            const cancelledEl = document.getElementById('cancelledAppointments');
+            if (cancelledEl && data.cancelled_appointments !== undefined) {
+                cancelledEl.textContent = data.cancelled_appointments;
             }
         }
 
@@ -2194,30 +2202,43 @@
                 // Load treatment statistics
                 const treatmentResponse = await fetch('/admin/api/reports/treatment-stats');
                 const treatmentData = await treatmentResponse.json();
-                
+
                 // Load doctor statistics
                 const doctorResponse = await fetch('/admin/api/reports/doctor-stats');
                 const doctorData = await doctorResponse.json();
-                
+
                 // Load appointment statistics
                 const appointmentResponse = await fetch('/admin/api/reports/appointment-stats');
                 const appointmentData = await appointmentResponse.json();
-                
+
+                console.log('📊 Dashboard Data Loaded:', {
+                    treatments: treatmentData,
+                    doctors: doctorData,
+                    appointments: appointmentData
+                });
+
                 // Update charts with real data
                 updateTreatmentChart(treatmentData.success ? treatmentData.data : []);
                 updateDoctorStatsChart(doctorData.success ? doctorData.data : []);
                 updateAppointmentStats(appointmentData.success ? appointmentData.data : {});
-                
+
             } catch (error) {
                 console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
-                showToast('ไม่สามารถโหลดข้อมูลได้', 'error');
+                // Don't show toast on page load, just log the error
+                console.warn('Dashboard data loading failed, using empty data');
             }
         }
 
         function initializeTreatmentChart() {
+            // Destroy existing chart first
+            if (treatmentChart) {
+                treatmentChart.destroy();
+                treatmentChart = null;
+            }
+
             const ctx = document.getElementById('treatmentChart').getContext('2d');
             const treatmentData = [];
-            
+
             // Use Thai treatment names directly
             // const treatmentNameMap = {
             //     'การตรวจสุขภาพฟัน': 'การตรวจสุขภาพฟัน',
@@ -2229,7 +2250,7 @@
             //     'การใส่ครอบฟัน': 'การใส่ครอบฟัน',
             //     'การจัดฟัน': 'การจัดฟัน'
             // };
-            
+
             // If no data, show empty chart
             if (!treatmentData || treatmentData.length === 0) {
                 treatmentChart = new Chart(ctx, {
@@ -2299,10 +2320,16 @@
         }
 
         function initializeDoctorStatsChart() {
+            // Destroy existing chart first
+            if (doctorStatsChart) {
+                doctorStatsChart.destroy();
+                doctorStatsChart = null;
+            }
+
             const ctx = document.getElementById('doctorStatsChart').getContext('2d');
             // const doctorData = <%- JSON.stringify(dashboardData.doctorStats || []) %>;
             const doctorData = [];
-            
+
             // If no data, show empty chart
             if (!doctorData || doctorData.length === 0) {
                 doctorStatsChart = new Chart(ctx, {
@@ -2783,16 +2810,7 @@
         });
 
         // Initialize dashboard when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            updateDateTime();
-            loadUserInfo();
-            initializeCharts();
-            loadDashboardData();
-            generateCalendar();
-            
-            // Update time every minute
-            setInterval(updateDateTime, 60000);
-        });
+        // (Already initialized in the first DOMContentLoaded listener above)
 
         window.addEventListener('online', () => showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว', 'success'));
         window.addEventListener('offline', () => showToast('ขาดการเชื่อมต่ออินเทอร์เน็ต', 'error'));

@@ -45,6 +45,10 @@ router.get('/api/schedule', checkAdminApiAuth, adminController.getScheduleAPI);
 router.get('/api/dashboard/appointments', checkAdminApiAuth, adminController.getAppointmentStatsAPI);
 // รับสถิติการรักษาสำหรับแดชบอร์ด
 router.get('/api/dashboard/treatments', checkAdminApiAuth, adminController.getTreatmentStatsAPI);
+// รับสถิติรายงานสำหรับแดชบอร์ด
+router.get('/api/reports/treatment-stats', checkAdminApiAuth, adminController.getTreatmentReportStatsAPI);
+router.get('/api/reports/doctor-stats', checkAdminApiAuth, adminController.getDoctorReportStatsAPI);
+router.get('/api/reports/appointment-stats', checkAdminApiAuth, adminController.getAppointmentReportStatsAPI);
 
 
 // รับข้อมูลสรุปแดชบอร์ด
@@ -245,6 +249,9 @@ router.get('/notifications', checkAdminAuth, (req, res) => {
 
 // Get all notifications
 router.get('/api/notifications', adminController.getNotifications);
+
+// Get unread notification count
+router.get('/api/notifications/unread-count', adminController.getUnreadNotificationCount);
 
 // Get single notification
 router.get('/api/notifications/:id', adminController.getNotificationById);

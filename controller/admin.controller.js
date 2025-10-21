@@ -1410,6 +1410,24 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
+// API: Get unread notification count
+exports.getUnreadNotificationCount = async (req, res) => {
+  try {
+    const count = await getUnreadNotificationCount();
+    res.json({
+      success: true,
+      count: count
+    });
+  } catch (error) {
+    console.error('Error getting unread notification count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถดึงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่านได้',
+      count: 0
+    });
+  }
+};
+
 // Get single notification by ID
 exports.getNotificationById = async (req, res) => {
   try {
@@ -3063,7 +3081,7 @@ exports.getAppointmentStatsAPI = async (req, res) => {
 exports.getTreatmentStatsAPI = async (req, res) => {
   try {
     const { period = 'month' } = req.query;
-    
+
     const result = await ReportAdminModel.getTreatmentStatsAPI({
       period
     });
@@ -3079,6 +3097,57 @@ exports.getTreatmentStatsAPI = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'ไม่สามารถดึงสถิติการรักษาได้'
+    });
+  }
+};
+
+// API สำหรับรายงาน - สถิติการรักษา
+exports.getTreatmentReportStatsAPI = async (req, res) => {
+  try {
+    const stats = await ReportAdminModel.getTreatmentStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error getting treatment report stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถดึงสถิติการรักษาได้'
+    });
+  }
+};
+
+// API สำหรับรายงาน - สถิติทันตแพทย์
+exports.getDoctorReportStatsAPI = async (req, res) => {
+  try {
+    const stats = await ReportAdminModel.getDentistStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error getting doctor report stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถดึงสถิติทันตแพทย์ได้'
+    });
+  }
+};
+
+// API สำหรับรายงาน - สถิติการนัดหมาย
+exports.getAppointmentReportStatsAPI = async (req, res) => {
+  try {
+    const stats = await ReportAdminModel.getAppointmentStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error getting appointment report stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'ไม่สามารถดึงสถิติการนัดหมายได้'
     });
   }
 };
