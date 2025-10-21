@@ -476,81 +476,12 @@
         /* Section Styles */
         .appointment-report-section,
         .treatments-section,
-        .doctor-stats-section,
-        .monthly-stats-section {
+        .doctor-stats-section {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
-        }
-
-        /* Monthly Statistics */
-        .stats-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-summary-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid #4A90E2;
-        }
-
-        .stat-summary-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #4A90E2;
-            margin-bottom: 5px;
-        }
-
-        .stat-summary-label {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.4;
-        }
-
-        .trends-info {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .trends-info h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .trends-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .trend-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .trend-date {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .trend-count {
-            color: #4A90E2;
-            font-weight: 600;
         }
 
         .section-header {
@@ -1567,47 +1498,6 @@
                         </div>
                     </div>
 
-                    <!-- Monthly Statistics Summary -->
-                    <div class="monthly-stats-section">
-                        <div class="section-header">
-                            <h3 class="section-title">สรุปสถิติรายเดือน:</h3>
-                        </div>
-                        <div class="stats-summary-grid">
-                            <div class="stat-summary-card">
-                                <div class="stat-summary-number"><%= dashboardData.appointmentSummary.total || 0 %></div>
-                                <div class="stat-summary-label">นัดหมายทั้งหมดเดือนนี้</div>
-                            </div>
-                            <div class="stat-summary-card">
-                                <div class="stat-summary-number"><%= dashboardData.appointmentSummary.confirmed || 0 %></div>
-                                <div class="stat-summary-label">นัดหมายที่ยืนยันแล้ว</div>
-                            </div>
-                            <div class="stat-summary-card">
-                                <div class="stat-summary-number"><%= dashboardData.appointmentSummary.pending || 0 %></div>
-                                <div class="stat-summary-label">นัดหมายรอยืนยัน</div>
-                            </div>
-                            <div class="stat-summary-card">
-                                <div class="stat-summary-number"><%= dashboardData.doctorStats ? dashboardData.doctorStats.length : 0 %></div>
-                                <div class="stat-summary-label">ทันตแพทย์ที่ทำงาน</div>
-                            </div>
-                            <div class="stat-summary-card">
-                                <div class="stat-summary-number"><%= dashboardData.appointmentSummary.completionRate || 0 %>%</div>
-                                <div class="stat-summary-label">อัตราการเสร็จสิ้น</div>
-                            </div>
-                        </div>
-                        <% if (dashboardData.monthlyTrends && dashboardData.monthlyTrends.length > 0) { %>
-                        <div class="trends-info">
-                            <h4>แนวโน้มนัดหมายรายวัน:</h4>
-                            <div class="trends-list">
-                                <% dashboardData.monthlyTrends.slice(0, 7).forEach(trend => { %>
-                                <div class="trend-item">
-                                    <span class="trend-date"><%= new Date(trend.appointment_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }) %></span>
-                                    <span class="trend-count"><%= trend.daily_count %> นัดหมาย</span>
-                                </div>
-                                <% }); %>
-                            </div>
-                        </div>
-                        <% } %>
-                    </div>
 
                 </div>
 
@@ -1665,7 +1555,7 @@
                             </div>
                             <% if (dashboardData.upcomingAppointments && dashboardData.upcomingAppointments.length > 0) { %>
                                 <% dashboardData.upcomingAppointments.forEach(appointment => { %>
-                                <div class="appointment-item" onclick="viewAppointmentDetail(<%= appointment.queue_id %>)">
+                                <div class="appointment-item" onclick="viewAppointmentDetail('<%= appointment.queue_id %>')">
                                     <div class="appointment-time">
                                         <%= new Date(appointment.time).toLocaleTimeString('th-TH', { 
                                             hour: '2-digit', 
@@ -1962,7 +1852,7 @@
             loadCalendarAppointments();
             
             // Debug: Log dashboard data
-            console.log('Dashboard Data:', <%- JSON.stringify(dashboardData) %>);
+            // console.log('Dashboard Data:', <%- JSON.stringify(dashboardData) %>);
             
             // Set up auto-refresh intervals
             setInterval(updateDateTime, 60000); // Update time every minute
@@ -2149,7 +2039,8 @@
 
         function initializeTreatmentChart() {
             const ctx = document.getElementById('treatmentChart').getContext('2d');
-            const treatmentData = <%- JSON.stringify(dashboardData.treatmentStats || []) %>;
+            // const treatmentData = <%- JSON.stringify(dashboardData.treatmentStats || []) %>;
+            const treatmentData = [];
             
             // Use Thai treatment names directly
             // const treatmentNameMap = {
@@ -2233,7 +2124,8 @@
 
         function initializeDoctorStatsChart() {
             const ctx = document.getElementById('doctorStatsChart').getContext('2d');
-            const doctorData = <%- JSON.stringify(dashboardData.doctorStats || []) %>;
+            // const doctorData = <%- JSON.stringify(dashboardData.doctorStats || []) %>;
+            const doctorData = [];
             
             // If no data, show empty chart
             if (!doctorData || doctorData.length === 0) {

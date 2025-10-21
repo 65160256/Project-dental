@@ -564,6 +564,22 @@ class ReportAdminModel {
         queryParams.push(status);
       }
 
+      // สร้าง WHERE clause ที่ถูกต้อง
+      let whereClause = '';
+      const whereConditions = [];
+      
+      if (dateFilter) {
+        whereConditions.push(dateFilter);
+      }
+      
+      if (statusFilter) {
+        whereConditions.push(statusFilter.replace('AND ', ''));
+      }
+      
+      if (whereConditions.length > 0) {
+        whereClause = 'WHERE ' + whereConditions.join(' AND ');
+      }
+
       const [appointments] = await db.execute(`
         SELECT 
           q.queue_id,
@@ -577,7 +593,7 @@ class ReportAdminModel {
         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
         JOIN dentist d ON qd.dentist_id = d.dentist_id
         JOIN treatment t ON qd.treatment_id = t.treatment_id
-        WHERE ${dateFilter} ${statusFilter}
+        ${whereClause}
         ORDER BY q.time DESC
       `, queryParams);
 

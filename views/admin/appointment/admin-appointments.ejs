@@ -76,12 +76,15 @@
     .nav-btn{background:#fff;border:2px solid #e1e5e9;border-radius:50%;width:44px;height:44px;cursor:pointer;font-size:16px;color:#666;transition:.3s;display:flex;align-items:center;justify-content:center}
     .nav-btn:hover{background:#4A90E2;color:#fff;border-color:#4A90E2;transform:scale(1.05)}
     .date-buttons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-    .date-button{background:#fff;border:2px solid #e1e5e9;border-radius:12px;padding:15px 12px;text-align:center;cursor:pointer;font-size:12px;line-height:1.3;color:#666;transition:.3s;min-width:80px;display:flex;flex-direction:column;align-items:center}
+    .date-button{background:#fff;border:2px solid #e1e5e9;border-radius:12px;padding:15px 12px;text-align:center;cursor:pointer;font-size:12px;line-height:1.3;color:#666;transition:.3s;min-width:80px;display:flex;flex-direction:column;align-items:center;position:relative}
     .date-button:hover{background:#f8f9fa;border-color:#4A90E2;transform:translateY(-3px);box-shadow:0 6px 20px rgba(74,144,226,.2)}
     .date-button.active{background:#4A90E2;color:#fff;border-color:#4A90E2;transform:translateY(-3px);box-shadow:0 6px 20px rgba(74,144,226,.3)}
     .date-button.today{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:#10b981}
     .day-name{font-weight:600;font-size:10px;opacity:.9;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
     .day-number{font-weight:700;font-size:16px}
+    .appointment-count{position:absolute;top:-5px;right:-5px;background:#ff4757;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+    .date-button.active .appointment-count{background:#fff;color:#4A90E2;border-color:#4A90E2}
+    .date-button.today .appointment-count{background:#fff;color:#10b981;border-color:#10b981}
 
     .stats-bar{background:#fff;padding:25px;border-radius:16px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
     .stats-info{display:flex;align-items:center;gap:25px;color:#666;font-size:14px}
@@ -112,6 +115,10 @@
     .appointments-table tbody tr{transition:.2s}
     .appointments-table tbody tr:hover{background:rgba(74,144,226,.05)}
     .time-cell{font-family:Monaco,monospace;color:#4A90E2;font-weight:600;font-size:13px}
+    .time-display{font-weight:700;font-size:14px;color:#4A90E2}
+    .date-display{font-size:11px;color:#666;margin-top:2px;font-weight:normal}
+    .patient-name{font-weight:600;color:#333;font-size:14px}
+    .treatment-name{font-weight:500;color:#333;font-size:13px}
     .status-badge{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:5px;min-width:90px;justify-content:center}
     .status-pending{background:linear-gradient(135deg,#fff3cd,#ffeaa7);color:#856404;border:1px solid #fdcb6e}
     .status-confirm{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
@@ -264,6 +271,20 @@
               <span>รออนุมัติ</span>
             </div>
           </div>
+          <div class="stat-item" id="confirmedStatItem" style="display:none;">
+            <i class="fas fa-check-circle"></i>
+            <div>
+              <span class="stat-number" id="confirmedCount">0</span>
+              <span>ยืนยันแล้ว</span>
+            </div>
+          </div>
+          <div class="stat-item" id="cancelledStatItem" style="display:none;">
+            <i class="fas fa-times-circle"></i>
+            <div>
+              <span class="stat-number" id="cancelledCount">0</span>
+              <span>ยกเลิกแล้ว</span>
+            </div>
+          </div>
         </div>
         <div class="tools-section">
           <button class="filter-toggle" onclick="toggleFilters()" id="filterToggle"><i class="fas fa-filter"></i> ตัวกรอง</button>
@@ -282,7 +303,6 @@
                 <option value="week">สัปดาห์นี้</option>
                 <option value="month">เดือนนี้</option>
                 <option value="custom">กำหนดเอง</option>
-                <option value="all">ทั้งหมด</option>
               </select>
             </div>
             <div class="filter-group" id="customDateGroup" style="display:none;">
@@ -375,10 +395,14 @@
       const today = new Date();
       selectedDate = formatDateForAPI(today);
 
+      // Set default filter to 'today' to show today's appointments
+      document.getElementById('filterDateRange').value = 'today';
+
       initializePage();
       setupEventListeners();
       generateDateButtons();
       loadFilterOptions();
+      loadWeekAppointments();
       loadAppointments();
 
       // Setup UI (Topbar additions)
@@ -387,7 +411,7 @@
       setupGlobalClickClose();
 
       // Auto refresh appointments every 30s
-      setInterval(()=>{ loadAppointments(); }, 30000);
+      setInterval(()=>{ loadWeekAppointments(); loadAppointments(); }, 30000);
     });
 
     // ======= Topbar helpers (match treatments page) =======
@@ -464,8 +488,8 @@
     function parseDateFromAPI(s){const [y,m,d]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,parseInt(d));}
     function initializePage(){updateSelectedDateText();}
     function setupEventListeners(){
-      document.getElementById('prevWeek').addEventListener('click', ()=>{weekOffset--;generateDateButtons();loadAppointments();});
-      document.getElementById('nextWeek').addEventListener('click', ()=>{weekOffset++;generateDateButtons();loadAppointments();});
+      document.getElementById('prevWeek').addEventListener('click', ()=>{weekOffset--;generateDateButtons();loadWeekAppointments();loadAppointments();});
+      document.getElementById('nextWeek').addEventListener('click', ()=>{weekOffset++;generateDateButtons();loadWeekAppointments();loadAppointments();});
       let t; document.getElementById('searchInput').addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>{ filterAppointments(); },500); });
       ['filterStatus','filterDentist','filterTreatment','filterDateRange','filterDateFrom','filterDateTo'].forEach(id=>{ document.getElementById(id)?.addEventListener('change', filterAppointments); });
     }
@@ -475,8 +499,23 @@
         const date=new Date(); date.setDate(today.getDate()+weekOffset*7+i);
         const iso=formatDateForAPI(date); const isToday=formatDateForAPI(today)===iso; const isSelected=selectedDate===iso;
         const btn=document.createElement('button'); btn.className=`date-button ${isSelected?'active':''} ${isToday?'today':''}`; btn.dataset.date=iso;
-        btn.innerHTML=`<div class="day-name">${thaiDays[date.getDay()]}</div><div class="day-number">${date.getDate()}</div><div class="day-month">${thaiMonths[date.getMonth()]}</div>`;
-        btn.addEventListener('click',()=>{ document.querySelectorAll('.date-button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); selectedDate=iso; updateSelectedDateText(); loadAppointments(); });
+        
+        // Get appointment count for this date
+        const appointmentCount = getAppointmentCountForDate(iso);
+        const countDisplay = appointmentCount > 0 ? `<div class="appointment-count">${appointmentCount}</div>` : '';
+        
+        btn.innerHTML=`<div class="day-name">${thaiDays[date.getDay()]}</div><div class="day-number">${date.getDate()}</div><div class="day-month">${thaiMonths[date.getMonth()]}</div>${countDisplay}`;
+        btn.addEventListener('click',()=>{ 
+          document.querySelectorAll('.date-button').forEach(b=>b.classList.remove('active')); 
+          btn.classList.add('active'); 
+          selectedDate=iso; 
+          updateSelectedDateText(); 
+          console.log('Selected date:', selectedDate); // Debug log
+          
+          // Set filter to 'today' when selecting a specific date
+          document.getElementById('filterDateRange').value = 'today';
+          loadAppointments(); 
+        });
         container.appendChild(btn);
       }
     }
@@ -504,16 +543,41 @@
         // Build query parameters
         const params = new URLSearchParams();
         
-        // Get date range parameters
-        const dateRangeParams = getDateRangeParams();
-        if(dateRangeParams.date){
-          params.append('date', dateRangeParams.date);
-        } else if(dateRangeParams.date_from || dateRangeParams.date_to){
-          if(dateRangeParams.date_from) params.append('date_from', dateRangeParams.date_from);
-          if(dateRangeParams.date_to) params.append('date_to', dateRangeParams.date_to);
+        // Check if filters are active
+        const dateRange = document.getElementById('filterDateRange').value;
+        const fromDate = document.getElementById('filterDateFrom').value;
+        const toDate = document.getElementById('filterDateTo').value;
+        let dateToUse = null;
+        
+        // If custom date range is selected, use those dates
+        if(dateRange === 'custom' && (fromDate || toDate)){
+          if(fromDate) params.append('date_from', fromDate);
+          if(toDate) params.append('date_to', toDate);
+        } else if(dateRange === 'week'){
+          // Load week data
+          const today = new Date();
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() + weekOffset * 7);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          params.append('date_from', formatDateForAPI(weekStart));
+          params.append('date_to', formatDateForAPI(weekEnd));
+        } else if(dateRange === 'month'){
+          // Load month data
+          const today = new Date();
+          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          params.append('date_from', formatDateForAPI(monthStart));
+          params.append('date_to', formatDateForAPI(monthEnd));
+        } else if(dateRange === 'today'){
+          // Load today's appointments or selected date
+          dateToUse = selectedDate || formatDateForAPI(new Date());
+          params.append('date', dateToUse);
+          console.log('Loading TODAY/SELECTED appointments:', dateToUse);
         } else {
-          // Default to selected date if no date range is specified
+          // Default to selected date
           params.append('date', selectedDate);
+          console.log('Loading SELECTED DATE appointments:', selectedDate);
         }
         
         // Add filter parameters if active
@@ -527,15 +591,24 @@
         if(treatment) params.append('treatment_id', treatment);
         if(search) params.append('search', search);
         
+        console.log('Date range filter:', dateRange); // Debug log
+        console.log('Selected date:', selectedDate); // Debug log
+        console.log('Date to use:', dateToUse || 'N/A'); // Debug log
+        console.log('Other filters - Status:', status, 'Dentist:', dentist, 'Treatment:', treatment, 'Search:', search);
+        console.log('Loading appointments with params:', params.toString()); // Debug log
         const res = await fetch(`/admin/api/appointments?${params.toString()}`);
         if(!res.ok) throw new Error('HTTP '+res.status);
         const data = await res.json();
+        console.log('Appointments loaded:', data.appointments?.length || 0, 'appointments'); // Debug log
         if(data.success){
           appointmentsData = data.appointments || [];
           originalAppointmentsData = [...appointmentsData];
           renderAppointments(appointmentsData);
           updateAppointmentCount(appointmentsData.length);
           updateFilterToggleState();
+          
+          // Update date buttons with appointment counts
+          updateDateButtonsWithCounts();
         }else{ throw new Error(data.error||'Failed to load appointments'); }
       }catch(e){ console.error(e); showToast('ไม่สามารถโหลดข้อมูลนัดหมายได้: '+e.message,'error'); renderEmptyState(); }
       finally{ document.getElementById('loading').style.display='none'; }
@@ -550,10 +623,21 @@
         const end = a.time_end ? new Date(a.time_end) : null;
         const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
         const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
+        
+        // Format date display
+        const appointmentDate = start ? formatDateDisplay(start) : 'ไม่ระบุ';
+        
         return `<tr data-id="${a.queue_id}">
-          <td class="time-cell">${formattedRange}</td>
-          <td>${escapeHtml(a.patient_name)||'ไม่ระบุ'}</td>
-          <td>${escapeHtml(a.treatment_name)||'ไม่ระบุ'}</td>
+          <td class="time-cell">
+            <div class="time-display">${formattedRange}</div>
+            <div class="date-display">${appointmentDate}</div>
+          </td>
+          <td>
+            <div class="patient-name">${escapeHtml(a.patient_name)||'ไม่ระบุ'}</div>
+          </td>
+          <td>
+            <div class="treatment-name">${escapeHtml(a.treatment_name)||'ไม่ระบุ'}</div>
+          </td>
           <td>${a.dentist_name ? 'ทพ. '+escapeHtml(a.dentist_name) : '-'}</td>
           <td>${escapeHtml(a.phone||a.patient_phone)||'ไม่ระบุ'}</td>
           <td><span class="status-badge status-${a.queue_status}"><i class="${icon}"></i> ${statusText}</span></td>
@@ -573,16 +657,110 @@
         return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${t}`;
       }catch{ return 'วันที่ไม่ถูกต้อง'; }
     }
+    
+    function formatDateDisplay(date){
+      if(!date) return 'ไม่ระบุ';
+      try{
+        const d = new Date(date);
+        if(isNaN(d.getTime())) return 'วันที่ไม่ถูกต้อง';
+        const today = new Date();
+        const isToday = d.toDateString() === today.toDateString();
+        const isTomorrow = d.toDateString() === new Date(today.getTime() + 24*60*60*1000).toDateString();
+        
+        if(isToday) return 'วันนี้';
+        if(isTomorrow) return 'พรุ่งนี้';
+        
+        return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
+      }catch{ return 'วันที่ไม่ถูกต้อง'; }
+    }
     function formatStatus(s){ if(s==='pending')return'รออนุมัติ'; if(s==='confirm')return'ยืนยันแล้ว'; if(s==='cancel')return'ยกเลิกแล้ว'; return s; }
     function renderEmptyState(){ document.getElementById('tableSection').style.display='none'; document.getElementById('emptyState').style.display='block'; }
     function updateAppointmentCount(total){
       const pending = (appointmentsData||[]).filter(a=>a.queue_status==='pending').length;
+      const confirmed = (appointmentsData||[]).filter(a=>a.queue_status==='confirm').length;
+      const cancelled = (appointmentsData||[]).filter(a=>a.queue_status==='cancel').length;
+      
       document.getElementById('appointmentCount').textContent = total;
+      
+      // Update pending count
       const ps = document.getElementById('pendingStatItem');
       if(pending>0){ ps.style.display='flex'; document.getElementById('pendingCount').textContent=pending; }
       else{ ps.style.display='none'; }
+      
+      // Update confirmed count
+      const cs = document.getElementById('confirmedStatItem');
+      if(confirmed>0){ cs.style.display='flex'; document.getElementById('confirmedCount').textContent=confirmed; }
+      else{ cs.style.display='none'; }
+      
+      // Update cancelled count
+      const cans = document.getElementById('cancelledStatItem');
+      if(cancelled>0){ cans.style.display='flex'; document.getElementById('cancelledCount').textContent=cancelled; }
+      else{ cans.style.display='none'; }
+      
       const badge=document.getElementById('notificationBadge');
       if(pending>0){ badge.textContent=pending; badge.classList.add('show'); } else { badge.classList.remove('show'); }
+    }
+    
+    function getAppointmentCountForDate(dateStr){
+      // Count appointments for a specific date from the week data
+      const weekData = window.weekAppointmentsData || [];
+      if(weekData.length === 0) return 0;
+      
+      return weekData.filter(appointment => {
+        if(!appointment.time) return false;
+        const appointmentDate = formatDateForAPI(new Date(appointment.time));
+        return appointmentDate === dateStr;
+      }).length;
+    }
+    
+    function updateDateButtonsWithCounts(){
+      // Update appointment counts on date buttons
+      const dateButtons = document.querySelectorAll('.date-button');
+      dateButtons.forEach(button => {
+        const dateStr = button.dataset.date;
+        const count = getAppointmentCountForDate(dateStr);
+        
+        // Remove existing count display
+        const existingCount = button.querySelector('.appointment-count');
+        if(existingCount) {
+          existingCount.remove();
+        }
+        
+        // Add new count display if there are appointments
+        if(count > 0) {
+          const countDisplay = document.createElement('div');
+          countDisplay.className = 'appointment-count';
+          countDisplay.textContent = count;
+          button.appendChild(countDisplay);
+        }
+      });
+    }
+    
+    async function loadWeekAppointments(){
+      // Load appointments for the entire week to show counts on date buttons
+      try {
+        const today = new Date();
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() + weekOffset * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        const params = new URLSearchParams();
+        params.append('date_from', formatDateForAPI(weekStart));
+        params.append('date_to', formatDateForAPI(weekEnd));
+        
+        const res = await fetch(`/admin/api/appointments?${params.toString()}`);
+        if(res.ok) {
+          const data = await res.json();
+          if(data.success) {
+            // Store week data for counting
+            window.weekAppointmentsData = data.appointments || [];
+            updateDateButtonsWithCounts();
+          }
+        }
+      } catch(e) {
+        console.error('Error loading week appointments:', e);
+      }
     }
     function filterAppointments(){
       // Use server-side filtering by reloading appointments
@@ -628,6 +806,20 @@
       filtersActive=false;
       document.getElementById('filterToggle').classList.remove('active');
       document.getElementById('filterToggle').innerHTML='<i class="fas fa-filter"></i> ตัวกรอง';
+      
+      // Reset to today's date
+      const today = new Date();
+      selectedDate = formatDateForAPI(today);
+      
+      // Update date buttons to show today as active
+      document.querySelectorAll('.date-button').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.dataset.date === selectedDate) {
+          btn.classList.add('active');
+        }
+      });
+      
+      updateSelectedDateText();
       // Reload appointments without filters
       loadAppointments();
       showToast('ล้างตัวกรองแล้ว','success');

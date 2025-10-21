@@ -376,7 +376,7 @@
                     <circle cx="60" cy="60" r="60" fill="#4A90E2"/>
                     <text x="60" y="75" font-family="Arial, sans-serif" font-size="36" font-weight="600" fill="#ffffff" text-anchor="middle">${initials}</text>
                 </svg>`;
-            photoElement.src = 'data:image/svg+xml;base64,' + btoa(svg);
+            photoElement.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
 
         // โหลดข้อมูลตาราง (ช่วงเดือนปัจจุบัน)

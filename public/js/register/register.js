@@ -80,7 +80,7 @@ function isValidEmail(email) {
 }
 
 function isValidName(name) {
-  return /^[a-zA-Z]+(\s[a-zA-Z]+)*$/.test(name) && name.length >= 2;
+  return /^[a-zA-Zก-๙]+(\s[a-zA-Zก-๙]+)*$/.test(name) && name.length >= 2;
 }
 
 function isValidPhone(phone) {
@@ -158,7 +158,7 @@ function validateField(input) {
       case 'lname':
         if (!isValidName(value)) {
           isValid = false;
-          errorMessage = 'Only letters and single spaces allowed, minimum 2 characters';
+          errorMessage = 'Only letters (English/Thai) and single spaces allowed, minimum 2 characters';
         }
         break;
       case 'email':
@@ -423,7 +423,7 @@ function setupEventListeners() {
     const input = safeGetElement(id);
     if (input) {
       input.addEventListener('input', function() {
-        this.value = this.value.replace(/[^a-zA-Z\s]/g, '').replace(/\s+/g, ' ');
+        this.value = this.value.replace(/[^a-zA-Zก-๙\s]/g, '').replace(/\s+/g, ' ');
       });
     }
   });

@@ -751,7 +751,10 @@
       if(btn){ btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> กำลังลบ...'; }
       try{
         const res = await fetch(`/admin/api/patients/${currentDeleteId}`,{method:'DELETE'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
+        if(!res.ok) {
+          const errorData = await res.json().catch(()=>({error:'HTTP '+res.status}));
+          throw new Error(errorData.error || 'HTTP '+res.status);
+        }
         const data = await res.json();
         if(data.success){
           const idx = patientsData.findIndex(p=>p.patient_id===currentDeleteId);
@@ -759,11 +762,29 @@
             const del = patientsData[idx];
             patientsData.splice(idx,1);
             applyFilters();
-            showToast(`ลบ ${getPatientName(del)} แล้ว`,`success`);
+            showToast(`✅ ลบข้อมูล ${getPatientName(del)} เรียบร้อยแล้ว`,`success`);
           }
-        }else{ throw new Error(data.error||'ลบผู้ป่วยไม่สำเร็จ'); }
+        }else{ 
+          // ใช้ error message จาก backend
+          throw new Error(data.error||'ลบผู้ป่วยไม่สำเร็จ'); 
+        }
       }catch(e){
-        showToast('เกิดข้อผิดพลาดในการลบ: '+e.message,'error');
+        // แสดงข้อความ error ที่ชัดเจนและแสดงสาเหตุที่แท้จริง
+        let errorMessage;
+        if (e.message.includes('มีนัดหมายที่ยังไม่เสร็จ')) {
+            errorMessage = '⚠️ ไม่สามารถลบผู้ป่วยได้ เนื่องจากมีนัดหมายที่ยังไม่เสร็จ กรุณายกเลิกนัดหมายทั้งหมดก่อน';
+        } else if (e.message.includes('HTTP 500')) {
+            // แสดงสาเหตุที่แท้จริงของ HTTP 500 Error
+            const errorDetails = e.message.replace('HTTP 500', '').trim();
+            errorMessage = '❌ เกิดข้อผิดพลาดในระบบ: ' + (errorDetails || 'ไม่ทราบสาเหตุ กรุณาลองใหม่อีกครั้ง');
+        } else if (e.message.includes('HTTP 404')) {
+            errorMessage = '❌ ไม่พบข้อมูลผู้ป่วย กรุณาโหลดหน้าใหม่';
+        } else if (e.message.includes('HTTP 403')) {
+            errorMessage = '❌ ไม่มีสิทธิ์ในการลบผู้ป่วย';
+        } else {
+            errorMessage = '❌ เกิดข้อผิดพลาดในการลบ: ' + e.message;
+        }
+        showToast(errorMessage,'error');
       }finally{
         if(btn){ btn.disabled=false; btn.innerHTML='<i class="fas fa-trash"></i> ลบผู้ป่วย'; }
         closeModal();

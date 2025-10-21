@@ -422,7 +422,7 @@ const licenseVal = dentist.license_no || dentist.license_number || dentist.licen
                     <rect width="200" height="200" fill="#4A90E2" rx="12"/>
                     <text x="100" y="120" font-family="Arial, sans-serif" font-size="60" font-weight="600" fill="white" text-anchor="middle">${initials}</text>
                 </svg>`;
-            photoElement.src = 'data:image/svg+xml;base64,' + btoa(svg);
+            photoElement.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
 
         // ============ โปรไฟล์/แจ้งเตือน ============

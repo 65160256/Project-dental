@@ -941,7 +941,7 @@ exports.deletePatientAPI = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: 'ไม่สามารถลบผู้ป่วยได้',
+      error: 'ไม่สามารถลบผู้ป่วยได้: ' + error.message,
       details: error.message
     });
   }

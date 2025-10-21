@@ -602,16 +602,34 @@
         async function deletePatient() {
             if (!patientId) return;
             try {
-                showToast('กำลังลบผู้ป่วย...', 'info');
+                showToast('⏳ กำลังลบข้อมูลผู้ป่วย...', 'info');
                 const res = await fetch(`/admin/api/patients/${patientId}`, { method:'DELETE' });
                 const data = await res.json().catch(()=>({success:false}));
                 if (data.success) {
                     closeModal();
-                    showToast('ลบข้อมูลผู้ป่วยสำเร็จ', 'success');
+                    showToast('✅ ลบข้อมูลผู้ป่วยเรียบร้อยแล้ว', 'success');
                     setTimeout(()=>window.location.href='/admin/patients', 1500);
-                } else throw new Error(data.error || 'ลบไม่สำเร็จ');
+                } else {
+                    // ใช้ error message จาก backend
+                    throw new Error(data.error || 'ลบไม่สำเร็จ');
+                }
             } catch (e) {
-                showToast('เกิดข้อผิดพลาดระหว่างลบ: ' + e.message, 'error');
+                // แสดงข้อความ error ที่ชัดเจนและแสดงสาเหตุที่แท้จริง
+                let errorMessage;
+                if (e.message.includes('มีนัดหมายที่ยังไม่เสร็จ')) {
+                    errorMessage = '⚠️ ไม่สามารถลบผู้ป่วยได้ เนื่องจากมีนัดหมายที่ยังไม่เสร็จ กรุณายกเลิกนัดหมายทั้งหมดก่อน';
+                } else if (e.message.includes('HTTP 500')) {
+                    // แสดงสาเหตุที่แท้จริงของ HTTP 500 Error
+                    const errorDetails = e.message.replace('HTTP 500', '').trim();
+                    errorMessage = '❌ เกิดข้อผิดพลาดในระบบ: ' + (errorDetails || 'ไม่ทราบสาเหตุ กรุณาลองใหม่อีกครั้ง');
+                } else if (e.message.includes('HTTP 404')) {
+                    errorMessage = '❌ ไม่พบข้อมูลผู้ป่วย กรุณาโหลดหน้าใหม่';
+                } else if (e.message.includes('HTTP 403')) {
+                    errorMessage = '❌ ไม่มีสิทธิ์ในการลบผู้ป่วย';
+                } else {
+                    errorMessage = '❌ เกิดข้อผิดพลาดระหว่างลบ: ' + e.message;
+                }
+                showToast(errorMessage, 'error');
             }
         }
 
