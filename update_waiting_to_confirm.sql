@@ -15,3 +15,4 @@ FROM queue q
 JOIN patient p ON q.patient_id = p.patient_id
 WHERE q.queue_status = 'confirm'
 ORDER BY q.time DESC;
+

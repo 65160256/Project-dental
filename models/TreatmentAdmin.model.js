@@ -305,6 +305,8 @@ class TreatmentAdminModel {
       const [rows] = await db.execute(`
         SELECT 
           d.dentist_id,
+          d.fname,
+          d.lname,
           CONCAT(d.fname, ' ', d.lname) as name,
           d.specialty
         FROM dentist d

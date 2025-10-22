@@ -18,3 +18,4 @@ WHERE queue_status = 'waiting_for_treatment';
 SELECT queue_status, COUNT(*) as count
 FROM queue 
 GROUP BY queue_status;
+
