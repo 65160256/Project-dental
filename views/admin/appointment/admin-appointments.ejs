@@ -619,7 +619,7 @@
         const start = a.time ? new Date(a.time) : null;
         const end = a.time_end ? new Date(a.time_end) : null;
         const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
-        const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='waiting_for_treatment'?'fas fa-user-md':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle')));
+        const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
         
         // Format date display
         const appointmentDate = start ? formatDateDisplay(start) : 'ไม่ระบุ';
@@ -665,12 +665,11 @@
         return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
       }catch{ return 'วันที่ไม่ถูกต้อง'; }
     }
-    function formatStatus(s){ if(s==='pending')return'รออนุมัติ'; if(s==='confirm')return'ยืนยันแล้ว'; if(s==='waiting_for_treatment')return'รอการรักษา'; if(s==='cancel')return'ยกเลิกแล้ว'; return s; }
+    function formatStatus(s){ if(s==='pending')return'รออนุมัติ'; if(s==='confirm')return'ยืนยันแล้ว'; if(s==='cancel')return'ยกเลิกแล้ว'; return s; }
     function renderEmptyState(){ document.getElementById('tableSection').style.display='none'; document.getElementById('emptyState').style.display='block'; }
     function updateAppointmentCount(total){
       const pending = (appointmentsData||[]).filter(a=>a.queue_status==='pending').length;
       const confirmed = (appointmentsData||[]).filter(a=>a.queue_status==='confirm').length;
-      const waitingForTreatment = (appointmentsData||[]).filter(a=>a.queue_status==='waiting_for_treatment').length;
       const cancelled = (appointmentsData||[]).filter(a=>a.queue_status==='cancel').length;
       
       document.getElementById('appointmentCount').textContent = total;

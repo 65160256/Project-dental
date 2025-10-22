@@ -547,19 +547,6 @@
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <% if (appointment.queue_status === 'pending') { %>
-                    <!-- ซ่อนปุ่มยืนยันการจอง - ไม่ใช่หน้าที่แพทย์ -->
-                    <!-- <button onclick="updateStatus('confirm')" class="btn btn-success">
-                        <i class="fas fa-check"></i> ยืนยันการนัดหมาย
-                    </button> -->
-                    <button onclick="updateStatus('completed')" class="btn btn-primary">
-                        <i class="fas fa-check-double"></i> ทำเครื่องหมายว่าเสร็จสิ้น
-                    </button>
-                    <% } else if (appointment.queue_status === 'confirm') { %>
-                    <button onclick="updateStatus('completed')" class="btn btn-primary">
-                        <i class="fas fa-check-double"></i> ทำเครื่องหมายว่าเสร็จสิ้น
-                    </button>
-                    <% } %>
                     <!-- ปุ่มแก้ไข (ถ้าต้องใช้ภายหลัง)
                     <button onclick="editAppointment()" class="btn btn-warning">
                         <i class="fas fa-edit"></i> แก้ไขรายละเอียด

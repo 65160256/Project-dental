@@ -13,7 +13,7 @@ class ReportsController {
         FROM treatment t
         LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
         LEFT JOIN queue q ON qd.queuedetail_id = q.queuedetail_id
-        WHERE q.queue_status IN ('confirm', 'waiting_for_treatment', 'completed')
+        WHERE q.queue_status IN ('confirm', 'completed')
         AND q.time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
         GROUP BY t.treatment_id, t.treatment_name
         HAVING count > 0
@@ -63,7 +63,7 @@ class ReportsController {
         FROM dentist d
         LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
         LEFT JOIN queue q ON qd.queuedetail_id = q.queuedetail_id
-        WHERE q.queue_status IN ('confirm', 'waiting_for_treatment', 'completed')
+        WHERE q.queue_status IN ('confirm', 'completed')
         AND q.time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
         GROUP BY d.dentist_id, d.fname, d.lname
         HAVING appointment_count > 0
@@ -106,7 +106,7 @@ class ReportsController {
       const [totalRows] = await db.execute(`
         SELECT COUNT(*) as total_appointments
         FROM queue
-        WHERE queue_status IN ('pending', 'confirm', 'waiting_for_treatment', 'completed', 'cancel')
+        WHERE queue_status IN ('pending', 'confirm', 'completed', 'cancel')
         AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
       `);
 
@@ -120,7 +120,7 @@ class ReportsController {
       const [pendingRows] = await db.execute(`
         SELECT COUNT(*) as pending_appointments
         FROM queue
-        WHERE queue_status IN ('pending', 'confirm', 'waiting_for_treatment')
+        WHERE queue_status IN ('pending', 'confirm')
         AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
       `);
 

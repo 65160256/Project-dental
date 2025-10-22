@@ -320,7 +320,7 @@ class QueueModel {
    * @returns {Promise<Object>} { success, affectedRows }
    */
   static async updateStatus(queueId, status) {
-    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'confirm', 'cancel', 'auto_cancelled', 'waiting_for_treatment'];
+    const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'confirm', 'cancel', 'auto_cancelled'];
     if (!validStatuses.includes(status)) {
       throw new Error('สถานะไม่ถูกต้อง');
     }

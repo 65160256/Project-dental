@@ -1980,9 +1980,7 @@ exports.updateAppointmentStatus = async (req, res) => {
     }
 
     // Update appointment status via model
-    // If confirming appointment, change to 'waiting_for_treatment' instead of 'confirm'
-    const finalStatus = status === 'confirm' ? 'waiting_for_treatment' : status;
-    await AppointmentAdminModel.updateAppointmentStatus(id, finalStatus);
+    await AppointmentAdminModel.updateAppointmentStatus(id, status);
 
       // Create notification for the patient
       let notificationTitle = '';

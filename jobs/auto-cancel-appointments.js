@@ -9,7 +9,7 @@ async function autoCancelAppointments() {
   
   try {
     // ค้นหานัดหมายที่:
-    // 1. สถานะเป็น 'waiting_for_treatment' (รอการรักษา)
+    // 1. สถานะเป็น 'confirm' (ยืนยันแล้ว)
     // 2. เวลานัดหมายผ่านไปแล้วมากกว่า 2 ชั่วโมง
     // 3. ยังไม่มีประวัติการรักษา
     const [appointments] = await db.execute(`
@@ -27,7 +27,7 @@ async function autoCancelAppointments() {
       JOIN dentist d ON qd.dentist_id = d.dentist_id
       JOIN treatment t ON qd.treatment_id = t.treatment_id
       LEFT JOIN treatmentHistory th ON qd.queuedetail_id = th.queuedetail_id
-      WHERE q.queue_status = 'waiting_for_treatment'
+      WHERE q.queue_status = 'confirm'
         AND q.time < DATE_SUB(NOW(), INTERVAL 2 HOUR)
         AND th.tmh_id IS NULL
     `);

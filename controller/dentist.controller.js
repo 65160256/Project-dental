@@ -191,7 +191,7 @@ updateAppointmentStatus: async (req, res) => {
     const { oldStatus, appointment } = result;
 
     // สร้างการแจ้งเตือนตามสถานะใหม่
-    if (finalStatus === 'waiting_for_treatment' && oldStatus !== 'waiting_for_treatment') {
+    if (finalStatus === 'confirm' && oldStatus !== 'confirm') {
       await NotificationHelper.createConfirmationNotification(
         queueId,
         appointment.patient_id,
