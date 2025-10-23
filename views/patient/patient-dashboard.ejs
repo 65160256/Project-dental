@@ -64,7 +64,7 @@
 
         <div class="profile-dropdown">
           <div class="user-info" id="profileToggle">
-            <div class="avatar"><%= patient.fname.charAt(0) + patient.lname.charAt(0) %></div>
+            <div class="avatar"><%= patient.email ? patient.email.charAt(0).toUpperCase() : 'U' %></div>
             <div class="user-details">
               <strong><%= patient.fname %> <%= patient.lname %></strong>
               <small>ผู้ป่วย</small>

@@ -786,7 +786,7 @@
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
                                 <img src="/uploads/<%= dentist.photo %>" alt="Profile" onerror="showInitials()">
                             <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
                             <% } %>
                         </div>
                         <div class="user-details">
@@ -942,7 +942,7 @@
                 case 'confirm': return 'รอการรักษา';
                 case 'pending': return 'รอดำเนินการ';
                 case 'cancel':  return 'ยกเลิก';
-                case 'auto_cancelled': return 'ยกเลิกอัตโนมัติ';
+                case 'auto_cancelled': return 'ยกเลิก';
                 case 'completed': return 'เสร็จสิ้น - ปิดการรักษา';
                 default:        return 'ไม่ทราบ';
             }
@@ -988,7 +988,7 @@
                     
                     treatments.forEach(treatment => {
                         // ตรวจสอบว่าสามารถคลิกได้หรือไม่ (ยกเลิกแล้วไม่สามารถคลิกได้)
-                        const isClickable = treatment.queue_status !== 'cancel';
+                        const isClickable = treatment.queue_status !== 'cancel' && treatment.queue_status !== 'auto_cancelled';
                         const clickHandler = isClickable ? `onclick="viewTreatmentDetail(${treatment.queue_id})"` : '';
                         const cursorStyle = isClickable ? '' : 'style="cursor: not-allowed;"';
                         

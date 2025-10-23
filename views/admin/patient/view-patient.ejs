@@ -389,7 +389,7 @@
             // Full name & avatar initials
             const fullName = `${patient.fname || ''} ${patient.lname || ''}`.trim();
             setValue('fullName', fullName || 'ไม่ได้ระบุ');
-            const initials = (patient.fname && patient.lname) ? (patient.fname[0] + patient.lname[0]).toUpperCase() : 'P';
+            const initials = patient.email ? patient.email.charAt(0).toUpperCase() : 'P';
             document.getElementById('patientAvatar').textContent = initials;
 
             // DoB

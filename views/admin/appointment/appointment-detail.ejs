@@ -328,6 +328,7 @@
         completed: { cls: 'status-completed', icon: 'fa-check-circle', text: 'เสร็จสิ้น' },
         cancelled: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
         cancel: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
+        auto_cancelled: { cls: 'status-cancel', icon: 'fa-times-circle', text: 'ยกเลิกแล้ว' },
       };
       const cfg = statusMap[status] || statusMap.pending;
       statusEl.className = `status-badge ${cfg.cls}`;

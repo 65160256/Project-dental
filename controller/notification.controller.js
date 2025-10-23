@@ -201,8 +201,15 @@ getPatientNotifications: async (req, res) => {
   // Mark all as read - อัพเดทเพื่อรองรับ patient
 markAllAsRead: async (req, res) => {
   try {
-    const userId = req.session.user?.user_id || req.session.userId;
+    const userId = req.session.userId || req.session.user?.user_id;
     const userType = req.query.userType || req.body.userType;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'กรุณาเข้าสู่ระบบ'
+      });
+    }
 
     let filters = {};
 
@@ -267,8 +274,15 @@ markAllAsRead: async (req, res) => {
  // Get unread count - อัพเดทเพื่อรองรับ patient
 getUnreadCount: async (req, res) => {
   try {
-    const userId = req.session.user?.user_id || req.session.userId;
+    const userId = req.session.userId || req.session.user?.user_id;
     const userType = req.query.userType;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'กรุณาเข้าสู่ระบบ'
+      });
+    }
 
     let filters = {};
 

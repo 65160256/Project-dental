@@ -305,7 +305,7 @@
         }
 
         function displayPatientInfo(patient) {
-            const initials = (patient.fname ? patient.fname.charAt(0) : 'U') + (patient.lname ? patient.lname.charAt(0) : 'P');
+            const initials = patient.email ? patient.email.charAt(0).toUpperCase() : 'U';
             const fullName = `${patient.fname || 'ไม่ระบุ'} ${patient.lname || ''}`.trim();
             const ageText = calculateAge(patient.dob);
 
@@ -498,7 +498,7 @@
                 case 'confirm': return 'รอการรักษา';
                 case 'pending': return 'รอดำเนินการ';
                 case 'cancel':  return 'ยกเลิก';
-                case 'auto_cancelled': return 'ยกเลิกอัตโนมัติ';
+                case 'auto_cancelled': return 'ยกเลิก';
                 case 'completed': return 'เสร็จสิ้น - ปิดการรักษา';
                 default:        return 'ไม่ทราบ';
             }

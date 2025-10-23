@@ -131,10 +131,8 @@
             const statusBadge = this.querySelector('.status-badge');
             const status = statusBadge ? statusBadge.className.match(/status-(\w+)/)[1] : '';
             
-            // Don't navigate if status is auto_cancelled
-            if (status !== 'auto_cancelled') {
-              window.location.href = `/patient/history/details/${appointmentId}`;
-            }
+            // Allow navigation for all statuses
+            window.location.href = `/patient/history/details/${appointmentId}`;
           }
         });
       });

@@ -42,12 +42,8 @@
         </div>
         <div class="profile-dropdown">
           <div class="user-info" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" onclick="toggleDropdown()" onkeydown="if(event.key==='Enter'||event.key===' '){toggleDropdown(); event.preventDefault();}">
-            <div class="avatar" aria-hidden="true">
-              <% if (patient && patient.avatar) { %>
-                <img src="/uploads/<%= patient.avatar %>" alt="">
-              <% } else { %>
-                <%= (patient?.fname?.[0] || 'ผ')[0] %><%= (patient?.lname?.[0] || 'ป')[0] %>
-              <% } %>
+            <div class="avatar">
+              <%= patient.email ? patient.email.charAt(0).toUpperCase() : 'U' %>
             </div>
             <div class="user-details">
               <strong><%= patient.fname %> <%= patient.lname %></strong>
@@ -98,7 +94,13 @@
               <div class="dentists-grid">
                 <% dentistsBySpecialty[specialty].forEach(function(dentist) { 
                      const hasPhoto = dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'default-doctor.png';
-                     const initials = (dentist.full_name || '').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+                     const initials = dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D';
+                     // Debug: Log dentist data
+                     console.log('Dentist data:', { id: dentist.dentist_id, email: dentist.email, initials: initials });
+                     // Also log to page for debugging
+                     if (dentist.dentist_id === dentistsBySpecialty[specialty][0].dentist_id) {
+                       console.log('First dentist debug:', JSON.stringify(dentist, null, 2));
+                     }
                 %>
                   <div class="dentist-card is-visible"
                        data-dentist-name="<%= (dentist.full_name || '').toLowerCase() %>"
@@ -110,7 +112,7 @@
                              loading="lazy" decoding="async"
                              onerror="handleImageError(this, <%= dentist.dentist_id %>, '<%= initials %>')">
                       <% } else { %>
-                        <span class="dentist-initials"><%= initials || 'DR' %></span>
+                        <span class="dentist-initials" title="Email: <%= dentist.email || 'No email' %>"><%= initials || 'DR' %></span>
                       <% } %>
                     </div>
 

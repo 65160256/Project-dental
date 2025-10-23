@@ -430,9 +430,9 @@
     }
 
     .status-auto_cancelled {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      color: #92400e;
-      border: 1px solid #f59e0b;
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #991b1b;
+      border: 1px solid #f87171;
     }
 
     .appointment-details {

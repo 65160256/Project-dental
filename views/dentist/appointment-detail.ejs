@@ -424,7 +424,7 @@
                             <% if (appointment && appointment.dentist_photo && appointment.dentist_photo !== 'default-avatar.png') { %>
                                 <img src="/uploads/<%= appointment.dentist_photo %>" alt="โปรไฟล์" onerror="showInitials()">
                             <% } else { %>
-                                <%= (appointment && appointment.dentist_fname) ? appointment.dentist_fname.charAt(0).toUpperCase() + (appointment.dentist_lname ? appointment.dentist_lname.charAt(0).toUpperCase() : '') : 'ท' %>
+                                <%= appointment.dentist_email ? appointment.dentist_email.charAt(0).toUpperCase() : 'ท' %>
                             <% } %>
                         </div>
                         <div class="user-details">
@@ -658,14 +658,12 @@
             if (avatarEl.querySelector('img')) return;
 
             if (!avatarEl.textContent.trim()) {
-                const userNameEl = document.getElementById('userName');
-                const userName = userNameEl ? userNameEl.textContent : '';
-                const nameParts = userName.replace('ทพ. ', '').split(' ');
-                const initials = nameParts.map(p => p.charAt(0)).join('').substring(0,2).toUpperCase();
+                // Use email initial instead of name initials
+                const emailInitial = '<%= appointment.dentist_email ? appointment.dentist_email.charAt(0).toUpperCase() : "ท" %>';
                 const blueColors = ['#4A90E2','#2196F3','#03A9F4','#00BCD4','#5DADE2','#3498DB','#2980B9','#1976D2'];
-                const colorIndex = userName.length % blueColors.length;
+                const colorIndex = emailInitial.length % blueColors.length;
                 avatarEl.style.background = blueColors[colorIndex];
-                avatarEl.textContent = initials || 'ทพ';
+                avatarEl.textContent = emailInitial;
             }
         }
 
@@ -674,12 +672,10 @@
             const img = avatar ? avatar.querySelector('img') : null;
             if (avatar && img) {
                 img.remove();
-                const userNameEl = document.getElementById('userName');
-                const userName = userNameEl ? userNameEl.textContent : '';
-                const nameParts = userName.replace('ทพ. ', '').split(' ');
-                const initials = nameParts.map(p => p.charAt(0)).join('').substring(0,2).toUpperCase();
+                // Use email initial instead of name initials
+                const emailInitial = '<%= appointment.dentist_email ? appointment.dentist_email.charAt(0).toUpperCase() : "ท" %>';
                 avatar.style.background = '#4A90E2';
-                avatar.textContent = initials || 'ทพ';
+                avatar.textContent = emailInitial;
             }
         }
     </script>

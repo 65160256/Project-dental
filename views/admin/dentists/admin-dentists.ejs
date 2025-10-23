@@ -407,7 +407,7 @@
                 </thead>
                 <tbody>
                     ${sortedList.map((d, index)=>{
-                        const initials = ((d.fname||'D').charAt(0)+(d.lname||'R').charAt(0)).toUpperCase();
+                        const initials = d.email ? d.email.charAt(0).toUpperCase() : 'D';
                         const rowNumber = index + 1;
                         return `
                         <tr>

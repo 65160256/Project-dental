@@ -122,11 +122,11 @@
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()" aria-haspopup="true" aria-expanded="false">
             <div class="avatar" id="navAvatar">
-              <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+              <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '') { %>
                 <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
-                     onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+                     onerror="this.remove(); document.getElementById('navAvatar').textContent='<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>';">
               <% } else { %>
-                <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
               <% } %>
             </div>
             <div class="user-details">
@@ -160,11 +160,11 @@
       <div class="profile-container">
         <div class="profile-left">
           <div class="profile-avatar" id="profileAvatar" title="คลิกเพื่อเปลี่ยนรูปภาพ">
-            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '') { %>
               <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์"
-                   onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>';">
+                   onerror="this.remove(); document.getElementById('profileAvatar').textContent='<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>';">
             <% } else { %>
-              <%= (dentist && dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+              <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
             <% } %>
           </div>
 

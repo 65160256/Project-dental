@@ -513,7 +513,7 @@
       row.style.backgroundColor='rgba(74,144,226,.1)';
     }
 
-    function getPatientInitials(p){const f=p.fname||'U', l=p.lname||'P'; return (f.charAt(0)+l.charAt(0)).toUpperCase()}
+    function getPatientInitials(p){return p.email ? p.email.charAt(0).toUpperCase() : 'U'}
     function getPatientName(p){const f=p.fname||'ไม่ทราบชื่อ', l=p.lname||''; return `${f} ${l}`.trim()}
 
     // อายุ (ข้อความไทย)

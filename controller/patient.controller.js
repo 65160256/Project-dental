@@ -1145,6 +1145,14 @@ exports.getDentists = async (req, res) => {
 
     // [REFACTORED] ใช้ Dentist.findAllForPatients แทน raw SQL
     const dentists = await Dentist.findAllForPatients(searchQuery);
+    
+    // Debug: Log dentist data to check if email field exists
+    console.log('Dentists data sample:', dentists.slice(0, 2).map(d => ({ 
+      id: d.dentist_id, 
+      name: d.full_name, 
+      email: d.email,
+      hasEmail: !!d.email 
+    })));
 
     // Get treatments for each dentist
     for (let dentist of dentists) {

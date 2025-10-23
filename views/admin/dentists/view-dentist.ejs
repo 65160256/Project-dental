@@ -414,8 +414,7 @@ const licenseVal = dentist.license_no || dentist.license_number || dentist.licen
         }
         function showAvatarFallback(dentist) {
             const photoElement = document.getElementById('dentistPhoto');
-            const initials = dentist.fname 
-                ? dentist.fname.charAt(0).toUpperCase() : 'DR';
+            const initials = dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D';
             const svg = `
                 <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
                     <rect width="200" height="200" fill="#4A90E2" rx="12"/>

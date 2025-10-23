@@ -495,7 +495,7 @@
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
                                 <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="showInitials()">
                             <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'D' %>
+                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
                             <% } %>
                         </div>
                         <div class="user-details">
@@ -667,7 +667,7 @@
             const img = avatar?.querySelector('img');
             if (img) {
                 img.remove();
-                avatar.innerHTML = '<%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : "") : "D" %>';
+                avatar.innerHTML = '<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : "D" %>';
             }
         }
 

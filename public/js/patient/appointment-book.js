@@ -41,7 +41,7 @@ async function loadPatientInfo() {
       const userName = document.getElementById('userName');
       if (userName) userName.textContent = `${currentPatient.fname} ${currentPatient.lname}`;
       const userAvatar = document.getElementById('userAvatar');
-      if (userAvatar) userAvatar.textContent = currentPatient.fname.charAt(0);
+      if (userAvatar) userAvatar.textContent = currentPatient.email ? currentPatient.email.charAt(0).toUpperCase() : 'U';
       console.log('✅ โหลดข้อมูลผู้ป่วย:', currentPatient);
     }
   } catch (error) {
@@ -305,7 +305,7 @@ async function showAvailableDentists(dateStr) {
       console.log('✅ Found', data.dentists.length, 'dentists');
       let doctorsHTML = '';
       data.dentists.forEach(doctor => {
-        const initials = doctor.fname.charAt(0) + doctor.lname.charAt(0);
+        const initials = doctor.email ? doctor.email.charAt(0).toUpperCase() : 'D';
         let treatmentsHTML = '';
         if (doctor.treatments && doctor.treatments.length > 0) {
           if (doctor.treatments.length <= 4) {
@@ -456,7 +456,7 @@ function updateStepDisplay() {
 function initializeStep2() {
   document.getElementById('selectedDoctorName').textContent = `ทพ. ${selectedDoctor.name}`;
   document.getElementById('selectedDoctorSpecialty').textContent = selectedDoctor.specialty;
-  document.getElementById('selectedDoctorAvatar').textContent = selectedDoctor.fname.charAt(0) + selectedDoctor.lname.charAt(0);
+  document.getElementById('selectedDoctorAvatar').textContent = selectedDoctor.email ? selectedDoctor.email.charAt(0).toUpperCase() : 'D';
   updateSelectedDateDisplay();
   const treatmentId = document.getElementById('treatmentSelect').value;
   if (treatmentId) loadTimeSlots();

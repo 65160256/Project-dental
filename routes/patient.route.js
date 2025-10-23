@@ -25,6 +25,7 @@ router.get('/dashboard', requirePatient, patientController.getDashboard);
 
 // === Appointments (redirects) ===
 router.get('/appointments', requirePatient, (req, res) => res.redirect('/patient/appointment/schedule'));
+router.get('/appointments/:id', requirePatient, patientController.getAppointmentDetails);
 router.get('/appointment',  requirePatient, (req, res) => res.redirect('/patient/appointment/schedule'));
 
 // หน้าจองแบบใหม่ที่ใช้ระบบ Schedule

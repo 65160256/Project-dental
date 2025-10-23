@@ -26,6 +26,7 @@ const getStatusText = (status) => ({
   pending: 'รอยืนยัน',
   confirm: 'ยืนยันแล้ว',
   cancel: 'ยกเลิกแล้ว',
+  auto_cancelled: 'ยกเลิกแล้ว',
   completed: 'เสร็จสิ้น'
 }[status] || status);
 
@@ -33,6 +34,7 @@ const getStatusColor = (status) => ({
   pending: '#f59e0b',
   confirm: '#10b981',
   cancel:  '#ef4444',
+  auto_cancelled: '#ef4444',
   completed:'#6b7280'
 }[status] || '#6b7280');
 
@@ -129,6 +131,22 @@ const sendAppointmentConfirmation = async (patientId, appointmentData) => {
   }
 };
 
+// Helper function to get first letter of email for avatar display
+const getEmailInitial = (email) => {
+  if (!email || typeof email !== 'string') return 'U';
+  return email.charAt(0).toUpperCase();
+};
+
+// Helper function to get initials from name (fallback)
+const getNameInitials = (fname, lname) => {
+  if (fname && lname) {
+    return (fname.charAt(0) + lname.charAt(0)).toUpperCase();
+  } else if (fname) {
+    return fname.charAt(0).toUpperCase();
+  }
+  return 'U';
+};
+
 module.exports = {
   formatAppointmentForPatient,
   getStatusText,
@@ -140,5 +158,7 @@ module.exports = {
   generateAppointmentReference,
   checkAppointmentConflicts,
   getPatientRecentHistory,
-  sendAppointmentConfirmation
+  sendAppointmentConfirmation,
+  getEmailInitial,
+  getNameInitials
 };

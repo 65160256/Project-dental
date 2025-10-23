@@ -103,10 +103,10 @@
         <div class="profile-dropdown">
           <div class="user-info" onclick="toggleDropdown()">
             <div class="avatar" id="navAvatar">
-              <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+              <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '') { %>
                 <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="handleImageError(this, 'navAvatar')">
               <% } else { %>
-                <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
               <% } %>
             </div>
             <div class="user-details">
@@ -136,10 +136,10 @@
       <div class="profile-container">
         <div class="profile-main">
           <div class="profile-avatar" id="profileAvatar">
-            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
+            <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '') { %>
               <img src="/uploads/<%= dentist.photo %>" alt="รูปโปรไฟล์" onerror="handleImageError(this, 'profileAvatar')">
             <% } else { %>
-              <%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : 'DR' %>
+              <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
             <% } %>
           </div>
 
@@ -260,7 +260,7 @@
       img.remove();
       const container = document.getElementById(containerId);
       if (container) {
-        container.textContent = '<%= (dentist.fname && dentist.lname) ? (dentist.fname.charAt(0)+dentist.lname.charAt(0)).toUpperCase() : "DR" %>';
+        container.textContent = '<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : "D" %>';
       }
     }
     document.addEventListener('click',function(e){

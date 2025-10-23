@@ -515,7 +515,7 @@
       const prev = document.getElementById('photoPreview');
       const ph   = document.getElementById('photoPlaceholder');
       const rm   = document.getElementById('removePhotoBtn');
-      const initials = (d.fname && d.lname) ? (d.fname[0]+d.lname[0]).toUpperCase() : 'DR';
+      const initials = d.email ? d.email.charAt(0).toUpperCase() : 'D';
       const svg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" rx="12" fill="#4A90E2"/><text x="100" y="120" font-family="Arial" font-size="60" font-weight="600" fill="#fff" text-anchor="middle">${initials}</text></svg>`;
       prev.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
       prev.style.display='block'; 

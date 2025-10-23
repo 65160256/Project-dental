@@ -290,9 +290,9 @@
                     <div class="user-info" onclick="toggleDropdown()">
                         <div class="avatar no-photo" id="userAvatar">
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์" onerror="this.style.display='none'; this.parentElement.innerHTML=generateInitials('<%= dentist.fname %>', '<%= dentist.lname %>')">
+                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์" onerror="handleImageError(this)">
                             <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'DR' %>
+                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
                             <% } %>
                         </div>
                         <div class="user-details">
@@ -505,16 +505,34 @@
         </div>
     </div>
 
-    <script>
-        // ข้อมูลทันตแพทย์จาก server
-        const dentist = {
-            fname: '<%= dentist.fname %>',
-            lname: '<%= dentist.lname %>',
-            photo: '<%= dentist.photo || "" %>'
-        };
+    <!-- Data from server -->
+    <script type="application/json" id="dentist-data">
+        {
+            "fname": "<%= dentist.fname %>",
+            "lname": "<%= dentist.lname %>",
+            "photo": "<%= dentist.photo || '' %>",
+            "email": "<%= dentist.email || '' %>"
+        }
+    </script>
+    
+    <script type="application/json" id="dashboard-data">
+        {
+            "currentYear": <%= currentYear %>,
+            "currentMonth": <%= currentMonth %>,
+            "monthlyAppointments": <%- JSON.stringify(monthlyAppointments) %>
+        }
+    </script>
 
-        let currentDate = new Date(<%= currentYear %>, <%= currentMonth - 1 %>, 1);
-        const monthlyAppointments = <%- JSON.stringify(monthlyAppointments) %>;
+    <script>
+        // Load data from JSON scripts
+        const dentistData = JSON.parse(document.getElementById('dentist-data').textContent);
+        const dashboardData = JSON.parse(document.getElementById('dashboard-data').textContent);
+        
+        window.dentist = dentistData;
+        window.dashboardData = {
+            currentDate: new Date(dashboardData.currentYear, dashboardData.currentMonth - 1, 1),
+            monthlyAppointments: dashboardData.monthlyAppointments
+        };
 
         // Notification System
         class NotificationSystem {
@@ -534,10 +552,16 @@
 
             attachEventListeners() {
                 // Toggle dropdown
-                document.getElementById('notificationBellBtn')?.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleDropdown();
-                });
+                const bellBtn = document.getElementById('notificationBellBtn');
+                if (bellBtn) {
+                    bellBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('Notification bell clicked');
+                        this.toggleDropdown();
+                    });
+                } else {
+                    console.error('Notification bell button not found');
+                }
 
                 // Mark all as read
                 document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
@@ -571,7 +595,7 @@
 
             async loadUnreadCount() {
                 try {
-                    const response = await fetch('/dentist/api/notifications/unread-count');
+                    const response = await fetch('/dentist/api/notifications/unread-count?userType=dentist');
                     const data = await response.json();
 
                     if (data.success) {
@@ -696,7 +720,7 @@
 
             async markAllAsRead() {
                 try {
-                    const response = await fetch('/dentist/api/notifications/mark-all-read', {
+                    const response = await fetch('/dentist/api/notifications/mark-all-read?userType=dentist', {
                         method: 'PUT'
                     });
 
@@ -714,12 +738,22 @@
                 this.isOpen = !this.isOpen;
                 const dropdown = document.getElementById('notificationDropdown');
                 
+                console.log('Toggle dropdown, isOpen:', this.isOpen);
+                console.log('Dropdown element:', dropdown);
+                
                 if (dropdown) {
-                    dropdown.classList.toggle('show');
-                    
                     if (this.isOpen) {
+                        dropdown.style.display = 'block';
+                        dropdown.classList.add('show');
+                        console.log('Showing dropdown');
                         this.loadNotifications();
+                    } else {
+                        dropdown.style.display = 'none';
+                        dropdown.classList.remove('show');
+                        console.log('Hiding dropdown');
                     }
+                } else {
+                    console.error('Notification dropdown not found');
                 }
             }
 
@@ -727,6 +761,7 @@
                 this.isOpen = false;
                 const dropdown = document.getElementById('notificationDropdown');
                 if (dropdown) {
+                    dropdown.style.display = 'none';
                     dropdown.classList.remove('show');
                 }
             }
@@ -739,22 +774,11 @@
             }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeAvatar();
-            generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
-            
-            // Initialize notification system
-            window.notificationSystem = new NotificationSystem();
-        });
+        // Initialize functions are now handled in the main DOMContentLoaded event
 
         // Avatar functions
-        function generateInitials(fname, lname) {
-            let initials = '';
-            if (fname && fname.trim()) { initials += fname.trim().charAt(0); }
-            if (lname && lname.trim()) { initials += lname.trim().charAt(0); }
-            else if (fname && fname.trim().length > 1) { initials = fname.trim().substring(0, 2); }
-            return initials.toUpperCase() || 'DR';
+        function generateInitials(email) {
+            return email ? email.charAt(0).toUpperCase() : 'D';
         }
 
         function getColorFromName(name) {
@@ -766,10 +790,9 @@
             return Math.abs(hash % 10);
         }
 
-        function createGmailAvatar(containerElement, fname, lname, photoUrl) {
-            const initials = generateInitials(fname, lname);
-            const fullName = `${fname} ${lname}`.trim();
-            const colorIndex = getColorFromName(fullName);
+        function createGmailAvatar(containerElement, email, photoUrl, fullName = '') {
+            const initials = generateInitials(email);
+            const colorIndex = getColorFromName(email || 'default');
             const hasPhoto = photoUrl && photoUrl !== '' && photoUrl !== 'default-avatar.png' && photoUrl !== null;
             containerElement.setAttribute('data-color', colorIndex);
             if (hasPhoto) {
@@ -786,7 +809,26 @@
 
         function initializeAvatar() {
             const avatarEl = document.getElementById('userAvatar');
-            createGmailAvatar(avatarEl, dentist.fname, dentist.lname, dentist.photo);
+            const fullName = `${dentist.fname} ${dentist.lname}`;
+            createGmailAvatar(avatarEl, dentist.email, dentist.photo, fullName);
+        }
+
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const query = this.value.toLowerCase();
+                    // Implement search functionality here
+                    console.log('Searching for:', query);
+                });
+            }
+        }
+
+        // Load dashboard data
+        function loadDashboardData() {
+            // Load dashboard statistics and data
+            console.log('Loading dashboard data...');
         }
 
         // Profile dropdown
@@ -844,14 +886,29 @@
         }
 
         function changeMonth(direction) {
+            if (!currentDate) {
+                console.error('currentDate is not defined');
+                return;
+            }
             currentDate.setMonth(currentDate.getMonth() + direction);
             updateCalendar();
         }
 
         function updateCalendar() {
+            if (!currentDate) {
+                console.error('currentDate is not defined');
+                return;
+            }
             const monthYear = currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
             document.getElementById('currentMonthYear').textContent = monthYear;
             generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        }
+
+        // Handle image error
+        function handleImageError(img) {
+            img.style.display = 'none';
+            const initial = window.dentist?.email ? window.dentist.email.charAt(0).toUpperCase() : 'D';
+            img.parentElement.innerHTML = initial;
         }
 
         // Toast
@@ -863,6 +920,35 @@
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.animation = 'slideInRight 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
+
+        // Initialize notification system when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Initializing dashboard');
+            
+            // Initialize notification system
+            try {
+                window.notificationSystem = new NotificationSystem();
+                console.log('Notification system initialized');
+            } catch (error) {
+                console.error('Error initializing notification system:', error);
+            }
+            
+            // Initialize other components
+            initializeSearch();
+            loadDashboardData();
+            
+            // Initialize avatar and calendar
+            initializeAvatar();
+            
+            // Use data from window.dashboardData
+            if (window.dashboardData && window.dashboardData.currentDate) {
+                currentDate = window.dashboardData.currentDate;
+                generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+            }
+        });
     </script>
+    
+    <!-- External JavaScript -->
+    <script src="/js/dentist/dashboard.js"></script>
 </body>
 </html>

@@ -836,7 +836,7 @@ let selectedDuration = null;
 }
 
     async function createDoctorCard(doctor, availableSlots){
-  const initials = doctor.fname.charAt(0) + doctor.lname.charAt(0);
+  const initials = doctor.email ? doctor.email.charAt(0).toUpperCase() : 'D';
   const license = doctor.license_no || doctor.license_number || doctor.licenseNo || '';
 
   let slots = `<span class="time-slot">${availableSlots} ช่วงเวลาว่าง</span>`;
@@ -1003,7 +1003,7 @@ let selectedDuration = null;
     function initializeStep2(){
   document.getElementById('selectedDoctorName').textContent = `ทพ./ทพญ. ${selectedDoctor.name}`;
   document.getElementById('selectedDoctorSpecialty').textContent = selectedDoctor.specialty;
-  document.getElementById('selectedDoctorAvatar').textContent = selectedDoctor.fname.charAt(0)+selectedDoctor.lname.charAt(0);
+  document.getElementById('selectedDoctorAvatar').textContent = selectedDoctor.email ? selectedDoctor.email.charAt(0).toUpperCase() : 'D';
   const lic = selectedDoctor.license || '';
   const licEl = document.getElementById('selectedDoctorLicense');
   if(lic){ licEl.textContent = `ใบอนุญาต: ${lic}`; licEl.style.display='block'; } else { licEl.style.display='none'; }

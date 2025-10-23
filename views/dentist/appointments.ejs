@@ -882,7 +882,7 @@
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
                                 <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์" onerror="showInitials()">
                             <% } else { %>
-                                <%= (dentist && dentist.fname) ? dentist.fname.charAt(0).toUpperCase() + (dentist.lname ? dentist.lname.charAt(0).toUpperCase() : '') : 'ท' %>
+                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'ท' %>
                             <% } %>
                         </div>
                         <div class="user-details">
@@ -1013,7 +1013,7 @@
                                         <% } else if (appointment.queue_status === 'cancel') { %>
                                             <i class="fas fa-times-circle"></i> ยกเลิก
                                         <% } else if (appointment.queue_status === 'auto_cancelled') { %>
-                                            <i class="fas fa-exclamation-triangle"></i> ยกเลิกอัตโนมัติ
+                                            <i class="fas fa-times-circle"></i> ยกเลิกแล้ว
                                         <% } else { %>
                                             <%= appointment.queue_status %>
                                         <% } %>
@@ -1090,18 +1090,17 @@
             }
             
             if (!avatarEl.textContent.trim()) {
-                const userName = document.getElementById('userName').textContent;
-                const nameParts = userName.replace('ทพ. ', '').split(' ');
-                const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
+                // Use email initial instead of name initials
+                const emailInitial = '<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : "ท" %>';
                 
                 const blueColors = [
                     '#4A90E2', '#2196F3', '#03A9F4', '#00BCD4',
                     '#5DADE2', '#3498DB', '#2980B9', '#1976D2'
                 ];
-                const colorIndex = userName.length % blueColors.length;
+                const colorIndex = emailInitial.length % blueColors.length;
                 
                 avatarEl.style.background = blueColors[colorIndex];
-                avatarEl.textContent = initials;
+                avatarEl.textContent = emailInitial;
             }
         }
 
@@ -1110,12 +1109,11 @@
             const img = avatar.querySelector('img');
             if (img) {
                 img.remove();
-                const userName = document.getElementById('userName').textContent;
-                const nameParts = userName.replace('ทพ. ', '').split(' ');
-                const initials = nameParts.map(part => part.charAt(0)).join('').substring(0, 2).toUpperCase();
+                // Use email initial instead of name initials
+                const emailInitial = '<%= dentist.email ? dentist.email.charAt(0).toUpperCase() : "ท" %>';
                 
                 avatar.style.background = '#4A90E2';
-                avatar.textContent = initials;
+                avatar.textContent = emailInitial;
             }
         }
 

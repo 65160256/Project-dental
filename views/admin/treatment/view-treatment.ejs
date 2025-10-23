@@ -653,7 +653,7 @@
                 dentistList.innerHTML = '<div class="no-dentists">ยังไม่มีทันตแพทย์ที่รับผิดชอบ</div>';
             } else {
                 dentistList.innerHTML = dentists.map(dentist => {
-                    const initial = dentist.fname ? dentist.fname.charAt(0).toUpperCase() : 'D';
+                    const initial = dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D';
                     return `
                         <div class="dentist-card">
                             <div class="dentist-avatar">${initial}</div>

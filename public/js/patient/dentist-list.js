@@ -148,14 +148,14 @@
 
     function displayProfile(dentist) {
       const content = document.getElementById('profileContent');
-      const initials = (dentist.full_name || '').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
-      const hasPhoto = dentist.photo && dentist.photo !== 'default-doctor.png';
+      const emailInitial = dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D';
+      const hasPhoto = dentist.photo && dentist.photo !== 'default-doctor.png' && dentist.photo !== 'default-avatar.png' && dentist.photo !== 'null' && dentist.photo !== '';
       content.innerHTML = `
         <div style="text-align:center;margin-bottom:30px;">
           <div style="width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg, var(--primary), var(--primary-2));margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:4rem;box-shadow:0 8px 20px rgba(74,144,226,.3); overflow:hidden;">
             ${hasPhoto
-              ? `<img src="/uploads/${encodeHtml(dentist.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;" loading="lazy" decoding="async" onerror="this.remove();const p=this.parentElement;p.innerHTML='<span style=&quot;font-size:2.2rem;font-weight:800;&quot;>${encodeHtml(initials || 'DR')}</span>';">`
-              : `<span style="font-size:2.2rem;font-weight:800;">${encodeHtml(initials || 'DR')}</span>`}
+              ? `<img src="/uploads/${encodeHtml(dentist.photo)}" alt="" style="width:100%;height:100%;object-fit:cover;" loading="lazy" decoding="async" onerror="this.remove();const p=this.parentElement;p.innerHTML='<span style=&quot;font-size:2.2rem;font-weight:800;&quot;>${encodeHtml(emailInitial)}</span>';">`
+              : `<span style="font-size:2.2rem;font-weight:800;">${encodeHtml(emailInitial)}</span>`}
           </div>
           <h2>ทพ. ${escapeHtml(dentist.full_name || '')}</h2>
           <p style="color: var(--primary); font-weight:700; font-size:16px;">${escapeHtml(dentist.specialty || '')}</p>
