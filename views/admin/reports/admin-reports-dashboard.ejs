@@ -1859,22 +1859,23 @@
 
         async function refreshDashboardData() {
             try {
-                // Get current active period
-                const activeButton = document.querySelector('.filter-btn.active');
-                const period = activeButton ? activeButton.dataset.period : 'month';
-                
-                // Update all statistics
+                // Use stored current period or default to month
+                const period = currentPeriod || 'month';
+
+                console.log('🔄 Refreshing dashboard data with period:', period);
+
+                // Update all statistics using the current period
                 await updateStats(period);
-                
+
                 // Update upcoming appointments
                 await refreshUpcomingAppointments();
-                
+
                 // Update today's doctors
                 await refreshTodaysDoctors();
-                
-                console.log('Dashboard data refreshed successfully');
+
+                console.log('✅ Dashboard data refreshed successfully');
             } catch (error) {
-                console.error('Error refreshing dashboard data:', error);
+                console.error('❌ Error refreshing dashboard data:', error);
             }
         }
 
@@ -2479,35 +2480,54 @@
         function setupEventListeners() {
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const section = this.closest('.appointment-report-section, .treatments-section, .doctor-stats-section');
-                    if (section) {
-                        section.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-                        const period = this.dataset.period;
-                        updateStats(period);
-                    }
+                    const period = this.dataset.period;
+
+                    console.log('🔘 Filter button clicked, period:', period);
+
+                    // Update ALL filter buttons across all sections to maintain consistent state
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('active');
+                        if (b.dataset.period === period) {
+                            b.classList.add('active');
+                        }
+                    });
+
+                    // Update statistics
+                    updateStats(period);
                 });
             });
         }
 
         async function updateStats(period) {
             try {
+                console.log('🔄 Updating stats for period:', period);
+
+                // Store current period
+                currentPeriod = period;
+
                 // Update appointment statistics
                 const appointmentResponse = await fetch(`/admin/api/dashboard/appointments?period=${period}`);
                 if (appointmentResponse.ok) {
                     const appointmentData = await appointmentResponse.json();
+                    console.log('📊 Appointment data:', appointmentData);
                     if (appointmentData.success) {
                         updateAppointmentDisplay(appointmentData.appointments);
                     }
+                } else {
+                    console.error('Failed to fetch appointment data:', appointmentResponse.status);
                 }
 
                 // Update treatment statistics
                 const treatmentResponse = await fetch(`/admin/api/dashboard/treatments?period=${period}`);
                 if (treatmentResponse.ok) {
                     const treatmentData = await treatmentResponse.json();
+                    console.log('💊 Treatment data:', treatmentData);
                     if (treatmentData.success) {
-                        updateTreatmentChart(treatmentData.treatments);
+                        updateTreatmentChart(treatmentData.treatments || []);
                     }
+                } else {
+                    console.error('Failed to fetch treatment data:', treatmentResponse.status);
+                    updateTreatmentChart([]);
                 }
 
                 // Update doctor statistics
@@ -2516,7 +2536,8 @@
                 // Update dashboard summary
                 await updateDashboardSummary();
 
-                showToast(`อัพเดทสถิติสำหรับ${period === 'day' ? 'วัน' : period === 'week' ? 'สัปดาห์' : 'เดือน'}แล้ว`, 'success');
+                const periodText = period === 'day' ? 'วัน' : period === 'week' ? 'สัปดาห์' : 'เดือน';
+                showToast(`อัพเดทสถิติสำหรับ${periodText}แล้ว`, 'success');
             } catch (error) {
                 console.error('เกิดข้อผิดพลาดในการอัพเดทสถิติ:', error);
                 showToast('ไม่สามารถอัพเดทสถิติได้', 'error');
@@ -2535,8 +2556,14 @@
 
         function updateTreatmentChart(treatments) {
             if (treatmentChart) {
-                treatmentChart.data.labels = treatments.map(item => item.treatment_name);
-                treatmentChart.data.datasets[0].data = treatments.map(item => item.count);
+                // Handle empty data case
+                if (!treatments || treatments.length === 0) {
+                    treatmentChart.data.labels = ['ไม่มีข้อมูล'];
+                    treatmentChart.data.datasets[0].data = [0];
+                } else {
+                    treatmentChart.data.labels = treatments.map(item => item.treatment_name);
+                    treatmentChart.data.datasets[0].data = treatments.map(item => item.count);
+                }
                 treatmentChart.update();
             }
         }
@@ -2547,6 +2574,8 @@
                 const response = await fetch(`/admin/api/dashboard/appointments?period=${period}`);
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('👨‍⚕️ Doctor stats data:', data);
+
                     if (data.success && data.appointments) {
                         // Group appointments by doctor
                         const doctorStats = {};
@@ -2571,14 +2600,29 @@
 
                         // Update doctor chart
                         if (doctorStatsChart) {
-                            doctorStatsChart.data.labels = doctorArray.map(doctor => 'ทพ. ' + doctor.doctor_name);
-                            doctorStatsChart.data.datasets[0].data = doctorArray.map(doctor => doctor.total_appointments);
+                            if (doctorArray.length === 0) {
+                                doctorStatsChart.data.labels = ['ไม่มีข้อมูล'];
+                                doctorStatsChart.data.datasets[0].data = [0];
+                            } else {
+                                doctorStatsChart.data.labels = doctorArray.map(doctor => 'ทพ. ' + doctor.doctor_name);
+                                doctorStatsChart.data.datasets[0].data = doctorArray.map(doctor => doctor.total_appointments);
+                            }
                             doctorStatsChart.update();
                         }
 
                         // Update doctor table
                         createDoctorSummaryTable(doctorArray);
+                    } else {
+                        // No data case
+                        if (doctorStatsChart) {
+                            doctorStatsChart.data.labels = ['ไม่มีข้อมูล'];
+                            doctorStatsChart.data.datasets[0].data = [0];
+                            doctorStatsChart.update();
+                        }
+                        createDoctorSummaryTable([]);
                     }
+                } else {
+                    console.error('Failed to fetch doctor stats:', response.status);
                 }
             } catch (error) {
                 console.error('Error updating doctor stats:', error);

@@ -546,14 +546,20 @@ class ReportAdminModel {
   static async getAppointmentStatsAPI(params) {
     try {
       const { period = 'month', status } = params;
-      
+
       let dateFilter = '';
       let queryParams = [];
-      
-      if (period === 'today') {
+
+      // Support both 'day' and 'today' for compatibility
+      if (period === 'day' || period === 'today') {
         dateFilter = 'DATE(time) = CURDATE()';
       } else if (period === 'week') {
-        dateFilter = 'DATE(time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
+        // Current week (Monday to Sunday)
+        // DAYOFWEEK: 1=Sunday, 2=Monday, ..., 7=Saturday
+        // Calculate days since Monday: (DAYOFWEEK(CURDATE()) + 5) % 7
+        dateFilter = `DATE(time) BETWEEN
+          DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) + 5) % 7 DAY)
+          AND DATE_ADD(DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) + 5) % 7 DAY), INTERVAL 6 DAY)`;
       } else if (period === 'month') {
         dateFilter = 'MONTH(time) = MONTH(CURDATE()) AND YEAR(time) = YEAR(CURDATE())';
       }
@@ -581,12 +587,20 @@ class ReportAdminModel {
       }
 
       const [appointments] = await db.execute(`
-        SELECT 
+        SELECT
           q.queue_id,
           q.time,
           q.queue_status,
+          q.patient_id,
+          p.fname as patient_fname,
+          p.lname as patient_lname,
           CONCAT(p.fname, ' ', p.lname) as patient_name,
+          qd.dentist_id,
+          d.fname as dentist_fname,
+          d.lname as dentist_lname,
           CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          d.specialty,
+          qd.treatment_id,
           t.treatment_name
         FROM queue q
         JOIN patient p ON q.patient_id = p.patient_id
@@ -615,12 +629,18 @@ class ReportAdminModel {
   static async getTreatmentStatsAPI(params) {
     try {
       const { period = 'month' } = params;
-      
+
       let dateFilter = '';
-      if (period === 'today') {
+      // Support both 'day' and 'today' for compatibility
+      if (period === 'day' || period === 'today') {
         dateFilter = 'AND DATE(q.time) = CURDATE()';
       } else if (period === 'week') {
-        dateFilter = 'AND DATE(q.time) BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()';
+        // Current week (Monday to Sunday)
+        // DAYOFWEEK: 1=Sunday, 2=Monday, ..., 7=Saturday
+        // Calculate days since Monday: (DAYOFWEEK(CURDATE()) + 5) % 7
+        dateFilter = `AND DATE(q.time) BETWEEN
+          DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) + 5) % 7 DAY)
+          AND DATE_ADD(DATE_SUB(CURDATE(), INTERVAL (DAYOFWEEK(CURDATE()) + 5) % 7 DAY), INTERVAL 6 DAY)`;
       } else if (period === 'month') {
         dateFilter = 'AND MONTH(q.time) = MONTH(CURDATE()) AND YEAR(q.time) = YEAR(CURDATE())';
       } else if (period === 'year') {
@@ -628,13 +648,14 @@ class ReportAdminModel {
       }
 
       const [treatmentStats] = await db.execute(`
-        SELECT 
+        SELECT
           t.treatment_name,
           COUNT(q.queue_id) as count,
           COUNT(CASE WHEN q.queue_status = 'confirm' THEN 1 END) as confirmed_count
         FROM treatment t
-        LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
-        LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id ${dateFilter}
+        INNER JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
+        INNER JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
+        WHERE 1=1 ${dateFilter}
         GROUP BY t.treatment_id, t.treatment_name
         HAVING count > 0
         ORDER BY count DESC
