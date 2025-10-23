@@ -1025,7 +1025,7 @@ class QueueModel {
         t.treatment_name,
         t.duration,
         th.diagnosis as treatment_diagnosis,
-        th.followUpdate as next_appointment_detail,
+        th.followUpdate,
         qd.date
       FROM queue q
       JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id

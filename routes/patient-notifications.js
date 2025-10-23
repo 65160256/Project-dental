@@ -2,28 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('../controller/notification.controller');
+const { requirePatient } = require('../middlewares/patient.middleware');
 
-// Middleware to check if user is logged in as patient
-const isPatientLoggedIn = (req, res, next) => {
-  const userId = req.session?.userId || req.session?.user?.user_id;
-  const roleId = req.session?.role_id || req.session?.role || req.session?.user?.role_id;
-
-  console.log('🔐 Patient Notification Auth Check:', {
-    userId,
-    roleId,
-    sessionKeys: Object.keys(req.session || {})
-  });
-
-  if (userId && roleId === 3) {
-    next();
-  } else {
-    console.log('❌ Unauthorized access to patient notifications');
-    res.status(401).json({ success: false, error: 'กรุณาเข้าสู่ระบบ' });
-  }
-};
-
-// Apply middleware to all routes
-router.use(isPatientLoggedIn);
+// Apply patient authentication middleware to all routes
+router.use(requirePatient);
 
 // ========== API Routes ==========
 
