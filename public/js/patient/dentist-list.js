@@ -178,10 +178,6 @@
             <p>${escapeHtml(dentist.specialty || '')}</p>
           </div>
         </div>
-        <div class="credential" style="margin-bottom:20px;">
-          <i class="fas fa-clock"></i>
-          <span>ประสบการณ์: 5+ ปี</span>
-        </div>
         <div style="text-align:center;margin-top:30px;">
           <button onclick="makeAppointment(${Number(dentist.dentist_id)||0}, '${escapeJsString(dentist.full_name || "ทันตแพทย์")}')"
                   class="make-appointment-btn" style="font-size:16px;padding:15px 30px;">

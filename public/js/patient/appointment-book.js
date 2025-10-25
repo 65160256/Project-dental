@@ -8,7 +8,8 @@ let doctorsData = [];
 let treatmentsData = [];
 let filteredTreatmentId = '';
 let calendarData = {};
-let currentPatient = { fname: '', lname: '' };
+// ข้อมูลผู้ป่วยจะถูกโหลดจาก window.patientData ที่ส่งมาจากเซสชัน
+let currentPatient = { fname: '', lname: '', email: '' };
 
 // Initialize Page
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,7 +21,17 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializePage() {
   try {
     showToast('กำลังโหลดระบบจองนัดหมาย...', 'info');
-    await loadPatientInfo();
+    
+    // โหลดข้อมูลผู้ป่วยจาก window.patientData
+    if (window.patientData) {
+      currentPatient = {
+        fname: window.patientData.fname || '',
+        lname: window.patientData.lname || '',
+        email: window.patientData.email || ''
+      };
+      console.log('✅ โหลดข้อมูลผู้ป่วยจากเซสชัน:', currentPatient);
+    }
+    
     await loadTreatments();
     await loadCalendarData();
     generateCalendar();
@@ -31,23 +42,7 @@ async function initializePage() {
   }
 }
 
-// Load Patient Info
-async function loadPatientInfo() {
-  try {
-    const response = await fetch('/patient/api/my-profile');
-    const data = await response.json();
-    if (data.success) {
-      currentPatient = { fname: data.patient.fname, lname: data.patient.lname };
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = `${currentPatient.fname} ${currentPatient.lname}`;
-      const userAvatar = document.getElementById('userAvatar');
-      if (userAvatar) userAvatar.textContent = currentPatient.email ? currentPatient.email.charAt(0).toUpperCase() : 'U';
-      console.log('✅ โหลดข้อมูลผู้ป่วย:', currentPatient);
-    }
-  } catch (error) {
-    console.error('❌ เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ป่วย:', error);
-  }
-}
+// ข้อมูลผู้ป่วยถูกโหลดจากเซสชันแล้ว ไม่ต้องเรียก API
 
 // Load Treatments
 async function loadTreatments() {

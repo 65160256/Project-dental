@@ -295,15 +295,15 @@
                   <label for="specialty">สาขา/ความชำนาญ <span class="required">*</span></label>
                   <select id="specialty" name="specialty" class="form-control" required>
                     <option value="">เลือกสาขา</option>
-                    <option value="General Dentistry">ทันตกรรมทั่วไป</option>
-                    <option value="Orthodontics">จัดฟัน</option>
-                    <option value="Oral Surgery">ศัลยกรรมช่องปาก</option>
-                    <option value="Endodontics">รักษารากฟัน</option>
-                    <option value="Periodontics">ปริทันตวิทยา</option>
-                    <option value="Pediatric Dentistry">ทันตกรรมเด็ก</option>
-                    <option value="Prosthodontics">ใส่ฟัน/ประดิษฐ์</option>
-                    <option value="Oral Pathology">พยาธิวิทยาช่องปาก</option>
-                    <option value="Tooth Extraction">ถอนฟัน</option>
+                                        <option value="ทันตกรรมทั่วไป">ทันตกรรมทั่วไป</option>
+                                        <option value="จัดฟัน">จัดฟัน</option>
+                                        <option value="ศัลยกรรมช่องปาก">ศัลยกรรมช่องปาก</option>
+                                        <option value="รักษาราก">รักษาราก</option>
+                                        <!-- <option value="Periodontics">ปริทันตวิทยา</option> -->
+                                        <!-- <option value="Pediatric Dentistry">ทันตกรรมเด็ก</option> -->
+                                        <option value="ฟันปลอม">ฟันปลอม</option>
+                                        <!-- <option value="Oral Pathology">พยาธิวิทยาช่องปาก</option> -->
+                                        <option value="ถอนฟัน">ถอนฟัน</option>
                   </select>
                   <div class="error-message">กรุณาเลือกสาขา</div>
                 </div>
@@ -878,14 +878,9 @@
     function showConfirmationModal(){
       const modal = document.getElementById('confirmModal');
       const msg = document.getElementById('modalMessage');
-      const changed = Object.keys(currentData).filter(k=> currentData[k] !== (originalData[k]||''));
       
       msg.innerHTML = `
-        <p>คุณกำลังบันทึกการเปลี่ยนแปลงในฟิลด์ต่อไปนี้:</p>
-        <ul style="margin:10px 0;padding-left:20px;">
-          ${changed.map(f=>`<li><strong>${formatFieldName(f)}</strong></li>`).join('')}
-        </ul>
-        <p>ยืนยันที่จะบันทึกหรือไม่?</p>`;
+        <p>คุณจะยืนยันการบันทึกใช่ไหม?</p>`;
       modal.style.display='flex';
     }
 
@@ -1109,15 +1104,10 @@
       });
     }
 
-    // ป้องกันการออกโดยไม่บันทึก
+    // ป้องกันการออกโดยไม่บันทึก - ลบออกเพื่อไม่ให้มีการยืนยันซ้ำซ้อน
     function setupUnsavedChangesWarning(){
-      window.addEventListener('beforeunload', e=>{
-        if(hasChanges && !isSubmitting){ 
-          e.preventDefault(); 
-          e.returnValue='คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก'; 
-          return 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก';
-        }
-      });
+      // ลบ beforeunload warning เพื่อไม่ให้มีการยืนยันซ้ำซ้อน
+      // ระบบจะใช้เฉพาะการยืนยันก่อนบันทึกเท่านั้น
     }
 
     // Event listeners

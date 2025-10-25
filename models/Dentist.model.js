@@ -671,8 +671,6 @@ class DentistModel {
         d.education,
         d.phone,
         d.photo,
-        d.work_start,
-        d.work_end,
         u.email,
         (
           SELECT COUNT(*)

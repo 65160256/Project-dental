@@ -883,11 +883,10 @@ class PatientModel {
           d.photo,
           d.specialty
        FROM dentist d
-       JOIN dentist_treatment dt ON d.dentist_id = dt.dentist_id
-       JOIN available_slots s ON dt.dentist_treatment_id = s.dentist_treatment_id
-       WHERE s.date = CURDATE()
-       AND s.is_available = 0
-       AND s.dentist_treatment_id IS NOT NULL`
+       JOIN dentist_schedule ds ON d.dentist_id = ds.dentist_id
+       WHERE ds.schedule_date = CURDATE()
+       AND ds.status = 'working'
+       ORDER BY name`
     );
 
     return {

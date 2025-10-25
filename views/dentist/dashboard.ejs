@@ -123,8 +123,7 @@
         .stat-card.completed { --card-color: #6366f1; --card-color-light: #818cf8; }
         .stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; background: linear-gradient(135deg, var(--card-color), var(--card-color-light)); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .stat-trend { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .stat-trend.down { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .stat-trend { display: none; }
         .stat-number { font-size: 36px; font-weight: 700; margin-bottom: 8px; color: #333; background: linear-gradient(135deg, var(--card-color), var(--card-color-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .stat-label { color: #666; font-size: 14px; font-weight: 500; }
 
@@ -484,22 +483,6 @@
                         </div>
                     </div>
 
-                    <!-- Working Hours -->
-                    <div class="panel-card">
-                        <div class="working-hours">
-                            <h4><i class="fas fa-clock"></i> เวลาทำงานวันนี้</h4>
-                            <div class="time">
-                                <i class="fas fa-business-time"></i>
-                                <span>
-                                    <%= dentist.work_start ? dentist.work_start.substring(0,5) : '08:00' %> - 
-                                    <%= dentist.work_end ? dentist.work_end.substring(0,5) : '16:00' %>
-                                </span>
-                            </div>
-                            <div class="specialty">
-                                <i class="fas fa-tooth"></i> ความเชี่ยวชาญ: <%= dentist.specialty || 'ทันตกรรมทั่วไป' %>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

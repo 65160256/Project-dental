@@ -1444,19 +1444,19 @@
                             <button class="add-appointment-btn" onclick="addNewAppointment()">+ เพิ่มนัดหมาย</button>
                         </div>
                         <div class="appointment-summary">
-                            <div class="summary-card confirmed" onclick="showAppointmentDetails('confirmed')">
+                            <div class="summary-card confirmed">
                                 <div class="summary-number" id="confirmedCount"><%= dashboardData.appointmentSummary.confirmed %></div>
                                 <div class="summary-label">ยืนยันแล้ว</div>
                             </div>
-                            <div class="summary-card pending" onclick="showAppointmentDetails('pending')">
+                            <div class="summary-card pending">
                                 <div class="summary-number" id="pendingCount"><%= dashboardData.appointmentSummary.pending %></div>
                                 <div class="summary-label">รอยืนยัน</div>
                             </div>
-                            <div class="summary-card cancelled" onclick="showAppointmentDetails('cancelled')">
+                            <div class="summary-card cancelled">
                                 <div class="summary-number" id="cancelledCount"><%= dashboardData.appointmentSummary.cancelled %></div>
                                 <div class="summary-label">ยกเลิกแล้ว</div>
                             </div>
-                            <div class="summary-card completed" onclick="showAppointmentDetails('completed')">
+                            <div class="summary-card completed">
                                 <div class="summary-number" id="completedCount"><%= dashboardData.appointmentSummary.completed || 0 %></div>
                                 <div class="summary-label">เสร็จสิ้นแล้ว - ปิดการรักษา</div>
                             </div>

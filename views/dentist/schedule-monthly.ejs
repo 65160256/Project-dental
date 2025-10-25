@@ -106,24 +106,209 @@
             z-index: 50;
         }
 
+
         .user-section {
             display: flex;
             align-items: center;
             gap: 15px;
         }
 
-        .notification-icon {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
+        /* Notification Bell */
+        .notification-bell-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .notification-bell-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 20px;
             color: #666;
-            transition: color 0.3s ease;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
-        .notification-icon:hover {
-            color: #4A90E2;
+        .notification-bell-btn:hover {
+            background: #f0f0f0;
+            color: #667eea;
         }
 
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+
+        .notification-badge.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 380px;
+            max-height: 500px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideDown 0.3s ease;
+            display: none;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .mark-all-read-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .mark-all-read-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .notification-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #f0f4ff;
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .notification-content {
+            display: inline-block;
+            width: calc(100% - 40px);
+            vertical-align: middle;
+            padding-left: 20px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+
+        .view-all-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        .notification-loading, .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .notification-empty i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.3;
+            display: block;
+        }
+
+        /* Profile Dropdown */
         .profile-dropdown {
             position: relative;
         }
@@ -133,21 +318,35 @@
             align-items: center;
             cursor: pointer;
             gap: 10px;
+            transition: opacity 0.3s ease;
+        }
+
+        .user-info:hover {
+            opacity: 0.8;
         }
 
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            background: #4A90E2;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 16px;
+            font-weight: 600;
             text-transform: uppercase;
-            border: 2px solid rgba(74, 144, 226, 0.2);
+            letter-spacing: -0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        .avatar:hover {
+            transform: scale(1.08);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
         }
 
         .avatar img {
@@ -155,6 +354,33 @@
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
+        }
+
+        .avatar[data-color="0"] { background: linear-gradient(135deg, #F44336, #E91E63); }
+        .avatar[data-color="1"] { background: linear-gradient(135deg, #9C27B0, #673AB7); }
+        .avatar[data-color="2"] { background: linear-gradient(135deg, #3F51B5, #2196F3); }
+        .avatar[data-color="3"] { background: linear-gradient(135deg, #00BCD4, #009688); }
+        .avatar[data-color="4"] { background: linear-gradient(135deg, #4CAF50, #8BC34A); }
+        .avatar[data-color="5"] { background: linear-gradient(135deg, #FF9800, #FF5722); }
+        .avatar[data-color="6"] { background: linear-gradient(135deg, #795548, #607D8B); }
+        .avatar[data-color="7"] { background: linear-gradient(135deg, #E91E63, #F44336); }
+        .avatar[data-color="8"] { background: linear-gradient(135deg, #2196F3, #03A9F4); }
+        .avatar[data-color="9"] { background: linear-gradient(135deg, #FF5722, #FF9800); }
+
+        .user-details strong {
+            display: block;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .user-details small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .dropdown-arrow {
+            color: #666;
+            font-size: 12px;
         }
 
         .dropdown-menu {
@@ -168,6 +394,12 @@
             min-width: 180px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             z-index: 1000;
+            animation: slideDown 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
         }
 
         .dropdown-menu a {
@@ -176,10 +408,18 @@
             text-decoration: none;
             color: #333;
             font-size: 13px;
+            transition: background 0.2s ease;
         }
 
         .dropdown-menu a:hover {
             background-color: #f8f9fa;
+        }
+
+        .dropdown-menu hr {
+            margin: 5px 0;
+            border: none;
+            height: 1px;
+            background: #e1e5e9;
         }
 
         /* Content */
@@ -906,25 +1146,53 @@
         <div class="top-bar">
             <div></div>
             <div class="user-section">
-                <i class="fas fa-bell notification-icon" title="การแจ้งเตือน"></i>
-                <div class="profile-dropdown">
+                <!-- Notification Bell -->
+                <div class="notification-bell-container">
+                    <button class="notification-bell-btn" id="notificationBellBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h3>การแจ้งเตือน</h3>
+                            <button class="mark-all-read-btn" id="markAllReadBtn">
+                                <i class="fas fa-check-double"></i> อ่านทั้งหมด
+                            </button>
+                        </div>
+                        
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-loading">
+                                <i class="fas fa-spinner fa-spin"></i> กำลังโหลด...
+                            </div>
+                        </div>
+                        
+                        <div class="notification-footer">
+                            <a href="/dentist/notifications" class="view-all-link">
+                                ดูทั้งหมด <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-dropdown" id="profileDropdown">
                     <div class="user-info" onclick="toggleDropdown()">
-                        <div class="avatar">
+                        <div class="avatar no-photo" id="userAvatar">
                             <% if (dentist && dentist.photo && dentist.photo !== 'default-avatar.png') { %>
-                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์">
+                                <img src="/uploads/<%= dentist.photo %>" alt="โปรไฟล์" onerror="handleImageError(this)">
                             <% } else { %>
-                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'ท' %>
+                                <%= dentist.email ? dentist.email.charAt(0).toUpperCase() : 'D' %>
                             <% } %>
                         </div>
                         <div class="user-details">
-                            <strong>สวัสดี ทพ. <%= dentist ? dentist.fname + ' ' + dentist.lname : 'ทันตแพทย์' %></strong>
+                            <strong>ทพ. <%= dentist.fname %> <%= dentist.lname %></strong>
                             <small>ทันตแพทย์</small>
                         </div>
-                        <i class="fas fa-caret-down"></i>
+                        <i class="fas fa-caret-down dropdown-arrow"></i>
                     </div>
-                    <div class="dropdown-menu" id="profileDropdown">
+                    <div class="dropdown-menu" id="dropdownMenu">
                         <a href="/dentist/profile"><i class="fas fa-user"></i> โปรไฟล์ของฉัน</a>
-                        <a href="/dentist/profile/edit"><i class="fas fa-edit"></i> แก้ไขโปรไฟล์</a>
+                        <a href="/dentist/profile/change-password"><i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน</a>
                         <hr />
                         <a href="/logout"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
                     </div>
@@ -1620,14 +1888,14 @@
         }
 
         function toggleDropdown() {
-            const menu = document.getElementById('profileDropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
         }
 
         document.addEventListener('click', function(e) {
-            const prof = document.querySelector('.profile-dropdown');
-            if (prof && !prof.contains(e.target)) {
-                document.getElementById('profileDropdown').style.display = 'none';
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (!profileDropdown.contains(e.target)) {
+                document.getElementById('dropdownMenu').classList.remove('show');
             }
         });
 
@@ -1637,6 +1905,307 @@
                 closeModal();
             }
         }
+
+        // Notification System
+        class NotificationSystem {
+            constructor() {
+                this.pollInterval = 30000; // 30 วินาที
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.isOpen = false;
+                this.init();
+            }
+
+            init() {
+                this.attachEventListeners();
+                this.loadNotifications();
+                this.startPolling();
+            }
+
+            attachEventListeners() {
+                // Toggle dropdown
+                const bellBtn = document.getElementById('notificationBellBtn');
+                if (bellBtn) {
+                    bellBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('Notification bell clicked');
+                        this.toggleDropdown();
+                    });
+                } else {
+                    console.error('Notification bell button not found');
+                }
+
+                // Mark all as read
+                document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
+                    this.markAllAsRead();
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const container = document.querySelector('.notification-bell-container');
+                    if (container && !container.contains(e.target)) {
+                        this.closeDropdown();
+                    }
+                });
+            }
+
+            async loadNotifications() {
+                try {
+                    const response = await fetch('/dentist/api/notifications?limit=5');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.notifications = data.notifications;
+                        this.unreadCount = data.unread || 0;
+                        this.updateBadge();
+                        this.renderNotifications();
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการโหลดการแจ้งเตือน:', error);
+                }
+            }
+
+            async loadUnreadCount() {
+                try {
+                    const response = await fetch('/dentist/api/notifications/unread-count?userType=dentist');
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.unreadCount = data.unread_count || 0;
+                        this.updateBadge();
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการโหลดจำนวนที่ยังไม่อ่าน:', error);
+                }
+            }
+
+            updateBadge() {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (this.unreadCount > 0) {
+                        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+                        badge.classList.add('show');
+                    } else {
+                        badge.classList.remove('show');
+                    }
+                }
+            }
+
+            renderNotifications() {
+                const list = document.getElementById('notificationList');
+                if (!list) return;
+
+                if (this.notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="notification-empty">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>ไม่มีการแจ้งเตือน</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = this.notifications.map(notif => this.createNotificationHTML(notif)).join('');
+
+                // Add click events
+                list.querySelectorAll('.notification-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        this.handleNotificationClick(this.notifications[index]);
+                    });
+                });
+            }
+
+            createNotificationHTML(notif) {
+                const icon = this.getNotificationIcon(notif.type);
+                const unreadClass = notif.is_read ? '' : 'unread';
+
+                return `
+                    <div class="notification-item ${unreadClass}" data-id="${notif.id}">
+                        <span class="notification-icon">${icon}</span>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-message">${notif.message}</div>
+                            <div class="notification-time">${notif.time_ago || this.getTimeAgo(notif.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    'new_appointment': '🆕',
+                    'appointment_confirmed': '✅',
+                    'appointment_cancelled': '❌',
+                    'appointment_reminder': '⏰',
+                    'treatment_completed': '📝',
+                    'default': '🔔'
+                };
+                return icons[type] || icons.default;
+            }
+
+            getTimeAgo(date) {
+                const now = new Date();
+                const past = new Date(date);
+                const diffMs = now - past;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) return 'เมื่อสักครู่';
+                if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+                if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+                if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+                
+                return past.toLocaleDateString('th-TH', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+
+            async handleNotificationClick(notif) {
+                // Mark as read
+                if (!notif.is_read) {
+                    await this.markAsRead(notif.id);
+                }
+
+                // Navigate to related page
+                if (notif.queue_id) {
+                    window.location.href = `/dentist/appointments/${notif.queue_id}`;
+                }
+            }
+
+            async markAsRead(notifId) {
+                try {
+                    const response = await fetch(`/dentist/api/notifications/${notifId}/read`, {
+                        method: 'PUT'
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายว่าอ่านแล้ว:', error);
+                }
+            }
+
+            async markAllAsRead() {
+                try {
+                    const response = await fetch('/dentist/api/notifications/mark-all-read?userType=dentist', {
+                        method: 'PUT'
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('อ่านการแจ้งเตือนทั้งหมดแล้ว', 'success');
+                        this.loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการทำเครื่องหมายอ่านทั้งหมด:', error);
+                }
+            }
+
+            toggleDropdown() {
+                this.isOpen = !this.isOpen;
+                const dropdown = document.getElementById('notificationDropdown');
+                
+                console.log('Toggle dropdown, isOpen:', this.isOpen);
+                console.log('Dropdown element:', dropdown);
+                
+                if (dropdown) {
+                    if (this.isOpen) {
+                        dropdown.style.display = 'block';
+                        dropdown.classList.add('show');
+                        console.log('Showing dropdown');
+                        this.loadNotifications();
+                    } else {
+                        dropdown.style.display = 'none';
+                        dropdown.classList.remove('show');
+                        console.log('Hiding dropdown');
+                    }
+                } else {
+                    console.error('Notification dropdown not found');
+                }
+            }
+
+            closeDropdown() {
+                this.isOpen = false;
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                    dropdown.classList.remove('show');
+                }
+            }
+
+            startPolling() {
+                // Poll for new notifications every 30 seconds
+                setInterval(() => {
+                    this.loadUnreadCount();
+                }, this.pollInterval);
+            }
+        }
+
+        // Avatar functions
+        function generateInitials(email) {
+            return email ? email.charAt(0).toUpperCase() : 'D';
+        }
+
+        function getColorFromName(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                hash = hash & hash;
+            }
+            return Math.abs(hash % 10);
+        }
+
+        function createGmailAvatar(containerElement, email, photoUrl, fullName = '') {
+            const initials = generateInitials(email);
+            const colorIndex = getColorFromName(email || 'default');
+            const hasPhoto = photoUrl && photoUrl !== '' && photoUrl !== 'default-avatar.png' && photoUrl !== null;
+            containerElement.setAttribute('data-color', colorIndex);
+            if (hasPhoto) {
+                const img = document.createElement('img');
+                img.src = `/uploads/${photoUrl}`;
+                img.alt = `ทพ. ${fullName}`;
+                img.onerror = function() { this.remove(); containerElement.textContent = initials; };
+                containerElement.innerHTML = '';
+                containerElement.appendChild(img);
+            } else {
+                containerElement.textContent = initials;
+            }
+        }
+
+        function initializeAvatar() {
+            const avatarEl = document.getElementById('userAvatar');
+            const fullName = `${dentist.fname} ${dentist.lname}`;
+            createGmailAvatar(avatarEl, dentist.email, dentist.photo, fullName);
+        }
+
+        // Handle image error
+        function handleImageError(img) {
+            img.style.display = 'none';
+            const initial = dentist?.email ? dentist.email.charAt(0).toUpperCase() : 'D';
+            img.parentElement.innerHTML = initial;
+        }
+
+
+        // Initialize notification system when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Initializing schedule page');
+            
+            // Initialize notification system
+            try {
+                window.notificationSystem = new NotificationSystem();
+                console.log('Notification system initialized');
+            } catch (error) {
+                console.error('Error initializing notification system:', error);
+            }
+            
+            // Initialize other components
+            initializeAvatar();
+        });
     </script>
 </body>
 </html>

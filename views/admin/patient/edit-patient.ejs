@@ -1632,17 +1632,8 @@
             const modal = document.getElementById('confirmModal');
             const message = document.getElementById('modalMessage');
             
-            const changedFields = Object.keys(currentData).filter(key => {
-                const originalKey = key === 'id_card' ? (originalData.id_card !== undefined ? 'id_card' : 'id_card') : key;
-                return currentData[key] !== (originalData[originalKey] || '');
-            });
-            
             message.innerHTML = `
-                <p>คุณกำลังจะบันทึกการเปลี่ยนแปลงในฟิลด์ต่อไปนี้:</p>
-                <ul style="margin: 10px 0; padding-left: 20px;">
-                    ${changedFields.map(field => `<li><strong>${formatFieldName(field)}</strong></li>`).join('')}
-                </ul>
-                <p>ข้อมูลของ ${originalData.fname} ${originalData.lname} จะถูกอัปเดต คุณแน่ใจหรือไม่?</p>
+                <p>คุณจะยืนยันการบันทึกใช่ไหม?</p>
             `;
             
             modal.style.display = 'flex';
@@ -1981,13 +1972,8 @@
             }
         });
 
-        window.addEventListener('beforeunload', function(e) {
-            if (hasChanges && !isSubmitting) {
-                e.preventDefault();
-                e.returnValue = 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการออก?';
-                return 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณแน่ใจหรือไม่ว่าต้องการออก?';
-            }
-        });
+        // ลบ beforeunload warning เพื่อไม่ให้มีการยืนยันซ้ำซ้อน
+        // ระบบจะใช้เฉพาะการยืนยันก่อนบันทึกเท่านั้น
 
         setInterval(() => {
             loadNotifications();

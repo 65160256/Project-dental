@@ -972,27 +972,8 @@
             const modal = document.getElementById('confirmModal');
             const message = document.getElementById('modalMessage');
             
-            const changedFields = [];
-            Object.keys(currentData).forEach(key => {
-                if (key === 'dentist_ids') {
-                    const current = Array.isArray(currentData[key]) ? currentData[key] : [];
-                    const original = Array.isArray(originalData[key]) ? originalData[key] : [];
-                    if (JSON.stringify(current.sort()) !== JSON.stringify(original.sort())) {
-                        changedFields.push('ทันตแพทย์ที่รับผิดชอบ');
-                    }
-                } else {
-                    if (currentData[key] !== (originalData[key] || '').toString()) {
-                        changedFields.push(formatFieldName(key));
-                    }
-                }
-            });
-            
             message.innerHTML = `
-                <p>คุณกำลังจะบันทึกการเปลี่ยนแปลงในฟิลด์:</p>
-                <ul style="margin: 10px 0; padding-left: 20px;">
-                    ${changedFields.map(field => `<li><strong>${field}</strong></li>`).join('')}
-                </ul>
-                <p>คุณแน่ใจหรือไม่?</p>
+                <p>คุณจะยืนยันการบันทึกใช่ไหม?</p>
             `;
             
             modal.style.display = 'flex';
@@ -1138,13 +1119,8 @@
             }
         });
 
-        window.addEventListener('beforeunload', function(e) {
-            if (hasChanges && !isSubmitting) {
-                e.preventDefault();
-                e.returnValue = 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก ต้องการออกจากหน้านี้หรือไม่?';
-                return e.returnValue;
-            }
-        });
+        // ลบ beforeunload warning เพื่อไม่ให้มีการยืนยันซ้ำซ้อน
+        // ระบบจะใช้เฉพาะการยืนยันก่อนบันทึกเท่านั้น
     </script>
 </body>
 </html>
