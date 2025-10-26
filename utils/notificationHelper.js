@@ -1,10 +1,41 @@
 // utils/notificationHelper.js
 const db = require('../config/db');
 
+// Helper function to validate database connection
+async function validateConnection() {
+  try {
+    await db.execute('SELECT 1');
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection error in notificationHelper:', error.message);
+    return false;
+  }
+}
+
+// Helper function to safely execute database queries
+async function safeExecute(query, params) {
+  try {
+    const isConnected = await validateConnection();
+    if (!isConnected) {
+      console.error('❌ Cannot create notification: Database not connected');
+      return null;
+    }
+    const [result] = await db.execute(query, params);
+    return result;
+  } catch (error) {
+    console.error('❌ Database query error:', error.message);
+    console.error('❌ Query:', query);
+    console.error('❌ Params:', params);
+    return null;
+  }
+}
+
 const NotificationHelper = {
   // สร้าง notification เมื่อมีการจองนัดหมายใหม่
   async createNewAppointmentNotification(appointmentId, patientId, dentistId) {
     try {
+      console.log('📢 Creating notification for appointment:', { appointmentId, patientId, dentistId });
+      
       const [patientData] = await db.execute(
         'SELECT fname, lname, phone FROM patient WHERE patient_id = ?',
         [patientId]
@@ -24,7 +55,11 @@ const NotificationHelper = {
       );
 
       if (patientData.length === 0 || dentistData.length === 0 || appointmentData.length === 0) {
-        console.error('ไม่สามารถสร้างการแจ้งเตือนได้: ข้อมูลไม่ครบถ้วน');
+        console.error('❌ ไม่สามารถสร้างการแจ้งเตือนได้: ข้อมูลไม่ครบถ้วน', {
+          patientData: patientData.length,
+          dentistData: dentistData.length,
+          appointmentData: appointmentData.length
+        });
         return;
       }
 
@@ -52,7 +87,7 @@ const NotificationHelper = {
       });
 
       // Notification for Admin
-      await db.execute(`
+      const adminResult = await safeExecute(`
         INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
         VALUES (?, ?, ?, ?, 0, 1)
       `, [
@@ -63,7 +98,7 @@ const NotificationHelper = {
       ]);
 
       // Notification for Dentist
-      await db.execute(`
+      const dentistResult = await safeExecute(`
         INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
         VALUES (?, ?, ?, ?, 0, 1)
       `, [
@@ -73,10 +108,19 @@ const NotificationHelper = {
         appointmentId
       ]);
 
-      console.log(`✅ สร้างการแจ้งเตือนนัดหมายสำเร็จ รหัส: ${appointmentId}`);
+      if (adminResult && dentistResult) {
+        console.log(`✅ สร้างการแจ้งเตือนนัดหมายสำเร็จ รหัส: ${appointmentId}`);
+      } else {
+        console.error('❌ ไม่สามารถสร้างการแจ้งเตือนได้ - Database connection issue');
+      }
 
     } catch (error) {
-      console.error('เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนนัดหมาย:', error);
+      console.error('❌ เกิดข้อผิดพลาดในการสร้างการแจ้งเตือนนัดหมาย:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        sqlState: error.sqlState
+      });
     }
   },
 
