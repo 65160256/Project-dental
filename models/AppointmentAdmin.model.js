@@ -38,8 +38,14 @@ class AppointmentAdminModel {
       }
 
       if (filters.status) {
-        whereClause += whereClause ? ' AND q.queue_status = ?' : 'WHERE q.queue_status = ?';
-        params.push(filters.status);
+        if (filters.status === 'cancel') {
+          // เมื่อกรองสถานะ "cancel" ให้รวมทั้ง "cancel" และ "auto_cancelled"
+          whereClause += whereClause ? ' AND q.queue_status IN (?, ?)' : 'WHERE q.queue_status IN (?, ?)';
+          params.push('cancel', 'auto_cancelled');
+        } else {
+          whereClause += whereClause ? ' AND q.queue_status = ?' : 'WHERE q.queue_status = ?';
+          params.push(filters.status);
+        }
       }
 
       if (filters.dentist_id) {

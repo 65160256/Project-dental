@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { formatThaiDateTime, formatDateForInput } = require('../utils/timezoneHelper');
 
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
@@ -1370,15 +1371,8 @@ exports.showEditProfile = async (req, res) => {
     // Format the data for form
     const profileData = {
       ...patient,
-      dob_formatted: patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : '',
-      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('th-TH', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) : 'ยังไม่เคยเข้าสู่ระบบ',
+      dob_formatted: formatDateForInput(patient.dob),
+      last_login_formatted: formatThaiDateTime(patient.last_login, { includeTime: true }),
       full_name: `${patient.fname} ${patient.lname}`
     };
 
@@ -1463,14 +1457,7 @@ exports.showChangePassword = async (req, res) => {
     // Format the data for display
     const profileData = {
       ...patient,
-      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) + ' AM' : 'Never logged in',
+      last_login_formatted: formatThaiDateTime(patient.last_login, { includeTime: true }),
       full_name: `${patient.fname} ${patient.lname}`
     };
 

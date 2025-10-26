@@ -123,6 +123,8 @@
     .status-pending{background:linear-gradient(135deg,#fff3cd,#ffeaa7);color:#856404;border:1px solid #fdcb6e}
     .status-confirm{background:linear-gradient(135deg,#d1f2eb,#a7f3d0);color:#065f46;border:1px solid #6ee7b7}
     .status-cancel{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#991b1b;border:1px solid #f87171}
+    .status-auto_cancelled{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border:1px solid #f59e0b;position:relative}
+    .status-auto_cancelled::after{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px}
     .btn-view-detail{background:linear-gradient(135deg,#4A90E2,#2DA8FF);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:.3s;display:inline-flex;align-items:center;gap:6px}
     .btn-view-detail:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,144,226,.3)}
     .appointments-table td:last-child{text-align:center}
@@ -619,7 +621,7 @@
         const start = a.time ? new Date(a.time) : null;
         const end = a.time_end ? new Date(a.time_end) : null;
         const formattedRange = (start && end) ? `${String(start.getHours()).padStart(2,'0')}:${String(start.getMinutes()).padStart(2,'0')} - ${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}` : (a.time ? formatDateTime(a.time) : 'ไม่ระบุ');
-        const icon = a.queue_status==='pending'?'fas fa-clock':(a.queue_status==='confirm'?'fas fa-check-circle':(a.queue_status==='cancel'?'fas fa-times-circle':'fas fa-question-circle'));
+        const icon = getStatusIcon(a.queue_status);
         
         // Format date display
         const appointmentDate = start ? formatDateDisplay(start) : 'ไม่ระบุ';
@@ -637,7 +639,13 @@
         </tr>`;
       }).join('');
     }
-    function getStatusIcon(s){return s==='pending'?'fas fa-clock':(s==='confirm'?'fas fa-check-circle':(s==='cancel'?'fas fa-times-circle':'fas fa-question-circle'))}
+    function getStatusIcon(s){
+      if(s==='pending') return 'fas fa-clock';
+      if(s==='confirm') return 'fas fa-check-circle';
+      if(s==='cancel') return 'fas fa-times-circle';
+      if(s==='auto_cancelled') return 'fas fa-robot';
+      return 'fas fa-question-circle';
+    }
     function viewAppointmentDetail(id){window.location.href=`/admin/appointments/detail?id=${id}`;}
     function formatDateTime(dt){
       if(!dt) return 'ไม่ระบุ';
@@ -665,12 +673,18 @@
         return `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
       }catch{ return 'วันที่ไม่ถูกต้อง'; }
     }
-    function formatStatus(s){ if(s==='pending')return'รออนุมัติ'; if(s==='confirm')return'ยืนยันแล้ว'; if(s==='cancel')return'ยกเลิกแล้ว'; return s; }
+    function formatStatus(s){ 
+      if(s==='pending')return'รออนุมัติ'; 
+      if(s==='confirm')return'ยืนยันแล้ว'; 
+      if(s==='cancel')return'ยกเลิกแล้ว'; 
+      if(s==='auto_cancelled')return'ยกเลิกอัตโนมัติ'; 
+      return s; 
+    }
     function renderEmptyState(){ document.getElementById('tableSection').style.display='none'; document.getElementById('emptyState').style.display='block'; }
     function updateAppointmentCount(total){
       const pending = (appointmentsData||[]).filter(a=>a.queue_status==='pending').length;
       const confirmed = (appointmentsData||[]).filter(a=>a.queue_status==='confirm').length;
-      const cancelled = (appointmentsData||[]).filter(a=>a.queue_status==='cancel').length;
+      const cancelled = (appointmentsData||[]).filter(a=>a.queue_status==='cancel' || a.queue_status==='auto_cancelled').length;
       
       document.getElementById('appointmentCount').textContent = total;
       

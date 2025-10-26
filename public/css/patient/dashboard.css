@@ -172,6 +172,37 @@ tbody tr:hover { background-color: #f8f9fa; transform: scale(1.01); }
   .view-details { position: static; display: inline-block; margin-top: 15px; }
   .notification-dropdown { width: 320px; right: -50px; }
 }
+/* ===== Search Results Messages ===== */
+.no-results-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.no-results-message .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.no-results-message .empty-state i {
+  font-size: 48px;
+  color: #ddd;
+}
+
+.no-results-message .empty-state h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #888;
+}
+
+.no-results-message .empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #aaa;
+}
+
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
   .search-section { flex-direction: column; gap: 10px; }

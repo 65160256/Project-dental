@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { formatThaiDateTime, formatDateForInput } = require('../utils/timezoneHelper');
 
 class PatientModel {
   /**
@@ -943,19 +944,8 @@ class PatientModel {
 
     return {
       ...patient,
-      dob_formatted: patient.dob ? new Date(patient.dob).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }) : 'Not specified',
-      last_login_formatted: patient.last_login ? new Date(patient.last_login).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }) + ' - ' + new Date(patient.last_login).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }) + ' AM' : 'Never logged in',
+      dob_formatted: formatDateForInput(patient.dob),
+      last_login_formatted: formatThaiDateTime(patient.last_login, { includeTime: true }),
       full_name: `${patient.fname} ${patient.lname}`,
       masked_password: '******',
       gender_th: genderTh,

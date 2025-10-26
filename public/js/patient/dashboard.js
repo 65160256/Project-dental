@@ -223,7 +223,7 @@ function closeProfileDropdownIfClickOutside(e) {
   }
 }
 
-// ===== Search: demo hook + debounce (เผื่ออนาคตผูกกับ API/filter ตาราง) =====
+// ===== Search: ฟังก์ชันค้นหาและกรองข้อมูล =====
 function debounce(fn, wait = 300) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
@@ -231,8 +231,111 @@ function debounce(fn, wait = 300) {
 
 function handleSearchInput(e) {
   const term = e.target.value.trim().toLowerCase();
-  // ปัจจุบัน: แค่ log (สามารถต่อยอดกรองตาราง/เรียก API ได้)
   console.log('กำลังค้นหา:', term);
+  
+  // กรองตารางนัดหมาย
+  filterAppointmentsTable(term);
+  
+  // กรองการรักษาล่าสุด
+  filterTreatmentHistory(term);
+  
+  // กรองทันตแพทย์
+  filterDentists(term);
+}
+
+function filterAppointmentsTable(searchTerm) {
+  const table = document.querySelector('.appointments-section table tbody');
+  if (!table) return;
+  
+  const rows = table.querySelectorAll('tr');
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    let shouldShow = false;
+    
+    if (cells.length > 0) {
+      // ตรวจสอบในแต่ละเซลล์
+      cells.forEach(cell => {
+        const text = cell.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+          shouldShow = true;
+        }
+      });
+    }
+    
+    if (shouldShow || searchTerm === '') {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  
+  // แสดงข้อความเมื่อไม่พบผลลัพธ์
+  showNoResultsMessage(visibleCount === 0 && searchTerm !== '', 'appointments');
+}
+
+function filterTreatmentHistory(searchTerm) {
+  const treatmentCard = document.querySelector('.treatment-history .treatment-card');
+  if (!treatmentCard) return;
+  
+  const text = treatmentCard.textContent.toLowerCase();
+  const shouldShow = text.includes(searchTerm) || searchTerm === '';
+  
+  if (shouldShow) {
+    treatmentCard.style.display = '';
+  } else {
+    treatmentCard.style.display = 'none';
+  }
+}
+
+function filterDentists(searchTerm) {
+  const dentistCards = document.querySelectorAll('.dentist-card');
+  let visibleCount = 0;
+  
+  dentistCards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const shouldShow = text.includes(searchTerm) || searchTerm === '';
+    
+    if (shouldShow) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  
+  // แสดงข้อความเมื่อไม่พบผลลัพธ์
+  showNoResultsMessage(visibleCount === 0 && searchTerm !== '', 'dentists');
+}
+
+function showNoResultsMessage(show, section) {
+  let messageId = `no-results-${section}`;
+  let existingMessage = document.getElementById(messageId);
+  
+  if (show && !existingMessage) {
+    const message = document.createElement('div');
+    message.id = messageId;
+    message.className = 'no-results-message';
+    message.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>ไม่พบผลลัพธ์</h3>
+        <p>ไม่พบข้อมูลที่ตรงกับการค้นหา</p>
+      </div>
+    `;
+    
+    if (section === 'appointments') {
+      const table = document.querySelector('.appointments-section table tbody');
+      if (table) table.appendChild(message);
+    } else if (section === 'dentists') {
+      const container = document.querySelector('.dentists-today');
+      if (container) container.appendChild(message);
+    }
+  } else if (!show && existingMessage) {
+    existingMessage.remove();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

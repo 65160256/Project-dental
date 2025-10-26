@@ -92,121 +92,121 @@ exports.changePassword = async (req, res) => {
 };
 
 // Dashboard
-exports.getDashboard = async (req, res) => {
-  try {
-    // ดึงข้อมูลตารางเวลาของทันตแพทย์ทั้งหมด
-    const scheduleData = await AdminModel.getDashboardData();
+// exports.getDashboard = async (req, res) => {
+//   try {
+//     // ดึงข้อมูลตารางเวลาของทันตแพทย์ทั้งหมด
+//     const scheduleData = await AdminModel.getDashboardData();
 
-    // จัดรูปแบบข้อมูลสำหรับ FullCalendar
-    const events = [];
+//     // จัดรูปแบบข้อมูลสำหรับ FullCalendar
+//     const events = [];
     
-    // Group schedules by dentist and date
-    const groupedSchedules = {};
+//     // Group schedules by dentist and date
+//     const groupedSchedules = {};
     
-    scheduleData.forEach(schedule => {
-      const dateKey = schedule.schedule_date.toISOString().split('T')[0];
-      const dentistKey = `${schedule.fname} ${schedule.lname}`;
+//     scheduleData.forEach(schedule => {
+//       const dateKey = schedule.schedule_date.toISOString().split('T')[0];
+//       const dentistKey = `${schedule.fname} ${schedule.lname}`;
       
-      if (!groupedSchedules[dateKey]) {
-        groupedSchedules[dateKey] = {};
-      }
+//       if (!groupedSchedules[dateKey]) {
+//         groupedSchedules[dateKey] = {};
+//       }
       
-      if (!groupedSchedules[dateKey][dentistKey]) {
-        groupedSchedules[dateKey][dentistKey] = {
-          dentist: dentistKey,
-          specialty: schedule.specialty,
-          schedules: [],
-          hasAppointments: false
-        };
-      }
+//       if (!groupedSchedules[dateKey][dentistKey]) {
+//         groupedSchedules[dateKey][dentistKey] = {
+//           dentist: dentistKey,
+//           specialty: schedule.specialty,
+//           schedules: [],
+//           hasAppointments: false
+//         };
+//       }
       
-      groupedSchedules[dateKey][dentistKey].schedules.push(schedule);
+//       groupedSchedules[dateKey][dentistKey].schedules.push(schedule);
       
-      if (schedule.appointment_count > 0) {
-        groupedSchedules[dateKey][dentistKey].hasAppointments = true;
-      }
-    });
+//       if (schedule.appointment_count > 0) {
+//         groupedSchedules[dateKey][dentistKey].hasAppointments = true;
+//       }
+//     });
 
-    // Create events for FullCalendar
-    Object.keys(groupedSchedules).forEach(date => {
-      Object.keys(groupedSchedules[date]).forEach(dentistName => {
-        const dentistData = groupedSchedules[date][dentistName];
+//     // Create events for FullCalendar
+//     Object.keys(groupedSchedules).forEach(date => {
+//       Object.keys(groupedSchedules[date]).forEach(dentistName => {
+//         const dentistData = groupedSchedules[date][dentistName];
         
-        if (dentistData.schedules.length === 0) return;
+//         if (dentistData.schedules.length === 0) return;
         
-        // Sort schedules by hour
-        dentistData.schedules.sort((a, b) => a.hour - b.hour);
+//         // Sort schedules by hour
+//         dentistData.schedules.sort((a, b) => a.hour - b.hour);
         
-        // Group continuous working hours
-        const workingBlocks = [];
-        let currentBlock = null;
+//         // Group continuous working hours
+//         const workingBlocks = [];
+//         let currentBlock = null;
         
-        dentistData.schedules.forEach(schedule => {
-          if (schedule.status === 'dayoff') {
-            if (currentBlock) {
-              workingBlocks.push(currentBlock);
-              currentBlock = null;
-            }
-            workingBlocks.push({
-              type: 'dayoff',
-              start: schedule.start_time,
-              end: schedule.end_time,
-              note: schedule.note
-            });
-          } else {
-            if (!currentBlock) {
-              currentBlock = {
-                type: 'working',
-                start: schedule.start_time,
-                end: schedule.end_time,
-                hasAppointments: schedule.appointment_count > 0
-              };
-            } else {
-              currentBlock.end = schedule.end_time;
-              if (schedule.appointment_count > 0) {
-                currentBlock.hasAppointments = true;
-              }
-            }
-          }
-        });
+//         dentistData.schedules.forEach(schedule => {
+//           if (schedule.status === 'dayoff') {
+//             if (currentBlock) {
+//               workingBlocks.push(currentBlock);
+//               currentBlock = null;
+//             }
+//             workingBlocks.push({
+//               type: 'dayoff',
+//               start: schedule.start_time,
+//               end: schedule.end_time,
+//               note: schedule.note
+//             });
+//           } else {
+//             if (!currentBlock) {
+//               currentBlock = {
+//                 type: 'working',
+//                 start: schedule.start_time,
+//                 end: schedule.end_time,
+//                 hasAppointments: schedule.appointment_count > 0
+//               };
+//             } else {
+//               currentBlock.end = schedule.end_time;
+//               if (schedule.appointment_count > 0) {
+//                 currentBlock.hasAppointments = true;
+//               }
+//             }
+//           }
+//         });
         
-        if (currentBlock) {
-          workingBlocks.push(currentBlock);
-        }
+//         if (currentBlock) {
+//           workingBlocks.push(currentBlock);
+//         }
         
-        // Create FullCalendar events
-        workingBlocks.forEach(block => {
-          if (block.type === 'dayoff') {
-            events.push({
-              title: `Dr. ${dentistName}\nDay Off`,
-              start: date,
-              color: '#f5f5f5',
-              textColor: '#999',
-              borderColor: '#ddd'
-            });
-          } else {
-            const startTime = block.start.substring(0, 5); // HH:MM
-            const endTime = block.end.substring(0, 5);
+//         // Create FullCalendar events
+//         workingBlocks.forEach(block => {
+//           if (block.type === 'dayoff') {
+//             events.push({
+//               title: `Dr. ${dentistName}\nDay Off`,
+//               start: date,
+//               color: '#f5f5f5',
+//               textColor: '#999',
+//               borderColor: '#ddd'
+//             });
+//           } else {
+//             const startTime = block.start.substring(0, 5); // HH:MM
+//             const endTime = block.end.substring(0, 5);
             
-            events.push({
-              title: `Dr. ${dentistName}\n${startTime}-${endTime}${block.hasAppointments ? ' (Has Appointments)' : ''}`,
-              start: date,
-              color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
-              textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
-              borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32'
-            });
-          }
-        });
-      });
-    });
+//             events.push({
+//               title: `Dr. ${dentistName}\n${startTime}-${endTime}${block.hasAppointments ? ' (Has Appointments)' : ''}`,
+//               start: date,
+//               color: block.hasAppointments ? '#fce4ec' : '#e8f5e8',
+//               textColor: block.hasAppointments ? '#c2185b' : '#2e7d32',
+//               borderColor: block.hasAppointments ? '#c2185b' : '#2e7d32'
+//             });
+//           }
+//         });
+//       });
+//     });
 
-    res.render('admin-dashboard', { events: JSON.stringify(events) });
+//     res.render('admin-dashboard', { events: JSON.stringify(events) });
     
-  } catch (error) {
-    console.error('Error loading dashboard:', error);
-    res.render('admin-dashboard', { events: JSON.stringify([]) });
-  }
-};
+//   } catch (error) {
+//     console.error('Error loading dashboard:', error);
+//     res.render('admin-dashboard', { events: JSON.stringify([]) });
+//   }
+// };
 
 exports.getScheduleAPI = async (req, res) => {
   const userId = req.session.userId;

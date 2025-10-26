@@ -53,7 +53,7 @@ class PatientAdminModel {
           COUNT(DISTINCT q.queue_id) as total_appointments
         FROM patient p
         LEFT JOIN user u ON p.user_id = u.user_id
-        LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
+        LEFT JOIN queue q ON p.patient_id = q.patient_id
         GROUP BY p.patient_id, p.fname, p.lname, p.phone, p.dob, p.address, p.id_card, p.gender, p.chronic_disease, p.allergy_history, u.email, u.last_login
         ORDER BY p.patient_id DESC
       `);
@@ -81,7 +81,7 @@ class PatientAdminModel {
           MAX(q.time) as last_visit
         FROM patient p
         LEFT JOIN user u ON p.user_id = u.user_id
-        LEFT JOIN queue q ON p.patient_id = q.patient_id AND q.queue_status IN ('confirm', 'pending')
+        LEFT JOIN queue q ON p.patient_id = q.patient_id
         WHERE p.patient_id = ?
         GROUP BY p.patient_id
       `, [patientId]);

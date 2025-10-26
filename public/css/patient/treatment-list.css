@@ -515,6 +515,34 @@
       }
     }
 
+    /* ===== Search Results Messages ===== */
+    .no-treatments {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    .no-treatments i {
+      font-size: 48px;
+      color: #ddd;
+      margin-bottom: 15px;
+    }
+
+    .no-treatments h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      color: #888;
+    }
+
+    .no-treatments p {
+      margin: 0;
+      font-size: 14px;
+      color: #aaa;
+    }
+
     @media (max-width: 480px) {
       .search-section {
         flex-direction: column;
