@@ -32,7 +32,7 @@ class ReportAdminModel {
           SUM(CASE WHEN q.queue_status = 'pending' THEN 1 ELSE 0 END) as pending_count,
           SUM(CASE WHEN q.queue_status = 'confirm' THEN 1 ELSE 0 END) as confirmed_count,
           SUM(CASE WHEN q.queue_status = 'completed' THEN 1 ELSE 0 END) as completed_count,
-          SUM(CASE WHEN q.queue_status = 'cancel' THEN 1 ELSE 0 END) as cancelled_count,
+          SUM(CASE WHEN q.queue_status IN ('cancel', 'auto_cancelled') THEN 1 ELSE 0 END) as cancelled_count,
           AVG(CASE WHEN q.queue_status = 'completed' THEN 1 ELSE 0 END) * 100 as completion_rate
         FROM queuedetail qd
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
@@ -75,7 +75,7 @@ class ReportAdminModel {
           COUNT(*) as total_appointments,
           COUNT(CASE WHEN queue_status = 'pending' THEN 1 END) as pending,
           COUNT(CASE WHEN queue_status = 'confirm' THEN 1 END) as confirmed,
-          COUNT(CASE WHEN queue_status = 'cancel' THEN 1 END) as cancelled
+          COUNT(CASE WHEN queue_status IN ('cancel', 'auto_cancelled') THEN 1 END) as cancelled
         FROM queue q
         WHERE DATE(q.time) BETWEEN ? AND ?
         GROUP BY DATE(q.time)
@@ -92,6 +92,7 @@ class ReportAdminModel {
         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
         JOIN treatment t ON qd.treatment_id = t.treatment_id
         WHERE DATE(q.time) BETWEEN ? AND ?
+          AND q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
         GROUP BY t.treatment_id, t.treatment_name
         ORDER BY booking_count DESC
         LIMIT 10
@@ -152,6 +153,7 @@ class ReportAdminModel {
         FROM queuedetail qd
         JOIN treatment t ON qd.treatment_id = t.treatment_id
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
+        WHERE q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
         ${whereClause}
         GROUP BY t.treatment_id, t.treatment_name
         ORDER BY total_count DESC
@@ -655,7 +657,7 @@ class ReportAdminModel {
         FROM treatment t
         INNER JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
         INNER JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
-        WHERE 1=1 ${dateFilter}
+        WHERE q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled') ${dateFilter}
         GROUP BY t.treatment_id, t.treatment_name
         HAVING count > 0
         ORDER BY count DESC
@@ -775,6 +777,192 @@ class ReportAdminModel {
   }
 
   /**
+   * ดึงสถิติการรักษา (สำหรับ API)
+   * @returns {Array} สถิติการรักษา
+   */
+  static async getTreatmentStatsForAPI() {
+    try {
+      const [rows] = await db.execute(`
+        SELECT 
+          t.treatment_name,
+          COUNT(q.queue_id) as count
+        FROM treatment t
+        LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
+        LEFT JOIN queue q ON qd.queuedetail_id = q.queuedetail_id
+        WHERE q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
+        AND q.time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY t.treatment_id, t.treatment_name
+        HAVING count > 0
+        ORDER BY count DESC
+        LIMIT 10
+      `);
+
+      return rows;
+    } catch (error) {
+      console.error('Error getting treatment stats for API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงสถิติทันตแพทย์ (สำหรับ API)
+   * @returns {Array} สถิติทันตแพทย์
+   */
+  static async getDoctorStatsForAPI() {
+    try {
+      const [rows] = await db.execute(`
+        SELECT 
+          CONCAT(d.fname, ' ', d.lname) as dentist_name,
+          COUNT(q.queue_id) as appointment_count
+        FROM dentist d
+        LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
+        LEFT JOIN queue q ON qd.queuedetail_id = q.queuedetail_id
+        WHERE q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
+        AND q.time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY d.dentist_id, d.fname, d.lname
+        HAVING appointment_count > 0
+        ORDER BY appointment_count DESC
+        LIMIT 10
+      `);
+
+      return rows;
+    } catch (error) {
+      console.error('Error getting doctor stats for API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงสถิติการนัดหมาย (สำหรับ API)
+   * @returns {Object} สถิติการนัดหมาย
+   */
+  static async getAppointmentStatsForAPI() {
+    try {
+      // ดึงสถิติรวม
+      const [totalRows] = await db.execute(`
+        SELECT COUNT(*) as total_appointments
+        FROM queue
+        WHERE queue_status IN ('pending', 'confirm', 'completed', 'cancel', 'auto_cancelled')
+        AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      `);
+
+      const [completedRows] = await db.execute(`
+        SELECT COUNT(*) as completed_appointments
+        FROM queue
+        WHERE queue_status = 'completed'
+        AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      `);
+
+      const [pendingRows] = await db.execute(`
+        SELECT COUNT(*) as pending_appointments
+        FROM queue
+        WHERE queue_status IN ('pending', 'confirm')
+        AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      `);
+
+      const [cancelledRows] = await db.execute(`
+        SELECT COUNT(*) as cancelled_appointments
+        FROM queue
+        WHERE queue_status IN ('cancel', 'auto_cancelled')
+        AND time >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+      `);
+
+      // ดึงสถิติรายเดือน
+      const [monthlyRows] = await db.execute(`
+        SELECT 
+          DATE_FORMAT(time, '%Y-%m') as month,
+          COUNT(*) as count
+        FROM queue
+        WHERE queue_status IN ('confirm', 'waiting_for_treatment', 'completed', 'cancel', 'auto_cancelled')
+        AND time >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY DATE_FORMAT(time, '%Y-%m')
+        ORDER BY month DESC
+        LIMIT 12
+      `);
+
+      return {
+        total_appointments: totalRows[0].total_appointments || 0,
+        completed_appointments: completedRows[0].completed_appointments || 0,
+        pending_appointments: pendingRows[0].pending_appointments || 0,
+        cancelled_appointments: cancelledRows[0].cancelled_appointments || 0,
+        monthly_stats: monthlyRows || []
+      };
+    } catch (error) {
+      console.error('Error getting appointment stats for API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงข้อมูลนัดหมายสำหรับปฏิทิน (สำหรับ API)
+   * @param {number} year - ปี
+   * @param {number} month - เดือน
+   * @returns {Array} ข้อมูลนัดหมาย
+   */
+  static async getCalendarAppointmentsForAPI(year, month) {
+    try {
+      const [rows] = await db.execute(`
+        SELECT 
+          q.queue_id,
+          q.time,
+          q.queue_status,
+          CONCAT(p.fname, ' ', p.lname) as patient_name,
+          t.treatment_name,
+          CONCAT(d.fname, ' ', d.lname) as dentist_name
+        FROM queue q
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN patient p ON q.patient_id = p.patient_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
+        JOIN dentist d ON qd.dentist_id = d.dentist_id
+        WHERE YEAR(q.time) = ? AND MONTH(q.time) = ?
+        AND q.queue_status IN ('confirm', 'waiting_for_treatment', 'completed', 'cancel', 'auto_cancelled')
+        ORDER BY q.time ASC
+      `, [year, month]);
+
+      return rows;
+    } catch (error) {
+      console.error('Error getting calendar appointments for API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ดึงสถิติรายได้ (สำหรับ API)
+   * @param {string} period - ช่วงเวลา (month, year)
+   * @returns {Array} สถิติรายได้
+   */
+  static async getRevenueStatsForAPI(period = 'month') {
+    try {
+      let dateFilter = '';
+      if (period === 'month') {
+        dateFilter = 'AND q.time >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
+      } else if (period === 'year') {
+        dateFilter = 'AND q.time >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
+      }
+
+      const [rows] = await db.execute(`
+        SELECT 
+          DATE_FORMAT(q.time, '%Y-%m') as period,
+          COUNT(*) as appointment_count,
+          SUM(t.price) as total_revenue
+        FROM queue q
+        JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
+        JOIN treatment t ON qd.treatment_id = t.treatment_id
+        WHERE q.queue_status = 'completed'
+        ${dateFilter}
+        GROUP BY DATE_FORMAT(q.time, '%Y-%m')
+        ORDER BY period DESC
+        LIMIT 12
+      `);
+
+      return rows;
+    } catch (error) {
+      console.error('Error getting revenue stats for API:', error);
+      throw error;
+    }
+  }
+
+  /**
    * ดึงข้อมูลแดชบอร์ดรายงาน
    * @returns {Object} ข้อมูลแดชบอร์ด
    */
@@ -815,8 +1003,8 @@ class ReportAdminModel {
           appointmentSummary.confirmed = stat.count;
         } else if (stat.queue_status === 'pending') {
           appointmentSummary.pending = stat.count;
-        } else if (stat.queue_status === 'cancel') {
-          appointmentSummary.cancelled = stat.count;
+        } else if (stat.queue_status === 'cancel' || stat.queue_status === 'auto_cancelled') {
+          appointmentSummary.cancelled += stat.count;
         } else if (stat.queue_status === 'completed') {
           appointmentSummary.completed = stat.count;
         }
@@ -837,6 +1025,7 @@ class ReportAdminModel {
         LEFT JOIN queuedetail qd ON t.treatment_id = qd.treatment_id
         LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id 
           AND DATE(q.time) BETWEEN ? AND ?
+          AND q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
         GROUP BY t.treatment_id, t.treatment_name
         ORDER BY count DESC
         LIMIT 10
@@ -854,6 +1043,7 @@ class ReportAdminModel {
         LEFT JOIN queuedetail qd ON d.dentist_id = qd.dentist_id
         LEFT JOIN queue q ON q.queuedetail_id = qd.queuedetail_id 
           AND DATE(q.time) BETWEEN ? AND ?
+          AND q.queue_status IN ('confirm', 'completed', 'cancel', 'auto_cancelled')
         GROUP BY d.dentist_id, d.fname, d.lname, d.specialty
         ORDER BY total_appointments DESC
       `, [firstDayOfMonth.toISOString().split('T')[0], lastDayOfMonth.toISOString().split('T')[0]]);
@@ -889,11 +1079,12 @@ class ReportAdminModel {
         JOIN queuedetail qd ON q.queuedetail_id = qd.queuedetail_id
         JOIN dentist d ON qd.dentist_id = d.dentist_id
         JOIN treatment t ON qd.treatment_id = t.treatment_id
-        WHERE DATE(q.time) BETWEEN CURDATE() AND ?
+        WHERE q.time > NOW()
+          AND q.time <= ?
           AND q.queue_status IN ('pending', 'confirm')
         ORDER BY q.time ASC
         LIMIT 10
-      `, [nextWeek.toISOString().split('T')[0]]);
+      `, [nextWeek.toISOString().split('T')[0] + ' 23:59:59']);
 
       // 7. ข้อมูลแนวโน้มรายเดือน
       const [monthlyTrends] = await db.execute(`

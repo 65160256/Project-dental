@@ -408,7 +408,7 @@ class AppointmentAdminModel {
           SUM(CASE WHEN q.queue_status = 'pending' THEN 1 ELSE 0 END) as pending_count,
           SUM(CASE WHEN q.queue_status = 'confirm' THEN 1 ELSE 0 END) as confirmed_count,
           SUM(CASE WHEN q.queue_status = 'completed' THEN 1 ELSE 0 END) as completed_count,
-          SUM(CASE WHEN q.queue_status = 'cancel' THEN 1 ELSE 0 END) as cancelled_count
+          SUM(CASE WHEN q.queue_status IN ('cancel', 'auto_cancelled') THEN 1 ELSE 0 END) as cancelled_count
         FROM queuedetail qd
         JOIN queue q ON q.queuedetail_id = qd.queuedetail_id
         ${whereClause}
