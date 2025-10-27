@@ -1369,16 +1369,62 @@ exports.deleteTreatment = async (req, res) => {
 };
 // ==================== Notifications Functions ====================
 
+// ฟังก์ชันกรองการแจ้งเตือนตามประเภทผู้ใช้
+function filterNotificationsByUserType(notifications, userType) {
+  return notifications.filter(notification => {
+    // ถ้าเป็น admin ให้แสดงเฉพาะการแจ้งเตือนที่ไม่ใช่สำหรับผู้ป่วย
+    if (userType === 'admin') {
+      return !isPatientNotification(notification);
+    }
+    // ถ้าเป็น dentist ให้แสดงเฉพาะการแจ้งเตือนที่เกี่ยวข้องกับทันตแพทย์
+    else if (userType === 'dentist') {
+      return !isPatientNotification(notification);
+    }
+    // ถ้าเป็น patient ให้แสดงเฉพาะการแจ้งเตือนสำหรับผู้ป่วย
+    else if (userType === 'patient') {
+      return isPatientNotification(notification);
+    }
+    return true;
+  });
+}
+
+// ตรวจสอบว่าการแจ้งเตือนนี้เป็นสำหรับผู้ป่วยหรือไม่
+function isPatientNotification(notification) {
+  // ตรวจสอบจาก patient_id ก่อน
+  if (notification.patient_id) {
+    return true;
+  }
+  
+  // ตรวจสอบจาก type
+  if (notification.type && notification.type.includes('_patient')) {
+    return true;
+  }
+  
+  // ตรวจสอบจากข้อความ
+  const patientKeywords = [
+    'คุณสามารถดูรายละเอียดได้ในประวัติการรักษา',
+    'ของคุณแล้ว',
+    'คุณมีนัดหมาย',
+    'การจองของคุณ',
+    'นัดหมายของคุณ',
+    'การรักษาของคุณ'
+  ];
+  
+  return patientKeywords.some(keyword => 
+    notification.message.includes(keyword)
+  );
+}
+
 // Get all notifications for admin
 exports.getNotifications = async (req, res) => {
   try {
-    const { limit = 50, offset = 0, unread_only = 'false' } = req.query;
+    const { limit = 50, offset = 0, unread_only = 'false', userType = 'admin' } = req.query;
 
     // แปลงเป็น number ทันที
     const limitNum = Number(limit);
     const offsetNum = Number(offset);
 
-    console.log('🔍 Query params:', { limit, offset, unread_only, limitNum, offsetNum });
+    console.log('🔍 Query params:', { limit, offset, unread_only, limitNum, offsetNum, userType });
 
     let whereClause = '';
 
@@ -1390,12 +1436,16 @@ exports.getNotifications = async (req, res) => {
     const notifications = await NotificationAdminModel.getAllNotifications(
       unread_only === 'true' ? { is_read: 0 } : {}
     );
-    const totalCount = notifications.length;
-    const unreadCount = await getUnreadNotificationCount();
+    
+    // กรองการแจ้งเตือนตามประเภทผู้ใช้
+    const filteredNotifications = filterNotificationsByUserType(notifications, userType);
+    
+    const totalCount = filteredNotifications.length;
+    const unreadCount = filteredNotifications.filter(n => !n.is_read).length;
 
     res.json({
       success: true,
-      notifications: notifications,
+      notifications: filteredNotifications,
       unread: unreadCount,
       total: totalCount
     });

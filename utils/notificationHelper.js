@@ -377,15 +377,16 @@ const NotificationHelper = {
         year: 'numeric'
       });
 
-      // Notification for Patient
+      // Notification for Patient (เฉพาะผู้ป่วยเท่านั้น)
       await db.execute(`
-        INSERT INTO notifications (type, title, message, queue_id, is_read, is_new)
-        VALUES (?, ?, ?, ?, 0, 1)
+        INSERT INTO notifications (type, title, message, queue_id, patient_id, is_read, is_new)
+        VALUES (?, ?, ?, ?, ?, 0, 1)
       `, [
-        'treatment_completed',
+        'treatment_completed_patient',
         '📝 บันทึกประวัติการรักษาแล้ว',
         `${appointment.dentist_name} ได้บันทึกประวัติการรักษา${appointment.treatment_name}ของคุณแล้ว คุณสามารถดูรายละเอียดได้ในประวัติการรักษา`,
-        appointmentId
+        appointmentId,
+        patientId
       ]);
 
       // Notification for Admin

@@ -286,14 +286,61 @@ class NotificationBell {
       const data = await response.json();
 
       if (data.success) {
-        this.notifications = data.notifications;
-        this.unreadCount = data.unread;
+        // กรองการแจ้งเตือนตามประเภทผู้ใช้
+        this.notifications = this.filterNotificationsByUserType(data.notifications);
+        this.unreadCount = this.notifications.filter(n => !n.is_read).length;
         this.updateBadge();
         this.renderNotifications();
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
+  }
+
+  // ฟังก์ชันกรองการแจ้งเตือนตามประเภทผู้ใช้
+  filterNotificationsByUserType(notifications) {
+    return notifications.filter(notification => {
+      // ถ้าเป็น admin ให้แสดงเฉพาะการแจ้งเตือนที่ไม่ใช่สำหรับผู้ป่วย
+      if (this.userType === 'admin') {
+        return !this.isPatientNotification(notification);
+      }
+      // ถ้าเป็น dentist ให้แสดงเฉพาะการแจ้งเตือนที่เกี่ยวข้องกับทันตแพทย์
+      else if (this.userType === 'dentist') {
+        return !this.isPatientNotification(notification);
+      }
+      // ถ้าเป็น patient ให้แสดงเฉพาะการแจ้งเตือนสำหรับผู้ป่วย
+      else if (this.userType === 'patient') {
+        return this.isPatientNotification(notification);
+      }
+      return true;
+    });
+  }
+
+  // ตรวจสอบว่าการแจ้งเตือนนี้เป็นสำหรับผู้ป่วยหรือไม่
+  isPatientNotification(notification) {
+    // ตรวจสอบจาก patient_id ก่อน
+    if (notification.patient_id) {
+      return true;
+    }
+    
+    // ตรวจสอบจาก type
+    if (notification.type && notification.type.includes('_patient')) {
+      return true;
+    }
+    
+    // ตรวจสอบจากข้อความ
+    const patientKeywords = [
+      'คุณสามารถดูรายละเอียดได้ในประวัติการรักษา',
+      'ของคุณแล้ว',
+      'คุณมีนัดหมาย',
+      'การจองของคุณ',
+      'นัดหมายของคุณ',
+      'การรักษาของคุณ'
+    ];
+    
+    return patientKeywords.some(keyword => 
+      notification.message.includes(keyword)
+    );
   }
 
   async loadUnreadCount() {
